@@ -18,24 +18,33 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
     queryKey: ["/api/auth/me"],
     queryFn: getCurrentUser,
     retry: false,
+    refetchOnMount: true,
   });
+
+  console.log(`ProtectedRoute - Ruolo richiesto: ${requiredRole}`, { user, isLoading, error });
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Verifica autenticazione...</p>
+        </div>
       </div>
     );
   }
 
   if (error || !user) {
+    console.log("Errore autenticazione o utente non trovato:", error);
     return <Redirect to="/" />;
   }
 
   if (user.role !== requiredRole) {
+    console.log(`Ruolo non corrispondente. Richiesto: ${requiredRole}, Utente: ${user.role}`);
     return <Redirect to="/" />;
   }
 
+  console.log(`Accesso autorizzato per ruolo: ${user.role}`);
   return <>{children}</>;
 }
 

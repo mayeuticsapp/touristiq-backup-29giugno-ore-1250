@@ -22,25 +22,31 @@ export default function Login() {
 
     try {
       const response = await login(iqCode.trim().toUpperCase());
+      console.log("Login risposta:", response);
       
       // Redirect based on role
       switch (response.role) {
         case 'admin':
+          console.log("Reindirizzamento ad admin");
           setLocation("/admin");
           break;
         case 'tourist':
+          console.log("Reindirizzamento a tourist");
           setLocation("/tourist");
           break;
         case 'structure':
+          console.log("Reindirizzamento a structure");
           setLocation("/structure");
           break;
         case 'partner':
+          console.log("Reindirizzamento a partner");
           setLocation("/partner");
           break;
         default:
           setError("Ruolo non riconosciuto");
       }
     } catch (error: any) {
+      console.error("Errore login:", error);
       setError(error.message || "Codice IQ non valido. Riprova.");
     } finally {
       setIsLoading(false);
