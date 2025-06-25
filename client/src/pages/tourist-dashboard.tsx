@@ -1,12 +1,14 @@
 import { Layout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Compass, Tags, History, Heart, User, Utensils, Check } from "lucide-react";
+import { TIQaiChat } from "@/components/tiqai-chat";
+import { Compass, Tags, History, Heart, User, Utensils, Check, MessageCircle } from "lucide-react";
 
 export default function TouristDashboard() {
   const navigation = [
     { icon: <Compass size={16} />, label: "Esplora", href: "#" },
     { icon: <Tags size={16} />, label: "I Miei Sconti", href: "#" },
+    { icon: <MessageCircle size={16} />, label: "TIQai Chat", href: "#" },
     { icon: <History size={16} />, label: "Cronologia", href: "#" },
     { icon: <Heart size={16} />, label: "Preferiti", href: "#" },
     { icon: <User size={16} />, label: "Profilo", href: "#" },
@@ -88,6 +90,12 @@ export default function TouristDashboard() {
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <TIQaiChat />
           </CardContent>
         </Card>
       </div>

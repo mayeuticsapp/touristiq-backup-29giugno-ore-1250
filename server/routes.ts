@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { loginSchema } from "@shared/schema";
 import { nanoid } from "nanoid";
+import { chatWithTIQai } from "./openai";
+import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -83,6 +85,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.clearCookie('session_token');
       res.json({ success: true });
     } catch (error) {
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // TIQai chat endpoint
+  const chatSchema = z.object({
+    message: z.string().min(1, "Messaggio richiesto").max(500, "Messaggio troppo lungo"),
+  });
+
+  app.post("/api/chat/tiqai", async (req, res) => {
+    try {
+      // Check if user is authenticated
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      // Validate request
+      const { message } = chatSchema.parse(req.body);
+      
+      // Get AI response
+      const response = await chatWithTIQai(message);
+      
+      res.json({ response });
+    } catch (error) {
+      console.error("Errore chat TIQai:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Richiesta non valida" });
+      }
       res.status(500).json({ message: "Errore del server" });
     }
   });

@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MapPin, LogIn, AlertTriangle, Loader2 } from "lucide-react";
 import { login } from "@/lib/auth";
+import { queryClient } from "@/lib/queryClient";
 
 export default function Login() {
   const [iqCode, setIqCode] = useState("");
@@ -23,6 +24,12 @@ export default function Login() {
     try {
       const response = await login(iqCode.trim().toUpperCase());
       console.log("Login risposta:", response);
+      
+      // Invalidate auth cache to force refresh
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      
+      // Small delay to ensure cookie is set
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Redirect based on role
       switch (response.role) {
