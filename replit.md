@@ -100,3 +100,4 @@ TouristIQ is a role-based authentication platform designed for the tourism indus
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Language: Italian only - all interface text, comments, and communication in Italian.

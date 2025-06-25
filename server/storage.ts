@@ -51,8 +51,10 @@ export class MemStorage implements IStorage {
   async createIqCode(insertIqCode: InsertIqCode): Promise<IqCode> {
     const id = this.currentIqCodeId++;
     const iqCode: IqCode = {
-      ...insertIqCode,
       id,
+      code: insertIqCode.code,
+      role: insertIqCode.role,
+      isActive: insertIqCode.isActive ?? true,
       createdAt: new Date(),
     };
     this.iqCodes.set(id, iqCode);
@@ -101,11 +103,17 @@ export class MemStorage implements IStorage {
 
   async cleanExpiredSessions(): Promise<void> {
     const now = new Date();
-    for (const [id, session] of this.sessions.entries()) {
+    const expiredSessions: number[] = [];
+    
+    for (const [id, session] of Array.from(this.sessions.entries())) {
       if (session.expiresAt <= now) {
-        this.sessions.delete(id);
+        expiredSessions.push(id);
       }
     }
+    
+    expiredSessions.forEach(id => {
+      this.sessions.delete(id);
+    });
   }
 }
 
