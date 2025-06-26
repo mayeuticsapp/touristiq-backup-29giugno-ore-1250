@@ -28,8 +28,8 @@ export default function Login() {
       // Invalidate auth cache to force refresh
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
 
-      // Longer delay to ensure cookie is properly set
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Extended delay to ensure cookie is properly set and session persists
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Redirect based on role
       switch (response.role) {

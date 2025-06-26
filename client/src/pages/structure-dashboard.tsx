@@ -1,7 +1,9 @@
 import { Layout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star, Package } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star, Package, Plus } from "lucide-react";
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -9,6 +11,7 @@ import { useState, useEffect } from "react";
 export default function StructureDashboard() {
   const params = useParams();
   const structureId = params.id;
+  const [guestName, setGuestName] = useState("");
   
   // Recupera dati specifici della struttura
   const { data: structureData, isLoading } = useQuery({
@@ -16,6 +19,42 @@ export default function StructureDashboard() {
     queryFn: () => fetch(`/api/structure/${structureId}`).then(res => res.json()),
     enabled: !!structureId
   });
+
+  // Query per pacchetti assegnati alla struttura
+  const { data: packagesData, refetch: refetchPackages } = useQuery({
+    queryKey: ["/api/my-packages"],
+    enabled: !!structureId,
+    refetchInterval: 10000 // Refresh ogni 10 secondi
+  });
+
+  const handleGenerateTouristCode = async (packageId: number) => {
+    const guestNameToUse = guestName.trim() || `Ospite ${Date.now()}`;
+    
+    try {
+      const response = await fetch("/api/generate-tourist-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          packageId,
+          guestName: guestNameToUse
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`Codice turistico generato!\n\nCodice: ${result.touristCode}\nOspite: ${result.guestName}\nCodici rimanenti nel pacchetto: ${result.remainingCodes}`);
+        setGuestName(""); // Reset campo
+        refetchPackages(); // Refresh package data
+      } else {
+        const error = await response.json();
+        alert(`Errore: ${error.message}`);
+      }
+    } catch (error) {
+      console.error("Errore generazione codice:", error);
+      alert("Errore durante la generazione del codice turistico");
+    }
+  };
 
   const navigation = [
     { icon: <TrendingUp size={16} />, label: "Dashboard", href: "#" },
@@ -86,6 +125,80 @@ export default function StructureDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Sezione Pacchetti IQCode Ricevuti */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package size={20} />
+            Pacchetti IQCode Ricevuti
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {packagesData?.packages?.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {packagesData.packages.map((pkg: any) => (
+                <Card key={pkg.id} className="border border-blue-200">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <div>
+                        <h4 className="font-semibold">Pacchetto {pkg.packageSize} Codici</h4>
+                        <p className="text-sm text-gray-600">ID: {pkg.id}</p>
+                      </div>
+                      <Badge className="bg-blue-100 text-blue-800">
+                        {pkg.availableCodes} disponibili
+                      </Badge>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Utilizzati</span>
+                        <span>{pkg.packageSize - pkg.availableCodes}/{pkg.packageSize}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full" 
+                          style={{width: `${((pkg.packageSize - pkg.availableCodes) / pkg.packageSize) * 100}%`}}
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <Input
+                          placeholder="Nome ospite (opzionale)"
+                          value={guestName}
+                          onChange={(e) => setGuestName(e.target.value)}
+                          className="mb-2"
+                        />
+                      </div>
+                      
+                      <Button 
+                        onClick={() => handleGenerateTouristCode(pkg.id)}
+                        disabled={pkg.availableCodes <= 0}
+                        className="w-full bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Plus size={16} className="mr-2" />
+                        Genera Codice Turistico
+                      </Button>
+                      
+                      {pkg.availableCodes <= 0 && (
+                        <p className="text-sm text-red-600 text-center">Pacchetto esaurito</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Package size={48} className="mx-auto mb-4 text-gray-300" />
+              <p>Nessun pacchetto IQCode assegnato</p>
+              <p className="text-sm">Contatta l'amministratore per ricevere pacchetti di codici sconto</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
       
       <Card>
         <CardContent className="p-6">
