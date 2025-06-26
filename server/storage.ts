@@ -30,11 +30,16 @@ export class MemStorage implements IStorage {
   }
 
   private async initializeDefaultCodes() {
+    // New international emotional IQ codes format: TIQ-[COUNTRY]-[EMOTIONAL_WORD]
     const defaultCodes = [
-      { code: 'ADMIN001', role: 'admin' as UserRole, isActive: true },
-      { code: 'TOURIST001', role: 'tourist' as UserRole, isActive: true },
-      { code: 'STRUCTURE001', role: 'structure' as UserRole, isActive: true },
-      { code: 'PARTNER001', role: 'partner' as UserRole, isActive: true },
+      { code: 'TIQ-IT-ADMIN', role: 'admin' as UserRole, isActive: true },
+      { code: 'TIQ-IT-LEONARDO', role: 'tourist' as UserRole, isActive: true },
+      { code: 'TIQ-IT-COLOSSEO', role: 'tourist' as UserRole, isActive: true },
+      { code: 'TIQ-IT-MICHELANGELO', role: 'tourist' as UserRole, isActive: true },
+      { code: 'TIQ-IT-VENEZIA', role: 'structure' as UserRole, isActive: true },
+      { code: 'TIQ-IT-DUOMO', role: 'structure' as UserRole, isActive: true },
+      { code: 'TIQ-IT-TIRAMISU', role: 'partner' as UserRole, isActive: true },
+      { code: 'TIQ-IT-GELATO', role: 'partner' as UserRole, isActive: true },
     ];
 
     for (const codeData of defaultCodes) {
