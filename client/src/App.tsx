@@ -53,6 +53,30 @@ function Router() {
     <Switch>
       <Route path="/" component={Login} />
       
+      <Route path="/admin/users">
+        <ProtectedRoute requiredRole="admin">
+          <AdminDashboard activeSection="users" />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/admin/iqcodes">
+        <ProtectedRoute requiredRole="admin">
+          <AdminDashboard activeSection="iqcodes" />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/admin/stats">
+        <ProtectedRoute requiredRole="admin">
+          <AdminDashboard activeSection="stats" />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/admin/settings">
+        <ProtectedRoute requiredRole="admin">
+          <AdminDashboard activeSection="settings" />
+        </ProtectedRoute>
+      </Route>
+      
       <Route path="/admin">
         <ProtectedRoute requiredRole="admin">
           <AdminDashboard />

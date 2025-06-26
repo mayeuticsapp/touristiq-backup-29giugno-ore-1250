@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ activeSection: propActiveSection }: { activeSection?: string }) {
   const [codeType, setCodeType] = useState(""); // "emotional" or "professional"
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedProvince, setSelectedProvince] = useState("");
@@ -19,7 +19,14 @@ export default function AdminDashboard() {
   const [generatedCode, setGeneratedCode] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [activeView, setActiveView] = useState("overview"); // overview, users, codes, stats, settings
+  const [activeView, setActiveView] = useState(propActiveSection || "overview"); // overview, users, codes, stats, settings
+
+  // Update activeView when propActiveSection changes
+  useEffect(() => {
+    if (propActiveSection) {
+      setActiveView(propActiveSection);
+    }
+  }, [propActiveSection]);
 
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
@@ -113,11 +120,11 @@ export default function AdminDashboard() {
   };
 
   const navigation = [
-    { icon: <BarChart3 size={16} />, label: "Dashboard", href: "#" },
-    { icon: <Users size={16} />, label: "Gestione Utenti", href: "#" },
-    { icon: <QrCode size={16} />, label: "Codici IQ", href: "#" },
-    { icon: <TrendingUp size={16} />, label: "Statistiche", href: "#" },
-    { icon: <Settings size={16} />, label: "Impostazioni", href: "#" },
+    { icon: <BarChart3 size={16} />, label: "Dashboard", href: "/admin", onClick: () => setActiveView("overview") },
+    { icon: <Users size={16} />, label: "Gestione Utenti", href: "/admin/users", onClick: () => setActiveView("users") },
+    { icon: <QrCode size={16} />, label: "Codici IQ", href: "/admin/iqcodes", onClick: () => setActiveView("iqcodes") },
+    { icon: <TrendingUp size={16} />, label: "Statistiche", href: "/admin/stats", onClick: () => setActiveView("stats") },
+    { icon: <Settings size={16} />, label: "Impostazioni", href: "/admin/settings", onClick: () => setActiveView("settings") },
   ];
 
   if (!user) {
@@ -358,7 +365,7 @@ export default function AdminDashboard() {
         <UsersManagement />
       )}
       
-      {activeView === "codes" && (
+      {activeView === "iqcodes" && (
         <CodesManagement />
       )}
       
@@ -448,6 +455,40 @@ function CodesManagement() {
       .catch(() => setLoading(false));
   }, []);
 
+  const getRoleLabel = (role: string) => {
+    const labels: { [key: string]: string } = {
+      'admin': 'Amministratore',
+      'tourist': 'Turista',
+      'structure': 'Struttura',
+      'partner': 'Partner'
+    };
+    return labels[role] || role;
+  };
+
+  const getProvinceFromCode = (code: string) => {
+    const parts = code.split('-');
+    if (parts.length >= 2) {
+      return parts[1]; // Extract province (VV, RC, CS, etc.)
+    }
+    return '';
+  };
+
+  const getDashboardLink = (code: any) => {
+    switch (code.role) {
+      case 'structure':
+        const structureId = code.code.split('-').pop();
+        return `/structure/${structureId}`;
+      case 'tourist':
+        return '/tourist';
+      case 'partner':
+        return '/partner';
+      case 'admin':
+        return '/admin';
+      default:
+        return '#';
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8">Caricamento codici...</div>;
   }
@@ -455,21 +496,75 @@ function CodesManagement() {
   return (
     <Card className="mb-8">
       <CardHeader>
-        <CardTitle>Gestione Codici IQ</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <QrCode size={20} />
+          Codici Generati - Lista Completa
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {codes.map((code) => (
-            <div key={code.id} className="border rounded-lg p-4">
-              <div className="font-mono text-lg font-semibold">{code.code}</div>
-              <div className="text-sm text-gray-600 mt-1">
-                {code.role} • {code.assignedTo || 'Non assegnato'}
-              </div>
-              <div className="text-xs text-gray-500 mt-2">
-                Creato: {new Date(code.createdAt).toLocaleDateString()}
-              </div>
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Codice IQ
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Tipologia
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Nome Assegnato
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Provincia
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Data Creazione
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Dashboard
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {codes.map((code) => (
+                <tr key={code.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap font-mono text-sm font-medium text-gray-900">
+                    {code.code}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      code.role === 'admin' ? 'bg-red-100 text-red-800' :
+                      code.role === 'tourist' ? 'bg-blue-100 text-blue-800' :
+                      code.role === 'structure' ? 'bg-purple-100 text-purple-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      {getRoleLabel(code.role)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {code.assignedTo || 'Non assegnato'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {getProvinceFromCode(code.code) || code.location || '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(code.createdAt).toLocaleDateString('it-IT')}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <a 
+                      href={getDashboardLink(code)}
+                      className="text-tourist-blue hover:text-tourist-blue-dark font-medium"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Vai alla Dashboard →
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </CardContent>
     </Card>

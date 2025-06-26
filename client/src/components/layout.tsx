@@ -12,6 +12,7 @@ interface LayoutProps {
     icon: React.ReactNode;
     label: string;
     href: string;
+    onClick?: () => void;
   }>;
   sidebarColor: string;
 }
@@ -48,13 +49,13 @@ export function Layout({ children, title, role, iqCode, navigation, sidebarColor
           <ul className="space-y-2">
             {navigation.map((item, index) => (
               <li key={index}>
-                <a 
-                  href={item.href} 
-                  className="flex items-center p-3 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                <button 
+                  onClick={item.onClick || (() => window.location.href = item.href)}
+                  className="w-full flex items-center p-3 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-left"
                 >
                   {item.icon}
                   <span className="ml-3">{item.label}</span>
-                </a>
+                </button>
               </li>
             ))}
           </ul>
