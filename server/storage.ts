@@ -42,9 +42,11 @@ export class MemStorage implements IStorage {
     this.iqCodes = new Map();
     this.sessions = new Map();
     this.assignedPackages = new Map();
+    this.guests = new Map();
     this.currentIqCodeId = 1;
     this.currentSessionId = 1;
     this.currentPackageId = 1;
+    this.currentGuestId = 1;
 
     // Initialize with default IQ codes
     this.initializeDefaultCodes();
@@ -164,6 +166,65 @@ export class MemStorage implements IStorage {
 
   async getAllAssignedPackages(): Promise<AssignedPackage[]> {
     return Array.from(this.assignedPackages.values());
+  }
+
+  // Guest management methods
+  async createGuest(insertGuest: InsertGuest): Promise<Guest> {
+    const id = this.currentGuestId++;
+    const guest: Guest = {
+      id,
+      structureCode: insertGuest.structureCode,
+      firstName: insertGuest.firstName,
+      lastName: insertGuest.lastName,
+      email: insertGuest.email || null,
+      phone: insertGuest.phone || null,
+      roomNumber: insertGuest.roomNumber || null,
+      checkinDate: insertGuest.checkinDate || null,
+      checkoutDate: insertGuest.checkoutDate || null,
+      notes: insertGuest.notes || null,
+      assignedCodes: insertGuest.assignedCodes || 0,
+      isActive: insertGuest.isActive ?? true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    this.guests.set(id, guest);
+    return guest;
+  }
+
+  async getGuestsByStructure(structureCode: string): Promise<Guest[]> {
+    return Array.from(this.guests.values()).filter(
+      guest => guest.structureCode === structureCode && guest.isActive
+    );
+  }
+
+  async getGuestById(id: number): Promise<Guest | undefined> {
+    return this.guests.get(id);
+  }
+
+  async updateGuest(id: number, updates: Partial<InsertGuest>): Promise<Guest> {
+    const existingGuest = this.guests.get(id);
+    if (!existingGuest) {
+      throw new Error(`Guest with id ${id} not found`);
+    }
+
+    const updatedGuest: Guest = {
+      ...existingGuest,
+      ...updates,
+      updatedAt: new Date()
+    };
+
+    this.guests.set(id, updatedGuest);
+    return updatedGuest;
+  }
+
+  async deleteGuest(id: number): Promise<void> {
+    const guest = this.guests.get(id);
+    if (guest) {
+      guest.isActive = false;
+      guest.updatedAt = new Date();
+      this.guests.set(id, guest);
+    }
   }
 }
 

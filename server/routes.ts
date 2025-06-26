@@ -778,7 +778,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Pacchetto non trovato" });
       }
 
-      const availableCodes = targetPackage.availableCodes || 0;
+      const availableCodes = targetPackage.codesGenerated?.length || 0;
       if (availableCodes <= 0) {
         return res.status(400).json({ message: "Nessun codice disponibile in questo pacchetto" });
       }

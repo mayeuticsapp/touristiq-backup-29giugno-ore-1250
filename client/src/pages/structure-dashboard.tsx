@@ -30,7 +30,7 @@ export default function StructureDashboard() {
     notes: ""
   });
   const [editingGuest, setEditingGuest] = useState(null);
-  const [selectedGuestId, setSelectedGuestId] = useState("");
+  const [selectedGuestId, setSelectedGuestId] = useState(0);
   
   // Recupera dati specifici della struttura
   const { data: structureData, isLoading } = useQuery({
@@ -47,33 +47,46 @@ export default function StructureDashboard() {
   });
 
   const handleGenerateTouristCode = async (packageId: number) => {
-    const guestNameToUse = assignGuestName.trim() || guestName.trim() || `Ospite ${Date.now()}`;
+    if (selectedGuestId === 0) {
+      alert("Seleziona un ospite registrato per assegnare il codice");
+      return;
+    }
     
     try {
-      const response = await fetch("/api/generate-tourist-code", {
+      const response = await fetch("/api/assign-code-to-guest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          packageId,
-          guestName: guestNameToUse
+          guestId: selectedGuestId,
+          packageId: packageId
         })
       });
 
       if (response.ok) {
         const result = await response.json();
-        alert(`Codice IQCode assegnato con successo!\n\nCodice: ${result.touristCode}\nOspite: ${result.guestName}\nCodici rimanenti nel pacchetto: ${result.remainingCodes}`);
-        setGuestName("");
-        setAssignGuestName("");
-        setAssignGuestEmail("");
         refetchPackages();
+        refetchGuests();
+        
+        // Mostra dettagli assegnazione con opzione WhatsApp
+        const guest = guestsData?.guests?.find((g: any) => g.id === selectedGuestId);
+        const message = `Codice IQ assegnato con successo!\n\nCodice: ${result.touristCode}\nOspite: ${result.guestName}\nCamera: ${guest?.roomNumber || 'N/A'}\nCodici rimanenti: ${result.remainingCodes}`;
+        
+        if (guest?.phone && confirm(`${message}\n\nVuoi inviare il codice via WhatsApp al numero ${guest.phone}?`)) {
+          handleSendWhatsApp(guest.phone, result.touristCode, guest);
+        } else {
+          alert(message);
+        }
+        
+        // Reset selezione
+        setSelectedGuestId(0);
       } else {
         const error = await response.json();
         alert(`Errore: ${error.message}`);
       }
     } catch (error) {
-      console.error("Errore generazione codice:", error);
-      alert("Errore durante la generazione del codice IQCode");
+      console.error("Errore assegnazione codice:", error);
+      alert("Errore durante l'assegnazione del codice");
     }
   };
 
@@ -238,23 +251,46 @@ export default function StructureDashboard() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="assignGuestName">Nome Ospite</Label>
-                  <Input
-                    id="assignGuestName"
-                    placeholder="Es. Mario Rossi"
-                    value={assignGuestName}
-                    onChange={(e) => setAssignGuestName(e.target.value)}
-                  />
+                  <Label htmlFor="selectGuest">Seleziona Ospite Registrato</Label>
+                  <select
+                    id="selectGuest"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    value={selectedGuestId}
+                    onChange={(e) => setSelectedGuestId(Number(e.target.value))}
+                  >
+                    <option value={0}>Seleziona un ospite...</option>
+                    {guestsData?.guests?.map((guest: any) => (
+                      <option key={guest.id} value={guest.id}>
+                        {guest.firstName} {guest.lastName} - Camera {guest.roomNumber || 'N/A'}
+                      </option>
+                    ))}
+                  </select>
+                  {(!guestsData?.guests || guestsData.guests.length === 0) && (
+                    <p className="text-sm text-orange-600 mt-1">
+                      Nessun ospite registrato. Vai su "Ospiti" per registrarne uno.
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <Label htmlFor="assignGuestEmail">Email Ospite (opzionale)</Label>
-                  <Input
-                    id="assignGuestEmail"
-                    type="email"
-                    placeholder="mario.rossi@email.com"
-                    value={assignGuestEmail}
-                    onChange={(e) => setAssignGuestEmail(e.target.value)}
-                  />
+                  <Label>Dettagli Ospite Selezionato</Label>
+                  {selectedGuestId > 0 && guestsData?.guests ? (
+                    (() => {
+                      const guest = guestsData.guests.find((g: any) => g.id === selectedGuestId);
+                      return guest ? (
+                        <div className="p-2 bg-gray-50 rounded-md text-sm">
+                          <p><strong>Nome:</strong> {guest.firstName} {guest.lastName}</p>
+                          <p><strong>Telefono:</strong> {guest.phone || 'Non fornito'}</p>
+                          <p><strong>Email:</strong> {guest.email || 'Non fornita'}</p>
+                          <p><strong>Camera:</strong> {guest.roomNumber || 'N/A'}</p>
+                          <p><strong>Codici assegnati:</strong> {guest.assignedCodes || 0}</p>
+                        </div>
+                      ) : null;
+                    })()
+                  ) : (
+                    <div className="p-2 bg-gray-50 rounded-md text-sm text-gray-500">
+                      Seleziona un ospite per vedere i dettagli
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -271,7 +307,7 @@ export default function StructureDashboard() {
                       
                       <Button 
                         onClick={() => handleGenerateTouristCode(pkg.id)}
-                        disabled={pkg.availableCodes <= 0 || !assignGuestName.trim()}
+                        disabled={pkg.availableCodes <= 0 || selectedGuestId === 0}
                         className="w-full bg-purple-600 hover:bg-purple-700"
                       >
                         <Plus size={16} className="mr-2" />
