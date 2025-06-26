@@ -1,4 +1,7 @@
 import { iqCodes, sessions, assignedPackages, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type UserRole } from "@shared/schema";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
+import { eq, and, lt } from "drizzle-orm";
 
 export interface IStorage {
   // IQ Code methods
@@ -155,4 +158,97 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// PostgreSQL Storage Class
+export class PostgreStorage implements IStorage {
+  private db: any;
+
+  constructor() {
+    const sql = neon(process.env.DATABASE_URL!);
+    this.db = drizzle(sql, { schema: { iqCodes, sessions, assignedPackages } });
+    this.initializeDefaultCodes();
+  }
+
+  private async initializeDefaultCodes() {
+    try {
+      // Check if admin already exists
+      const existingAdmin = await this.db.select().from(iqCodes).where(eq(iqCodes.code, 'TIQ-IT-ADMIN')).limit(1);
+      
+      if (existingAdmin.length === 0) {
+        await this.db.insert(iqCodes).values({
+          code: 'TIQ-IT-ADMIN',
+          role: 'admin',
+          isActive: true,
+          createdAt: new Date()
+        });
+        console.log('Admin user TIQ-IT-ADMIN created in PostgreSQL');
+      }
+    } catch (error) {
+      console.log('Error initializing admin user:', error);
+    }
+  }
+
+  async getIqCodeByCode(code: string): Promise<IqCode | undefined> {
+    const result = await this.db.select().from(iqCodes).where(eq(iqCodes.code, code)).limit(1);
+    return result[0];
+  }
+
+  async createIqCode(insertIqCode: InsertIqCode): Promise<IqCode> {
+    const result = await this.db.insert(iqCodes).values({
+      ...insertIqCode,
+      createdAt: new Date()
+    }).returning();
+    return result[0];
+  }
+
+  async getAllIqCodes(): Promise<IqCode[]> {
+    return await this.db.select().from(iqCodes);
+  }
+
+  async createSession(insertSession: InsertSession): Promise<Session> {
+    const result = await this.db.insert(sessions).values({
+      iqCode: insertSession.iqCode,
+      role: insertSession.role,
+      sessionToken: insertSession.sessionToken,
+      expiresAt: insertSession.expiresAt,
+      createdAt: new Date()
+    }).returning();
+    return result[0];
+  }
+
+  async getSessionByToken(token: string): Promise<Session | undefined> {
+    const result = await this.db.select().from(sessions).where(eq(sessions.sessionToken, token)).limit(1);
+    return result[0];
+  }
+
+  async deleteSession(token: string): Promise<void> {
+    await this.db.delete(sessions).where(eq(sessions.sessionToken, token));
+  }
+
+  async cleanExpiredSessions(): Promise<void> {
+    const now = new Date();
+    try {
+      await this.db.delete(sessions).where(lt(sessions.expiresAt, now));
+    } catch (error) {
+      console.log('Error cleaning expired sessions:', error);
+    }
+  }
+
+  async createAssignedPackage(insertAssignedPackage: InsertAssignedPackage): Promise<AssignedPackage> {
+    const result = await this.db.insert(assignedPackages).values({
+      ...insertAssignedPackage,
+      assignedAt: new Date()
+    }).returning();
+    return result[0];
+  }
+
+  async getPackagesByRecipient(recipientIqCode: string): Promise<AssignedPackage[]> {
+    return await this.db.select().from(assignedPackages).where(eq(assignedPackages.recipientIqCode, recipientIqCode));
+  }
+
+  async getAllAssignedPackages(): Promise<AssignedPackage[]> {
+    return await this.db.select().from(assignedPackages);
+  }
+}
+
+// Use PostgreSQL storage if DATABASE_URL exists, otherwise fallback to memory
+export const storage = process.env.DATABASE_URL ? new PostgreStorage() : new MemStorage();
