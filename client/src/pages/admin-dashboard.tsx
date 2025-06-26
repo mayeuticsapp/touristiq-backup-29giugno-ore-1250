@@ -895,17 +895,36 @@ function AssignPackagesView({
       .filter((user: any) => user.role === 'structure')
       .map((user: any) => ({
         id: user.code,
-        name: user.assignedTo || user.code,
+        name: user.assignedTo || getStructureName(user.code) || user.code,
         code: user.code
       })),
     partner: allUsers
       .filter((user: any) => user.role === 'partner')
       .map((user: any) => ({
         id: user.code,
-        name: user.assignedTo || user.code,
+        name: user.assignedTo || getPartnerName(user.code) || user.code,
         code: user.code
       }))
   };
+
+  // Funzioni helper per nomi strutture e partner
+  function getStructureName(code: string): string {
+    const structureNames: { [key: string]: string } = {
+      'TIQ-VV-STT-9576': 'Resort Capo Vaticano',
+      'TIQ-RC-STT-4334': 'Grand Hotel Reggio',
+      'TIQ-CS-STT-7541': 'Hotel Calabria',
+      'TIQ-VV-STT-0700': 'Hotel Pazzo Pizzo'
+    };
+    return structureNames[code] || code;
+  }
+
+  function getPartnerName(code: string): string {
+    const partnerNames: { [key: string]: string } = {
+      'TIQ-VV-PRT-4897': 'Hotel Centrale Pizzo',
+      'TIQ-RC-PRT-8654': 'Ristorante Marina'
+    };
+    return partnerNames[code] || code;
+  }
 
   // Debug: Log per verificare i dati
   console.log('Users data:', usersData);

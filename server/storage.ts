@@ -182,8 +182,70 @@ export class PostgreStorage implements IStorage {
         });
         console.log('Admin user TIQ-IT-ADMIN created in PostgreSQL');
       }
+
+      // Crea strutture di esempio se non esistono
+      const existingStructures = await this.db.select().from(iqCodes).where(eq(iqCodes.role, 'structure')).limit(1);
+      
+      if (existingStructures.length === 0) {
+        const structures = [
+          { code: 'TIQ-VV-STT-9576', role: 'structure' as const },
+          { code: 'TIQ-RC-STT-4334', role: 'structure' as const },
+          { code: 'TIQ-CS-STT-7541', role: 'structure' as const },
+          { code: 'TIQ-VV-STT-0700', role: 'structure' as const }
+        ];
+
+        for (const struct of structures) {
+          await this.db.insert(iqCodes).values({
+            code: struct.code,
+            role: struct.role,
+            isActive: true,
+            createdAt: new Date()
+          });
+        }
+        console.log('Strutture di esempio create in PostgreSQL');
+
+        // Assegna pacchetti alle strutture
+        const packages = [
+          { recipientIqCode: 'TIQ-VV-STT-9576', packageSize: 25, assignedBy: 'TIQ-IT-ADMIN', availableCodes: 25 },
+          { recipientIqCode: 'TIQ-VV-STT-0700', packageSize: 50, assignedBy: 'TIQ-IT-ADMIN', availableCodes: 50 },
+          { recipientIqCode: 'TIQ-RC-STT-4334', packageSize: 75, assignedBy: 'TIQ-IT-ADMIN', availableCodes: 75 }
+        ];
+
+        for (const pkg of packages) {
+          await this.db.insert(assignedPackages).values({
+            recipientIqCode: pkg.recipientIqCode,
+            packageSize: pkg.packageSize,
+            availableCodes: pkg.availableCodes,
+            assignedBy: pkg.assignedBy,
+            codesUsed: 0,
+            assignedAt: new Date()
+          });
+        }
+        console.log('Pacchetti di esempio assegnati in PostgreSQL');
+      }
+
+      // Crea partner di esempio se non esistono
+      const existingPartners = await this.db.select().from(iqCodes).where(eq(iqCodes.role, 'partner')).limit(1);
+      
+      if (existingPartners.length === 0) {
+        const partners = [
+          { code: 'TIQ-VV-PRT-4897', role: 'partner' as const },
+          { code: 'TIQ-RC-PRT-8654', role: 'partner' as const }
+        ];
+
+        for (const partner of partners) {
+          await this.db.insert(iqCodes).values({
+            code: partner.code,
+            role: partner.role,
+            isActive: true,
+            createdAt: new Date()
+          });
+        }
+        console.log('Partner di esempio creati in PostgreSQL');
+      }
+
     } catch (error) {
-      console.log('Error initializing admin user:', error);
+      console.log('Error initializing default data:', error);
     }
   }
 
