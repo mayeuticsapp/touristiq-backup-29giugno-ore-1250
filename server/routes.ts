@@ -432,8 +432,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verify target exists in real database
       const allCodes = await storage.getAllIqCodes();
       const targetCode = allCodes.find(code => 
-        code.role === targetType && 
-        (code.code.includes(`-${targetId}`) || code.code.endsWith(targetId.toUpperCase()))
+        code.role === targetType && code.code === targetId
       );
 
       if (!targetCode) {

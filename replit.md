@@ -95,6 +95,7 @@ TouristIQ is a role-based authentication platform designed for the tourism indus
 - **Session Storage**: Configurable between in-memory and database storage
 
 ## Changelog
+- June 26, 2025: FILTRO DESTINATARI RISOLTO - Hotel Centrale Pizzo (TIQ-VV-PRT-4897) ora appare correttamente nel dropdown assegnazione pacchetti
 - June 26, 2025: SISTEMA PACCHETTI REALI IMPLEMENTATO - Risolto problema "teatro vuoto": destinatari dal database reale, pacchetti salvati, partner vedono codici assegnati
 - June 26, 2025: SEZIONE ASSEGNA PACCHETTI COMPLETATA - /admin/assign-iqcodes funzionale con selezione destinatario, pacchetti (25/50/75/100), endpoint backend operativo
 - June 26, 2025: BOTTONI ADMIN COMPLETI - 5 sezioni funzionali: /admin/users, /admin/iqcodes (Codici Generati), /admin/assign-iqcodes (Assegna Pacchetti), /admin/stats, /admin/settings
