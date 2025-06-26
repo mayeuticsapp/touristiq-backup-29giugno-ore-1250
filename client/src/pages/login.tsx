@@ -24,28 +24,28 @@ export default function Login() {
     try {
       const response = await login(iqCode.trim().toUpperCase());
       console.log("Login risposta:", response);
-      
+
       // Invalidate auth cache to force refresh
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      
+
       // Small delay to ensure cookie is set
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Redirect based on role
       switch (response.role) {
-        case 'admin':
+        case "admin":
           console.log("Reindirizzamento ad admin");
           setLocation("/admin");
           break;
-        case 'tourist':
+        case "tourist":
           console.log("Reindirizzamento a tourist");
           setLocation("/tourist");
           break;
-        case 'structure':
+        case "structure":
           console.log("Reindirizzamento a structure");
           setLocation("/structure");
           break;
-        case 'partner':
+        case "partner":
           console.log("Reindirizzamento a partner");
           setLocation("/partner");
           break;
@@ -69,7 +69,9 @@ export default function Login() {
             <MapPin className="text-white text-3xl" size={32} />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">TouristIQ</h1>
-          <p className="text-gray-600 text-lg">Inserisci il tuo codice IQ per accedere</p>
+          <p className="text-gray-600 text-lg">
+            Inserisci il tuo codice IQ per accedere
+          </p>
         </div>
 
         {/* Login Form */}
@@ -77,7 +79,10 @@ export default function Login() {
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="iqCode" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="iqCode"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Codice IQ
                 </label>
                 <Input
@@ -119,9 +124,33 @@ export default function Login() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-
-            
           </CardContent>
+          {/* Support Message */}
+          <div className="mt-6 flex items-center justify-center rounded-md bg-blue-50 px-4 py-3 text-sm text-blue-800">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-2 text-blue-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 12H8m8 0a4 4 0 00-8 0m8 0a4 4 0 01-8 0M4 6h16M4 6v12h16V6"
+              />
+            </svg>
+            <span>
+              Non funziona? Niente panico!{" "}
+              <a
+                href="mailto:info@touristiq.it"
+                className="font-semibold underline text-blue-700"
+              >
+                Scrivici a info@touristiq.it
+              </a>
+            </span>
+          </div>
         </Card>
       </div>
     </div>
