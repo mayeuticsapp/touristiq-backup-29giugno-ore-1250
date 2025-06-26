@@ -197,6 +197,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Structure specific data endpoint
+  app.get('/api/structure/:id', async (req, res) => {
+    try {
+      const structureId = req.params.id;
+      
+      // Find structure by ID in any province
+      const allCodes = await storage.getAllIqCodes();
+      const structureCode = allCodes.find(code => 
+        code.role === 'structure' && code.code.endsWith(`-${structureId}`)
+      );
+      
+      if (!structureCode) {
+        return res.status(404).json({ error: 'Struttura non trovata' });
+      }
+      
+      // Generate unique data based on structure ID
+      const structureData = generateStructureData(structureId, structureCode.code);
+      res.json(structureData);
+    } catch (error) {
+      console.error('Errore recupero dati struttura:', error);
+      res.status(500).json({ error: 'Errore interno server' });
+    }
+  });
+
   // Admin Users Management
   app.get("/api/admin/users", async (req, res) => {
     try {
@@ -439,5 +463,75 @@ function generateTopProducts(partnerName: string) {
     { name: 'Pizza Margherita', sales: 45 },
     { name: 'Gelato Artigianale', sales: 38 },
     { name: 'Caffè Espresso', sales: 67 }
+  ];
+}
+
+function generateStructureData(structureId: string, iqCode: string) {
+  // Extract province from code
+  const province = iqCode.split('-')[1];
+  
+  // Generate unique data based on structure ID
+  const seed = parseInt(structureId) || 1000;
+  
+  const structureNames: { [key: string]: string[] } = {
+    'VV': ['Hotel Lo Stretto', 'Resort Capo Vaticano', 'B&B Vista Mare Tropea'],
+    'RC': ['Hotel Bergamotto', 'Villa Aspromonte', 'Grand Hotel Reggio'],
+    'CS': ['Hotel Cosenza Palace', 'Resort Sila Verde', 'B&B Centro Storico']
+  };
+  
+  const managerNames = [
+    'Giuseppe Calabrese', 'Maria Rossini', 'Antonio Greco', 'Francesca Romano',
+    'Salvatore Marino', 'Elena Bianchi', 'Marco Ricci', 'Lucia Ferretti'
+  ];
+  
+  const totalRooms = 15 + (seed % 25); // 15-40 rooms
+  const occupiedRooms = Math.floor(totalRooms * (0.6 + (seed % 30) / 100)); // 60-90% occupancy
+  const checkinToday = 3 + (seed % 8); // 3-10 checkins
+  const rating = 4.0 + ((seed % 10) / 10); // 4.0-4.9 rating
+  
+  return {
+    id: structureId,
+    iqCode: iqCode,
+    name: (structureNames[province] && structureNames[province][seed % 3]) || `Hotel ${province} ${structureId}`,
+    manager: managerNames[seed % managerNames.length],
+    province: province,
+    totalRooms: totalRooms,
+    occupiedRooms: occupiedRooms,
+    checkinToday: checkinToday,
+    rating: Math.round(rating * 10) / 10,
+    revenue: Math.floor(5000 + (seed * 47) % 15000),
+    recentBookings: generateUniqueBookings(structureId),
+    roomTypes: generateRoomTypes(seed),
+    stats: {
+      occupancyRate: Math.round((occupiedRooms / totalRooms) * 100),
+      avgNightlyRate: 80 + (seed % 120),
+      totalGuests: occupiedRooms * 2,
+      pendingCheckouts: 2 + (seed % 5)
+    }
+  };
+}
+
+function generateUniqueBookings(structureId: string) {
+  const seed = parseInt(structureId) || 1000;
+  const guests = [
+    'Marco Bianchi', 'Laura Ferretti', 'Giuseppe Marino', 'Elena Romano',
+    'Antonio Greco', 'Francesca Ricci', 'Salvatore Rossi', 'Maria Calabrese'
+  ];
+  
+  return Array.from({ length: 5 }, (_, i) => ({
+    id: seed + i,
+    guest: guests[(seed + i) % guests.length],
+    room: 100 + ((seed + i * 7) % 50),
+    checkin: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)).toLocaleDateString('it-IT'),
+    checkout: new Date(Date.now() + ((3 - i) * 24 * 60 * 60 * 1000)).toLocaleDateString('it-IT'),
+    status: i < 2 ? 'Attivo' : 'Check-out'
+  }));
+}
+
+function generateRoomTypes(seed: number) {
+  return [
+    { type: 'Standard', count: 8 + (seed % 5), price: 80 + (seed % 30) },
+    { type: 'Superior', count: 4 + (seed % 3), price: 120 + (seed % 40) },
+    { type: 'Suite', count: 2 + (seed % 2), price: 200 + (seed % 80) }
   ];
 }

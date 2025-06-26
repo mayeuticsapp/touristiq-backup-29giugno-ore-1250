@@ -95,6 +95,7 @@ TouristIQ is a role-based authentication platform designed for the tourism indus
 - **Session Storage**: Configurable between in-memory and database storage
 
 ## Changelog
+- June 26, 2025: ROUTING DINAMICO IMPLEMENTATO - Dashboard personalizzate reali: TIQ-VV-STT-8446 → /structure/8446 (Resort Capo Vaticano), TIQ-RC-STT-1658 → /structure/1658 (Grand Hotel Reggio)
 - June 26, 2025: SISTEMA COMPLETO - Tutti i 7 punti implementati: bottoni admin funzionali, dashboard personalizzate, provincia VV/RC/CS
 - June 26, 2025: Implementati endpoint admin completi: /admin/users, /admin/stats, /admin/iqcodes, /admin/settings
 - June 26, 2025: Dashboard personalizzate per ID univoco: TIQ-VV-STT-7541 Hotel Calabria ha dati specifici

@@ -2,8 +2,21 @@ import { Layout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star } from "lucide-react";
+import { useParams } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 
 export default function StructureDashboard() {
+  const params = useParams();
+  const structureId = params.id;
+  
+  // Recupera dati specifici della struttura
+  const { data: structureData, isLoading } = useQuery({
+    queryKey: ['structure', structureId],
+    queryFn: () => fetch(`/api/structure/${structureId}`).then(res => res.json()),
+    enabled: !!structureId
+  });
+
   const navigation = [
     { icon: <TrendingUp size={16} />, label: "Dashboard", href: "#" },
     { icon: <Bed size={16} />, label: "Camere", href: "#" },
@@ -12,10 +25,15 @@ export default function StructureDashboard() {
     { icon: <Settings size={16} />, label: "Impostazioni", href: "#" },
   ];
 
+  if (isLoading) {
+    return <div className="p-8">Caricamento dati struttura...</div>;
+  }
+
   return (
     <Layout
-      title="Dashboard Struttura"
+      title={structureData ? `Dashboard ${structureData.name}` : "Dashboard Struttura"}
       role="Gestione Struttura"
+      iqCode={structureData?.iqCode}
       navigation={navigation}
       sidebarColor="bg-purple-600"
     >
@@ -28,7 +46,9 @@ export default function StructureDashboard() {
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-600">Camere Occupate</p>
-                <p className="text-2xl font-semibold text-gray-900">24/30</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {structureData ? `${structureData.occupiedRooms}/${structureData.totalRooms}` : "Caricamento..."}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -42,7 +62,9 @@ export default function StructureDashboard() {
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-600">Check-in Oggi</p>
-                <p className="text-2xl font-semibold text-gray-900">8</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {structureData ? structureData.checkinToday : "Caricamento..."}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -56,7 +78,9 @@ export default function StructureDashboard() {
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-600">Rating Medio</p>
-                <p className="text-2xl font-semibold text-gray-900">4.7</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {structureData ? structureData.rating : "Caricamento..."}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -77,22 +101,22 @@ export default function StructureDashboard() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Mario Rossi</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Suite 201</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">15-20 Gen</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Badge className="bg-green-100 text-green-800">Confermata</Badge>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Laura Bianchi</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Camera 105</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">18-22 Gen</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Badge className="bg-yellow-100 text-yellow-800">In Attesa</Badge>
-                  </td>
-                </tr>
+                {structureData?.recentBookings?.map((booking, index) => (
+                  <tr key={booking.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{booking.guest}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Camera {booking.room}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{booking.checkin} - {booking.checkout}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <Badge className={booking.status === 'Attivo' ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+                        {booking.status}
+                      </Badge>
+                    </td>
+                  </tr>
+                )) || (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-4 text-center text-gray-500">Caricamento prenotazioni...</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

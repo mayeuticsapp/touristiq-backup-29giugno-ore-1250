@@ -65,6 +65,12 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
+      <Route path="/structure/:id">
+        <ProtectedRoute requiredRole="structure">
+          <StructureDashboard />
+        </ProtectedRoute>
+      </Route>
+      
       <Route path="/structure">
         <ProtectedRoute requiredRole="structure">
           <StructureDashboard />

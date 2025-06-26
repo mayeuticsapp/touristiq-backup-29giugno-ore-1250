@@ -43,7 +43,9 @@ export default function Login() {
           break;
         case "structure":
           console.log("Reindirizzamento a structure");
-          setLocation("/structure");
+          // Extract ID from structure code (e.g., TIQ-VV-STT-8311 -> 8311)
+          const structureId = response.iqCode.split('-').pop();
+          setLocation(`/structure/${structureId}`);
           break;
         case "partner":
           console.log("Reindirizzamento a partner");
