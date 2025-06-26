@@ -1,4 +1,4 @@
-import { iqCodes, sessions, assignedPackages, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type UserRole } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type UserRole } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt } from "drizzle-orm";
@@ -19,15 +19,24 @@ export interface IStorage {
   createAssignedPackage(assignedPackage: InsertAssignedPackage): Promise<AssignedPackage>;
   getPackagesByRecipient(recipientIqCode: string): Promise<AssignedPackage[]>;
   getAllAssignedPackages(): Promise<AssignedPackage[]>;
+
+  // Guest management methods
+  createGuest(guest: InsertGuest): Promise<Guest>;
+  getGuestsByStructure(structureCode: string): Promise<Guest[]>;
+  getGuestById(id: number): Promise<Guest | undefined>;
+  updateGuest(id: number, updates: Partial<InsertGuest>): Promise<Guest>;
+  deleteGuest(id: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
   private iqCodes: Map<number, IqCode>;
   private sessions: Map<number, Session>;
   private assignedPackages: Map<number, AssignedPackage>;
+  private guests: Map<number, Guest>;
   private currentIqCodeId: number;
   private currentSessionId: number;
   private currentPackageId: number;
+  private currentGuestId: number;
 
   constructor() {
     this.iqCodes = new Map();
@@ -164,7 +173,7 @@ export class PostgreStorage implements IStorage {
 
   constructor() {
     const sql = neon(process.env.DATABASE_URL!);
-    this.db = drizzle(sql, { schema: { iqCodes, sessions, assignedPackages } });
+    this.db = drizzle(sql, { schema: { iqCodes, sessions, assignedPackages, guests } });
     this.initializeDefaultCodes();
   }
 
@@ -309,6 +318,37 @@ export class PostgreStorage implements IStorage {
 
   async getAllAssignedPackages(): Promise<AssignedPackage[]> {
     return await this.db.select().from(assignedPackages);
+  }
+
+  // Guest management methods
+  async createGuest(insertGuest: InsertGuest): Promise<Guest> {
+    const result = await this.db.insert(guests).values({
+      ...insertGuest,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return result[0];
+  }
+
+  async getGuestsByStructure(structureCode: string): Promise<Guest[]> {
+    return await this.db.select().from(guests).where(eq(guests.structureCode, structureCode));
+  }
+
+  async getGuestById(id: number): Promise<Guest | undefined> {
+    const result = await this.db.select().from(guests).where(eq(guests.id, id)).limit(1);
+    return result[0];
+  }
+
+  async updateGuest(id: number, updates: Partial<InsertGuest>): Promise<Guest> {
+    const result = await this.db.update(guests)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(guests.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteGuest(id: number): Promise<void> {
+    await this.db.delete(guests).where(eq(guests.id, id));
   }
 }
 

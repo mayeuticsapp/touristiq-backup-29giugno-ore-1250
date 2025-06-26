@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star, Package, Plus, Gift, UserPlus } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star, Package, Plus, Gift, UserPlus, Phone, Mail, MessageCircle, Edit, Trash2 } from "lucide-react";
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -16,6 +17,20 @@ export default function StructureDashboard() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [assignGuestName, setAssignGuestName] = useState("");
   const [assignGuestEmail, setAssignGuestEmail] = useState("");
+  
+  // Stati per gestione ospiti
+  const [newGuest, setNewGuest] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    roomNumber: "",
+    checkinDate: "",
+    checkoutDate: "",
+    notes: ""
+  });
+  const [editingGuest, setEditingGuest] = useState(null);
+  const [selectedGuestId, setSelectedGuestId] = useState("");
   
   // Recupera dati specifici della struttura
   const { data: structureData, isLoading } = useQuery({
@@ -61,6 +76,95 @@ export default function StructureDashboard() {
       alert("Errore durante la generazione del codice IQCode");
     }
   };
+
+  // Funzioni gestione ospiti
+  const handleCreateGuest = async () => {
+    if (!newGuest.firstName || !newGuest.lastName) {
+      alert("Nome e cognome sono obbligatori");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/guests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          ...newGuest,
+          structureCode: structureData?.iqCode
+        })
+      });
+
+      if (response.ok) {
+        setNewGuest({
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: "",
+          roomNumber: "",
+          checkinDate: "",
+          checkoutDate: "",
+          notes: ""
+        });
+        refetchGuests();
+        alert("Ospite registrato con successo!");
+      } else {
+        const error = await response.json();
+        alert(`Errore: ${error.message}`);
+      }
+    } catch (error) {
+      alert("Errore durante la registrazione dell'ospite");
+    }
+  };
+
+  const handleAssignCodeToGuest = async (guestId: number, packageId: number) => {
+    try {
+      const response = await fetch("/api/assign-code-to-guest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          guestId,
+          packageId
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        refetchPackages();
+        refetchGuests();
+        
+        // Mostra dettagli assegnazione con opzione WhatsApp
+        const guest = guestsData?.guests?.find((g: any) => g.id === guestId);
+        const message = `Codice IQ assegnato con successo!\n\nCodice: ${result.touristCode}\nOspite: ${guest?.firstName} ${guest?.lastName}\nCamera: ${guest?.roomNumber || 'N/A'}`;
+        
+        if (guest?.phone && confirm(`${message}\n\nVuoi inviare il codice via WhatsApp al numero ${guest.phone}?`)) {
+          handleSendWhatsApp(guest.phone, result.touristCode, guest);
+        } else {
+          alert(message);
+        }
+      } else {
+        const error = await response.json();
+        alert(`Errore: ${error.message}`);
+      }
+    } catch (error) {
+      alert("Errore durante l'assegnazione del codice");
+    }
+  };
+
+  const handleSendWhatsApp = (phone: string, code: string, guest: any) => {
+    const message = `🏨 ${structureData?.name || 'Hotel'}\n\n✨ Il tuo codice sconto personale: *${code}*\n\n🎉 Ciao ${guest.firstName}! Ecco il tuo codice IQ per scoprire sconti esclusivi nei migliori locali della zona.\n\n📱 Usa questo codice per ottenere vantaggi speciali durante il tuo soggiorno!\n\n🌟 Buon divertimento!`;
+    
+    const whatsappUrl = `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  // Query per ospiti della struttura
+  const { data: guestsData, refetch: refetchGuests } = useQuery({
+    queryKey: ["/api/guests"],
+    enabled: !!structureId,
+    refetchInterval: 10000
+  });
 
   const navigation = [
     { icon: <TrendingUp size={16} />, label: "Dashboard", href: "#", onClick: () => setActiveSection("dashboard") },
@@ -239,6 +343,205 @@ export default function StructureDashboard() {
     </div>
   );
 
+  // Renderizza sezione gestione ospiti
+  const renderGuestManagement = () => (
+    <div className="space-y-6">
+      {/* Form aggiunta nuovo ospite */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus size={20} />
+            Registra Nuovo Ospite
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="firstName">Nome *</Label>
+              <Input
+                id="firstName"
+                value={newGuest.firstName}
+                onChange={(e) => setNewGuest({...newGuest, firstName: e.target.value})}
+                placeholder="Mario"
+              />
+            </div>
+            <div>
+              <Label htmlFor="lastName">Cognome *</Label>
+              <Input
+                id="lastName"
+                value={newGuest.lastName}
+                onChange={(e) => setNewGuest({...newGuest, lastName: e.target.value})}
+                placeholder="Rossi"
+              />
+            </div>
+            <div>
+              <Label htmlFor="phone">Telefono</Label>
+              <Input
+                id="phone"
+                value={newGuest.phone}
+                onChange={(e) => setNewGuest({...newGuest, phone: e.target.value})}
+                placeholder="+39 123 456 7890"
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={newGuest.email}
+                onChange={(e) => setNewGuest({...newGuest, email: e.target.value})}
+                placeholder="mario.rossi@email.com"
+              />
+            </div>
+            <div>
+              <Label htmlFor="roomNumber">Camera</Label>
+              <Input
+                id="roomNumber"
+                value={newGuest.roomNumber}
+                onChange={(e) => setNewGuest({...newGuest, roomNumber: e.target.value})}
+                placeholder="101"
+              />
+            </div>
+            <div>
+              <Label htmlFor="checkinDate">Check-in</Label>
+              <Input
+                id="checkinDate"
+                type="date"
+                value={newGuest.checkinDate}
+                onChange={(e) => setNewGuest({...newGuest, checkinDate: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="checkoutDate">Check-out</Label>
+              <Input
+                id="checkoutDate"
+                type="date"
+                value={newGuest.checkoutDate}
+                onChange={(e) => setNewGuest({...newGuest, checkoutDate: e.target.value})}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <Label htmlFor="notes">Note</Label>
+              <Textarea
+                id="notes"
+                value={newGuest.notes}
+                onChange={(e) => setNewGuest({...newGuest, notes: e.target.value})}
+                placeholder="Note aggiuntive sull'ospite..."
+                rows={2}
+              />
+            </div>
+          </div>
+          
+          <div className="mt-4">
+            <Button 
+              onClick={handleCreateGuest}
+              className="bg-purple-600 hover:bg-purple-700"
+              disabled={!newGuest.firstName || !newGuest.lastName}
+            >
+              <UserPlus size={16} className="mr-2" />
+              Registra Ospite
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Lista ospiti registrati */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users size={20} />
+            Ospiti Registrati
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {guestsData?.guests?.length > 0 ? (
+            <div className="space-y-4">
+              {guestsData.guests.map((guest: any) => (
+                <Card key={guest.id} className="border border-gray-200">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold text-lg">
+                          {guest.firstName} {guest.lastName}
+                        </h4>
+                        <div className="text-sm text-gray-600 space-y-1">
+                          {guest.roomNumber && (
+                            <div className="flex items-center gap-2">
+                              <Bed size={14} />
+                              Camera {guest.roomNumber}
+                            </div>
+                          )}
+                          {guest.phone && (
+                            <div className="flex items-center gap-2">
+                              <Phone size={14} />
+                              {guest.phone}
+                            </div>
+                          )}
+                          {guest.email && (
+                            <div className="flex items-center gap-2">
+                              <Mail size={14} />
+                              {guest.email}
+                            </div>
+                          )}
+                          {(guest.checkinDate || guest.checkoutDate) && (
+                            <div className="flex items-center gap-2">
+                              <Calendar size={14} />
+                              {guest.checkinDate} - {guest.checkoutDate}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <Badge className="bg-blue-100 text-blue-800">
+                        {guest.assignedCodes || 0} codici assegnati
+                      </Badge>
+                    </div>
+
+                    {/* Assegnazione codici rapida */}
+                    {packagesData?.packages?.length > 0 && (
+                      <div className="border-t pt-3">
+                        <p className="text-sm font-medium mb-2">Assegna Codice IQ:</p>
+                        <div className="flex gap-2 flex-wrap">
+                          {packagesData.packages.map((pkg: any) => (
+                            <Button
+                              key={pkg.id}
+                              size="sm"
+                              onClick={() => handleAssignCodeToGuest(guest.id, pkg.id)}
+                              disabled={pkg.availableCodes <= 0}
+                              className="bg-purple-600 hover:bg-purple-700"
+                            >
+                              <Gift size={14} className="mr-1" />
+                              Pacchetto {pkg.packageSize}
+                              {guest.phone && <MessageCircle size={14} className="ml-1" />}
+                            </Button>
+                          ))}
+                        </div>
+                        {packagesData.packages.every((pkg: any) => pkg.availableCodes <= 0) && (
+                          <p className="text-sm text-red-600 mt-2">Nessun codice disponibile</p>
+                        )}
+                      </div>
+                    )}
+
+                    {guest.notes && (
+                      <div className="border-t pt-3 mt-3">
+                        <p className="text-sm text-gray-600">{guest.notes}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Users size={48} className="mx-auto mb-4 text-gray-300" />
+              <p>Nessun ospite registrato</p>
+              <p className="text-sm">Registra il primo ospite usando il form sopra</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   return (
     <Layout
       title={structureData ? `Dashboard ${structureData.name}` : "Dashboard Struttura"}
@@ -248,6 +551,7 @@ export default function StructureDashboard() {
       sidebarColor="bg-purple-600"
     >
       {activeSection === "iqcode" && renderIQCodeManagement()}
+      {activeSection === "ospiti" && renderGuestManagement()}
       
       {activeSection === "dashboard" && (
         <div>

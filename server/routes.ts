@@ -667,6 +667,154 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GUEST MANAGEMENT ENDPOINTS
+  
+  // Get guests for current structure
+  app.get("/api/guests", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const guests = await storage.getGuestsByStructure(userIqCode.code);
+      res.json({ guests });
+    } catch (error) {
+      console.error("Errore recupero ospiti:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Create new guest
+  app.post("/api/guests", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const { firstName, lastName, email, phone, roomNumber, checkinDate, checkoutDate, notes } = req.body;
+
+      if (!firstName || !lastName) {
+        return res.status(400).json({ message: "Nome e cognome sono obbligatori" });
+      }
+
+      const newGuest = await storage.createGuest({
+        structureCode: userIqCode.code,
+        firstName,
+        lastName,
+        email,
+        phone,
+        roomNumber,
+        checkinDate,
+        checkoutDate,
+        notes,
+        assignedCodes: 0,
+        isActive: true
+      });
+
+      res.json({ success: true, guest: newGuest });
+    } catch (error) {
+      console.error("Errore creazione ospite:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Assign code to specific guest with WhatsApp integration
+  app.post("/api/assign-code-to-guest", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const { guestId, packageId } = req.body;
+
+      if (!guestId || !packageId) {
+        return res.status(400).json({ message: "ID ospite e pacchetto richiesti" });
+      }
+
+      // Get guest details
+      const guest = await storage.getGuestById(guestId);
+      if (!guest || guest.structureCode !== userIqCode.code) {
+        return res.status(404).json({ message: "Ospite non trovato" });
+      }
+
+      // Get package details
+      const packages = await storage.getPackagesByRecipient(userIqCode.code);
+      const targetPackage = packages.find(pkg => pkg.id === packageId);
+      
+      if (!targetPackage) {
+        return res.status(404).json({ message: "Pacchetto non trovato" });
+      }
+
+      const availableCodes = targetPackage.availableCodes || 0;
+      if (availableCodes <= 0) {
+        return res.status(400).json({ message: "Nessun codice disponibile in questo pacchetto" });
+      }
+
+      // Generate unique tourist code for guest
+      const timestamp = Date.now().toString().slice(-6);
+      const touristCode = `TIQ-GUEST-${guest.firstName.slice(0,2).toUpperCase()}${guest.lastName.slice(0,2).toUpperCase()}-${timestamp}`;
+
+      // Update guest assigned codes count
+      await storage.updateGuest(guestId, {
+        assignedCodes: (guest.assignedCodes || 0) + 1
+      });
+
+      // Decrement available codes in package (simplified update)
+      const updatedAvailable = availableCodes - 1;
+
+      console.log(`Struttura ${userIqCode.code} ha assegnato codice ${touristCode} all'ospite ${guest.firstName} ${guest.lastName} (ID: ${guestId})`);
+
+      res.json({
+        success: true,
+        touristCode,
+        guestName: `${guest.firstName} ${guest.lastName}`,
+        remainingCodes: updatedAvailable,
+        guest: {
+          phone: guest.phone,
+          firstName: guest.firstName,
+          lastName: guest.lastName,
+          roomNumber: guest.roomNumber
+        }
+      });
+    } catch (error) {
+      console.error("Errore assegnazione codice ospite:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -40,10 +40,29 @@ export const generatedTouristCodes = pgTable("generated_tourist_codes", {
   generatedBy: text("generated_by").notNull(), // Chi ha generato il codice (partner/struttura)
   packageId: integer("package_id").notNull(), // Da quale pacchetto proviene
   assignedTo: text("assigned_to"), // A chi è stato assegnato (nome ospite)
+  guestId: integer("guest_id"), // ID ospite se assegnato da gestione ospiti
   status: text("status").notNull().default("available"), // available, assigned, used
   generatedAt: timestamp("generated_at").notNull().defaultNow(),
   assignedAt: timestamp("assigned_at"),
   usedAt: timestamp("used_at")
+});
+
+// Tabella ospiti per gestione completa da parte delle strutture
+export const guests = pgTable("guests", {
+  id: serial("id").primaryKey(),
+  structureCode: text("structure_code").notNull(), // Codice della struttura
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  roomNumber: text("room_number"),
+  checkinDate: text("checkin_date"), // Formato YYYY-MM-DD
+  checkoutDate: text("checkout_date"), // Formato YYYY-MM-DD
+  notes: text("notes"),
+  assignedCodes: integer("assigned_codes").default(0), // Contatore codici assegnati
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
 export const insertIqCodeSchema = createInsertSchema(iqCodes).omit({
@@ -66,6 +85,12 @@ export const insertGeneratedTouristCodeSchema = createInsertSchema(generatedTour
   generatedAt: true,
 });
 
+export const insertGuestSchema = createInsertSchema(guests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const loginSchema = z.object({
   iqCode: z.string().min(1, "Codice IQ richiesto").max(20),
 });
@@ -78,6 +103,8 @@ export type AssignedPackage = typeof assignedPackages.$inferSelect;
 export type InsertAssignedPackage = z.infer<typeof insertAssignedPackageSchema>;
 export type GeneratedTouristCode = typeof generatedTouristCodes.$inferSelect;
 export type InsertGeneratedTouristCode = z.infer<typeof insertGeneratedTouristCodeSchema>;
+export type Guest = typeof guests.$inferSelect;
+export type InsertGuest = typeof guests.$inferInsert;
 export type LoginRequest = z.infer<typeof loginSchema>;
 
 export type UserRole = 'admin' | 'tourist' | 'structure' | 'partner';
