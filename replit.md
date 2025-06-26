@@ -95,7 +95,9 @@ TouristIQ is a role-based authentication platform designed for the tourism indus
 - **Session Storage**: Configurable between in-memory and database storage
 
 ## Changelog
-- June 25, 2025. Initial setup
+- June 26, 2025: Implementato sistema generazione codici IQ emozionali formato TIQ-[PAESE]-[PAROLA] nella dashboard admin
+- June 26, 2025: Risolto problema campo login troppo corto per nuovi codici IQ
+- June 25, 2025: Initial setup
 
 ## User Preferences
 

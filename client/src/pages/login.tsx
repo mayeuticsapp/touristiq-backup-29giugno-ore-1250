@@ -91,9 +91,9 @@ export default function Login() {
                   required
                   value={iqCode}
                   onChange={(e) => setIqCode(e.target.value.toUpperCase())}
-                  placeholder="es. ADMIN001"
-                  maxLength={15}
-                  className="text-center text-lg font-medium tracking-wider uppercase"
+                  placeholder="es. TIQ-IT-LEONARDO"
+                  maxLength={25}
+                  className="text-center text-lg font-medium tracking-wider uppercase w-full"
                   disabled={isLoading}
                 />
               </div>
