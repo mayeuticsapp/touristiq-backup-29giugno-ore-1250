@@ -2,8 +2,15 @@ import { Layout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart3, Tags, QrCode, TrendingUp, Settings, Ticket, Euro, Users, Star, Camera } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getCurrentUser } from "@/lib/auth";
 
 export default function PartnerDashboard() {
+  const { data: user } = useQuery({
+    queryKey: ["/api/auth/me"],
+    queryFn: getCurrentUser,
+  });
+
   const navigation = [
     { icon: <BarChart3 size={16} />, label: "Dashboard", href: "#" },
     { icon: <Tags size={16} />, label: "Gestione Sconti", href: "#" },
@@ -12,10 +19,22 @@ export default function PartnerDashboard() {
     { icon: <Settings size={16} />, label: "Impostazioni", href: "#" },
   ];
 
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Caricamento...</h2>
+          <p className="text-gray-600">Sto caricando il tuo dashboard partner</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Layout
       title="Dashboard Partner"
       role="Area Partner"
+      iqCode={user.iqCode}
       navigation={navigation}
       sidebarColor="bg-orange-500"
     >
@@ -114,7 +133,7 @@ export default function PartnerDashboard() {
               <div className="w-32 h-32 mx-auto mb-4 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
                 <QrCode className="text-4xl text-gray-400" size={48} />
               </div>
-              <Button className="bg-tourist-blue hover:bg-tourist-dark">
+              <Button className="bg-orange-500 hover:bg-orange-600 text-white">
                 <Camera className="mr-2" size={16} />
                 Scansiona Codice
               </Button>
