@@ -1,7 +1,7 @@
 import { Layout } from "@/components/layout";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star } from "lucide-react";
+import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star, Package } from "lucide-react";
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -119,6 +119,46 @@ export default function StructureDashboard() {
                 )}
               </tbody>
             </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sezione Acquisto Pacchetti IQCode */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package size={20} />
+            Acquista Pacchetti IQCode
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-blue-50 p-6 rounded-lg">
+            <p className="text-blue-900 mb-4">Espandi la tua offerta con pacchetti di codici sconto per i tuoi ospiti</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <a href="https://pay.sumup.com/b2c/QSJE461B" target="_blank" rel="noopener noreferrer"
+                 className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg text-center transition-colors">
+                <div className="text-xl font-bold">25</div>
+                <div className="text-sm">codici sconto</div>
+              </a>
+              <a href="https://pay.sumup.com/b2c/QK6MLJC7" target="_blank" rel="noopener noreferrer"
+                 className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg text-center transition-colors">
+                <div className="text-xl font-bold">50</div>
+                <div className="text-sm">codici sconto</div>
+              </a>
+              <a href="https://pay.sumup.com/b2c/Q9517L3P" target="_blank" rel="noopener noreferrer"
+                 className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg text-center transition-colors">
+                <div className="text-xl font-bold">75</div>
+                <div className="text-sm">codici sconto</div>
+              </a>
+              <a href="https://pay.sumup.com/b2c/Q3BWI26N" target="_blank" rel="noopener noreferrer"
+                 className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg text-center transition-colors">
+                <div className="text-xl font-bold">100</div>
+                <div className="text-sm">codici sconto</div>
+              </a>
+            </div>
+            <p className="text-xs text-blue-700 mt-3">
+              Dopo l'acquisto, i codici verranno assegnati automaticamente alla tua struttura
+            </p>
           </div>
         </CardContent>
       </Card>

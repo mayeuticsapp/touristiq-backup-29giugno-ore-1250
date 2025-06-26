@@ -208,9 +208,39 @@ export default function PartnerDashboard() {
             <div className="text-center py-8">
               <Package size={48} className="mx-auto text-gray-400 mb-4" />
               <p className="text-gray-600 mb-2">Nessun pacchetto assegnato</p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 mb-6">
                 I pacchetti IQCode assegnati dall'amministratore appariranno qui
               </p>
+              
+              {/* Link acquisto pacchetti SumUp */}
+              <div className="bg-blue-50 p-6 rounded-lg">
+                <h4 className="font-semibold text-blue-900 mb-4">Acquista Pacchetti IQCode</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <a href="https://pay.sumup.com/b2c/QSJE461B" target="_blank" rel="noopener noreferrer"
+                     className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg text-center transition-colors">
+                    <div className="text-lg font-bold">25</div>
+                    <div className="text-xs">codici</div>
+                  </a>
+                  <a href="https://pay.sumup.com/b2c/QK6MLJC7" target="_blank" rel="noopener noreferrer"
+                     className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg text-center transition-colors">
+                    <div className="text-lg font-bold">50</div>
+                    <div className="text-xs">codici</div>
+                  </a>
+                  <a href="https://pay.sumup.com/b2c/Q9517L3P" target="_blank" rel="noopener noreferrer"
+                     className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg text-center transition-colors">
+                    <div className="text-lg font-bold">75</div>
+                    <div className="text-xs">codici</div>
+                  </a>
+                  <a href="https://pay.sumup.com/b2c/Q3BWI26N" target="_blank" rel="noopener noreferrer"
+                     className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg text-center transition-colors">
+                    <div className="text-lg font-bold">100</div>
+                    <div className="text-xs">codici</div>
+                  </a>
+                </div>
+                <p className="text-xs text-blue-700 mt-3">
+                  Dopo l'acquisto, i codici verranno assegnati automaticamente al tuo account
+                </p>
+              </div>
             </div>
           )}
         </CardContent>

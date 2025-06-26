@@ -719,19 +719,28 @@ function AssignPackagesView({
 }) {
   const packageSizes = [25, 50, 75, 100];
 
-  // Mock data per destinatari (in futuro da API)
-  const availableTargets = {
-    structure: [
-      { id: "9576", name: "Resort Capo Vaticano", code: "TIQ-VV-STT-9576" },
-      { id: "4334", name: "Grand Hotel Reggio", code: "TIQ-RC-STT-4334" },
-      { id: "7541", name: "Hotel Calabria Mare", code: "TIQ-VV-STT-7541" },
-    ],
-    partner: [
-      { id: "9334", name: "Ristorante La Vista", code: "TIQ-VV-PRT-9334" },
-      { id: "8877", name: "Shop Souvenir RC", code: "TIQ-RC-PRT-8877" },
-      { id: "5566", name: "Tour Operator Sud", code: "TIQ-CS-PRT-5566" },
-    ]
-  };
+  // Query per destinatari reali dal database
+  const { data: usersData } = useQuery({
+    queryKey: ["/api/admin/users"],
+  });
+
+  // Filtra destinatari reali dal database
+  const availableTargets = usersData?.users ? {
+    structure: usersData.users
+      .filter((user: any) => user.role === 'structure')
+      .map((user: any) => ({
+        id: user.code,
+        name: user.assignedTo || user.code,
+        code: user.code
+      })),
+    partner: usersData.users
+      .filter((user: any) => user.role === 'partner')
+      .map((user: any) => ({
+        id: user.code,
+        name: user.assignedTo || user.code,
+        code: user.code
+      }))
+  } : { structure: [], partner: [] };
 
   const currentTargets = targetType ? availableTargets[targetType as keyof typeof availableTargets] || [] : [];
 
@@ -788,17 +797,35 @@ function AssignPackagesView({
           <div>
             <Label>Dimensione Pacchetto</Label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
-              {packageSizes.map((size) => (
-                <Button
-                  key={size}
-                  variant={packageSize === size ? "default" : "outline"}
-                  onClick={() => setPackageSize(size)}
-                  className="h-16 flex flex-col items-center justify-center"
-                >
-                  <div className="text-2xl font-bold">{size}</div>
-                  <div className="text-xs">codici</div>
-                </Button>
-              ))}
+              {packageSizes.map((size) => {
+                const sumupLinks = {
+                  25: "https://pay.sumup.com/b2c/QSJE461B",
+                  50: "https://pay.sumup.com/b2c/QK6MLJC7",
+                  75: "https://pay.sumup.com/b2c/Q9517L3P",
+                  100: "https://pay.sumup.com/b2c/Q3BWI26N"
+                };
+                
+                return (
+                  <div key={size} className="relative">
+                    <Button
+                      variant={packageSize === size ? "default" : "outline"}
+                      onClick={() => setPackageSize(size)}
+                      className="h-16 w-full flex flex-col items-center justify-center"
+                    >
+                      <div className="text-2xl font-bold">{size}</div>
+                      <div className="text-xs">codici</div>
+                    </Button>
+                    <a 
+                      href={sumupLinks[size as keyof typeof sumupLinks]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full hover:bg-green-600 transition-colors"
+                    >
+                      Acquista
+                    </a>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
