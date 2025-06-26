@@ -123,6 +123,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate IQ Code (Admin only)
+  const generateCodeSchema = z.object({
+    country: z.string().min(2, "Codice paese richiesto"),
+    role: z.enum(["admin", "tourist", "structure", "partner"]),
+    assignedTo: z.string().optional()
+  });
+
+  app.post("/api/genera-iqcode", async (req, res) => {
+    try {
+      // Check if user is authenticated and is admin
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      // Validate request
+      const { country, role, assignedTo } = generateCodeSchema.parse(req.body);
+      
+      // Generate new code
+      const { createIQCode } = await import("./createIQCode");
+      const result = await createIQCode(country, role, assignedTo || "");
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Errore generazione codice IQ:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Richiesta non valida" });
+      }
+      res.status(500).json({ 
+        message: (error as Error).message || "Errore durante la generazione del codice" 
+      });
+    }
+  });
+
   // Clean expired sessions periodically
   setInterval(async () => {
     await storage.cleanExpiredSessions();
