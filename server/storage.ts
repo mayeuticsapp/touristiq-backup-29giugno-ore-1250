@@ -1,4 +1,4 @@
-import { iqCodes, sessions, type IqCode, type InsertIqCode, type Session, type InsertSession, type UserRole } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type UserRole } from "@shared/schema";
 
 export interface IStorage {
   // IQ Code methods
@@ -11,19 +11,28 @@ export interface IStorage {
   getSessionByToken(token: string): Promise<Session | undefined>;
   deleteSession(token: string): Promise<void>;
   cleanExpiredSessions(): Promise<void>;
+
+  // Package assignment methods
+  createAssignedPackage(assignedPackage: InsertAssignedPackage): Promise<AssignedPackage>;
+  getPackagesByRecipient(recipientIqCode: string): Promise<AssignedPackage[]>;
+  getAllAssignedPackages(): Promise<AssignedPackage[]>;
 }
 
 export class MemStorage implements IStorage {
   private iqCodes: Map<number, IqCode>;
   private sessions: Map<number, Session>;
+  private assignedPackages: Map<number, AssignedPackage>;
   private currentIqCodeId: number;
   private currentSessionId: number;
+  private currentPackageId: number;
 
   constructor() {
     this.iqCodes = new Map();
     this.sessions = new Map();
+    this.assignedPackages = new Map();
     this.currentIqCodeId = 1;
     this.currentSessionId = 1;
+    this.currentPackageId = 1;
 
     // Initialize with default IQ codes
     this.initializeDefaultCodes();
@@ -122,6 +131,33 @@ export class MemStorage implements IStorage {
     expiredSessions.forEach(id => {
       this.sessions.delete(id);
     });
+  }
+
+  // Package assignment methods
+  async createAssignedPackage(insertAssignedPackage: InsertAssignedPackage): Promise<AssignedPackage> {
+    const id = this.currentPackageId++;
+    const assignedPackage: AssignedPackage = {
+      id,
+      recipientIqCode: insertAssignedPackage.recipientIqCode,
+      packageSize: insertAssignedPackage.packageSize,
+      status: insertAssignedPackage.status || "available",
+      assignedBy: insertAssignedPackage.assignedBy,
+      codesGenerated: insertAssignedPackage.codesGenerated || null,
+      assignedAt: new Date()
+    };
+    
+    this.assignedPackages.set(id, assignedPackage);
+    return assignedPackage;
+  }
+
+  async getPackagesByRecipient(recipientIqCode: string): Promise<AssignedPackage[]> {
+    return Array.from(this.assignedPackages.values()).filter(
+      pkg => pkg.recipientIqCode === recipientIqCode
+    );
+  }
+
+  async getAllAssignedPackages(): Promise<AssignedPackage[]> {
+    return Array.from(this.assignedPackages.values());
   }
 }
 

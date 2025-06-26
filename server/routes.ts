@@ -90,6 +90,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get packages assigned to current user
+  app.get("/api/my-packages", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode) {
+        return res.status(404).json({ message: "Codice IQ non trovato" });
+      }
+
+      // Get packages assigned to this user
+      const assignedPackages = await storage.getPackagesByRecipient(userIqCode.code);
+
+      res.json({
+        packages: assignedPackages.map(pkg => ({
+          id: pkg.id,
+          packageSize: pkg.packageSize,
+          status: pkg.status,
+          assignedBy: pkg.assignedBy,
+          assignedAt: pkg.assignedAt,
+          codesGenerated: pkg.codesGenerated,
+          availableCodes: pkg.codesGenerated?.length || 0
+        }))
+      });
+    } catch (error) {
+      console.error("Errore recupero pacchetti:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // TIQai chat endpoint
   const chatSchema = z.object({
     message: z.string().min(1, "Messaggio richiesto").max(500, "Messaggio troppo lungo"),
@@ -391,59 +429,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Dimensione pacchetto non valida" });
       }
 
-      // For demo purposes, allow assignment to predefined targets
-      // In production, this would check against actual structure/partner database
-      const validTargets = {
-        structure: ["9576", "4334", "7541", "VENEZIA", "DUOMO"],
-        partner: ["9334", "8877", "5566", "TIRAMISU", "GELATO"]
-      };
+      // Verify target exists in real database
+      const allCodes = await storage.getAllIqCodes();
+      const targetCode = allCodes.find(code => 
+        code.role === targetType && 
+        (code.code.includes(`-${targetId}`) || code.code.endsWith(targetId.toUpperCase()))
+      );
 
-      const isValidTarget = validTargets[targetType as keyof typeof validTargets]?.includes(targetId.toUpperCase());
-      
-      if (!isValidTarget) {
-        return res.status(404).json({ message: "Destinatario non trovato" });
+      if (!targetCode) {
+        return res.status(404).json({ message: "Destinatario non trovato nel database" });
       }
 
-      // Generate package codes - simplified for packages
+      // Generate tourist codes for the package
       const generatedCodes = [];
       for (let i = 0; i < packageSize; i++) {
         try {
-          // Create simple tourist codes for packages
           const packageCodeId = Math.floor(Math.random() * 9000) + 1000;
           const packageCode = `TIQ-PKG-${targetType.toUpperCase()}-${targetId}-${packageCodeId}`;
           
           const newCodeData = {
             code: packageCode,
             role: 'tourist' as const,
-            assignedTo: `Pacchetto per ${targetType} ${targetId}`,
+            assignedTo: `Pacchetto per ${targetCode.code}`,
             location: 'IT',
             codeType: 'package',
-            isActive: true,
-            createdAt: new Date()
+            isActive: true
           };
           
           const savedCode = await storage.createIqCode(newCodeData);
-          generatedCodes.push(savedCode);
+          generatedCodes.push(savedCode.code);
         } catch (error) {
           console.error(`Errore generazione codice ${i + 1}:`, error);
-          // Continue with next code if one fails
         }
       }
 
+      // Save package assignment to database
+      const packageAssignment = await storage.createAssignedPackage({
+        recipientIqCode: targetCode.code,
+        packageSize,
+        status: "available",
+        assignedBy: userIqCode.code,
+        codesGenerated: generatedCodes
+      });
+
       // Log assignment
-      console.log(`Admin ${userIqCode.code} ha assegnato pacchetto di ${packageSize} codici a ${targetType} ${targetId}`);
+      console.log(`Admin ${userIqCode.code} ha assegnato pacchetto di ${packageSize} codici a ${targetType} ${targetCode.code}`);
 
       res.json({
         success: true,
-        message: `Pacchetto di ${packageSize} codici assegnato con successo`,
+        message: `Pacchetto di ${packageSize} codici assegnato con successo a ${targetCode.code}`,
         targetType,
-        targetId,
+        targetCode: targetCode.code,
         packageSize,
-        generatedCodesIds: generatedCodes.map(code => code.id),
-        assignedAt: new Date().toISOString()
+        packageId: packageAssignment.id,
+        codesGenerated: generatedCodes,
+        assignedAt: packageAssignment.assignedAt.toISOString()
       });
     } catch (error) {
       console.error("Errore assegnazione pacchetto:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Get packages assigned to current user
+  app.get("/api/my-packages", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode) {
+        return res.status(404).json({ message: "Codice IQ non trovato" });
+      }
+
+      // Get packages assigned to this user
+      const assignedPackages = await storage.getPackagesByRecipient(userIqCode.code);
+
+      res.json({
+        packages: assignedPackages.map(pkg => ({
+          id: pkg.id,
+          packageSize: pkg.packageSize,
+          status: pkg.status,
+          assignedBy: pkg.assignedBy,
+          assignedAt: pkg.assignedAt,
+          codesGenerated: pkg.codesGenerated,
+          availableCodes: pkg.codesGenerated?.length || 0
+        }))
+      });
+    } catch (error) {
+      console.error("Errore recupero pacchetti:", error);
       res.status(500).json({ message: "Errore del server" });
     }
   });

@@ -1,7 +1,8 @@
 import { Layout } from "@/components/layout";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Tags, QrCode, TrendingUp, Settings, Ticket, Euro, Users, Star, Camera } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { BarChart3, Tags, QrCode, TrendingUp, Settings, Ticket, Euro, Users, Star, Camera, Package } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -9,6 +10,12 @@ export default function PartnerDashboard() {
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
     queryFn: getCurrentUser,
+  });
+
+  // Query per pacchetti assegnati
+  const { data: packagesData } = useQuery({
+    queryKey: ["/api/my-packages"],
+    enabled: !!user,
   });
 
   const navigation = [
@@ -142,6 +149,72 @@ export default function PartnerDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Sezione Pacchetti Assegnati */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package size={20} />
+            Pacchetti IQCode Assegnati
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {packagesData?.packages?.length > 0 ? (
+            <div className="space-y-4">
+              {packagesData.packages.map((pkg: any) => (
+                <div key={pkg.id} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="font-semibold text-lg">Pacchetto #{pkg.id}</h3>
+                      <p className="text-sm text-gray-600">
+                        Assegnato da: {pkg.assignedBy} il {new Date(pkg.assignedAt).toLocaleDateString('it-IT')}
+                      </p>
+                    </div>
+                    <Badge variant={pkg.status === 'available' ? 'default' : 'secondary'}>
+                      {pkg.status === 'available' ? 'Disponibile' : pkg.status}
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Codici Totali</p>
+                      <p className="text-xl font-bold text-blue-600">{pkg.packageSize}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Codici Disponibili</p>
+                      <p className="text-xl font-bold text-green-600">{pkg.availableCodes}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Codici Utilizzati</p>
+                      <p className="text-xl font-bold text-orange-600">{pkg.packageSize - pkg.availableCodes}</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-3">
+                    <p className="text-sm text-gray-600 mb-2">Codici generati ({pkg.codesGenerated?.length || 0}):</p>
+                    <div className="max-h-32 overflow-y-auto bg-gray-50 p-2 rounded text-xs font-mono">
+                      {pkg.codesGenerated?.slice(0, 5).map((code: string, index: number) => (
+                        <div key={index} className="mb-1">{code}</div>
+                      ))}
+                      {pkg.codesGenerated?.length > 5 && (
+                        <div className="text-gray-500">... e altri {pkg.codesGenerated.length - 5} codici</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Package size={48} className="mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-600 mb-2">Nessun pacchetto assegnato</p>
+              <p className="text-sm text-gray-500">
+                I pacchetti IQCode assegnati dall'amministratore appariranno qui
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </Layout>
   );
 }
