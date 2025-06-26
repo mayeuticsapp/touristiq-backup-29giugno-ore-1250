@@ -343,7 +343,6 @@ export default function StructureDashboard() {
         </div>
       )}
       
-      {/* Altre sezioni placeholder */}
       {activeSection !== "dashboard" && activeSection !== "iqcode" && (
         <div className="text-center py-8">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Sezione in Sviluppo</h3>
