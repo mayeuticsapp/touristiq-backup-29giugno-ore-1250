@@ -24,7 +24,7 @@ function StatsValue({ endpoint, field }: { endpoint: string; field: string }) {
     return path.split('.').reduce((current, key) => current?.[key], obj);
   };
   
-  const value = getValue(data?.stats, field) || 0;
+  const value = getValue(data, field) || 0;
   return <p className="text-2xl font-semibold text-gray-900">{value.toLocaleString()}</p>;
 }
 
@@ -215,7 +215,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-600">Utenti Totali</p>
-                <StatsValue endpoint="/api/admin/stats" field="totalCodes" />
+                <StatsValue endpoint="/api/admin/stats" field="stats.totalCodes" />
               </div>
             </div>
           </CardContent>
@@ -229,7 +229,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-600">Codici Attivi</p>
-                <StatsValue endpoint="/api/admin/stats" field="activeUsers" />
+                <StatsValue endpoint="/api/admin/stats" field="stats.activeUsers" />
               </div>
             </div>
           </CardContent>
@@ -243,7 +243,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-600">Partner</p>
-                <StatsValue endpoint="/api/admin/stats" field="byRole.partner" />
+                <StatsValue endpoint="/api/admin/stats" field="stats.byRole.partner" />
               </div>
             </div>
           </CardContent>
@@ -257,7 +257,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-600">Codici Turistici Generati</p>
-                <StatsValue endpoint="/api/admin/stats" field="byRole.tourist" />
+                <StatsValue endpoint="/api/admin/stats" field="stats.byRole.tourist" />
               </div>
             </div>
           </CardContent>
