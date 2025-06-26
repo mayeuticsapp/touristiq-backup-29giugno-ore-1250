@@ -197,6 +197,207 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Users Management
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const allCodes = await storage.getAllIqCodes();
+      const users = allCodes.map(code => ({
+        id: code.id,
+        code: code.code,
+        role: code.role,
+        assignedTo: code.assignedTo,
+        location: code.location,
+        codeType: code.codeType,
+        isActive: code.isActive,
+        createdAt: code.createdAt
+      }));
+
+      res.json({ users });
+    } catch (error) {
+      console.error("Errore gestione utenti:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Admin IQ Codes Management
+  app.get("/api/admin/iqcodes", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const allCodes = await storage.getAllIqCodes();
+      res.json({ codes: allCodes });
+    } catch (error) {
+      console.error("Errore lista codici IQ:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Admin Statistics
+  app.get("/api/admin/stats", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const allCodes = await storage.getAllIqCodes();
+      const stats = {
+        totalCodes: allCodes.length,
+        activeUsers: allCodes.filter(c => c.isActive).length,
+        byRole: {
+          tourist: allCodes.filter(c => c.role === 'tourist').length,
+          structure: allCodes.filter(c => c.role === 'structure').length,
+          partner: allCodes.filter(c => c.role === 'partner').length,
+          admin: allCodes.filter(c => c.role === 'admin').length
+        },
+        byType: {
+          emotional: allCodes.filter(c => c.codeType === 'emotional').length,
+          professional: allCodes.filter(c => c.codeType === 'professional').length
+        }
+      };
+
+      res.json({ stats });
+    } catch (error) {
+      console.error("Errore statistiche:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Admin Settings
+  app.get("/api/admin/settings", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const settings = {
+        platformName: "TouristIQ",
+        supportEmail: "support@touristiq.com",
+        welcomeMessage: "Benvenuto nella piattaforma TouristIQ",
+        maxCodesPerDay: 100
+      };
+
+      res.json({ settings });
+    } catch (error) {
+      console.error("Errore impostazioni:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // User-specific dashboard data
+  app.get("/api/dashboard/data", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode) {
+        return res.status(404).json({ message: "Codice IQ non trovato" });
+      }
+
+      // Generate dashboard data specific to this user
+      const dashboardData = {
+        userInfo: {
+          code: userIqCode.code,
+          role: userIqCode.role,
+          assignedTo: userIqCode.assignedTo,
+          location: userIqCode.location,
+          codeType: userIqCode.codeType,
+          createdAt: userIqCode.createdAt,
+          isActive: userIqCode.isActive
+        },
+        // Role-specific data
+        ...(userIqCode.role === 'tourist' && {
+          touristData: {
+            visitedPlaces: 0,
+            discountsUsed: 0,
+            recommendedSpots: generateTouristRecommendations(userIqCode.location || 'IT'),
+            activeOffers: generateActiveOffers(userIqCode.location || 'IT')
+          }
+        }),
+        ...(userIqCode.role === 'structure' && {
+          structureData: {
+            totalBookings: Math.floor(Math.random() * 100) + 50,
+            monthlyRevenue: Math.floor(Math.random() * 10000) + 5000,
+            averageRating: (Math.random() * 2 + 3).toFixed(1),
+            roomsAvailable: Math.floor(Math.random() * 20) + 5,
+            recentBookings: generateRecentBookings(userIqCode.assignedTo || 'Struttura')
+          }
+        }),
+        ...(userIqCode.role === 'partner' && {
+          partnerData: {
+            offersActive: Math.floor(Math.random() * 10) + 3,
+            customersReached: Math.floor(Math.random() * 500) + 100,
+            conversionRate: (Math.random() * 10 + 5).toFixed(1) + '%',
+            monthlyEarnings: Math.floor(Math.random() * 5000) + 1000,
+            topProducts: generateTopProducts(userIqCode.assignedTo || 'Partner')
+          }
+        })
+      };
+
+      res.json(dashboardData);
+    } catch (error) {
+      console.error("Errore dashboard data:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // Clean expired sessions periodically
   setInterval(async () => {
     await storage.cleanExpiredSessions();
@@ -204,4 +405,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Helper functions for generating role-specific data
+function generateTouristRecommendations(location: string) {
+  const recommendations: Record<string, string[]> = {
+    'IT': ['Colosseo', 'Fontana di Trevi', 'Pantheon'],
+    'VV': ['Tropea', 'Pizzo Calabro', 'Scilla'],
+    'RC': ['Castello Aragonese', 'Museo Nazionale', 'Lungomare'],
+    'CS': ['Centro Storico', 'Castello Svevo', 'Teatro Rendano']
+  };
+  return recommendations[location] || ['Attrazione Locale 1', 'Attrazione Locale 2', 'Attrazione Locale 3'];
+}
+
+function generateActiveOffers(location: string) {
+  return [
+    { title: 'Sconto 20% Ristoranti', validUntil: '2025-07-01' },
+    { title: 'Ingresso Gratuito Musei', validUntil: '2025-06-30' },
+    { title: 'Tour Guidato -30%', validUntil: '2025-07-15' }
+  ];
+}
+
+function generateRecentBookings(structureName: string) {
+  return [
+    { guest: 'Mario Rossi', checkIn: '2025-06-28', nights: 3 },
+    { guest: 'Anna Bianchi', checkIn: '2025-06-29', nights: 2 },
+    { guest: 'Luigi Verdi', checkIn: '2025-07-01', nights: 5 }
+  ];
+}
+
+function generateTopProducts(partnerName: string) {
+  return [
+    { name: 'Pizza Margherita', sales: 45 },
+    { name: 'Gelato Artigianale', sales: 38 },
+    { name: 'Caffè Espresso', sales: 67 }
+  ];
 }

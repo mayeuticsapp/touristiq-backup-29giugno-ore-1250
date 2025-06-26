@@ -61,6 +61,9 @@ export class MemStorage implements IStorage {
       role: insertIqCode.role,
       isActive: insertIqCode.isActive ?? true,
       createdAt: new Date(),
+      assignedTo: insertIqCode.assignedTo || null,
+      location: insertIqCode.location || null,
+      codeType: insertIqCode.codeType || null,
     };
     this.iqCodes.set(id, iqCode);
     return iqCode;

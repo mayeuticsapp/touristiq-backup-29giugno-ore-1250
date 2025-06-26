@@ -103,6 +103,12 @@ export function parseIQCode(code: string): {country: string, word: string} | nul
 
 // Professional IQ Codes: TIQ-VV-PRT/STT-0001
 export function generateProfessionalIQCode(province: string, type: 'PRT' | 'STT'): string {
+  // Validate province format (2-3 uppercase letters)
+  const validProvince = province.toUpperCase().match(/^[A-Z]{2,3}$/);
+  if (!validProvince) {
+    throw new Error('Provincia deve essere 2-3 lettere maiuscole (es: VV, RC, CS)');
+  }
+  
   const counter = String(Math.floor(Math.random() * 9999) + 1).padStart(4, '0');
   return `TIQ-${province.toUpperCase()}-${type}-${counter}`;
 }

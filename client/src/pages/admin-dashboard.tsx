@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BarChart3, Users, QrCode, Settings, TrendingUp, Handshake, Percent, Copy, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
@@ -19,6 +19,7 @@ export default function AdminDashboard() {
   const [generatedCode, setGeneratedCode] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [activeView, setActiveView] = useState("overview"); // overview, users, codes, stats, settings
 
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
@@ -245,19 +246,14 @@ export default function AdminDashboard() {
 
             {codeType === "professional" && (
               <div>
-                <Label htmlFor="province">Provincia</Label>
-                <Select value={selectedProvince} onValueChange={setSelectedProvince}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona provincia" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {provinces.map((province) => (
-                      <SelectItem key={province.code} value={province.code}>
-                        {province.code} - {province.name} ({province.region})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="province">Provincia (es: VV, RC, CS)</Label>
+                <Input
+                  value={selectedProvince}
+                  onChange={(e) => setSelectedProvince(e.target.value.toUpperCase())}
+                  placeholder="Inserisci sigla provincia (es: VV, RC, CS)"
+                  maxLength={3}
+                  className="uppercase"
+                />
               </div>
             )}
 
@@ -356,6 +352,262 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Conditional Rendering Based on Active View */}
+      {activeView === "users" && (
+        <UsersManagement />
+      )}
+      
+      {activeView === "codes" && (
+        <CodesManagement />
+      )}
+      
+      {activeView === "stats" && (
+        <StatsView />
+      )}
+      
+      {activeView === "settings" && (
+        <SettingsView />
+      )}
     </Layout>
+  );
+}
+
+// Users Management Component
+function UsersManagement() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/admin/users', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        setUsers(data.users || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-8">Caricamento utenti...</div>;
+  }
+
+  return (
+    <Card className="mb-8">
+      <CardHeader>
+        <CardTitle>Gestione Utenti</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left p-2">Codice IQ</th>
+                <th className="text-left p-2">Ruolo</th>
+                <th className="text-left p-2">Assegnato a</th>
+                <th className="text-left p-2">Posizione</th>
+                <th className="text-left p-2">Tipo</th>
+                <th className="text-left p-2">Stato</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id} className="border-b">
+                  <td className="p-2 font-mono">{user.code}</td>
+                  <td className="p-2">{user.role}</td>
+                  <td className="p-2">{user.assignedTo || '-'}</td>
+                  <td className="p-2">{user.location || '-'}</td>
+                  <td className="p-2">{user.codeType || '-'}</td>
+                  <td className="p-2">
+                    <span className={`px-2 py-1 rounded text-xs ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {user.isActive ? 'Attivo' : 'Inattivo'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Codes Management Component
+function CodesManagement() {
+  const [codes, setCodes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/admin/iqcodes', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        setCodes(data.codes || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-8">Caricamento codici...</div>;
+  }
+
+  return (
+    <Card className="mb-8">
+      <CardHeader>
+        <CardTitle>Gestione Codici IQ</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {codes.map((code) => (
+            <div key={code.id} className="border rounded-lg p-4">
+              <div className="font-mono text-lg font-semibold">{code.code}</div>
+              <div className="text-sm text-gray-600 mt-1">
+                {code.role} • {code.assignedTo || 'Non assegnato'}
+              </div>
+              <div className="text-xs text-gray-500 mt-2">
+                Creato: {new Date(code.createdAt).toLocaleDateString()}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Stats View Component
+function StatsView() {
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/admin/stats', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        setStats(data.stats);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-8">Caricamento statistiche...</div>;
+  }
+
+  if (!stats) {
+    return <div className="text-center py-8">Errore nel caricamento statistiche</div>;
+  }
+
+  return (
+    <Card className="mb-8">
+      <CardHeader>
+        <CardTitle>Statistiche Piattaforma</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-blue-600">{stats.totalCodes}</div>
+            <div className="text-sm text-gray-600">Codici Totali</div>
+          </div>
+          
+          <div className="text-center">
+            <div className="text-3xl font-bold text-green-600">{stats.activeUsers}</div>
+            <div className="text-sm text-gray-600">Utenti Attivi</div>
+          </div>
+          
+          <div className="text-center">
+            <div className="text-3xl font-bold text-yellow-600">{stats.byType.emotional || 0}</div>
+            <div className="text-sm text-gray-600">Codici Emozionali</div>
+          </div>
+          
+          <div className="text-center">
+            <div className="text-3xl font-bold text-purple-600">{stats.byType.professional || 0}</div>
+            <div className="text-sm text-gray-600">Codici Professionali</div>
+          </div>
+        </div>
+        
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold mb-4">Distribuzione per Ruolo</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-blue-50 p-4 rounded">
+              <div className="text-2xl font-bold text-blue-600">{stats.byRole.tourist}</div>
+              <div className="text-sm">Turisti</div>
+            </div>
+            <div className="bg-green-50 p-4 rounded">
+              <div className="text-2xl font-bold text-green-600">{stats.byRole.structure}</div>
+              <div className="text-sm">Strutture</div>
+            </div>
+            <div className="bg-orange-50 p-4 rounded">
+              <div className="text-2xl font-bold text-orange-600">{stats.byRole.partner}</div>
+              <div className="text-sm">Partner</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded">
+              <div className="text-2xl font-bold text-gray-600">{stats.byRole.admin}</div>
+              <div className="text-sm">Admin</div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Settings View Component
+function SettingsView() {
+  const [settings, setSettings] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/admin/settings', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        setSettings(data.settings);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-8">Caricamento impostazioni...</div>;
+  }
+
+  if (!settings) {
+    return <div className="text-center py-8">Errore nel caricamento impostazioni</div>;
+  }
+
+  return (
+    <Card className="mb-8">
+      <CardHeader>
+        <CardTitle>Impostazioni Sistema</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          <div>
+            <Label>Nome Piattaforma</Label>
+            <Input value={settings?.platformName || 'TouristIQ'} disabled className="mt-1" />
+          </div>
+          
+          <div>
+            <Label>Email Supporto</Label>
+            <Input value={settings?.supportEmail || 'support@touristiq.com'} disabled className="mt-1" />
+          </div>
+          
+          <div>
+            <Label>Messaggio di Benvenuto</Label>
+            <Input value={settings?.welcomeMessage || 'Benvenuto in TouristIQ'} disabled className="mt-1" />
+          </div>
+          
+          <div>
+            <Label>Codici Massimi per Giorno</Label>
+            <Input value={settings?.maxCodesPerDay || 100} disabled className="mt-1" />
+          </div>
+          
+          <Button disabled>
+            Salva Modifiche (Demo)
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

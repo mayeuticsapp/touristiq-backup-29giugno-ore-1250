@@ -8,6 +8,9 @@ export const iqCodes = pgTable("iq_codes", {
   role: text("role").notNull(), // 'admin', 'tourist', 'structure', 'partner'
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  assignedTo: text("assigned_to"), // Nome persona/azienda
+  location: text("location"), // IT, VV, RC, etc.
+  codeType: text("code_type"), // emotional, professional
 });
 
 export const sessions = pgTable("sessions", {

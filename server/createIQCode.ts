@@ -32,7 +32,10 @@ export async function createIQCode(
       const data = await storage.createIqCode({
         code: newCode,
         role,
-        isActive: true
+        isActive: true,
+        assignedTo,
+        location,
+        codeType
       });
 
       return {
