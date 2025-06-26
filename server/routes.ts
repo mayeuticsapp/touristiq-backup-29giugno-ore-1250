@@ -177,6 +177,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // TIQai Chat endpoint
+  app.post("/api/tiqai/chat", async (req, res) => {
+    try {
+      const { message } = req.body;
+      if (!message) {
+        return res.status(400).json({ message: "Messaggio richiesto" });
+      }
+
+      const { chatWithTIQai } = await import("./openai");
+      const response = await chatWithTIQai(message);
+      
+      res.json({ response });
+    } catch (error) {
+      console.error("Errore TIQai:", error);
+      res.status(500).json({ 
+        message: "Mi dispiace, non riesco a rispondere in questo momento. Riprova." 
+      });
+    }
+  });
+
   // Clean expired sessions periodically
   setInterval(async () => {
     await storage.cleanExpiredSessions();
