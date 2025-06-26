@@ -95,6 +95,7 @@ TouristIQ is a role-based authentication platform designed for the tourism indus
 - **Session Storage**: Configurable between in-memory and database storage
 
 ## Changelog
+- June 26, 2025: DATABASE AZZERATO MANUALMENTE - Rimossi tutti gli utenti tranne admin TIQ-IT-ADMIN, sistema pulito e pronto per nuove configurazioni
 - June 26, 2025: DATABASE POSTGRESQL PERSISTENTE IMPLEMENTATO - Dati permanenti, niente più azzeramenti, sistema affidabile per produzione
 - June 26, 2025: SISTEMA FINALE COMPLETATO - Dashboard strutture visualizza pacchetti ricevuti, generazione codici turistici operativa, login stabilizzato al primo tentativo
 - June 26, 2025: RESET SISTEMA COMPLETATO - Database azzerato, rimane solo admin TIQ-IT-ADMIN per ripartire da zero pulito
