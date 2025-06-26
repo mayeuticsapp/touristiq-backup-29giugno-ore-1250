@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { loginSchema } from "@shared/schema";
 import { nanoid } from "nanoid";
 import { chatWithTIQai } from "./openai";
+import { createIQCode } from "./createIQCode";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -353,6 +354,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ settings });
     } catch (error) {
       console.error("Errore impostazioni:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Admin Assign IQCode Packages
+  app.post("/api/admin/assign-iqcodes", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const { targetType, targetId, packageSize } = req.body;
+
+      // Validate input
+      if (!targetType || !targetId || !packageSize) {
+        return res.status(400).json({ message: "Parametri mancanti" });
+      }
+
+      if (!['structure', 'partner'].includes(targetType)) {
+        return res.status(400).json({ message: "Tipo destinatario non valido" });
+      }
+
+      if (![25, 50, 75, 100].includes(packageSize)) {
+        return res.status(400).json({ message: "Dimensione pacchetto non valida" });
+      }
+
+      // Verify target exists
+      const allCodes = await storage.getAllIqCodes();
+      const targetExists = allCodes.some(code => 
+        code.role === targetType && code.code.includes(`-${targetId}`)
+      );
+
+      if (!targetExists) {
+        return res.status(404).json({ message: "Destinatario non trovato" });
+      }
+
+      // Generate package codes - simplified for packages
+      const generatedCodes = [];
+      for (let i = 0; i < packageSize; i++) {
+        try {
+          // Create simple tourist codes for packages
+          const packageCodeId = Math.floor(Math.random() * 9000) + 1000;
+          const packageCode = `TIQ-PKG-${targetType.toUpperCase()}-${targetId}-${packageCodeId}`;
+          
+          const newCodeData = {
+            code: packageCode,
+            role: 'tourist' as const,
+            assignedTo: `Pacchetto per ${targetType} ${targetId}`,
+            location: 'IT',
+            codeType: 'package',
+            isActive: true,
+            createdAt: new Date()
+          };
+          
+          const savedCode = await storage.createIqCode(newCodeData);
+          generatedCodes.push(savedCode);
+        } catch (error) {
+          console.error(`Errore generazione codice ${i + 1}:`, error);
+          // Continue with next code if one fails
+        }
+      }
+
+      // Log assignment
+      console.log(`Admin ${userIqCode.code} ha assegnato pacchetto di ${packageSize} codici a ${targetType} ${targetId}`);
+
+      res.json({
+        success: true,
+        message: `Pacchetto di ${packageSize} codici assegnato con successo`,
+        targetType,
+        targetId,
+        packageSize,
+        generatedCodesIds: generatedCodes.map(code => code.id),
+        assignedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Errore assegnazione pacchetto:", error);
       res.status(500).json({ message: "Errore del server" });
     }
   });

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BarChart3, Users, QrCode, Settings, TrendingUp, Handshake, Percent, Copy, Check } from "lucide-react";
+import { BarChart3, Users, QrCode, Settings, TrendingUp, Handshake, Percent, Copy, Check, Package } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/auth";
@@ -19,7 +19,13 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
   const [generatedCode, setGeneratedCode] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [activeView, setActiveView] = useState(propActiveSection || "overview"); // overview, users, codes, stats, settings
+  const [activeView, setActiveView] = useState(propActiveSection || "overview"); // overview, users, codes, stats, settings, assign-iqcodes
+  
+  // Stati per assegnazione pacchetti
+  const [targetType, setTargetType] = useState(""); // "structure" o "partner"
+  const [targetId, setTargetId] = useState("");
+  const [packageSize, setPackageSize] = useState(0);
+  const [isAssigning, setIsAssigning] = useState(false);
 
   // Update activeView when propActiveSection changes
   useEffect(() => {
@@ -119,10 +125,46 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleAssignPackage = async () => {
+    if (!targetType || !targetId || !packageSize) return;
+
+    setIsAssigning(true);
+    try {
+      const response = await fetch("/api/admin/assign-iqcodes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          targetType,
+          targetId,
+          packageSize
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`Pacchetto di ${packageSize} codici assegnato con successo a ${targetType} ${targetId}`);
+        // Reset form
+        setTargetType("");
+        setTargetId("");
+        setPackageSize(0);
+      } else {
+        const error = await response.json();
+        alert(`Errore: ${error.message}`);
+      }
+    } catch (error) {
+      console.error("Errore assegnazione pacchetto:", error);
+      alert("Errore durante l'assegnazione del pacchetto");
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
   const navigation = [
     { icon: <BarChart3 size={16} />, label: "Dashboard", href: "/admin", onClick: () => setActiveView("overview") },
     { icon: <Users size={16} />, label: "Gestione Utenti", href: "/admin/users", onClick: () => setActiveView("users") },
     { icon: <QrCode size={16} />, label: "Codici IQ", href: "/admin/iqcodes", onClick: () => setActiveView("iqcodes") },
+    { icon: <Package size={16} />, label: "Assegna Pacchetti", href: "/admin/assign-iqcodes", onClick: () => setActiveView("assign-iqcodes") },
     { icon: <TrendingUp size={16} />, label: "Statistiche", href: "/admin/stats", onClick: () => setActiveView("stats") },
     { icon: <Settings size={16} />, label: "Impostazioni", href: "/admin/settings", onClick: () => setActiveView("settings") },
   ];
@@ -367,6 +409,19 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
       
       {activeView === "iqcodes" && (
         <CodesManagement />
+      )}
+      
+      {activeView === "assign-iqcodes" && (
+        <AssignPackagesView 
+          targetType={targetType}
+          setTargetType={setTargetType}
+          targetId={targetId}
+          setTargetId={setTargetId}
+          packageSize={packageSize}
+          setPackageSize={setPackageSize}
+          onAssign={handleAssignPackage}
+          isAssigning={isAssigning}
+        />
       )}
       
       {activeView === "stats" && (
@@ -643,6 +698,134 @@ function StatsView() {
             </div>
           </div>
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Assign Packages View Component
+function AssignPackagesView({ 
+  targetType, setTargetType, targetId, setTargetId, 
+  packageSize, setPackageSize, onAssign, isAssigning 
+}: {
+  targetType: string;
+  setTargetType: (type: string) => void;
+  targetId: string;
+  setTargetId: (id: string) => void;
+  packageSize: number;
+  setPackageSize: (size: number) => void;
+  onAssign: () => void;
+  isAssigning: boolean;
+}) {
+  const packageSizes = [25, 50, 75, 100];
+
+  // Mock data per destinatari (in futuro da API)
+  const availableTargets = {
+    structure: [
+      { id: "9576", name: "Resort Capo Vaticano", code: "TIQ-VV-STT-9576" },
+      { id: "4334", name: "Grand Hotel Reggio", code: "TIQ-RC-STT-4334" },
+      { id: "7541", name: "Hotel Calabria Mare", code: "TIQ-VV-STT-7541" },
+    ],
+    partner: [
+      { id: "9334", name: "Ristorante La Vista", code: "TIQ-VV-PRT-9334" },
+      { id: "8877", name: "Shop Souvenir RC", code: "TIQ-RC-PRT-8877" },
+      { id: "5566", name: "Tour Operator Sud", code: "TIQ-CS-PRT-5566" },
+    ]
+  };
+
+  const currentTargets = targetType ? availableTargets[targetType as keyof typeof availableTargets] || [] : [];
+
+  return (
+    <Card className="mb-8">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Package size={20} />
+          Assegna Pacchetti IQCode
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* A. Selezione tipo di attore */}
+          <div>
+            <Label htmlFor="targetType">Tipo Destinatario</Label>
+            <Select value={targetType} onValueChange={setTargetType}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleziona tipo destinatario" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="structure">Struttura</SelectItem>
+                <SelectItem value="partner">Partner</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* B. Selezione destinatario */}
+          {targetType && (
+            <div>
+              <Label htmlFor="targetId">Destinatario</Label>
+              <Select value={targetId} onValueChange={setTargetId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona destinatario" />
+                </SelectTrigger>
+                <SelectContent>
+                  {currentTargets.map((target) => (
+                    <SelectItem key={target.id} value={target.id}>
+                      <div>
+                        <div className="font-medium">{target.name}</div>
+                        <div className="text-xs text-gray-500">{target.code}</div>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+
+        {/* C. Selezione pacchetto */}
+        {targetType && targetId && (
+          <div>
+            <Label>Dimensione Pacchetto</Label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+              {packageSizes.map((size) => (
+                <Button
+                  key={size}
+                  variant={packageSize === size ? "default" : "outline"}
+                  onClick={() => setPackageSize(size)}
+                  className="h-16 flex flex-col items-center justify-center"
+                >
+                  <div className="text-2xl font-bold">{size}</div>
+                  <div className="text-xs">codici</div>
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* D. Conferma assegnazione */}
+        {targetType && targetId && packageSize > 0 && (
+          <div className="border-t pt-6">
+            <div className="bg-blue-50 p-4 rounded-lg mb-4">
+              <h3 className="font-semibold text-blue-900 mb-2">Riepilogo Assegnazione</h3>
+              <div className="text-sm text-blue-800">
+                <p><strong>Tipo:</strong> {targetType === 'structure' ? 'Struttura' : 'Partner'}</p>
+                <p><strong>Destinatario:</strong> {currentTargets.find(t => t.id === targetId)?.name}</p>
+                <p><strong>Codice:</strong> {currentTargets.find(t => t.id === targetId)?.code}</p>
+                <p><strong>Pacchetto:</strong> {packageSize} codici IQ</p>
+              </div>
+            </div>
+            
+            <Button 
+              onClick={onAssign}
+              disabled={isAssigning}
+              className="w-full"
+              size="lg"
+            >
+              {isAssigning ? "Assegnazione in corso..." : "Assegna Pacchetto"}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
