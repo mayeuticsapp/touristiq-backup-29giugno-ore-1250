@@ -861,6 +861,15 @@ function generateStructureData(structureId: string, iqCode: string) {
   // Generate unique data based on structure ID
   const seed = parseInt(structureId) || 1000;
   
+  // Mapping specifico per strutture reali esistenti nel database
+  const specificStructures: { [key: string]: string } = {
+    '0700': 'Hotel Pazzo Calabria',
+    '9576': 'Resort Capo Vaticano', 
+    '4334': 'Grand Hotel Reggio',
+    '7541': 'Hotel Calabria Palace'
+  };
+  
+  // Fallback names per province se non c'è mapping specifico
   const structureNames: { [key: string]: string[] } = {
     'VV': ['Hotel Lo Stretto', 'Resort Capo Vaticano', 'B&B Vista Mare Tropea'],
     'RC': ['Hotel Bergamotto', 'Villa Aspromonte', 'Grand Hotel Reggio'],
@@ -877,10 +886,15 @@ function generateStructureData(structureId: string, iqCode: string) {
   const checkinToday = 3 + (seed % 8); // 3-10 checkins
   const rating = 4.0 + ((seed % 10) / 10); // 4.0-4.9 rating
   
+  // Usa nome specifico se disponibile, altrimenti fallback
+  const structureName = specificStructures[structureId] || 
+    (structureNames[province] && structureNames[province][seed % 3]) || 
+    `Hotel ${province} ${structureId}`;
+  
   return {
     id: structureId,
     iqCode: iqCode,
-    name: (structureNames[province] && structureNames[province][seed % 3]) || `Hotel ${province} ${structureId}`,
+    name: structureName,
     manager: managerNames[seed % managerNames.length],
     province: province,
     totalRooms: totalRooms,
