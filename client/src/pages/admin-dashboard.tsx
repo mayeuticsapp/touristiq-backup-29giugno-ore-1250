@@ -10,6 +10,24 @@ import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
 
+// Component for real-time stats values
+function StatsValue({ endpoint, field }: { endpoint: string; field: string }) {
+  const { data, isLoading } = useQuery({
+    queryKey: [endpoint],
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
+  });
+
+  if (isLoading) return <p className="text-2xl font-semibold text-gray-400">...</p>;
+  
+  // Handle nested field access (e.g., "byRole.partner")
+  const getValue = (obj: any, path: string) => {
+    return path.split('.').reduce((current, key) => current?.[key], obj);
+  };
+  
+  const value = getValue(data?.stats, field) || 0;
+  return <p className="text-2xl font-semibold text-gray-900">{value.toLocaleString()}</p>;
+}
+
 export default function AdminDashboard({ activeSection: propActiveSection }: { activeSection?: string }) {
   const [codeType, setCodeType] = useState(""); // "emotional" or "professional"
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -197,7 +215,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-600">Utenti Totali</p>
-                <p className="text-2xl font-semibold text-gray-900">1,234</p>
+                <StatsValue endpoint="/api/admin/stats" field="totalCodes" />
               </div>
             </div>
           </CardContent>
@@ -211,7 +229,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-600">Codici Attivi</p>
-                <p className="text-2xl font-semibold text-gray-900">567</p>
+                <StatsValue endpoint="/api/admin/stats" field="activeUsers" />
               </div>
             </div>
           </CardContent>
@@ -225,7 +243,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-600">Partner</p>
-                <p className="text-2xl font-semibold text-gray-900">89</p>
+                <StatsValue endpoint="/api/admin/stats" field="byRole.partner" />
               </div>
             </div>
           </CardContent>
@@ -238,8 +256,8 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
                 <Percent className="text-purple-600" size={20} />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-600">Sconti Utilizzati</p>
-                <p className="text-2xl font-semibold text-gray-900">2,345</p>
+                <p className="text-sm text-gray-600">Codici Turistici Generati</p>
+                <StatsValue endpoint="/api/admin/stats" field="byRole.tourist" />
               </div>
             </div>
           </CardContent>
