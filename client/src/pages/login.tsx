@@ -120,16 +120,7 @@ export default function Login() {
               </Alert>
             )}
 
-            {/* Example Codes */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-500 mb-2">Codici di esempio:</p>
-              <div className="text-xs text-gray-600 space-y-1">
-                <div><code className="bg-white px-2 py-1 rounded">ADMIN001</code> - Amministratore</div>
-                <div><code className="bg-white px-2 py-1 rounded">TOURIST001</code> - Turista</div>
-                <div><code className="bg-white px-2 py-1 rounded">STRUCTURE001</code> - Struttura</div>
-                <div><code className="bg-white px-2 py-1 rounded">PARTNER001</code> - Partner</div>
-              </div>
-            </div>
+            
           </CardContent>
         </Card>
       </div>
