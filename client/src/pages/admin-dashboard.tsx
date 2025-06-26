@@ -11,7 +11,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function AdminDashboard() {
+  const [codeType, setCodeType] = useState(""); // "emotional" or "professional"
   const [selectedCountry, setSelectedCountry] = useState("");
+  const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
@@ -30,6 +32,21 @@ export default function AdminDashboard() {
     { code: "JP", name: "日本", flag: "🇯🇵" }
   ];
 
+  const provinces = [
+    { code: "RM", name: "Roma", region: "Lazio" },
+    { code: "MI", name: "Milano", region: "Lombardia" },
+    { code: "NA", name: "Napoli", region: "Campania" },
+    { code: "TO", name: "Torino", region: "Piemonte" },
+    { code: "PA", name: "Palermo", region: "Sicilia" },
+    { code: "GE", name: "Genova", region: "Liguria" },
+    { code: "BO", name: "Bologna", region: "Emilia-Romagna" },
+    { code: "FI", name: "Firenze", region: "Toscana" },
+    { code: "BA", name: "Bari", region: "Puglia" },
+    { code: "CA", name: "Cagliari", region: "Sardegna" },
+    { code: "VE", name: "Venezia", region: "Veneto" },
+    { code: "CT", name: "Catania", region: "Sicilia" }
+  ];
+
   const roles = [
     { value: "tourist", label: "Turista" },
     { value: "structure", label: "Struttura" },
@@ -37,19 +54,29 @@ export default function AdminDashboard() {
     { value: "admin", label: "Amministratore" }
   ];
 
+  const codeTypes = [
+    { value: "emotional", label: "Emozionale (per turisti)", description: "TIQ-IT-LEONARDO" },
+    { value: "professional", label: "Professionale (per aziende)", description: "TIQ-RM-PRT-0001" }
+  ];
+
   const handleGenerateCode = async () => {
-    if (!selectedCountry || !selectedRole) return;
+    if (!codeType || !selectedRole) return;
+    if (codeType === "emotional" && !selectedCountry) return;
+    if (codeType === "professional" && !selectedProvince) return;
 
     setIsGenerating(true);
     try {
+      const requestBody = {
+        codeType,
+        role: selectedRole,
+        assignedTo,
+        ...(codeType === "emotional" ? { country: selectedCountry } : { province: selectedProvince })
+      };
+
       const response = await fetch("/api/genera-iqcode", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          country: selectedCountry,
-          role: selectedRole,
-          assignedTo
-        })
+        body: JSON.stringify(requestBody)
       });
 
       const data = await response.json();
@@ -163,20 +190,59 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="country">Paese</Label>
-              <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+              <Label htmlFor="codeType">Tipo di Codice</Label>
+              <Select value={codeType} onValueChange={setCodeType}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleziona paese" />
+                  <SelectValue placeholder="Seleziona tipo di codice" />
                 </SelectTrigger>
                 <SelectContent>
-                  {countries.map((country) => (
-                    <SelectItem key={country.code} value={country.code}>
-                      {country.flag} {country.name}
+                  {codeTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      <div>
+                        <div className="font-medium">{type.label}</div>
+                        <div className="text-xs text-gray-500">{type.description}</div>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {codeType === "emotional" && (
+              <div>
+                <Label htmlFor="country">Paese</Label>
+                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona paese" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countries.map((country) => (
+                      <SelectItem key={country.code} value={country.code}>
+                        {country.flag} {country.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {codeType === "professional" && (
+              <div>
+                <Label htmlFor="province">Provincia</Label>
+                <Select value={selectedProvince} onValueChange={setSelectedProvince}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona provincia" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {provinces.map((province) => (
+                      <SelectItem key={province.code} value={province.code}>
+                        {province.code} - {province.name} ({province.region})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="role">Ruolo</Label>
@@ -206,7 +272,13 @@ export default function AdminDashboard() {
 
             <Button 
               onClick={handleGenerateCode}
-              disabled={!selectedCountry || !selectedRole || isGenerating}
+              disabled={
+                !codeType || 
+                !selectedRole || 
+                (codeType === "emotional" && !selectedCountry) ||
+                (codeType === "professional" && !selectedProvince) ||
+                isGenerating
+              }
               className="w-full bg-tourist-blue hover:bg-tourist-dark"
             >
               {isGenerating ? "Generando..." : "Genera Codice IQ"}

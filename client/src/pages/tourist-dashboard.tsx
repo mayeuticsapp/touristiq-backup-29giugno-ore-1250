@@ -3,8 +3,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TIQaiChat } from "@/components/tiqai-chat";
 import { Compass, Tags, History, Heart, User, Utensils, Check, MessageCircle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getCurrentUser } from "@/lib/auth";
 
 export default function TouristDashboard() {
+  const { data: user } = useQuery({
+    queryKey: ["/api/auth/me"],
+    queryFn: getCurrentUser,
+  });
   const navigation = [
     { icon: <Compass size={16} />, label: "Esplora", href: "#" },
     { icon: <Tags size={16} />, label: "I Miei Sconti", href: "#" },
@@ -14,21 +20,33 @@ export default function TouristDashboard() {
     { icon: <User size={16} />, label: "Profilo", href: "#" },
   ];
 
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Caricamento...</h2>
+          <p className="text-gray-600">Sto caricando il tuo dashboard turista</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Layout
       title="Benvenuto, Turista!"
       role="Area Turista"
+      iqCode={user.iqCode}
       navigation={navigation}
       sidebarColor="bg-tourist-green"
     >
       <div className="mb-8">
         <Card className="bg-gradient-to-r from-tourist-green to-green-400 text-white">
           <CardContent className="p-6">
-            <h2 className="text-xl font-semibold mb-2">Il tuo Codice IQ</h2>
-            <div className="bg-white/20 rounded-lg p-4 text-center">
-              <span className="text-2xl font-bold tracking-wider">TOURIST001</span>
+            <h2 className="text-xl font-semibold mb-2 text-white">Il tuo Codice IQ</h2>
+            <div className="bg-white/30 rounded-lg p-4 text-center border-2 border-white/20">
+              <span className="text-2xl font-bold tracking-wider text-gray-900">{user.iqCode}</span>
             </div>
-            <p className="mt-3 text-green-100">Mostra questo codice ai partner per ottenere sconti esclusivi!</p>
+            <p className="mt-3 text-white font-medium">Mostra questo codice ai partner per ottenere sconti esclusivi!</p>
           </CardContent>
         </Card>
       </div>

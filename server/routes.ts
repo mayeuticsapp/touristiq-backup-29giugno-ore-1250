@@ -125,8 +125,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Generate IQ Code (Admin only)
   const generateCodeSchema = z.object({
-    country: z.string().min(2, "Codice paese richiesto"),
+    codeType: z.enum(["emotional", "professional"]),
     role: z.enum(["admin", "tourist", "structure", "partner"]),
+    country: z.string().optional(),
+    province: z.string().optional(),
     assignedTo: z.string().optional()
   });
 
@@ -149,11 +151,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Validate request
-      const { country, role, assignedTo } = generateCodeSchema.parse(req.body);
+      const { codeType, role, country, province, assignedTo } = generateCodeSchema.parse(req.body);
+      
+      // Determine location based on code type
+      const location = codeType === "emotional" ? country : province;
+      if (!location) {
+        return res.status(400).json({ 
+          message: codeType === "emotional" ? "Paese richiesto per codici emozionali" : "Provincia richiesta per codici professionali" 
+        });
+      }
       
       // Generate new code
       const { createIQCode } = await import("./createIQCode");
-      const result = await createIQCode(country, role, assignedTo || "");
+      const result = await createIQCode(codeType, role, location, assignedTo || "");
       
       res.json(result);
     } catch (error) {
