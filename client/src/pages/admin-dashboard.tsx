@@ -8,7 +8,7 @@ import { BarChart3, Users, QrCode, Settings, TrendingUp, Handshake, Percent, Cop
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/auth";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 // Component for real-time stats values
 function StatsValue({ endpoint, field }: { endpoint: string; field: string }) {
@@ -119,6 +119,10 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
       }
       
       setGeneratedCode(data.code);
+      
+      // Invalidate users cache to refresh dropdown lists immediately
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
       
       // Reset form after successful generation
       setCodeType("");
@@ -873,28 +877,39 @@ function AssignPackagesView({
 }) {
   const packageSizes = [25, 50, 75, 100];
 
-  // Query per destinatari reali dal database
-  const { data: usersData } = useQuery({
+  // Query per destinatari reali dal database con refresh automatico
+  const { data: usersData, refetch: refetchUsers } = useQuery({
     queryKey: ["/api/admin/users"],
+    refetchInterval: 5000, // Refresh ogni 5 secondi per aggiornare la lista
   });
 
+  // Effetto per refreshare gli utenti quando cambia la vista
+  useEffect(() => {
+    refetchUsers();
+  }, [targetType, refetchUsers]);
+
   // Filtra destinatari reali dal database
-  const availableTargets = usersData?.users ? {
-    structure: usersData.users
+  const allUsers = usersData?.users || [];
+  const availableTargets = {
+    structure: allUsers
       .filter((user: any) => user.role === 'structure')
       .map((user: any) => ({
         id: user.code,
         name: user.assignedTo || user.code,
         code: user.code
       })),
-    partner: usersData.users
+    partner: allUsers
       .filter((user: any) => user.role === 'partner')
       .map((user: any) => ({
         id: user.code,
         name: user.assignedTo || user.code,
         code: user.code
       }))
-  } : { structure: [], partner: [] };
+  };
+
+  // Debug: Log per verificare i dati
+  console.log('Users data:', usersData);
+  console.log('Available targets:', availableTargets);
 
   const currentTargets = targetType ? availableTargets[targetType as keyof typeof availableTargets] || [] : [];
 
