@@ -76,13 +76,30 @@ export default function AdminDashboard() {
       const response = await fetch("/api/genera-iqcode", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // Include cookies for session
         body: JSON.stringify(requestBody)
       });
 
       const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || "Errore durante la generazione");
+      }
+      
       setGeneratedCode(data.code);
+      
+      // Reset form after successful generation
+      setCodeType("");
+      setSelectedCountry("");
+      setSelectedProvince("");
+      setSelectedRole("");
+      setAssignedTo("");
+      setCopied(false);
+      
     } catch (error) {
       console.error("Errore generazione codice:", error);
+      // Show error to user
+      alert(`Errore: ${(error as Error).message}`);
     } finally {
       setIsGenerating(false);
     }
