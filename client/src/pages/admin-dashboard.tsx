@@ -439,6 +439,11 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
 function UsersManagement() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newUserRole, setNewUserRole] = useState("");
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserProvince, setNewUserProvince] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     fetch('/api/admin/users', { credentials: 'include' })
@@ -450,48 +455,179 @@ function UsersManagement() {
       .catch(() => setLoading(false));
   }, []);
 
+  const handleAddUser = async () => {
+    if (!newUserRole || !newUserName || (newUserRole !== 'tourist' && !newUserProvince)) {
+      alert("Compila tutti i campi richiesti");
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      const payload = newUserRole === 'tourist' 
+        ? {
+            codeType: "emotional",
+            role: newUserRole,
+            country: "IT",
+            assignedTo: newUserName
+          }
+        : {
+            codeType: "professional", 
+            role: newUserRole,
+            province: newUserProvince,
+            assignedTo: newUserName
+          };
+
+      const response = await fetch("/api/genera-iqcode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`Utente creato con successo!\nCodice IQ: ${result.code}`);
+        setShowAddUser(false);
+        setNewUserRole("");
+        setNewUserName("");
+        setNewUserProvince("");
+        // Refresh user list
+        window.location.reload();
+      } else {
+        const error = await response.json();
+        alert(`Errore: ${error.message}`);
+      }
+    } catch (error) {
+      console.error("Errore creazione utente:", error);
+      alert("Errore durante la creazione dell'utente");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8">Caricamento utenti...</div>;
   }
 
   return (
-    <Card className="mb-8">
-      <CardHeader>
-        <CardTitle>Gestione Utenti</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">Codice IQ</th>
-                <th className="text-left p-2">Ruolo</th>
-                <th className="text-left p-2">Assegnato a</th>
-                <th className="text-left p-2">Posizione</th>
-                <th className="text-left p-2">Tipo</th>
-                <th className="text-left p-2">Stato</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id} className="border-b">
-                  <td className="p-2 font-mono">{user.code}</td>
-                  <td className="p-2">{user.role}</td>
-                  <td className="p-2">{user.assignedTo || '-'}</td>
-                  <td className="p-2">{user.location || '-'}</td>
-                  <td className="p-2">{user.codeType || '-'}</td>
-                  <td className="p-2">
-                    <span className={`px-2 py-1 rounded text-xs ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {user.isActive ? 'Attivo' : 'Inattivo'}
-                    </span>
-                  </td>
+    <div className="space-y-6">
+      {/* Add User Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            Aggiungi Nuovo Utente
+            <Button 
+              onClick={() => setShowAddUser(!showAddUser)}
+              variant={showAddUser ? "outline" : "default"}
+            >
+              {showAddUser ? "Annulla" : "Nuovo Utente"}
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        {showAddUser && (
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="userRole">Tipo Utente</Label>
+                <Select value={newUserRole} onValueChange={setNewUserRole}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona ruolo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="tourist">Turista</SelectItem>
+                    <SelectItem value="structure">Struttura</SelectItem>
+                    <SelectItem value="partner">Partner</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="userName">Nome/Denominazione</Label>
+                <Input
+                  id="userName"
+                  value={newUserName}
+                  onChange={(e) => setNewUserName(e.target.value)}
+                  placeholder="Nome utente o azienda"
+                />
+              </div>
+
+              {newUserRole && newUserRole !== 'tourist' && (
+                <div>
+                  <Label htmlFor="userProvince">Provincia</Label>
+                  <Select value={newUserProvince} onValueChange={setNewUserProvince}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleziona provincia" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="VV">Vibo Valentia (VV)</SelectItem>
+                      <SelectItem value="RC">Reggio Calabria (RC)</SelectItem>
+                      <SelectItem value="CS">Cosenza (CS)</SelectItem>
+                      <SelectItem value="CZ">Catanzaro (CZ)</SelectItem>
+                      <SelectItem value="KR">Crotone (KR)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4">
+              <Button 
+                onClick={handleAddUser}
+                disabled={isCreating}
+                className="w-full"
+              >
+                {isCreating ? "Creazione in corso..." : "Crea Utente e Genera IQ Code"}
+              </Button>
+              <p className="text-xs text-gray-500 mt-2">
+                {newUserRole === 'tourist' 
+                  ? "Verrà generato un codice emozionale formato TIQ-IT-[PAROLA]"
+                  : "Verrà generato un codice professionale formato TIQ-[PROVINCIA]-[TIPO]-[NUMERO]"
+                }
+              </p>
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Users List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Utenti Registrati</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Codice IQ</th>
+                  <th className="text-left p-2">Ruolo</th>
+                  <th className="text-left p-2">Assegnato a</th>
+                  <th className="text-left p-2">Posizione</th>
+                  <th className="text-left p-2">Tipo</th>
+                  <th className="text-left p-2">Stato</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id} className="border-b">
+                    <td className="p-2 font-mono">{user.code}</td>
+                    <td className="p-2">{user.role}</td>
+                    <td className="p-2">{user.assignedTo || '-'}</td>
+                    <td className="p-2">{user.location || '-'}</td>
+                    <td className="p-2">{user.codeType || '-'}</td>
+                    <td className="p-2">
+                      <span className={`px-2 py-1 rounded text-xs ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {user.isActive ? 'Attivo' : 'Inattivo'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

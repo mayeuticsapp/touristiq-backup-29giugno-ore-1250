@@ -598,6 +598,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     await storage.cleanExpiredSessions();
   }, 60000); // Clean every minute
 
+  // Generate tourist code from package pool (for structures/partners)
+  app.post("/api/generate-tourist-code", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || !['structure', 'partner'].includes(userIqCode.role)) {
+        return res.status(403).json({ message: "Accesso negato - solo strutture e partner" });
+      }
+
+      const { packageId, guestName } = req.body;
+      if (!packageId) {
+        return res.status(400).json({ message: "ID pacchetto richiesto" });
+      }
+
+      // Get user's packages
+      const assignedPackages = await storage.getPackagesByRecipient(userIqCode.code);
+      const targetPackage = assignedPackages.find(pkg => pkg.id === packageId);
+
+      if (!targetPackage) {
+        return res.status(404).json({ message: "Pacchetto non trovato" });
+      }
+
+      // Check if package has available codes
+      const codesUsed = targetPackage.codesUsed || 0;
+      if (codesUsed >= targetPackage.packageSize) {
+        return res.status(400).json({ message: "Pacchetto esaurito - nessun codice disponibile" });
+      }
+
+      // Generate unique tourist code
+      const touristCodeId = Math.floor(Math.random() * 9000) + 1000;
+      const touristCode = `TIQ-${userIqCode.location || 'IT'}-TOURIST-${touristCodeId}`;
+
+      // Create the tourist IQ code
+      const newTouristCode = await storage.createIqCode({
+        code: touristCode,
+        role: 'tourist',
+        assignedTo: guestName || `Ospite generato da ${userIqCode.code}`,
+        location: userIqCode.location || 'IT',
+        codeType: 'anonymous',
+        isActive: true
+      });
+
+      // Update package usage count (simplified in memory storage)
+      targetPackage.codesUsed = codesUsed + 1;
+
+      res.json({
+        success: true,
+        touristCode: newTouristCode.code,
+        guestName: guestName || "Ospite anonimo",
+        packageId: packageId,
+        remainingCodes: targetPackage.packageSize - targetPackage.codesUsed,
+        generatedAt: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error("Errore generazione codice turistico:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -30,6 +30,20 @@ export const assignedPackages = pgTable("assigned_packages", {
   assignedBy: text("assigned_by").notNull(), // Codice IQ admin che ha assegnato
   assignedAt: timestamp("assigned_at").notNull().defaultNow(),
   codesGenerated: text("codes_generated").array(), // Array dei codici IQ generati
+  codesUsed: integer("codes_used").notNull().default(0), // Contatore codici utilizzati
+});
+
+// Tabella per i codici turistici generati dai partner/strutture dal loro pool
+export const generatedTouristCodes = pgTable("generated_tourist_codes", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(), // Codice turistico generato
+  generatedBy: text("generated_by").notNull(), // Chi ha generato il codice (partner/struttura)
+  packageId: integer("package_id").notNull(), // Da quale pacchetto proviene
+  assignedTo: text("assigned_to"), // A chi è stato assegnato (nome ospite)
+  status: text("status").notNull().default("available"), // available, assigned, used
+  generatedAt: timestamp("generated_at").notNull().defaultNow(),
+  assignedAt: timestamp("assigned_at"),
+  usedAt: timestamp("used_at")
 });
 
 export const insertIqCodeSchema = createInsertSchema(iqCodes).omit({
@@ -47,6 +61,11 @@ export const insertAssignedPackageSchema = createInsertSchema(assignedPackages).
   assignedAt: true,
 });
 
+export const insertGeneratedTouristCodeSchema = createInsertSchema(generatedTouristCodes).omit({
+  id: true,
+  generatedAt: true,
+});
+
 export const loginSchema = z.object({
   iqCode: z.string().min(1, "Codice IQ richiesto").max(20),
 });
@@ -57,6 +76,8 @@ export type Session = typeof sessions.$inferSelect;
 export type InsertSession = z.infer<typeof insertSessionSchema>;
 export type AssignedPackage = typeof assignedPackages.$inferSelect;
 export type InsertAssignedPackage = z.infer<typeof insertAssignedPackageSchema>;
+export type GeneratedTouristCode = typeof generatedTouristCodes.$inferSelect;
+export type InsertGeneratedTouristCode = z.infer<typeof insertGeneratedTouristCodeSchema>;
 export type LoginRequest = z.infer<typeof loginSchema>;
 
 export type UserRole = 'admin' | 'tourist' | 'structure' | 'partner';

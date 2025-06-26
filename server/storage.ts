@@ -143,6 +143,7 @@ export class MemStorage implements IStorage {
       status: insertAssignedPackage.status || "available",
       assignedBy: insertAssignedPackage.assignedBy,
       codesGenerated: insertAssignedPackage.codesGenerated || null,
+      codesUsed: insertAssignedPackage.codesUsed || 0,
       assignedAt: new Date()
     };
     

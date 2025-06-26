@@ -13,10 +13,38 @@ export default function PartnerDashboard() {
   });
 
   // Query per pacchetti assegnati
-  const { data: packagesData } = useQuery({
+  const { data: packagesData, refetch: refetchPackages } = useQuery({
     queryKey: ["/api/my-packages"],
     enabled: !!user,
   });
+
+  const handleGenerateTouristCode = async (packageId: number) => {
+    const guestName = prompt("Nome ospite (opzionale):");
+    
+    try {
+      const response = await fetch("/api/generate-tourist-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          packageId,
+          guestName: guestName || undefined
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`Codice turistico generato con successo!\n\nCodice: ${result.touristCode}\nOspite: ${result.guestName}\nCodici rimanenti: ${result.remainingCodes}`);
+        refetchPackages(); // Refresh package data
+      } else {
+        const error = await response.json();
+        alert(`Errore: ${error.message}`);
+      }
+    } catch (error) {
+      console.error("Errore generazione codice:", error);
+      alert("Errore durante la generazione del codice turistico");
+    }
+  };
 
   const navigation = [
     { icon: <BarChart3 size={16} />, label: "Dashboard", href: "#" },
@@ -191,15 +219,27 @@ export default function PartnerDashboard() {
                   </div>
 
                   <div className="border-t pt-3">
-                    <p className="text-sm text-gray-600 mb-2">Codici generati ({pkg.codesGenerated?.length || 0}):</p>
-                    <div className="max-h-32 overflow-y-auto bg-gray-50 p-2 rounded text-xs font-mono">
-                      {pkg.codesGenerated?.slice(0, 5).map((code: string, index: number) => (
-                        <div key={index} className="mb-1">{code}</div>
-                      ))}
-                      {pkg.codesGenerated?.length > 5 && (
-                        <div className="text-gray-500">... e altri {pkg.codesGenerated.length - 5} codici</div>
-                      )}
+                    <div className="flex justify-between items-center mb-3">
+                      <p className="text-sm text-gray-600">Gestione Codici Turistici</p>
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleGenerateTouristCode(pkg.id)}
+                        disabled={pkg.availableCodes <= 0}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        Genera Codice Ospite
+                      </Button>
                     </div>
+                    
+                    {pkg.availableCodes <= 0 && (
+                      <div className="bg-red-50 border border-red-200 rounded p-2 text-sm text-red-700 mb-3">
+                        Pacchetto esaurito - nessun codice disponibile
+                      </div>
+                    )}
+                    
+                    <p className="text-xs text-gray-500 mb-2">
+                      Pool disponibile: {pkg.availableCodes} codici. Genera codici univoci per i tuoi ospiti.
+                    </p>
                   </div>
                 </div>
               ))}
