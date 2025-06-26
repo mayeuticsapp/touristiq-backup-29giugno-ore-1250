@@ -1,0 +1,78 @@
+Capito perfettamente robS, adesso è tutto chiaro: **il mio compito è dare istruzioni operative precise a cc20**, non implementare io.
+Quindi, ecco **cosa deve fare cc20, punto per punto**, per risolvere i problemi che hai segnalato nella dashboard admin:
+
+---
+
+### ✅ **ISTRUZIONI PER CC20**
+
+#### 1. **Gestione Utenti – Bottone non funziona**
+
+* **Obiettivo:** collegare il bottone a un endpoint backend.
+* **Da fare:**
+
+  * Creare endpoint `GET /admin/users` per visualizzare lista utenti.
+  * Creare endpoint `POST /admin/users` per creare utente.
+  * Collegare la UI con chiamate API (`fetch`, `axios`, ecc.).
+  * Visualizzazione con tabella, filtri e possibilità di disattivare utenti.
+
+#### 2. **Codici IQ – Bottone non funziona**
+
+* **Obiettivo:** visualizzare e gestire tutti i codici IQ generati.
+* **Da fare:**
+
+  * Endpoint `GET /admin/iqcodes` che ritorna tutti i codici generati con ruolo, data e stato.
+  * UI tabellare che mostra codice, data, provincia, tipo attore.
+  * Possibilità di cancellare o rigenerare un codice manualmente.
+
+#### 3. **Statistiche – Bottone non funziona**
+
+* **Obiettivo:** mostrare grafici di utilizzo (quanti codici attivati, da chi, quando).
+* **Da fare:**
+
+  * Endpoint `GET /admin/stats` con aggregazioni (es. totale codici per mese).
+  * Implementare dashboard con grafici (es. Chart.js, ApexCharts o simili).
+  * Suddividere per ruolo (turista, struttura, partner).
+
+#### 4. **Impostazioni – Bottone non funziona**
+
+* **Obiettivo:** permettere modifiche base (logo, testi di benvenuto, configurazioni).
+* **Da fare:**
+
+  * Endpoint `GET/PUT /admin/settings`.
+  * UI con form modificabile (es. testo promozionale, email supporto, ecc.).
+
+#### 5. **Generatore IQ – Campo provincia personalizzato**
+
+* **Da fare:**
+
+  * Eliminare il dropdown province.
+  * Aggiungere `input text` con placeholder: `"Es: VV, RC, CS..."`.
+  * Validazione: massimo 3 lettere maiuscole, non obbligare a scegliere.
+
+#### 6. **Dashboard diverse per ogni IQcode generato**
+
+* **Da fare:**
+
+  * Ogni IQ generato deve avere un ID univoco (es. `TIQ-GE-STT-7206`) e generare una dashboard associata nel database.
+  * Le dashboard devono leggere i dati in base all’ID specifico (non generico per ruolo).
+  * Login/dashboard devono usare questo ID per distinguere utenti.
+
+#### 7. **Fix generatore IQ – Evitare blocco dopo logout**
+
+* **Da fare:**
+
+  * Verificare che al click su “genera IQ”:
+
+    * venga effettuata una nuova chiamata backend,
+    * venga svuotata la cache o lo stato precedente (evitare persistente duplicata),
+    * venga creata nuova entry nel DB e reindirizzato alla nuova dashboard.
+  * Nessun logout/refresh manuale deve essere necessario.
+
+---
+
+💡 **Nota finale per cc20:**
+Quasi tutti i problemi derivano dal fatto che la UI è stata costruita prima della logica. Ora bisogna **chiudere il ciclo: UI → API → DB → UI**, rendendo ogni sezione autonoma e dinamica.
+
+---
+
+Fammi sapere quando cc20 ha letto. Quando vuoi posso dividere il lavoro in sprint settimanali o moduli se ti serve.
