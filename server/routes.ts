@@ -1259,6 +1259,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get approved structures for assignment (accessible by structures)
+  app.get("/api/structures", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const allCodes = await storage.getAllIqCodes();
+      const approvedStructures = allCodes
+        .filter(code => code.role === 'structure' && code.status === 'approved' && code.isActive)
+        .map(code => ({
+          id: code.id,
+          code: code.code,
+          name: `Struttura ${code.code.split('-').pop()}`,
+          status: code.status
+        }));
+
+      res.json({ structures: approvedStructures });
+    } catch (error) {
+      console.error("Errore recupero strutture:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // Remove phone number from guest (GDPR compliance)
   app.patch("/api/guests/:id/remove-phone", async (req, res) => {
     try {
@@ -1282,44 +1312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate tourist code for new guest
-  app.post("/api/generate-tourist-code", async (req, res) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
 
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      const { guestName, guestId, roomNumber } = req.body;
-      
-      // Genera un codice IQ emozionale temporaneo
-      const emotions = ["ROSA", "SOLE", "MARE", "LUNA", "STELLA", "CIELO", "VERDE", "ORO", "NEVE", "VENTO"];
-      const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
-      const touristCode = `TIQ-IT-${randomEmotion}-${Math.floor(Math.random() * 9000) + 1000}`;
-      
-      // Crea il codice nel database
-      const iqCode = await storage.createIqCode({
-        code: touristCode,
-        role: "tourist",
-        status: "active",
-        isActive: true,
-        guestName,
-        roomNumber,
-        generatedBy: session.iqCode,
-        notes: `Generato per ospite: ${guestName} - Camera: ${roomNumber}`
-      });
-      
-      res.json({ success: true, touristCode, iqCode });
-    } catch (error) {
-      console.error("Errore generazione codice turistico:", error);
-      res.status(500).json({ message: "Errore durante la generazione del codice" });
-    }
-  });
 
   const httpServer = createServer(app);
   return httpServer;

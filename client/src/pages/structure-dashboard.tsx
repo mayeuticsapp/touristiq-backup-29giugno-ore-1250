@@ -181,25 +181,38 @@ export default function StructureDashboard() {
   const handleAssignCodeToNewGuest = async () => {
     if (!justCreatedGuest) return;
     
+    // Verifica se ci sono pacchetti disponibili
+    if (!packagesData?.packages || packagesData.packages.length === 0) {
+      alert("Nessun pacchetto disponibile. Contatta l'admin per ricevere crediti.");
+      return;
+    }
+
+    // Usa il primo pacchetto con crediti disponibili
+    const availablePackage = packagesData.packages.find((pkg: any) => pkg.creditsRemaining > 0);
+    if (!availablePackage) {
+      alert("Nessun credito disponibile nei pacchetti assegnati.");
+      return;
+    }
+    
     try {
-      // Genera un codice IQ emozionale temporaneo per il nuovo ospite
-      const response = await fetch("/api/generate-tourist-code", {
+      const response = await fetch("/api/assign-code-to-guest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          guestName: `${justCreatedGuest.firstName} ${justCreatedGuest.lastName}`,
           guestId: justCreatedGuest.id,
-          roomNumber: justCreatedGuest.roomNumber
+          packageId: availablePackage.id
         })
       });
 
       if (response.ok) {
         const result = await response.json();
         setAssignedCode(result.touristCode);
-        alert(`Codice IQ assegnato: ${result.touristCode}`);
+        refetchPackages(); // Aggiorna i crediti rimanenti
+        alert(`Codice IQ assegnato: ${result.touristCode}\nCrediti rimanenti: ${result.remainingCredits}`);
       } else {
-        alert("Errore durante l'assegnazione del codice");
+        const error = await response.json();
+        alert(`Errore: ${error.message}`);
       }
     } catch (error) {
       alert("Errore durante l'assegnazione del codice");

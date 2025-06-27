@@ -976,10 +976,14 @@ function AssignPackagesView({
 
   const fetchTargets = async () => {
     try {
-      const response = await fetch('/api/admin/structures', { credentials: 'include' });
+      const response = await fetch('/api/structures', { credentials: 'include' });
       const data = await response.json();
       setStructures(data.structures || []);
-      setPartners(data.partners || []);
+      
+      // Recupera anche i partner approvati
+      const partnerResponse = await fetch('/api/admin/partners', { credentials: 'include' });
+      const partnerData = await partnerResponse.json();
+      setPartners(partnerData.partners || []);
     } catch (error) {
       console.error('Errore caricamento destinatari:', error);
     }
