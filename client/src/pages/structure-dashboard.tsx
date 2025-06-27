@@ -626,6 +626,34 @@ export default function StructureDashboard() {
       
       {activeSection === "dashboard" && (
         <div>
+          {/* Banner Pannello Struttura Completo */}
+          <Card className="mb-6 bg-gradient-to-r from-purple-600 to-purple-800 text-white">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">🎟 Pannello Struttura Completo</h2>
+                  <p className="text-purple-100 mb-4">
+                    Accedi al pannello completo per acquistare pacchetti IQCode, assegnare codici via WhatsApp e gestire la contabilità
+                  </p>
+                  <div className="flex gap-4 text-sm">
+                    <span>🛒 Acquisto Pacchetti</span>
+                    <span>📲 Invio WhatsApp</span>
+                    <span>📊 Mini Gestionale</span>
+                  </div>
+                </div>
+                <div>
+                  <Button 
+                    onClick={() => window.location.href = `/structure/${structureId}/panel`}
+                    className="bg-white text-purple-600 hover:bg-gray-100 font-semibold px-6 py-3"
+                    size="lg"
+                  >
+                    Apri Pannello Completo
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
           {/* Statistiche principali */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <Card>

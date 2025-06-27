@@ -92,7 +92,7 @@ function Router() {
       
       <Route path="/structure/:id/panel">
         <ProtectedRoute requiredRole="structure">
-          <StructurePanel structureCode="TIQ-RC-STT-2567" structureName="Resort Calabria" />
+          <StructurePanel />
         </ProtectedRoute>
       </Route>
       
