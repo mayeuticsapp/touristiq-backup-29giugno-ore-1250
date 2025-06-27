@@ -118,8 +118,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: pkg.status,
           assignedBy: pkg.assignedBy,
           assignedAt: pkg.assignedAt,
-          codesGenerated: pkg.codesGenerated,
-          availableCodes: pkg.codesGenerated?.length || 0
+          creditsRemaining: pkg.creditsRemaining,
+          creditsUsed: pkg.creditsUsed,
+          availableCodes: pkg.creditsRemaining
         }))
       });
     } catch (error) {
@@ -466,9 +467,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const packageAssignment = await storage.createAssignedPackage({
         recipientIqCode: targetCode.code,
         packageSize,
-        status: "available",
+        status: "available", 
         assignedBy: userIqCode.code,
-        codesGenerated: generatedCodes
+        creditsRemaining: packageSize,
+        creditsUsed: 0
       });
 
       // Log assignment
@@ -518,8 +520,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: pkg.status,
           assignedBy: pkg.assignedBy,
           assignedAt: pkg.assignedAt,
-          codesGenerated: pkg.codesGenerated,
-          availableCodes: pkg.codesGenerated?.length || 0
+          creditsRemaining: pkg.creditsRemaining,
+          creditsUsed: pkg.creditsUsed,
+          availableCodes: pkg.creditsRemaining
         }))
       });
     } catch (error) {
@@ -740,7 +743,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Assign code to specific guest with WhatsApp integration
+  // Generate emotional IQCode for guest using credits system
   app.post("/api/assign-code-to-guest", async (req, res) => {
     try {
       const sessionToken = req.cookies.session_token;
@@ -770,7 +773,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Ospite non trovato" });
       }
 
-      // Get package details
+      // Get package details and verify credits
       const packages = await storage.getPackagesByRecipient(userIqCode.code);
       const targetPackage = packages.find(pkg => pkg.id === packageId);
       
@@ -778,30 +781,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Pacchetto non trovato" });
       }
 
-      const availableCodes = targetPackage.codesGenerated?.length || 0;
-      if (availableCodes <= 0) {
-        return res.status(400).json({ message: "Nessun codice disponibile in questo pacchetto" });
+      if (targetPackage.creditsRemaining <= 0) {
+        return res.status(400).json({ message: "Nessun credito disponibile in questo pacchetto" });
       }
 
-      // Generate unique tourist code for guest
-      const timestamp = Date.now().toString().slice(-6);
-      const touristCode = `TIQ-GUEST-${guest.firstName.slice(0,2).toUpperCase()}${guest.lastName.slice(0,2).toUpperCase()}-${timestamp}`;
+      // Generate unique emotional IQCode (TIQ-IT-ROSA format)
+      const guestName = `${guest.firstName} ${guest.lastName}`;
+      const result = await storage.generateEmotionalIQCode(userIqCode.code, packageId, guestName, guestId);
 
       // Update guest assigned codes count
       await storage.updateGuest(guestId, {
         assignedCodes: (guest.assignedCodes || 0) + 1
       });
 
-      // Decrement available codes in package (simplified update)
-      const updatedAvailable = availableCodes - 1;
-
-      console.log(`Struttura ${userIqCode.code} ha assegnato codice ${touristCode} all'ospite ${guest.firstName} ${guest.lastName} (ID: ${guestId})`);
+      console.log(`Struttura ${userIqCode.code} ha generato IQCode emozionale ${result.code} per ospite ${guestName} (ID: ${guestId}), crediti rimanenti: ${result.remainingCredits}`);
 
       res.json({
         success: true,
-        touristCode,
-        guestName: `${guest.firstName} ${guest.lastName}`,
-        remainingCodes: updatedAvailable,
+        touristCode: result.code,
+        guestName: guestName,
+        remainingCredits: result.remainingCredits,
+        message: `IQCode emozionale ${result.code} generato con successo per ${guestName}`,
         guest: {
           phone: guest.phone,
           firstName: guest.firstName,
@@ -810,7 +810,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      console.error("Errore assegnazione codice ospite:", error);
+      console.error("Errore generazione IQCode emozionale:", error);
       res.status(500).json({ message: "Errore del server" });
     }
   });

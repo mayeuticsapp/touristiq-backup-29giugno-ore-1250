@@ -26,6 +26,10 @@ export interface IStorage {
   getGuestById(id: number): Promise<Guest | undefined>;
   updateGuest(id: number, updates: Partial<InsertGuest>): Promise<Guest>;
   deleteGuest(id: number): Promise<void>;
+
+  // Emotional IQCode generation methods
+  generateEmotionalIQCode(structureCode: string, packageId: number, guestName: string, guestId?: number): Promise<{ code: string; remainingCredits: number }>;
+  decrementPackageCredits(packageId: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -149,8 +153,8 @@ export class MemStorage implements IStorage {
       packageSize: insertAssignedPackage.packageSize,
       status: insertAssignedPackage.status || "available",
       assignedBy: insertAssignedPackage.assignedBy,
-      codesGenerated: insertAssignedPackage.codesGenerated || null,
-      codesUsed: insertAssignedPackage.codesUsed || 0,
+      creditsRemaining: insertAssignedPackage.packageSize, // Crediti iniziali = packageSize
+      creditsUsed: 0,
       assignedAt: new Date()
     };
     
@@ -224,6 +228,52 @@ export class MemStorage implements IStorage {
       guest.isActive = false;
       guest.updatedAt = new Date();
       this.guests.set(id, guest);
+    }
+  }
+
+  // Emotional IQCode generation methods
+  async generateEmotionalIQCode(structureCode: string, packageId: number, guestName: string, guestId?: number): Promise<{ code: string; remainingCredits: number }> {
+    // Get package and verify credits
+    const targetPackage = this.assignedPackages.get(packageId);
+    if (!targetPackage || targetPackage.creditsRemaining <= 0) {
+      throw new Error("Nessun credito disponibile nel pacchetto");
+    }
+
+    // Import emotional words for code generation
+    const { generateEmotionalIQCode } = await import('./iq-generator');
+    
+    // Generate unique emotional code (TIQ-IT-ROSA format)
+    let uniqueCode: string;
+    let attempts = 0;
+    do {
+      uniqueCode = generateEmotionalIQCode('IT'); // Default Italy for now
+      attempts++;
+    } while (this.isCodeExists(uniqueCode) && attempts < 50);
+
+    if (attempts >= 50) {
+      throw new Error("Impossibile generare codice univoco");
+    }
+
+    // Decrement credits
+    targetPackage.creditsRemaining--;
+    targetPackage.creditsUsed++;
+
+    return {
+      code: uniqueCode,
+      remainingCredits: targetPackage.creditsRemaining
+    };
+  }
+
+  private isCodeExists(code: string): boolean {
+    // Check in existing IQ codes
+    return Array.from(this.iqCodes.values()).some(iq => iq.code === code);
+  }
+
+  async decrementPackageCredits(packageId: number): Promise<void> {
+    const targetPackage = this.assignedPackages.get(packageId);
+    if (targetPackage && targetPackage.creditsRemaining > 0) {
+      targetPackage.creditsRemaining--;
+      targetPackage.creditsUsed++;
     }
   }
 }
@@ -368,6 +418,7 @@ export class PostgreStorage implements IStorage {
   async createAssignedPackage(insertAssignedPackage: InsertAssignedPackage): Promise<AssignedPackage> {
     const result = await this.db.insert(assignedPackages).values({
       ...insertAssignedPackage,
+      creditsRemaining: insertAssignedPackage.packageSize, // Crediti iniziali
       assignedAt: new Date()
     }).returning();
     return result[0];
@@ -410,6 +461,63 @@ export class PostgreStorage implements IStorage {
 
   async deleteGuest(id: number): Promise<void> {
     await this.db.delete(guests).where(eq(guests.id, id));
+  }
+
+  // Emotional IQCode generation methods
+  async generateEmotionalIQCode(structureCode: string, packageId: number, guestName: string, guestId?: number): Promise<{ code: string; remainingCredits: number }> {
+    // Get package and verify credits
+    const packages = await this.db.select().from(assignedPackages).where(eq(assignedPackages.id, packageId));
+    const targetPackage = packages[0];
+    
+    if (!targetPackage || targetPackage.creditsRemaining <= 0) {
+      throw new Error("Nessun credito disponibile nel pacchetto");
+    }
+
+    // Import emotional words for code generation
+    const { generateEmotionalIQCode } = await import('./iq-generator');
+    
+    // Generate unique emotional code (TIQ-IT-ROSA format)
+    let uniqueCode: string;
+    let attempts = 0;
+    do {
+      uniqueCode = generateEmotionalIQCode('IT'); // Default Italy for now
+      attempts++;
+      
+      // Check if code exists in database
+      const existing = await this.db.select().from(iqCodes).where(eq(iqCodes.code, uniqueCode)).limit(1);
+      if (existing.length === 0) break;
+    } while (attempts < 50);
+
+    if (attempts >= 50) {
+      throw new Error("Impossibile generare codice univoco");
+    }
+
+    // Decrement credits
+    await this.db.update(assignedPackages)
+      .set({ 
+        creditsRemaining: targetPackage.creditsRemaining - 1,
+        creditsUsed: targetPackage.creditsUsed + 1
+      })
+      .where(eq(assignedPackages.id, packageId));
+
+    return {
+      code: uniqueCode,
+      remainingCredits: targetPackage.creditsRemaining - 1
+    };
+  }
+
+  async decrementPackageCredits(packageId: number): Promise<void> {
+    const packages = await this.db.select().from(assignedPackages).where(eq(assignedPackages.id, packageId));
+    const targetPackage = packages[0];
+    
+    if (targetPackage && targetPackage.creditsRemaining > 0) {
+      await this.db.update(assignedPackages)
+        .set({
+          creditsRemaining: targetPackage.creditsRemaining - 1,
+          creditsUsed: targetPackage.creditsUsed + 1
+        })
+        .where(eq(assignedPackages.id, packageId));
+    }
   }
 }
 
