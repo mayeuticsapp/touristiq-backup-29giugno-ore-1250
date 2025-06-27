@@ -66,6 +66,8 @@ export default function StructureDashboard() {
   const [selectedGuestId, setSelectedGuestId] = useState(0);
   const [justCreatedGuest, setJustCreatedGuest] = useState<Guest | null>(null);
   const [assignedCode, setAssignedCode] = useState<string>("");
+  const [selectedGuestForManagement, setSelectedGuestForManagement] = useState<Guest | null>(null);
+  const [guestHistory, setGuestHistory] = useState<any[]>([]);
   
   // Recupera dati specifici della struttura
   const { data: structureData, isLoading } = useQuery({
@@ -722,30 +724,46 @@ export default function StructureDashboard() {
                       </Badge>
                     </div>
 
-                    {/* Assegnazione codici rapida */}
-                    {packagesData?.packages && packagesData.packages.length > 0 && (
-                      <div className="border-t pt-3">
-                        <p className="text-sm font-medium mb-2">Assegna Codice IQ:</p>
-                        <div className="flex gap-2 flex-wrap">
-                          {packagesData?.packages?.map((pkg: Package) => (
-                            <Button
-                              key={pkg.id}
-                              size="sm"
-                              onClick={() => handleAssignCodeToGuest(guest.id, pkg.id)}
-                              disabled={(pkg.availableCodes || 0) <= 0}
-                              className="bg-purple-600 hover:bg-purple-700"
-                            >
-                              <Gift size={14} className="mr-1" />
-                              Pacchetto {pkg.packageSize}
-                              {guest.phone && <MessageCircle size={14} className="ml-1" />}
-                            </Button>
-                          ))}
-                        </div>
-                        {packagesData.packages.every((pkg: any) => pkg.availableCodes <= 0) && (
-                          <p className="text-sm text-red-600 mt-2">Nessun codice disponibile</p>
-                        )}
+                    {/* Gestione Completa Ospite - SEMPRE DISPONIBILE */}
+                    <div className="border-t pt-3 mt-3">
+                      <div className="flex justify-between items-center mb-3">
+                        <p className="text-sm font-medium">Gestione Ospite</p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedGuestForManagement(guest)}
+                          className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                        >
+                          <Settings size={14} className="mr-1" />
+                          Apri Gestione
+                        </Button>
                       </div>
-                    )}
+                      
+                      {/* Azioni rapide inline */}
+                      {packagesData?.packages && packagesData.packages.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs text-gray-600">Assegna Codice Rapido:</p>
+                          <div className="flex gap-2 flex-wrap">
+                            {packagesData?.packages?.map((pkg: Package) => (
+                              <Button
+                                key={pkg.id}
+                                size="sm"
+                                onClick={() => handleAssignCodeToGuest(guest.id, pkg.id)}
+                                disabled={(pkg.availableCodes || 0) <= 0}
+                                className="bg-purple-600 hover:bg-purple-700 text-xs"
+                              >
+                                <Gift size={12} className="mr-1" />
+                                {pkg.packageSize}
+                                {guest.phone && <MessageCircle size={12} className="ml-1" />}
+                              </Button>
+                            ))}
+                          </div>
+                          {packagesData.packages.every((pkg: any) => (pkg.availableCodes || 0) <= 0) && (
+                            <p className="text-xs text-red-600">Nessun credito disponibile</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
 
                     {guest.notes && (
                       <div className="border-t pt-3 mt-3">
@@ -778,6 +796,141 @@ export default function StructureDashboard() {
     >
       {activeSection === "iqcode" && renderIQCodeManagement()}
       {activeSection === "ospiti" && renderGuestManagement()}
+      
+      {/* Pannello Gestione Dettagliata Ospite */}
+      {selectedGuestForManagement && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold">
+                  Gestione Ospite: {selectedGuestForManagement.firstName} {selectedGuestForManagement.lastName}
+                </h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedGuestForManagement(null)}
+                >
+                  Chiudi
+                </Button>
+              </div>
+              <p className="text-gray-600 mt-1">
+                Camera {selectedGuestForManagement.roomNumber} • {selectedGuestForManagement.assignedCodes || 0} codici assegnati
+              </p>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Informazioni Ospite */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Telefono</Label>
+                  <p className="text-sm">{selectedGuestForManagement.phone || "Non fornito"}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Check-in/Check-out</Label>
+                  <p className="text-sm">
+                    {selectedGuestForManagement.checkinDate && selectedGuestForManagement.checkoutDate
+                      ? `${selectedGuestForManagement.checkinDate} - ${selectedGuestForManagement.checkoutDate}`
+                      : "Date non specificate"}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Assegnazione Nuovi Codici */}
+              {packagesData?.packages && packagesData.packages.length > 0 && (
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-semibold mb-3">Assegna Nuovo Codice IQ</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {packagesData.packages.map((pkg: Package) => (
+                      <Button
+                        key={pkg.id}
+                        onClick={() => {
+                          handleAssignCodeToGuest(selectedGuestForManagement.id, pkg.id);
+                          setSelectedGuestForManagement(null);
+                        }}
+                        disabled={(pkg.availableCodes || 0) <= 0}
+                        className="bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Gift size={16} className="mr-2" />
+                        Pacchetto {pkg.packageSize}
+                        <Badge className="ml-2 bg-white text-purple-600">
+                          {pkg.availableCodes || 0} disponibili
+                        </Badge>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Azioni WhatsApp e Copia */}
+              {selectedGuestForManagement.phone && (
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-semibold mb-3">Comunicazioni</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      onClick={() => {
+                        if (assignedCode) {
+                          handleSendWhatsApp(selectedGuestForManagement.phone, assignedCode, selectedGuestForManagement);
+                        } else {
+                          alert("Prima assegna un codice IQ per inviarlo via WhatsApp");
+                        }
+                      }}
+                      className="bg-green-600 hover:bg-green-700"
+                      disabled={!assignedCode}
+                    >
+                      <MessageCircle size={16} className="mr-2" />
+                      Invia via WhatsApp
+                    </Button>
+                    
+                    <Button
+                      onClick={() => {
+                        if (assignedCode) {
+                          navigator.clipboard.writeText(assignedCode);
+                          alert(`Codice ${assignedCode} copiato negli appunti`);
+                        }
+                      }}
+                      className="bg-gray-600 hover:bg-gray-700"
+                      disabled={!assignedCode}
+                    >
+                      <Copy size={16} className="mr-2" />
+                      Copia Ultimo Codice
+                    </Button>
+                  </div>
+                  
+                  {!selectedGuestForManagement.phone && (
+                    <p className="text-sm text-orange-600 mt-2">
+                      Numero di telefono non disponibile per questo ospite
+                    </p>
+                  )}
+                </div>
+              )}
+              
+              {/* Note Ospite */}
+              {selectedGuestForManagement.notes && (
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-semibold mb-2">Note</h3>
+                  <p className="text-sm text-gray-600">{selectedGuestForManagement.notes}</p>
+                </div>
+              )}
+              
+              {/* Storico Operazioni */}
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold mb-3">Riepilogo Operazioni</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Codici IQ assegnati:</span>
+                    <Badge>{selectedGuestForManagement.assignedCodes || 0}</Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Data registrazione:</span>
+                    <span className="text-gray-600">Oggi</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {activeSection === "dashboard" && (
         <div>
