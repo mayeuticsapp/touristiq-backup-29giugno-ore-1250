@@ -10,7 +10,6 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import TouristDashboard from "@/pages/tourist-dashboard";
 import StructureDashboard from "@/pages/structure-dashboard";
 import PartnerDashboard from "@/pages/partner-dashboard";
-import { AdvancedPartnerDashboard } from "@/pages/advanced-partner-dashboard";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 
@@ -99,12 +98,6 @@ function Router() {
       <Route path="/structure">
         <ProtectedRoute requiredRole="structure">
           <StructureDashboard />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/partner/advanced">
-        <ProtectedRoute requiredRole="partner">
-          <AdvancedPartnerDashboard />
         </ProtectedRoute>
       </Route>
       

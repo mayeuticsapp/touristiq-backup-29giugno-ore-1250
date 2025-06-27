@@ -109,10 +109,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // =================== PARTNER DASHBOARD AVANZATA API ===================
-
-  // 1. GESTIONE PROMOZIONI PARTNER
-  app.get("/api/partner/promotions", async (req, res) => {
+  // Admin routes
+  app.get("/api/admin/stats", async (req, res) => {
     try {
       const sessionToken = req.cookies.session_token;
       if (!sessionToken) {
@@ -120,276 +118,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
+      if (!session || session.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato" });
       }
 
-      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
-      if (!userIqCode || userIqCode.role !== 'partner') {
-        return res.status(403).json({ message: "Accesso negato - solo partner" });
-      }
+      const allCodes = await storage.getAllIqCodes();
+      const stats = {
+        totalUsers: allCodes.filter(code => !code.isDeleted).length,
+        activeUsers: allCodes.filter(code => code.isActive && !code.isDeleted).length,
+        totalAdmins: allCodes.filter(code => code.role === 'admin' && !code.isDeleted).length,
+        totalTourists: allCodes.filter(code => code.role === 'tourist' && !code.isDeleted).length,
+        totalStructures: allCodes.filter(code => code.role === 'structure' && !code.isDeleted).length,
+        totalPartners: allCodes.filter(code => code.role === 'partner' && !code.isDeleted).length,
+        pendingApprovals: allCodes.filter(code => code.status === 'pending' && !code.isDeleted).length,
+        blockedUsers: allCodes.filter(code => code.status === 'blocked' && !code.isDeleted).length
+      };
 
-      const promotions = await storage.getPartnerPromotions(userIqCode.code);
-      res.json({ promotions });
+      res.json(stats);
     } catch (error) {
-      console.error("Errore ottenimento promozioni:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  app.post("/api/partner/promotions", async (req, res) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
-      if (!userIqCode || userIqCode.role !== 'partner') {
-        return res.status(403).json({ message: "Accesso negato - solo partner" });
-      }
-
-      const { title, description, discountType, discountValue, requiresConnection, expiresAt } = req.body;
-
-      const promotion = await storage.createPartnerPromotion({
-        partnerCode: userIqCode.code,
-        title,
-        description,
-        discountType,
-        discountValue,
-        requiresConnection: requiresConnection || false,
-        expiresAt: expiresAt ? new Date(expiresAt) : null,
-        isActive: true
-      });
-
-      res.json({ success: true, promotion });
-    } catch (error) {
-      console.error("Errore creazione promozione:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  // 2. GESTIONE COLLEGAMENTI TURISTI
-  app.get("/api/partner/connections", async (req, res) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
-      if (!userIqCode || userIqCode.role !== 'partner') {
-        return res.status(403).json({ message: "Accesso negato - solo partner" });
-      }
-
-      const connections = await storage.getPartnerConnections(userIqCode.code);
-      res.json({ connections });
-    } catch (error) {
-      console.error("Errore ottenimento collegamenti:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  app.post("/api/partner/assign-multiple-tourists", async (req, res) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
-      if (!userIqCode || userIqCode.role !== 'partner') {
-        return res.status(403).json({ message: "Accesso negato - solo partner" });
-      }
-
-      const { touristCodes } = req.body;
-      if (!Array.isArray(touristCodes) || touristCodes.length === 0) {
-        return res.status(400).json({ message: "Lista codici turista richiesta" });
-      }
-
-      const connections = await storage.assignMultipleTourists(userIqCode.code, touristCodes);
-      res.json({ success: true, connections, assigned: connections.length });
-    } catch (error) {
-      console.error("Errore assegnazione multipla:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  // 3. ANALYTICS E STATISTICHE AVANZATE
-  app.get("/api/partner/analytics", async (req, res) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
-      if (!userIqCode || userIqCode.role !== 'partner') {
-        return res.status(403).json({ message: "Accesso negato - solo partner" });
-      }
-
-      const analytics = await storage.getPartnerAnalytics(userIqCode.code);
-      res.json({ analytics });
-    } catch (error) {
-      console.error("Errore ottenimento analytics:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  // 4. COMUNICAZIONI ADMIN
-  app.get("/api/partner/communications", async (req, res) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
-      if (!userIqCode || userIqCode.role !== 'partner') {
-        return res.status(403).json({ message: "Accesso negato - solo partner" });
-      }
-
-      const communications = await storage.getPartnerCommunications(userIqCode.code);
-      const unreadCount = await storage.getUnreadCommunicationsCount(userIqCode.code);
-      
-      res.json({ communications, unreadCount });
-    } catch (error) {
-      console.error("Errore ottenimento comunicazioni:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  // 5. RICHIESTE CREDITI
-  app.get("/api/partner/credit-requests", async (req, res) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
-      if (!userIqCode || userIqCode.role !== 'partner') {
-        return res.status(403).json({ message: "Accesso negato - solo partner" });
-      }
-
-      const requests = await storage.getPartnerCreditRequests(userIqCode.code);
-      res.json({ requests });
-    } catch (error) {
-      console.error("Errore ottenimento richieste crediti:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  app.post("/api/partner/credit-requests", async (req, res) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
-      if (!userIqCode || userIqCode.role !== 'partner') {
-        return res.status(403).json({ message: "Accesso negato - solo partner" });
-      }
-
-      const { requestedAmount, justification } = req.body;
-      if (!requestedAmount || !justification) {
-        return res.status(400).json({ message: "Importo e giustificazione richiesti" });
-      }
-
-      const request = await storage.createCreditRequest({
-        partnerCode: userIqCode.code,
-        requestedAmount,
-        justification
-      });
-
-      res.json({ success: true, request });
-    } catch (error) {
-      console.error("Errore creazione richiesta crediti:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  // 6. EXPORT DATI PARTNER
-  app.get("/api/partner/export", async (req, res) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
-      if (!userIqCode || userIqCode.role !== 'partner') {
-        return res.status(403).json({ message: "Accesso negato - solo partner" });
-      }
-
-      const exportData = await storage.exportPartnerData(userIqCode.code);
-      
-      // Format CSV data for connections
-      const csvConnections = exportData.connections.map(conn => ({
-        TuristaCode: conn.touristCode,
-        Stato: conn.connectionStatus,
-        DataCollegamento: new Date(conn.connectedAt).toLocaleDateString('it-IT'),
-        UltimaInterazione: new Date(conn.lastInteraction).toLocaleDateString('it-IT'),
-        TotaleVisite: conn.totalVisits,
-        PromozioniUsate: conn.promotionsUsed,
-        ValoreTotale: (conn.totalValue / 100).toFixed(2) + '€',
-        Note: conn.notes || ''
-      }));
-
-      res.json({ 
-        success: true, 
-        data: exportData,
-        csvConnections,
-        summary: {
-          totalConnections: exportData.connections.length,
-          activeConnections: exportData.connections.filter(c => c.isActive).length,
-          totalPromotions: exportData.promotions.length,
-          activePromotions: exportData.promotions.filter(p => p.isActive).length
-        }
-      });
-    } catch (error) {
-      console.error("Errore export dati:", error);
+      console.error("Errore ottenimento statistiche:", error);
       res.status(500).json({ message: "Errore del server" });
     }
   });

@@ -73,24 +73,6 @@ export default function PartnerDashboard() {
       navigation={navigation}
       sidebarColor="bg-orange-500"
     >
-      {/* Banner per accesso alla Dashboard Avanzata */}
-      <div className="mb-6 p-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold">🚀 Nuova Partner Dashboard Avanzata</h3>
-            <p className="text-purple-100 mt-1">
-              Gestione promozioni avanzata, analytics ROI, assegnazione multipla turisti, comunicazioni admin e molto altro!
-            </p>
-          </div>
-          <Button 
-            onClick={() => window.location.href = '/partner/advanced'} 
-            className="bg-white text-purple-600 hover:bg-purple-50 font-medium"
-          >
-            Accedi Ora →
-          </Button>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardContent className="p-6">
