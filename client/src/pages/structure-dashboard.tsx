@@ -10,6 +10,40 @@ import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 
+// Interfacce TypeScript per tipizzazione completa
+interface Guest {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  roomNumber: string;
+  checkIn: string;
+  checkOut: string;
+  assignedCodes: number;
+  structureCode: string;
+  notes?: string;
+}
+
+interface Package {
+  id: number;
+  packageSize: number;
+  status: string;
+  createdAt: string;
+  assignerIqCode: string;
+  recipientIqCode: string;
+  codesGenerated?: string[];
+  availableCodes?: number;
+}
+
+interface GuestsResponse {
+  guests: Guest[];
+}
+
+interface PackagesResponse {
+  packages: Package[];
+}
+
 export default function StructureDashboard() {
   const params = useParams();
   const structureId = params.id;
@@ -40,10 +74,16 @@ export default function StructureDashboard() {
   });
 
   // Query per pacchetti assegnati alla struttura
-  const { data: packagesData, refetch: refetchPackages } = useQuery({
+  const { data: packagesData, refetch: refetchPackages } = useQuery<PackagesResponse>({
     queryKey: ["/api/my-packages"],
     enabled: !!structureId,
     refetchInterval: 10000 // Refresh ogni 10 secondi
+  });
+
+  // Query per ospiti della struttura
+  const { data: guestsData, refetch: refetchGuests } = useQuery<GuestsResponse>({
+    queryKey: ["/api/guests"],
+    enabled: !!structureId,
   });
 
   const handleGenerateTouristCode = async (packageId: number) => {
@@ -69,7 +109,7 @@ export default function StructureDashboard() {
         refetchGuests();
         
         // Mostra dettagli assegnazione con opzione WhatsApp
-        const guest = guestsData?.guests?.find((g: any) => g.id === selectedGuestId);
+        const guest = guestsData?.guests?.find((g: Guest) => g.id === selectedGuestId);
         const message = `Codice IQ assegnato con successo!\n\nCodice: ${result.touristCode}\nOspite: ${result.guestName}\nCamera: ${guest?.roomNumber || 'N/A'}\nCodici rimanenti: ${result.remainingCodes}`;
         
         if (guest?.phone && confirm(`${message}\n\nVuoi inviare il codice via WhatsApp al numero ${guest.phone}?`)) {
@@ -148,7 +188,7 @@ export default function StructureDashboard() {
         refetchGuests();
         
         // Mostra dettagli assegnazione con opzione WhatsApp
-        const guest = guestsData?.guests?.find((g: any) => g.id === guestId);
+        const guest = guestsData?.guests?.find((g: Guest) => g.id === guestId);
         const message = `Codice IQ assegnato con successo!\n\nCodice: ${result.touristCode}\nOspite: ${guest?.firstName} ${guest?.lastName}\nCamera: ${guest?.roomNumber || 'N/A'}`;
         
         if (guest?.phone && confirm(`${message}\n\nVuoi inviare il codice via WhatsApp al numero ${guest.phone}?`)) {
@@ -172,12 +212,7 @@ export default function StructureDashboard() {
     window.open(whatsappUrl, '_blank');
   };
 
-  // Query per ospiti della struttura
-  const { data: guestsData, refetch: refetchGuests } = useQuery({
-    queryKey: ["/api/guests"],
-    enabled: !!structureId,
-    refetchInterval: 10000
-  });
+
 
   const navigation = [
     { icon: <TrendingUp size={16} />, label: "Dashboard", href: "#", onClick: () => setActiveSection("dashboard") },
@@ -247,7 +282,7 @@ export default function StructureDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {packagesData?.packages?.length > 0 ? (
+          {packagesData?.packages && packagesData.packages.length > 0 ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -259,7 +294,7 @@ export default function StructureDashboard() {
                     onChange={(e) => setSelectedGuestId(Number(e.target.value))}
                   >
                     <option value={0}>Seleziona un ospite...</option>
-                    {guestsData?.guests?.map((guest: any) => (
+                    {guestsData?.guests?.map((guest: Guest) => (
                       <option key={guest.id} value={guest.id}>
                         {guest.firstName} {guest.lastName} - Camera {guest.roomNumber || 'N/A'}
                       </option>
@@ -295,26 +330,26 @@ export default function StructureDashboard() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {packagesData.packages.map((pkg: any) => (
+                {packagesData?.packages?.map((pkg: Package) => (
                   <Card key={pkg.id} className="border border-purple-200">
                     <CardContent className="p-4">
                       <div className="text-center mb-3">
                         <h4 className="font-semibold">Pacchetto {pkg.packageSize}</h4>
                         <Badge className="bg-purple-100 text-purple-800">
-                          {pkg.availableCodes} disponibili
+                          {pkg.availableCodes || pkg.codesGenerated?.length || 0} disponibili
                         </Badge>
                       </div>
                       
                       <Button 
                         onClick={() => handleGenerateTouristCode(pkg.id)}
-                        disabled={pkg.availableCodes <= 0 || selectedGuestId === 0}
+                        disabled={(pkg.availableCodes || 0) <= 0 || selectedGuestId === 0}
                         className="w-full bg-purple-600 hover:bg-purple-700"
                       >
                         <Plus size={16} className="mr-2" />
                         Assegna Codice
                       </Button>
                       
-                      {pkg.availableCodes <= 0 && (
+                      {(pkg.availableCodes || 0) <= 0 && (
                         <p className="text-xs text-red-600 text-center mt-2">Pacchetto esaurito</p>
                       )}
                     </CardContent>
@@ -339,7 +374,7 @@ export default function StructureDashboard() {
       </Card>
 
       {/* Dettaglio Pacchetti */}
-      {packagesData?.packages?.length > 0 && (
+      {packagesData?.packages && packagesData.packages.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Dettaglio Pacchetti Acquistati</CardTitle>
@@ -490,9 +525,9 @@ export default function StructureDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {guestsData?.guests?.length > 0 ? (
+          {guestsData?.guests && guestsData.guests.length > 0 ? (
             <div className="space-y-4">
-              {guestsData.guests.map((guest: any) => (
+              {guestsData?.guests?.map((guest: Guest) => (
                 <Card key={guest.id} className="border border-gray-200">
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-3">
@@ -519,10 +554,10 @@ export default function StructureDashboard() {
                               {guest.email}
                             </div>
                           )}
-                          {(guest.checkinDate || guest.checkoutDate) && (
+                          {(guest.checkIn || guest.checkOut) && (
                             <div className="flex items-center gap-2">
                               <Calendar size={14} />
-                              {guest.checkinDate} - {guest.checkoutDate}
+                              {guest.checkIn} - {guest.checkOut}
                             </div>
                           )}
                         </div>
@@ -533,16 +568,16 @@ export default function StructureDashboard() {
                     </div>
 
                     {/* Assegnazione codici rapida */}
-                    {packagesData?.packages?.length > 0 && (
+                    {packagesData?.packages && packagesData.packages.length > 0 && (
                       <div className="border-t pt-3">
                         <p className="text-sm font-medium mb-2">Assegna Codice IQ:</p>
                         <div className="flex gap-2 flex-wrap">
-                          {packagesData.packages.map((pkg: any) => (
+                          {packagesData?.packages?.map((pkg: Package) => (
                             <Button
                               key={pkg.id}
                               size="sm"
                               onClick={() => handleAssignCodeToGuest(guest.id, pkg.id)}
-                              disabled={pkg.availableCodes <= 0}
+                              disabled={(pkg.availableCodes || 0) <= 0}
                               className="bg-purple-600 hover:bg-purple-700"
                             >
                               <Gift size={14} className="mr-1" />
