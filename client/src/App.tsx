@@ -9,7 +9,7 @@ import Login from "@/pages/login";
 import AdminDashboard from "@/pages/admin-dashboard";
 import TouristDashboard from "@/pages/tourist-dashboard";
 import StructureDashboard from "@/pages/structure-dashboard";
-import StructurePanel from "@/pages/structure-panel";
+import StructurePanel from "@/pages/structure-panel-fixed";
 import PartnerDashboard from "@/pages/partner-dashboard";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";

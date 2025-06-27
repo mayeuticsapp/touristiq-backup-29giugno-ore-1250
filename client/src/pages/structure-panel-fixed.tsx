@@ -1,0 +1,291 @@
+import { useState, useEffect } from 'react';
+import { useParams } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { 
+  ShoppingCart, 
+  MessageCircle, 
+  BarChart3,
+  Package,
+  Euro,
+  CheckCircle
+} from 'lucide-react';
+import { Layout } from '@/components/layout';
+import { useToast } from '@/hooks/use-toast';
+import { AdvancedAccounting } from '@/components/advanced-accounting';
+
+// Prezzi dei pacchetti IQCode
+const PACKAGE_PRICES = {
+  10: '€49',
+  25: '€99', 
+  50: '€179',
+  100: '€299'
+};
+
+export default function StructurePanelFixed() {
+  const params = useParams();
+  const structureId = params.id;
+  const { toast } = useToast();
+  
+  // Query per ottenere i dati della struttura
+  const { data: structureData } = useQuery({
+    queryKey: ['/api/structure', structureId],
+    enabled: !!structureId
+  });
+  
+  const structureCode = (structureData as any)?.iqCode || `TIQ-VV-STT-${structureId}`;
+  const structureName = (structureData as any)?.name || `Struttura ${structureId}`;
+
+  // Stati per il pannello
+  const [iqCodesBalance, setIqCodesBalance] = useState(47);
+  const [selectedPackageSize, setSelectedPackageSize] = useState<'10' | '25' | '50' | '100'>('25');
+  const [paymentStatus, setPaymentStatus] = useState('idle');
+  const [selectedCode, setSelectedCode] = useState('TIQ-IT-MARGHERITA');
+  const [gestionaleAccess, setGestionaleAccess] = useState({
+    hasAccess: true,
+    hoursRemaining: 42
+  });
+
+  const navigation = [
+    { icon: null, label: 'Dashboard Admin', href: '/admin' },
+    { icon: null, label: 'Gestione Utenti', href: '/admin/users' },
+    { icon: null, label: 'Dashboard Struttura', href: `/structure/${structureId}` },
+    { icon: null, label: 'Pannello Completo', href: `/structure/${structureId}/panel` }
+  ];
+
+  const handlePurchasePackage = async () => {
+    setPaymentStatus('processing');
+    
+    try {
+      // Simulo elaborazione pagamento SumUp
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Aggiorno il saldo
+      const packageSize = parseInt(selectedPackageSize);
+      const newBalance = iqCodesBalance + packageSize;
+      setIqCodesBalance(newBalance);
+      
+      setPaymentStatus('completed');
+      toast({
+        title: "Acquisto completato!",
+        description: `Pacchetto ${selectedPackageSize} IQCode acquistato con successo. Nuovo saldo: ${newBalance}`,
+      });
+    } catch (error) {
+      setPaymentStatus('failed');
+      toast({
+        title: "Errore pagamento",
+        description: "Si è verificato un errore durante l'acquisto.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAssignCodeWhatsApp = async (phoneNumber: string) => {
+    if (!selectedCode) {
+      toast({
+        title: "Errore",
+        description: "Seleziona un codice IQ da assegnare",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Assegnazione codice via WhatsApp
+      const whatsappUrl = `https://wa.me/${phoneNumber}?text=🎟 Il tuo codice TouristIQ: ${selectedCode}%0A%0AUsa questo codice per accedere agli sconti esclusivi della zona!`;
+      window.open(whatsappUrl, '_blank');
+      
+      // Riduco il saldo
+      setIqCodesBalance(prev => Math.max(0, prev - 1));
+      
+      toast({
+        title: "Codice assegnato!",
+        description: `Codice ${selectedCode} inviato via WhatsApp`,
+      });
+    } catch (error) {
+      toast({
+        title: "Errore invio",
+        description: "Errore durante l'invio del codice",
+        variant: "destructive"
+      });
+    }
+  };
+
+  return (
+    <Layout
+      title={`Pannello Struttura - ${structureName}`}
+      role="structure"
+      iqCode={structureCode}
+      navigation={navigation}
+      sidebarColor="bg-purple-600"
+    >
+      <div className="min-h-screen bg-gray-50">
+        {/* Header del Pannello */}
+        <div className="bg-white shadow-sm border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="py-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Pannello Completo Struttura</h1>
+                  <p className="text-gray-600">{structureName} - {structureCode}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                    Saldo IQCode: {iqCodesBalance}
+                  </Badge>
+                  <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                    Gestionale: {gestionaleAccess.hoursRemaining}h
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Contenuto Principale */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Tabs defaultValue="packages" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="packages" className="flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4" />
+                Acquista Pacchetti
+              </TabsTrigger>
+              <TabsTrigger value="whatsapp" className="flex items-center gap-2">
+                <MessageCircle className="w-4 h-4" />
+                Assegnazione WhatsApp
+              </TabsTrigger>
+              <TabsTrigger value="accounting" className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Mini Gestionale
+              </TabsTrigger>
+            </TabsList>
+
+            {/* TAB 1: Acquisto Pacchetti */}
+            <TabsContent value="packages" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShoppingCart className="w-5 h-5" />
+                    Acquisto Pacchetti IQCode
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[
+                      { size: '10', price: '€49' },
+                      { size: '25', price: '€99' },
+                      { size: '50', price: '€179' },
+                      { size: '100', price: '€299' }
+                    ].map(({ size, price }) => (
+                      <div 
+                        key={size}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          selectedPackageSize === size 
+                            ? 'border-purple-500 bg-purple-50' 
+                            : 'border-gray-200 hover:border-purple-300'
+                        }`}
+                        onClick={() => setSelectedPackageSize(size as '10' | '25' | '50' | '100')}
+                      >
+                        <div className="text-center">
+                          <Package className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+                          <div className="text-2xl font-bold">{size}</div>
+                          <div className="text-sm text-gray-600">IQCode</div>
+                          <div className="text-lg font-semibold text-purple-600 mt-2">{price}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-6">
+                    <Button 
+                      onClick={handlePurchasePackage}
+                      disabled={paymentStatus === 'processing'}
+                      className="w-full bg-purple-600 hover:bg-purple-700"
+                    >
+                      {paymentStatus === 'processing' ? (
+                        'Elaborazione pagamento...'
+                      ) : (
+                        <>
+                          <Euro className="w-4 h-4 mr-2" />
+                          Acquista Pacchetto {selectedPackageSize} IQCode - {selectedPackageSize === '10' ? '€49' : selectedPackageSize === '25' ? '€99' : selectedPackageSize === '50' ? '€179' : '€299'}
+                        </>
+                      )}
+                    </Button>
+                    
+                    {paymentStatus === 'completed' && (
+                      <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2 text-green-700">
+                          <CheckCircle className="w-5 h-5" />
+                          <span className="font-medium">Pagamento completato con successo!</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* TAB 2: Assegnazione WhatsApp */}
+            <TabsContent value="whatsapp" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageCircle className="w-5 h-5" />
+                    Assegnazione Codici via WhatsApp
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Numero WhatsApp Cliente</Label>
+                      <Input 
+                        placeholder="Es: +393901234567"
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label>Codice IQ da Assegnare</Label>
+                      <Select value={selectedCode} onValueChange={setSelectedCode}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="TIQ-IT-MARGHERITA">TIQ-IT-MARGHERITA</SelectItem>
+                          <SelectItem value="TIQ-IT-LEONARDO">TIQ-IT-LEONARDO</SelectItem>
+                          <SelectItem value="TIQ-IT-DANTE">TIQ-IT-DANTE</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <Button 
+                      onClick={() => handleAssignCodeWhatsApp('+393901234567')}
+                      className="w-full bg-green-600 hover:bg-green-700"
+                    >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Invia Codice via WhatsApp
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* TAB 3: Mini Gestionale Avanzato */}
+            <TabsContent value="accounting">
+              <AdvancedAccounting 
+                structureCode={structureCode}
+                hasAccess={gestionaleAccess.hasAccess || iqCodesBalance > 0}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    </Layout>
+  );
+}

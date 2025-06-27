@@ -103,9 +103,14 @@ export const accountingMovements = pgTable("accounting_movements", {
   id: serial("id").primaryKey(),
   structureCode: text("structure_code").notNull(),
   type: text("type").notNull(), // "income" o "expense"
+  category: text("category").notNull(), // categoria settore turistico
   description: text("description").notNull(),
   amount: text("amount").notNull(), // Storing as text for simplicity
   movementDate: text("movement_date").notNull(), // YYYY-MM-DD format
+  paymentMethod: text("payment_method"), // contanti, carta, bonifico
+  clientsServed: integer("clients_served"), // numero clienti per questo movimento
+  iqcodesUsed: integer("iqcodes_used"), // IQCode utilizzati per questo servizio
+  notes: text("notes"), // note aggiuntive
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });

@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   ShoppingCart, 
   MessageCircle, 
@@ -21,10 +22,52 @@ import {
   Package,
   Euro,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Filter,
+  Calendar,
+  FileText,
+  TrendingUp,
+  Users,
+  CreditCard
 } from 'lucide-react';
 import { Layout } from '@/components/layout';
 import { useToast } from '@/hooks/use-toast';
+import { AdvancedAccounting } from '@/components/advanced-accounting';
+
+// Import categorie settore turistico
+const INCOME_CATEGORIES = [
+  { id: 'rooms', label: 'Camere', icon: '🏨' },
+  { id: 'breakfast', label: 'Colazioni', icon: '☕' },
+  { id: 'extra_services', label: 'Extra Servizi', icon: '🛎️' },
+  { id: 'iqcodes_sold', label: 'IQCode Venduti', icon: '🎫' },
+  { id: 'parking', label: 'Parcheggio', icon: '🚗' },
+  { id: 'restaurant', label: 'Ristorazione', icon: '🍽️' },
+  { id: 'wellness', label: 'Wellness/SPA', icon: '💆' },
+  { id: 'tours', label: 'Tour/Escursioni', icon: '🗺️' },
+  { id: 'other_income', label: 'Altre Entrate', icon: '💰' }
+];
+
+const EXPENSE_CATEGORIES = [
+  { id: 'ota_commissions', label: 'Commissioni OTA', icon: '💳' },
+  { id: 'iqcodes_cost', label: 'Costo IQCode', icon: '🎫' },
+  { id: 'supplies', label: 'Forniture', icon: '📦' },
+  { id: 'cleaning', label: 'Pulizie', icon: '🧹' },
+  { id: 'laundry', label: 'Lavanderia', icon: '👕' },
+  { id: 'maintenance', label: 'Manutenzioni', icon: '🔧' },
+  { id: 'utilities', label: 'Utenze', icon: '⚡' },
+  { id: 'marketing', label: 'Marketing', icon: '📢' },
+  { id: 'staff', label: 'Personale', icon: '👥' },
+  { id: 'other_expense', label: 'Altre Spese', icon: '💸' }
+];
+
+const PAYMENT_METHODS = [
+  { id: 'cash', label: 'Contanti', icon: '💵' },
+  { id: 'card', label: 'Carta', icon: '💳' },
+  { id: 'bank_transfer', label: 'Bonifico', icon: '🏦' },
+  { id: 'paypal', label: 'PayPal', icon: '📱' },
+  { id: 'sumup', label: 'SumUp', icon: '📲' },
+  { id: 'other', label: 'Altro', icon: '❓' }
+];
 
 // Prezzi dei pacchetti IQCode
 const PACKAGE_PRICES = {
@@ -390,9 +433,11 @@ export default function StructurePanel() {
 
             {/* TAB 3: Mini Gestionale */}
             <TabsContent value="accounting">
-              <div className="space-y-6">
-                {gestionaleAccess.hasAccess ? (
-                  <>
+              <AdvancedAccounting 
+                structureCode={structureCode}
+                hasAccess={gestionaleAccess.hasAccess || iqCodesBalance > 0}
+              />
+            </TabsContent>
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center justify-between">
@@ -496,23 +541,6 @@ export default function StructurePanel() {
                         </div>
                       </CardContent>
                     </Card>
-                  </>
-                ) : (
-                  <Card>
-                    <CardContent className="p-8 text-center">
-                      <AlertTriangle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold mb-2">Accesso Gestionale Scaduto</h3>
-                      <p className="text-gray-600 mb-4">
-                        Il periodo di prova di 48 ore è terminato. Acquista un pacchetto per continuare ad utilizzare il mini gestionale.
-                      </p>
-                      <Button onClick={() => setGestionaleAccess({hasAccess: true, hoursRemaining: 48})}>
-                        Acquista Accesso Gestionale
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </TabsContent>
           </Tabs>
         </div>
       </div>
