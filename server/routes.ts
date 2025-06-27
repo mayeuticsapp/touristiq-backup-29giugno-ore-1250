@@ -190,14 +190,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo admin" });
       }
 
-      // Verifica crediti admin - Pacchetto RobS
-      const adminCredits = await storage.getAdminCredits(userIqCode.code);
-      if (adminCredits && adminCredits.creditsRemaining <= 0) {
-        return res.status(400).json({ 
-          message: "Hai finito i tuoi 1000 codici, oh Grande RobS 😅" 
-        });
-      }
-
       // Validate request
       const { codeType, role, country, province, assignedTo } = generateCodeSchema.parse(req.body);
       
@@ -208,15 +200,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: codeType === "emotional" ? "Paese richiesto per codici emozionali" : "Provincia richiesta per codici professionali" 
         });
       }
-      
-      // Generate new code
-      const { createIQCode } = await import("./createIQCode");
-      const result = await createIQCode(codeType, role, location, assignedTo || `Generato da ${userIqCode.code}`);
-      
-      // Decrement admin credits
-      await storage.decrementAdminCredits(userIqCode.code);
-      
-      res.json(result);
+
+      // DISTINZIONE CRITICA: CODICI PROFESSIONALI vs EMOZIONALI
+      if (codeType === "professional") {
+        // CODICI PROFESSIONALI - SEMPRE DISPONIBILI (NON SCALANO CREDITI)
+        const { createIQCode } = await import("./createIQCode");
+        const result = await createIQCode(codeType, role, location, assignedTo || `Generato da ${userIqCode.code}`);
+        // NON scala crediti per codici professionali
+        res.json(result);
+        return;
+      }
+
+      if (codeType === "emotional") {
+        // CODICI EMOZIONALI - VERIFICO E SCALO PACCHETTO ROBS
+        const adminCredits = await storage.getAdminCredits(userIqCode.code);
+        if (adminCredits && adminCredits.creditsRemaining <= 0) {
+          return res.status(400).json({ 
+            message: "Hai finito i tuoi 1000 codici, oh Grande RobS 😅" 
+          });
+        }
+
+        const { createIQCode } = await import("./createIQCode");
+        const result = await createIQCode(codeType, role, location, assignedTo || `Generato da ${userIqCode.code}`);
+        
+        // Scala crediti SOLO per codici emozionali
+        await storage.decrementAdminCredits(userIqCode.code);
+        
+        res.json(result);
+        return;
+      }
+
+      res.status(400).json({ message: "Tipo di codice non riconosciuto" });
     } catch (error) {
       console.error("Errore generazione codice IQ:", error);
       if (error instanceof z.ZodError) {
@@ -404,6 +418,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching admin credits:', error);
       res.status(500).json({ message: 'Errore nel caricamento dei crediti' });
+    }
+  });
+
+  // Admin User Management - Approve/Block/Delete
+  app.patch("/api/admin/users/:id", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const userId = parseInt(req.params.id);
+      const { action } = req.body; // approve, block, activate, deactivate
+
+      if (!action || !['approve', 'block', 'activate', 'deactivate'].includes(action)) {
+        return res.status(400).json({ message: "Azione non valida" });
+      }
+
+      let newStatus = 'pending';
+      switch (action) {
+        case 'approve':
+          newStatus = 'approved';
+          break;
+        case 'block':
+          newStatus = 'blocked';
+          break;
+        case 'activate':
+          newStatus = 'approved';
+          break;
+        case 'deactivate':
+          newStatus = 'inactive';
+          break;
+      }
+
+      const updatedUser = await storage.updateIqCodeStatus(userId, newStatus, userIqCode.code);
+      res.json({ success: true, user: updatedUser });
+
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      res.status(500).json({ message: 'Errore nell\'aggiornamento dello stato utente' });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const userId = parseInt(req.params.id);
+      
+      // Non permettere cancellazione dell'admin stesso
+      const targetUser = await storage.getAllIqCodes().then(codes => codes.find(c => c.id === userId));
+      if (targetUser && targetUser.code === userIqCode.code) {
+        return res.status(400).json({ message: "Non puoi cancellare il tuo stesso account" });
+      }
+
+      await storage.deleteIqCode(userId);
+      res.json({ success: true, message: "Utente cancellato con successo" });
+
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: 'Errore nella cancellazione dell\'utente' });
     }
   });
 

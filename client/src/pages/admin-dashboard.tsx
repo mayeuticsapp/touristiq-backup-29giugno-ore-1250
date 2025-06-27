@@ -233,6 +233,50 @@ function UsersManagement() {
   const [newUserProvince, setNewUserProvince] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
+  const updateUserStatus = async (userId: number, action: string) => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action })
+      });
+
+      if (response.ok) {
+        alert(`Utente ${action === 'approve' ? 'approvato' : action === 'block' ? 'bloccato' : 'aggiornato'} con successo`);
+        window.location.reload();
+      } else {
+        const error = await response.json();
+        alert(`Errore: ${error.message}`);
+      }
+    } catch (error) {
+      alert('Errore nell\'aggiornamento dello stato utente');
+    }
+  };
+
+  const deleteUser = async (userId: number) => {
+    if (!confirm('Sei sicuro di voler cancellare questo utente? Questa azione è irreversibile.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        alert('Utente cancellato con successo');
+        window.location.reload();
+      } else {
+        const error = await response.json();
+        alert(`Errore: ${error.message}`);
+      }
+    } catch (error) {
+      alert('Errore nella cancellazione dell\'utente');
+    }
+  };
+
   useEffect(() => {
     // Carica utenti
     fetch('/api/admin/users', { credentials: 'include' })
@@ -412,10 +456,11 @@ function UsersManagement() {
         )}
       </Card>
 
-      {/* Users List */}
+      {/* Users List con Gestione */}
       <Card>
         <CardHeader>
-          <CardTitle>Utenti Registrati ({users.length})</CardTitle>
+          <CardTitle>Gestione Utenti ({users.length})</CardTitle>
+          <p className="text-sm text-gray-600">Approva, blocca o cancella utenti per controllo editoriale</p>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -424,13 +469,15 @@ function UsersManagement() {
                 <tr className="border-b">
                   <th className="text-left py-2">Codice IQ</th>
                   <th className="text-left py-2">Ruolo</th>
-                  <th className="text-left py-2">Stato</th>
-                  <th className="text-left py-2">Data Creazione</th>
+                  <th className="text-left py-2">Assegnato</th>
+                  <th className="text-left py-2">Status</th>
+                  <th className="text-left py-2">Tipo</th>
+                  <th className="text-left py-2">Azioni</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map((user, index) => (
-                  <tr key={index} className="border-b">
+                {users.map((user) => (
+                  <tr key={user.id} className="border-b">
                     <td className="py-2 font-mono">{user.code}</td>
                     <td className="py-2">
                       <Badge variant={
@@ -441,10 +488,61 @@ function UsersManagement() {
                         {user.role}
                       </Badge>
                     </td>
+                    <td className="py-2 text-xs">{user.assignedTo || 'Non assegnato'}</td>
                     <td className="py-2">
-                      <Badge variant="outline">Attivo</Badge>
+                      <Badge variant={
+                        user.status === 'approved' ? 'default' :
+                        user.status === 'blocked' ? 'destructive' :
+                        user.status === 'inactive' ? 'secondary' : 'outline'
+                      }>
+                        {user.status === 'approved' ? 'Approvato' :
+                         user.status === 'blocked' ? 'Bloccato' :
+                         user.status === 'inactive' ? 'Inattivo' : 'In Attesa'}
+                      </Badge>
                     </td>
-                    <td className="py-2">{new Date(user.createdAt).toLocaleDateString('it-IT')}</td>
+                    <td className="py-2">
+                      <Badge variant="outline" className={
+                        user.codeType === 'emotional' ? 'text-purple-600' : 'text-blue-600'
+                      }>
+                        {user.codeType === 'emotional' ? 'Emozionale' : 'Professionale'}
+                      </Badge>
+                    </td>
+                    <td className="py-2">
+                      {user.code !== 'TIQ-IT-ADMIN' ? (
+                        <div className="flex space-x-1">
+                          {user.status !== 'approved' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600 hover:bg-green-50 text-xs px-2 py-1"
+                              onClick={() => updateUserStatus(user.id, 'approve')}
+                            >
+                              ✓
+                            </Button>
+                          )}
+                          {user.status !== 'blocked' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-orange-600 hover:bg-orange-50 text-xs px-2 py-1"
+                              onClick={() => updateUserStatus(user.id, 'block')}
+                            >
+                              🚫
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 hover:bg-red-50 text-xs px-2 py-1"
+                            onClick={() => deleteUser(user.id)}
+                          >
+                            🗑️
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-500">Admin</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

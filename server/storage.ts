@@ -8,6 +8,8 @@ export interface IStorage {
   getIqCodeByCode(code: string): Promise<IqCode | undefined>;
   createIqCode(iqCode: InsertIqCode): Promise<IqCode>;
   getAllIqCodes(): Promise<IqCode[]>;
+  updateIqCodeStatus(id: number, status: string, approvedBy?: string): Promise<IqCode>;
+  deleteIqCode(id: number): Promise<void>;
 
   // Session methods
   createSession(session: InsertSession): Promise<Session>;
@@ -101,6 +103,27 @@ export class MemStorage implements IStorage {
 
   async getAllIqCodes(): Promise<IqCode[]> {
     return Array.from(this.iqCodes.values());
+  }
+
+  async updateIqCodeStatus(id: number, status: string, approvedBy?: string): Promise<IqCode> {
+    const iqCode = this.iqCodes.get(id);
+    if (!iqCode) {
+      throw new Error("Codice IQ non trovato");
+    }
+
+    const updatedIqCode: IqCode = {
+      ...iqCode,
+      status,
+      approvedAt: status === 'approved' ? new Date() : iqCode.approvedAt,
+      approvedBy: status === 'approved' ? approvedBy : iqCode.approvedBy
+    };
+
+    this.iqCodes.set(id, updatedIqCode);
+    return updatedIqCode;
+  }
+
+  async deleteIqCode(id: number): Promise<void> {
+    this.iqCodes.delete(id);
   }
 
   async createSession(insertSession: InsertSession): Promise<Session> {
@@ -440,6 +463,30 @@ export class PostgreStorage implements IStorage {
 
   async getAllIqCodes(): Promise<IqCode[]> {
     return await this.db.select().from(iqCodes);
+  }
+
+  async updateIqCodeStatus(id: number, status: string, approvedBy?: string): Promise<IqCode> {
+    const updateData: any = { status };
+    if (status === 'approved') {
+      updateData.approvedAt = new Date();
+      updateData.approvedBy = approvedBy;
+    }
+
+    const result = await this.db
+      .update(iqCodes)
+      .set(updateData)
+      .where(eq(iqCodes.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      throw new Error("Codice IQ non trovato");
+    }
+
+    return result[0];
+  }
+
+  async deleteIqCode(id: number): Promise<void> {
+    await this.db.delete(iqCodes).where(eq(iqCodes.id, id));
   }
 
   async createSession(insertSession: InsertSession): Promise<Session> {

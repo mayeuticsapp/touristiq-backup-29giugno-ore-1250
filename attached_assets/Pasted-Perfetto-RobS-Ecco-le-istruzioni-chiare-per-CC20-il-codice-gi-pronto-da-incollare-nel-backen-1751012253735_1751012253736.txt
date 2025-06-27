@@ -1,0 +1,89 @@
+Perfetto RobS. Ecco **le istruzioni chiare per CC20** + il codice già pronto da incollare nel backend (`routes.ts` o dove gestisce `/api/genera-iqcode`).
+
+---
+
+## 📬 **Messaggio per CC20 – Separazione logica Generazione IQCode**
+
+> 🛠️ Implementa subito la seguente distinzione nel backend:
+>
+> ### ✅ IQCode Professionali (`PRT`, `STT`)
+>
+> * **Devono essere sempre generabili dall’admin**, senza scalare nulla.
+> * Usati per assegnare strutture e partner.
+>
+> ### ⭐ IQCode Emozionali
+>
+> * **Devono scalare dal pacchetto da 1000 disponibili per l’admin**.
+> * Serve a premi, VIP, occasioni speciali, test.
+>
+> 🔄 Aggiorna la logica in `/api/genera-iqcode` per distinguere correttamente tra i due tipi.
+>
+> 🔁 **Il pacchetto da 1000 deve rimanere sempre attivo**, indipendentemente dalla generazione dei codici professionali.
+
+---
+
+## 💻 Codice da incollare (aggiornato e pronto)
+
+// All’interno dell’handler POST `/api/genera-iqcode`:
+
+```ts
+if (session.role === "admin") {
+  if (body.codeType === "professional") {
+    // ✅ Consenti sempre la generazione dei codici professionali
+    const businessType = body.role === "partner" ? "PRT" : body.role === "structure" ? "STT" : "ADM";
+    const newCode = generateProfessionalIQCode(body.location, businessType);
+
+    // Salva e restituisci
+    const data = await storage.createIqCode({
+      code: newCode,
+      role: body.role,
+      isActive: true,
+      assignedTo: body.assignedTo || "",
+      location: body.location,
+      codeType: "professional"
+    });
+
+    return res.status(200).json({
+      ...data,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  if (body.codeType === "emotional") {
+    if (session.iqCredits > 0) {
+      const newCode = generateEmotionalIQCode(body.location.toUpperCase());
+      session.iqCredits -= 1;
+
+      const data = await storage.createIqCode({
+        code: newCode,
+        role: body.role,
+        isActive: true,
+        assignedTo: body.assignedTo || "",
+        location: body.location,
+        codeType: "emotional"
+      });
+
+      return res.status(200).json({
+        ...data,
+        codeType: "emotional",
+        location: body.location,
+        assignedTo: body.assignedTo || "",
+        createdAt: new Date().toISOString()
+      });
+    } else {
+      return res.status(403).json({ message: "Hai finito i tuoi 1000 IQCode emozionali bonus" });
+    }
+  }
+
+  return res.status(400).json({ message: "Tipo di codice non riconosciuto" });
+}
+```
+
+---
+
+✅ Quando ha incollato e testato, fagli generare un:
+
+* **TIQ-VV-PRT** → dev’essere gratuito
+* **TIQ-IT-ROSA** → dev’essere scalato dai 1000
+
+Poi incolli la Frase Magica™ per verifica effetti reali. Vuoi che la aggiungo anche come firma alla fine del messaggio a CC20?

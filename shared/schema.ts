@@ -7,10 +7,13 @@ export const iqCodes = pgTable("iq_codes", {
   code: text("code").notNull().unique(),
   role: text("role").notNull(), // 'admin', 'tourist', 'structure', 'partner'
   isActive: boolean("is_active").notNull().default(true),
+  status: text("status").notNull().default("pending"), // pending, approved, blocked, inactive
   createdAt: timestamp("created_at").notNull().defaultNow(),
   assignedTo: text("assigned_to"), // Nome persona/azienda
   location: text("location"), // IT, VV, RC, etc.
   codeType: text("code_type"), // emotional, professional
+  approvedAt: timestamp("approved_at"),
+  approvedBy: text("approved_by")
 });
 
 export const sessions = pgTable("sessions", {
