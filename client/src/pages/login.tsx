@@ -1,18 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import { MapPin, LogIn, AlertTriangle, Loader2 } from "lucide-react";
 import { login } from "@/lib/auth";
 import { queryClient } from "@/lib/queryClient";
+
+const STORAGE_KEY = "touristiq_last_code";
 
 export default function Login() {
   const [iqCode, setIqCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [rememberCode, setRememberCode] = useState(false);
   const [, setLocation] = useLocation();
+
+  // Carica ultimo codice salvato al mount
+  useEffect(() => {
+    const savedCode = localStorage.getItem(STORAGE_KEY);
+    if (savedCode) {
+      setIqCode(savedCode);
+      setRememberCode(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,11 +38,18 @@ export default function Login() {
       const response = await login(iqCode.trim().toUpperCase());
       console.log("Login risposta:", response);
 
+      // Salva codice IQ se richiesto
+      if (rememberCode) {
+        localStorage.setItem(STORAGE_KEY, iqCode.trim().toUpperCase());
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+
       // Invalidate auth cache to force refresh
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
 
       // Extended delay to ensure cookie is properly set and session persists
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Redirect based on role
       switch (response.role) {
@@ -98,6 +118,20 @@ export default function Login() {
                   className="text-center text-lg font-medium tracking-wider uppercase w-full"
                   disabled={isLoading}
                 />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="remember"
+                  checked={rememberCode}
+                  onCheckedChange={(checked) => setRememberCode(checked === true)}
+                />
+                <label
+                  htmlFor="remember"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Ricorda questo codice IQ
+                </label>
               </div>
 
               <Button
