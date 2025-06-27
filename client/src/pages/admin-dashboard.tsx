@@ -222,12 +222,19 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
   );
 }
 
-// Users Management Component - DISABILITATO GENERAZIONE DIRETTA
+// Users Management Component - CON PACCHETTO ROBS
 function UsersManagement() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [adminCredits, setAdminCredits] = useState<any>(null);
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newUserRole, setNewUserRole] = useState("");
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserProvince, setNewUserProvince] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
+    // Carica utenti
     fetch('/api/admin/users', { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
@@ -235,7 +242,69 @@ function UsersManagement() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+    
+    // Carica crediti admin
+    fetch('/api/admin/credits', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => setAdminCredits(data.credits))
+      .catch(() => console.log('Error loading admin credits'));
   }, []);
+
+  const handleAddUser = async () => {
+    if (!newUserRole || !newUserName || (newUserRole !== 'tourist' && !newUserProvince)) {
+      alert("Compila tutti i campi richiesti");
+      return;
+    }
+
+    if (adminCredits && adminCredits.creditsRemaining <= 0) {
+      alert("Hai finito i tuoi 1000 codici, oh Grande RobS 😅");
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      const payload = newUserRole === 'tourist' 
+        ? {
+            codeType: "emotional",
+            role: newUserRole,
+            country: "IT",
+            assignedTo: newUserName
+          }
+        : {
+            codeType: "professional", 
+            role: newUserRole,
+            province: newUserProvince,
+            assignedTo: newUserName
+          };
+
+      const response = await fetch("/api/genera-iqcode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`Utente creato con successo!\nCodice IQ: ${result.code}`);
+        setShowAddUser(false);
+        setNewUserRole("");
+        setNewUserName("");
+        setNewUserProvince("");
+        
+        // Ricarica dati
+        window.location.reload();
+      } else {
+        const error = await response.json();
+        alert(`Errore: ${error.message}`);
+      }
+    } catch (error) {
+      console.error("Errore creazione utente:", error);
+      alert("Errore durante la creazione dell'utente");
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   if (loading) {
     return <div className="text-center py-8">Caricamento utenti...</div>;
@@ -243,17 +312,104 @@ function UsersManagement() {
 
   return (
     <div className="space-y-6">
-      {/* Notice */}
+      {/* Pacchetto RobS */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-yellow-600">⚠️ Generazione Codici Disabilitata</CardTitle>
+          <CardTitle className="text-green-600">📦 Pacchetto RobS</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-700">
-            La generazione diretta di codici IQ dall'admin è stata disabilitata. 
-            Utilizza la sezione <strong>"Assegna Pacchetti"</strong> per assegnare crediti alle strutture e ai partner.
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-lg font-semibold">
+                Crediti rimanenti: <span className="text-green-600">{adminCredits?.creditsRemaining || 1000}</span>
+              </p>
+              <p className="text-sm text-gray-600">
+                Codici utilizzati: {adminCredits?.creditsUsed || 0}/1000
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="w-32 bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-green-600 h-2 rounded-full" 
+                  style={{ width: `${((adminCredits?.creditsRemaining || 1000) / 1000) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
         </CardContent>
+      </Card>
+
+      {/* Add User Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            Genera Nuovo Codice IQ
+            <Button 
+              onClick={() => setShowAddUser(!showAddUser)}
+              variant={showAddUser ? "outline" : "default"}
+              disabled={adminCredits && adminCredits.creditsRemaining <= 0}
+            >
+              {showAddUser ? "Annulla" : "Nuovo Codice"}
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        {showAddUser && (
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="userRole">Tipo Utente</Label>
+                <Select value={newUserRole} onValueChange={setNewUserRole}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona ruolo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="tourist">Turista</SelectItem>
+                    <SelectItem value="structure">Struttura</SelectItem>
+                    <SelectItem value="partner">Partner</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="userName">Nome/Descrizione</Label>
+                <Input
+                  id="userName"
+                  value={newUserName}
+                  onChange={(e) => setNewUserName(e.target.value)}
+                  placeholder="es. Mario Rossi"
+                />
+              </div>
+
+              {newUserRole !== 'tourist' && (
+                <div>
+                  <Label htmlFor="userProvince">Provincia</Label>
+                  <Select value={newUserProvince} onValueChange={setNewUserProvince}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleziona provincia" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="VV">Vibo Valentia</SelectItem>
+                      <SelectItem value="RC">Reggio Calabria</SelectItem>
+                      <SelectItem value="CS">Cosenza</SelectItem>
+                      <SelectItem value="KR">Crotone</SelectItem>
+                      <SelectItem value="CZ">Catanzaro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4">
+              <Button 
+                onClick={handleAddUser} 
+                disabled={isCreating || !newUserRole || !newUserName}
+                className="w-full"
+              >
+                {isCreating ? "Generando..." : "Genera Codice IQ"}
+              </Button>
+            </div>
+          </CardContent>
+        )}
       </Card>
 
       {/* Users List */}

@@ -1,4 +1,4 @@
-import { iqCodes, sessions, assignedPackages, guests, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type UserRole } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type UserRole } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt } from "drizzle-orm";
@@ -30,6 +30,12 @@ export interface IStorage {
   // Emotional IQCode generation methods
   generateEmotionalIQCode(structureCode: string, packageId: number, guestName: string, guestId?: number): Promise<{ code: string; remainingCredits: number }>;
   decrementPackageCredits(packageId: number): Promise<void>;
+
+  // Admin credits methods - Pacchetto RobS
+  getAdminCredits(adminCode: string): Promise<AdminCredits | undefined>;
+  createAdminCredits(adminCredits: InsertAdminCredits): Promise<AdminCredits>;
+  decrementAdminCredits(adminCode: string): Promise<AdminCredits>;
+  getAdminGenerationLog(adminCode: string): Promise<IqCode[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -37,20 +43,24 @@ export class MemStorage implements IStorage {
   private sessions: Map<number, Session>;
   private assignedPackages: Map<number, AssignedPackage>;
   private guests: Map<number, Guest>;
+  private adminCredits: Map<string, AdminCredits>;
   private currentIqCodeId: number;
   private currentSessionId: number;
   private currentPackageId: number;
   private currentGuestId: number;
+  private currentAdminCreditsId: number;
 
   constructor() {
     this.iqCodes = new Map();
     this.sessions = new Map();
     this.assignedPackages = new Map();
     this.guests = new Map();
+    this.adminCredits = new Map();
     this.currentIqCodeId = 1;
     this.currentSessionId = 1;
     this.currentPackageId = 1;
     this.currentGuestId = 1;
+    this.currentAdminCreditsId = 1;
 
     // Initialize with default IQ codes
     this.initializeDefaultCodes();
@@ -275,6 +285,52 @@ export class MemStorage implements IStorage {
       targetPackage.creditsRemaining--;
       targetPackage.creditsUsed++;
     }
+  }
+
+  // Admin credits methods - Pacchetto RobS
+  async getAdminCredits(adminCode: string): Promise<AdminCredits | undefined> {
+    return this.adminCredits.get(adminCode);
+  }
+
+  async createAdminCredits(insertAdminCredits: InsertAdminCredits): Promise<AdminCredits> {
+    const adminCreditsRecord: AdminCredits = {
+      id: this.currentAdminCreditsId++,
+      adminCode: insertAdminCredits.adminCode,
+      creditsRemaining: insertAdminCredits.creditsRemaining || 1000,
+      creditsUsed: insertAdminCredits.creditsUsed || 0,
+      lastGeneratedAt: insertAdminCredits.lastGeneratedAt || null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    this.adminCredits.set(adminCreditsRecord.adminCode, adminCreditsRecord);
+    return adminCreditsRecord;
+  }
+
+  async decrementAdminCredits(adminCode: string): Promise<AdminCredits> {
+    let adminCreditsRecord = this.adminCredits.get(adminCode);
+    
+    if (!adminCreditsRecord) {
+      adminCreditsRecord = await this.createAdminCredits({
+        adminCode: adminCode,
+        creditsRemaining: 1000,
+        creditsUsed: 0
+      });
+    }
+
+    adminCreditsRecord.creditsUsed += 1;
+    adminCreditsRecord.creditsRemaining -= 1;
+    adminCreditsRecord.lastGeneratedAt = new Date();
+    adminCreditsRecord.updatedAt = new Date();
+
+    this.adminCredits.set(adminCode, adminCreditsRecord);
+    return adminCreditsRecord;
+  }
+
+  async getAdminGenerationLog(adminCode: string): Promise<IqCode[]> {
+    return Array.from(this.iqCodes.values()).filter(
+      (code) => code.role === 'tourist' && code.assignedTo?.includes(adminCode)
+    );
   }
 }
 
@@ -518,6 +574,50 @@ export class PostgreStorage implements IStorage {
         })
         .where(eq(assignedPackages.id, packageId));
     }
+  }
+
+  // Admin credits methods - Pacchetto RobS
+  async getAdminCredits(adminCode: string): Promise<AdminCredits | undefined> {
+    const result = await this.db.select().from(adminCredits).where(eq(adminCredits.adminCode, adminCode)).limit(1);
+    return result[0];
+  }
+
+  async createAdminCredits(insertAdminCredits: InsertAdminCredits): Promise<AdminCredits> {
+    const result = await this.db.insert(adminCredits).values({
+      ...insertAdminCredits,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return result[0];
+  }
+
+  async decrementAdminCredits(adminCode: string): Promise<AdminCredits> {
+    let adminCreditsRecord = await this.getAdminCredits(adminCode);
+    
+    if (!adminCreditsRecord) {
+      adminCreditsRecord = await this.createAdminCredits({
+        adminCode: adminCode,
+        creditsRemaining: 1000,
+        creditsUsed: 0
+      });
+    }
+
+    const result = await this.db.update(adminCredits)
+      .set({
+        creditsUsed: adminCreditsRecord.creditsUsed + 1,
+        creditsRemaining: adminCreditsRecord.creditsRemaining - 1,
+        lastGeneratedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(adminCredits.adminCode, adminCode))
+      .returning();
+
+    return result[0];
+  }
+
+  async getAdminGenerationLog(adminCode: string): Promise<IqCode[]> {
+    return await this.db.select().from(iqCodes)
+      .where(and(eq(iqCodes.role, 'tourist'), eq(iqCodes.assignedTo, adminCode)));
   }
 }
 

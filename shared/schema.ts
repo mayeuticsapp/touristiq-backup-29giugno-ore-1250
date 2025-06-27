@@ -66,6 +66,17 @@ export const guests = pgTable("guests", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Tabella crediti admin per il Pacchetto RobS
+export const adminCredits = pgTable("admin_credits", {
+  id: serial("id").primaryKey(),
+  adminCode: text("admin_code").notNull().unique(), // TIQ-IT-ADMIN
+  creditsRemaining: integer("credits_remaining").notNull().default(1000),
+  creditsUsed: integer("credits_used").notNull().default(0),
+  lastGeneratedAt: timestamp("last_generated_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 export const insertIqCodeSchema = createInsertSchema(iqCodes).omit({
   id: true,
   createdAt: true,
@@ -92,6 +103,12 @@ export const insertGuestSchema = createInsertSchema(guests).omit({
   updatedAt: true,
 });
 
+export const insertAdminCreditsSchema = createInsertSchema(adminCredits).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const loginSchema = z.object({
   iqCode: z.string().min(1, "Codice IQ richiesto").max(20),
 });
@@ -106,6 +123,8 @@ export type GeneratedEmotionalCode = typeof generatedEmotionalCodes.$inferSelect
 export type InsertGeneratedEmotionalCode = z.infer<typeof insertGeneratedEmotionalCodeSchema>;
 export type Guest = typeof guests.$inferSelect;
 export type InsertGuest = typeof guests.$inferInsert;
+export type AdminCredits = typeof adminCredits.$inferSelect;
+export type InsertAdminCredits = z.infer<typeof insertAdminCreditsSchema>;
 export type LoginRequest = z.infer<typeof loginSchema>;
 
 export type UserRole = 'admin' | 'tourist' | 'structure' | 'partner';

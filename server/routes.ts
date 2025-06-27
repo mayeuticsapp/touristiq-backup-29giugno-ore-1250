@@ -173,9 +173,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/genera-iqcode", async (req, res) => {
-    return res.status(403).json({ 
-      message: "OPERAZIONE NON DISPONIBILE: L'admin non può più generare codici IQ direttamente. Utilizzare il sistema di assegnazione pacchetti." 
-    });
+    try {
+      // Check if user is authenticated and is admin
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      // Verifica crediti admin - Pacchetto RobS
+      const adminCredits = await storage.getAdminCredits(userIqCode.code);
+      if (adminCredits && adminCredits.creditsRemaining <= 0) {
+        return res.status(400).json({ 
+          message: "Hai finito i tuoi 1000 codici, oh Grande RobS 😅" 
+        });
+      }
+
+      // Validate request
+      const { codeType, role, country, province, assignedTo } = generateCodeSchema.parse(req.body);
+      
+      // Determine location based on code type
+      const location = codeType === "emotional" ? country : province;
+      if (!location) {
+        return res.status(400).json({ 
+          message: codeType === "emotional" ? "Paese richiesto per codici emozionali" : "Provincia richiesta per codici professionali" 
+        });
+      }
+      
+      // Generate new code
+      const { createIQCode } = await import("./createIQCode");
+      const result = await createIQCode(codeType, role, location, assignedTo || `Generato da ${userIqCode.code}`);
+      
+      // Decrement admin credits
+      await storage.decrementAdminCredits(userIqCode.code);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Errore generazione codice IQ:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Richiesta non valida" });
+      }
+      res.status(500).json({ 
+        message: (error as Error).message || "Errore durante la generazione del codice" 
+      });
+    }
   });
 
   // TIQai Chat endpoint
@@ -323,6 +373,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Errore statistiche:", error);
       res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Pacchetto RobS - Admin credits endpoint
+  app.get('/api/admin/credits', async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const adminCredits = await storage.getAdminCredits(userIqCode.code);
+      const generationLog = await storage.getAdminGenerationLog(userIqCode.code);
+
+      res.json({
+        credits: adminCredits || { creditsRemaining: 1000, creditsUsed: 0 },
+        generationLog: generationLog.slice(0, 10)
+      });
+    } catch (error) {
+      console.error('Error fetching admin credits:', error);
+      res.status(500).json({ message: 'Errore nel caricamento dei crediti' });
     }
   });
 
