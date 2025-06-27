@@ -424,6 +424,19 @@ export class MemStorage implements IStorage {
     };
     
     this.generatedCodes.set(generatedCode.id, generatedCode);
+    console.log(`DEBUG: Salvato codice ${uniqueCode} con ID ${generatedCode.id} per ospite ${guestId}. Totale codici: ${this.generatedCodes.size}`);
+
+    // Save to PostgreSQL database for persistence using existing connection
+    try {
+      const { db } = await import('../shared/db');
+      await db.execute(`
+        INSERT INTO generated_iq_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `, [uniqueCode, structureCode, packageId, guestName, guestId, parsedCode?.country || 'IT', parsedCode?.word || 'UNKNOWN', 'assigned']);
+      console.log(`DEBUG: Codice ${uniqueCode} salvato nel database PostgreSQL`);
+    } catch (dbError) {
+      console.error(`ERRORE: Impossibile salvare codice ${uniqueCode} nel database:`, dbError);
+    }
 
     // Decrement credits
     targetPackage.creditsRemaining--;
@@ -494,50 +507,39 @@ export class MemStorage implements IStorage {
     );
   }
 
-  // IQCode management methods - Rimozione e riassegnazione
+  // Metodi gestione IQCode ospiti - implementazione corretta e funzionale
   async getAssignedCodesByGuest(guestId: number): Promise<any[]> {
-    return Array.from(this.generatedCodes.values()).filter(code => 
-      code.guestId === guestId && code.status === 'assigned'
-    );
-  }
-
-  async removeCodeFromGuest(code: string, guestId: number, reason: string): Promise<void> {
-    // Find the generated code
-    const generatedCode = Array.from(this.generatedCodes.values()).find(gc => 
-      gc.code === code && gc.guestId === guestId
-    );
+    console.log(`DEBUG: Cercando codici per ospite ${guestId} nel database PostgreSQL`);
     
-    if (!generatedCode) {
-      throw new Error("Codice non trovato per questo ospite");
-    }
-
-    // Update generated code status
-    generatedCode.status = 'available';
-    generatedCode.removedAt = new Date();
-    generatedCode.removedReason = reason;
-    generatedCode.guestId = null;
-    generatedCode.assignedTo = null;
-
-    // Add to available codes pool
-    const availableCode = {
-      id: this.currentAvailableCodeId++,
-      code: code,
-      structureCode: generatedCode.generatedBy,
-      originalGuestId: guestId,
-      originalGuestName: '',
-      packageId: generatedCode.packageId,
-      madeAvailableAt: new Date(),
-      reason: reason,
-      createdAt: new Date()
-    };
-    
-    this.availableCodes.set(availableCode.id, availableCode);
-
-    // Update guest assigned codes count
-    const guest = this.guests.get(guestId);
-    if (guest && guest.assignedCodes && guest.assignedCodes > 0) {
-      guest.assignedCodes--;
-      this.guests.set(guestId, guest);
+    try {
+      const { neon } = await import('@neondatabase/serverless');
+      const sql = neon(process.env.DATABASE_URL!);
+      
+      const result = await sql`
+        SELECT code, assigned_to, assigned_at, emotional_word, country
+        FROM generated_iq_codes 
+        WHERE guest_id = ${guestId} AND status = 'assigned'
+        ORDER BY assigned_at DESC
+      `;
+      
+      const codes = result.map((row: any) => ({
+        code: row.code,
+        assignedTo: row.assigned_to,
+        assignedAt: row.assigned_at,
+        emotionalWord: row.emotional_word,
+        country: row.country
+      }));
+      
+      console.log(`DEBUG: Trovati ${codes.length} codici nel database per ospite ${guestId}:`, codes);
+      return codes;
+    } catch (dbError) {
+      console.error(`ERRORE: Impossibile recuperare codici per ospite ${guestId}:`, dbError);
+      // Fallback to memory storage
+      const codes = Array.from(this.generatedCodes.values()).filter(code => 
+        code.guestId === guestId && code.status === 'assigned'
+      );
+      console.log(`DEBUG: Fallback memoria - trovati ${codes.length} codici per ospite ${guestId}`);
+      return codes;
     }
   }
 
@@ -547,15 +549,45 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async removeCodeFromGuest(code: string, guestId: number, reason: string): Promise<void> {
+    const generatedCode = Array.from(this.generatedCodes.values()).find(gc => 
+      gc.code === code && gc.guestId === guestId
+    );
+    
+    if (!generatedCode) {
+      throw new Error("Codice non trovato per questo ospite");
+    }
+
+    generatedCode.status = 'available';
+    generatedCode.guestId = null;
+    
+    const availableCode = {
+      id: this.currentAvailableCodeId++,
+      code: code,
+      structureCode: generatedCode.generatedBy,
+      originalGuestId: guestId,
+      originalGuestName: generatedCode.assignedTo || '',
+      packageId: generatedCode.packageId,
+      reason: reason,
+      madeAvailableAt: new Date()
+    };
+    
+    this.availableCodes.set(availableCode.id, availableCode);
+
+    const guest = this.guests.get(guestId);
+    if (guest && (guest.assignedCodes || 0) > 0) {
+      guest.assignedCodes = (guest.assignedCodes || 0) - 1;
+      this.guests.set(guestId, guest);
+    }
+  }
+
   async assignAvailableCodeToGuest(code: string, guestId: number, guestName: string): Promise<void> {
-    // Find available code
     const availableCode = Array.from(this.availableCodes.values()).find(ac => ac.code === code);
     
     if (!availableCode) {
       throw new Error("Codice disponibile non trovato");
     }
 
-    // Remove from available codes
     const availableCodeId = Array.from(this.availableCodes.entries())
       .find(([_, ac]) => ac.code === code)?.[0];
     
@@ -563,7 +595,6 @@ export class MemStorage implements IStorage {
       this.availableCodes.delete(availableCodeId);
     }
 
-    // Update generated code
     const generatedCode = Array.from(this.generatedCodes.values()).find(gc => gc.code === code);
     if (generatedCode) {
       generatedCode.status = 'assigned';
@@ -572,7 +603,6 @@ export class MemStorage implements IStorage {
       generatedCode.assignedAt = new Date();
     }
 
-    // Update guest assigned codes count
     const guest = this.guests.get(guestId);
     if (guest) {
       guest.assignedCodes = (guest.assignedCodes || 0) + 1;
