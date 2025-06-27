@@ -45,8 +45,8 @@ export default function StructurePanel() {
     enabled: !!structureId
   });
   
-  const structureCode = structureData?.iqCode || `TIQ-VV-STT-${structureId}`;
-  const structureName = structureData?.name || `Struttura ${structureId}`;
+  const structureCode = (structureData as any)?.iqCode || `TIQ-VV-STT-${structureId}`;
+  const structureName = (structureData as any)?.name || `Struttura ${structureId}`;
   
   const [iqCodesBalance, setIqCodesBalance] = useState(0);
   const [selectedPackageSize, setSelectedPackageSize] = useState(25);
@@ -192,7 +192,13 @@ export default function StructurePanel() {
   };
 
   return (
-    <Layout>
+    <Layout
+      title={`Pannello Struttura - ${structureName}`}
+      role="structure"
+      iqCode={structureCode}
+      navigation={navigation}
+      sidebarColor="bg-purple-600"
+    >
       <div className="min-h-screen bg-gray-50">
         {/* Header del Pannello */}
         <div className="bg-white shadow-sm border-b border-gray-200">
