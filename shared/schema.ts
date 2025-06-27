@@ -83,6 +83,78 @@ export const adminCredits = pgTable("admin_credits", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Tabella promozioni partner per gestione avanzata
+export const partnerPromotions = pgTable("partner_promotions", {
+  id: serial("id").primaryKey(),
+  partnerCode: text("partner_code").notNull(), // Codice IQ del partner
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  discountType: text("discount_type").notNull(), // percentage, fixed, special
+  discountValue: text("discount_value").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  requiresConnection: boolean("requires_connection").notNull().default(false), // Solo per turisti collegati
+  viewCount: integer("view_count").notNull().default(0),
+  usageCount: integer("usage_count").notNull().default(0),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Tabella collegamenti partner-turista per tracking relazioni
+export const partnerTouristConnections = pgTable("partner_tourist_connections", {
+  id: serial("id").primaryKey(),
+  partnerCode: text("partner_code").notNull(), // Codice IQ del partner
+  touristCode: text("tourist_code").notNull(), // Codice IQ del turista
+  connectionStatus: text("connection_status").notNull().default("pending"), // pending, active, inactive
+  connectedAt: timestamp("connected_at").defaultNow().notNull(),
+  lastInteraction: timestamp("last_interaction").defaultNow().notNull(),
+  totalVisits: integer("total_visits").notNull().default(0),
+  promotionsUsed: integer("promotions_used").notNull().default(0),
+  totalValue: integer("total_value").notNull().default(0), // Valore generato in centesimi
+  notes: text("notes"), // Note interne del partner
+  isActive: boolean("is_active").notNull().default(true)
+});
+
+// Tabella utilizzi promozioni per analytics dettagliate
+export const promotionUsages = pgTable("promotion_usages", {
+  id: serial("id").primaryKey(),
+  promotionId: integer("promotion_id").notNull(),
+  touristCode: text("tourist_code").notNull(),
+  partnerCode: text("partner_code").notNull(),
+  usageType: text("usage_type").notNull(), // view, click, redeem
+  value: integer("value").default(0), // Valore transazione in centesimi
+  metadata: text("metadata"), // JSON con dettagli extra
+  usedAt: timestamp("used_at").defaultNow().notNull()
+});
+
+// Tabella comunicazioni admin-partner
+export const adminCommunications = pgTable("admin_communications", {
+  id: serial("id").primaryKey(),
+  recipientCode: text("recipient_code").notNull(), // Codice IQ destinatario
+  senderCode: text("sender_code").notNull(), // Codice IQ mittente (admin)
+  subject: text("subject").notNull(),
+  message: text("message").notNull(),
+  type: text("type").notNull().default("general"), // general, alert, promotion, system
+  priority: text("priority").notNull().default("normal"), // low, normal, high, urgent
+  isRead: boolean("is_read").notNull().default(false),
+  requiresResponse: boolean("requires_response").notNull().default(false),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+  readAt: timestamp("read_at")
+});
+
+// Tabella richieste crediti partner
+export const creditRequests = pgTable("credit_requests", {
+  id: serial("id").primaryKey(),
+  partnerCode: text("partner_code").notNull(),
+  requestedAmount: integer("requested_amount").notNull(),
+  justification: text("justification").notNull(),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected
+  requestedAt: timestamp("requested_at").defaultNow().notNull(),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewedBy: text("reviewed_by"),
+  reviewNotes: text("review_notes")
+});
+
 export const insertIqCodeSchema = createInsertSchema(iqCodes).omit({
   id: true,
   createdAt: true,
@@ -115,6 +187,33 @@ export const insertAdminCreditsSchema = createInsertSchema(adminCredits).omit({
   updatedAt: true,
 });
 
+export const insertPartnerPromotionSchema = createInsertSchema(partnerPromotions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPartnerTouristConnectionSchema = createInsertSchema(partnerTouristConnections).omit({
+  id: true,
+  connectedAt: true,
+  lastInteraction: true,
+});
+
+export const insertPromotionUsageSchema = createInsertSchema(promotionUsages).omit({
+  id: true,
+  usedAt: true,
+});
+
+export const insertAdminCommunicationSchema = createInsertSchema(adminCommunications).omit({
+  id: true,
+  sentAt: true,
+});
+
+export const insertCreditRequestSchema = createInsertSchema(creditRequests).omit({
+  id: true,
+  requestedAt: true,
+});
+
 export const loginSchema = z.object({
   iqCode: z.string().min(1, "Codice IQ richiesto").max(20),
 });
@@ -131,6 +230,16 @@ export type Guest = typeof guests.$inferSelect;
 export type InsertGuest = typeof guests.$inferInsert;
 export type AdminCredits = typeof adminCredits.$inferSelect;
 export type InsertAdminCredits = z.infer<typeof insertAdminCreditsSchema>;
+export type PartnerPromotion = typeof partnerPromotions.$inferSelect;
+export type InsertPartnerPromotion = z.infer<typeof insertPartnerPromotionSchema>;
+export type PartnerTouristConnection = typeof partnerTouristConnections.$inferSelect;
+export type InsertPartnerTouristConnection = z.infer<typeof insertPartnerTouristConnectionSchema>;
+export type PromotionUsage = typeof promotionUsages.$inferSelect;
+export type InsertPromotionUsage = z.infer<typeof insertPromotionUsageSchema>;
+export type AdminCommunication = typeof adminCommunications.$inferSelect;
+export type InsertAdminCommunication = z.infer<typeof insertAdminCommunicationSchema>;
+export type CreditRequest = typeof creditRequests.$inferSelect;
+export type InsertCreditRequest = z.infer<typeof insertCreditRequestSchema>;
 export type LoginRequest = z.infer<typeof loginSchema>;
 
 export type UserRole = 'admin' | 'tourist' | 'structure' | 'partner';
