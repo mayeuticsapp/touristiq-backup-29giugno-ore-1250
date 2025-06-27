@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -83,6 +83,44 @@ export const adminCredits = pgTable("admin_credits", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Pacchetti IQCode acquistati dalle strutture
+export const purchasedPackages = pgTable("purchased_packages", {
+  id: serial("id").primaryKey(),
+  structureCode: text("structure_code").notNull(),
+  packageSize: integer("package_size").notNull(), // 10, 25, 50, 100
+  price: text("price").notNull(), // Storing as text for simplicity
+  iqCodesRemaining: integer("iq_codes_remaining").notNull(),
+  iqCodesUsed: integer("iq_codes_used").default(0),
+  purchaseDate: timestamp("purchase_date").defaultNow(),
+  paymentMethod: text("payment_method").default("sumup"),
+  paymentStatus: text("payment_status").default("completed"), // pending, completed, failed
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Movimenti contabili mini gestionale
+export const accountingMovements = pgTable("accounting_movements", {
+  id: serial("id").primaryKey(),
+  structureCode: text("structure_code").notNull(),
+  type: text("type").notNull(), // "income" o "expense"
+  description: text("description").notNull(),
+  amount: text("amount").notNull(), // Storing as text for simplicity
+  movementDate: text("movement_date").notNull(), // YYYY-MM-DD format
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Configurazioni struttura (per gestionale trial 48h)
+export const structureSettings = pgTable("structure_settings", {
+  id: serial("id").primaryKey(),
+  structureCode: text("structure_code").notNull().unique(),
+  gestionaleUnlockedAt: timestamp("gestionale_unlocked_at").defaultNow(), // Quando è stato sbloccato
+  firstPackagePurchase: timestamp("first_package_purchase"), // Prima volta che compra
+  isGestionaleBlocked: boolean("is_gestionale_blocked").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 export const insertIqCodeSchema = createInsertSchema(iqCodes).omit({
   id: true,
   createdAt: true,
@@ -115,6 +153,24 @@ export const insertAdminCreditsSchema = createInsertSchema(adminCredits).omit({
   updatedAt: true,
 });
 
+export const insertPurchasedPackageSchema = createInsertSchema(purchasedPackages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAccountingMovementSchema = createInsertSchema(accountingMovements).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertStructureSettingsSchema = createInsertSchema(structureSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const loginSchema = z.object({
   iqCode: z.string().min(1, "Codice IQ richiesto").max(20),
 });
@@ -131,6 +187,16 @@ export type Guest = typeof guests.$inferSelect;
 export type InsertGuest = typeof guests.$inferInsert;
 export type AdminCredits = typeof adminCredits.$inferSelect;
 export type InsertAdminCredits = z.infer<typeof insertAdminCreditsSchema>;
+
+export type PurchasedPackage = typeof purchasedPackages.$inferSelect;
+export type InsertPurchasedPackage = z.infer<typeof insertPurchasedPackageSchema>;
+
+export type AccountingMovement = typeof accountingMovements.$inferSelect;
+export type InsertAccountingMovement = z.infer<typeof insertAccountingMovementSchema>;
+
+export type StructureSettings = typeof structureSettings.$inferSelect;
+export type InsertStructureSettings = z.infer<typeof insertStructureSettingsSchema>;
+
 export type LoginRequest = z.infer<typeof loginSchema>;
 
 export type UserRole = 'admin' | 'tourist' | 'structure' | 'partner';

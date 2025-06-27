@@ -9,6 +9,7 @@ import Login from "@/pages/login";
 import AdminDashboard from "@/pages/admin-dashboard";
 import TouristDashboard from "@/pages/tourist-dashboard";
 import StructureDashboard from "@/pages/structure-dashboard";
+import StructurePanel from "@/pages/structure-panel";
 import PartnerDashboard from "@/pages/partner-dashboard";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
@@ -86,6 +87,12 @@ function Router() {
       <Route path="/tourist">
         <ProtectedRoute requiredRole="tourist">
           <TouristDashboard />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/structure/:id/panel">
+        <ProtectedRoute requiredRole="structure">
+          <StructurePanel structureCode="TIQ-RC-STT-2567" structureName="Resort Calabria" />
         </ProtectedRoute>
       </Route>
       

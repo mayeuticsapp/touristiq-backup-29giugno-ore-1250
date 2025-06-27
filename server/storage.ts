@@ -1,4 +1,4 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type UserRole } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type UserRole } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt } from "drizzle-orm";
@@ -43,6 +43,23 @@ export interface IStorage {
   createAdminCredits(adminCredits: InsertAdminCredits): Promise<AdminCredits>;
   decrementAdminCredits(adminCode: string): Promise<AdminCredits>;
   getAdminGenerationLog(adminCode: string): Promise<IqCode[]>;
+
+  // Structure packages methods
+  createPurchasedPackage(purchasedPackage: InsertPurchasedPackage): Promise<PurchasedPackage>;
+  getPurchasedPackagesByStructure(structureCode: string): Promise<PurchasedPackage[]>;
+  getTotalIQCodesRemaining(structureCode: string): Promise<number>;
+  useIQCodeFromPackage(structureCode: string): Promise<boolean>;
+
+  // Accounting movements methods
+  createAccountingMovement(movement: InsertAccountingMovement): Promise<AccountingMovement>;
+  getAccountingMovements(structureCode: string): Promise<AccountingMovement[]>;
+  getMonthlyAccountingSummary(structureCode: string, month: string): Promise<{income: number, expenses: number, balance: number}>;
+
+  // Structure settings methods
+  getStructureSettings(structureCode: string): Promise<StructureSettings | undefined>;
+  createStructureSettings(settings: InsertStructureSettings): Promise<StructureSettings>;
+  updateStructureSettings(structureCode: string, settings: Partial<InsertStructureSettings>): Promise<StructureSettings>;
+  checkGestionaleAccess(structureCode: string): Promise<{hasAccess: boolean, hoursRemaining?: number}>;
 }
 
 export class MemStorage implements IStorage {
@@ -51,11 +68,17 @@ export class MemStorage implements IStorage {
   private assignedPackages: Map<number, AssignedPackage>;
   private guests: Map<number, Guest>;
   private adminCredits: Map<string, AdminCredits>;
+  private purchasedPackages: Map<number, PurchasedPackage>;
+  private accountingMovements: Map<number, AccountingMovement>;
+  private structureSettings: Map<string, StructureSettings>;
   private currentIqCodeId: number;
   private currentSessionId: number;
   private currentPackageId: number;
   private currentGuestId: number;
   private currentAdminCreditsId: number;
+  private currentPurchasedPackageId: number;
+  private currentAccountingMovementId: number;
+  private currentStructureSettingsId: number;
 
   constructor() {
     this.iqCodes = new Map();
