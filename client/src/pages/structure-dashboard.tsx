@@ -68,6 +68,9 @@ export default function StructureDashboard() {
   const [assignedCode, setAssignedCode] = useState<string>("");
   const [selectedGuestForManagement, setSelectedGuestForManagement] = useState<Guest | null>(null);
   const [guestHistory, setGuestHistory] = useState<any[]>([]);
+  const [guestCodes, setGuestCodes] = useState<any[]>([]);
+  const [availableCodes, setAvailableCodes] = useState<any[]>([]);
+  const [loadingCodes, setLoadingCodes] = useState(false);
   
   // Recupera dati specifici della struttura
   const { data: structureData, isLoading } = useQuery({
@@ -86,6 +89,12 @@ export default function StructureDashboard() {
   // Query per ospiti della struttura
   const { data: guestsData, refetch: refetchGuests } = useQuery<GuestsResponse>({
     queryKey: ["/api/guests"],
+    enabled: !!structureId,
+  });
+
+  // Query per codici disponibili per riassegnazione
+  const { data: availableCodesData, refetch: refetchAvailableCodes } = useQuery({
+    queryKey: ["/api/available-codes"],
     enabled: !!structureId,
   });
 
@@ -322,6 +331,73 @@ export default function StructureDashboard() {
     
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
+  };
+
+  // Funzioni per gestione codici IQ - Rimozione e riassegnazione
+  const loadGuestCodes = async (guestId: number) => {
+    try {
+      setLoadingCodes(true);
+      const response = await fetch(`/api/guest/${guestId}/codes`, {
+        credentials: "include"
+      });
+      const data = await response.json();
+      setGuestCodes(data.codes || []);
+    } catch (error) {
+      console.error("Errore caricamento codici ospite:", error);
+      setGuestCodes([]);
+    } finally {
+      setLoadingCodes(false);
+    }
+  };
+
+  const handleRemoveCodeFromGuest = async (code: string, guestId: number, reason: string) => {
+    try {
+      const response = await fetch(`/api/guest/${guestId}/remove-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ code, reason })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        await loadGuestCodes(guestId);
+        await refetchAvailableCodes();
+        await refetchGuests();
+        alert(`Codice ${code} rimosso dall'ospite e aggiunto ai codici disponibili`);
+      } else {
+        alert(result.message || "Errore durante la rimozione del codice");
+      }
+    } catch (error) {
+      console.error("Errore rimozione codice:", error);
+      alert("Errore durante la rimozione del codice");
+    }
+  };
+
+  const handleAssignAvailableCode = async (code: string, guestId: number, guestName: string) => {
+    try {
+      const response = await fetch("/api/assign-available-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ code, guestId, guestName })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        await loadGuestCodes(guestId);
+        await refetchAvailableCodes();
+        await refetchGuests();
+        alert(`Codice ${code} assegnato a ${guestName}`);
+      } else {
+        alert(result.message || "Errore durante l'assegnazione del codice");
+      }
+    } catch (error) {
+      console.error("Errore assegnazione codice:", error);
+      alert("Errore durante l'assegnazione del codice");
+    }
   };
 
 
@@ -800,7 +876,7 @@ export default function StructureDashboard() {
       {/* Pannello Gestione Dettagliata Ospite */}
       {selectedGuestForManagement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold">
@@ -809,7 +885,10 @@ export default function StructureDashboard() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setSelectedGuestForManagement(null)}
+                  onClick={() => {
+                    setSelectedGuestForManagement(null);
+                    setGuestCodes([]);
+                  }}
                 >
                   Chiudi
                 </Button>
@@ -817,6 +896,14 @@ export default function StructureDashboard() {
               <p className="text-gray-600 mt-1">
                 Camera {selectedGuestForManagement.roomNumber} • {selectedGuestForManagement.assignedCodes || 0} codici assegnati
               </p>
+              <Button
+                onClick={() => loadGuestCodes(selectedGuestForManagement.id)}
+                size="sm"
+                className="mt-2 bg-blue-600 hover:bg-blue-700"
+                disabled={loadingCodes}
+              >
+                {loadingCodes ? "Caricamento..." : "Carica Codici Assegnati"}
+              </Button>
             </div>
             
             <div className="p-6 space-y-6">
@@ -829,12 +916,89 @@ export default function StructureDashboard() {
                 <div>
                   <Label className="text-sm font-medium text-gray-700">Check-in/Check-out</Label>
                   <p className="text-sm">
-                    {selectedGuestForManagement.checkinDate && selectedGuestForManagement.checkoutDate
-                      ? `${selectedGuestForManagement.checkinDate} - ${selectedGuestForManagement.checkoutDate}`
+                    {selectedGuestForManagement.checkIn && selectedGuestForManagement.checkOut
+                      ? `${selectedGuestForManagement.checkIn} - ${selectedGuestForManagement.checkOut}`
                       : "Date non specificate"}
                   </p>
                 </div>
               </div>
+
+              {/* Codici IQ Assegnati all'Ospite */}
+              {guestCodes.length > 0 && (
+                <div className="border rounded-lg p-4 bg-blue-50">
+                  <h3 className="font-semibold mb-3 text-blue-800">Codici IQ Assegnati</h3>
+                  <div className="space-y-2">
+                    {guestCodes.map((codeData: any, index: number) => (
+                      <div key={index} className="flex justify-between items-center bg-white p-3 rounded border">
+                        <div className="flex items-center gap-3">
+                          <Badge className="bg-blue-600 text-white">{codeData.code}</Badge>
+                          <span className="text-sm text-gray-600">
+                            Assegnato: {codeData.assignedAt ? new Date(codeData.assignedAt).toLocaleDateString() : 'Oggi'}
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              navigator.clipboard.writeText(codeData.code);
+                              alert(`Codice ${codeData.code} copiato negli appunti`);
+                            }}
+                          >
+                            <Copy size={14} className="mr-1" />
+                            Copia
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => {
+                              const reason = prompt("Motivo rimozione codice:", "Assegnato per errore");
+                              if (reason) {
+                                handleRemoveCodeFromGuest(codeData.code, selectedGuestForManagement.id, reason);
+                              }
+                            }}
+                          >
+                            <Trash2 size={14} className="mr-1" />
+                            Rimuovi
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Codici Disponibili per Riassegnazione */}
+              {availableCodesData?.codes && availableCodesData.codes.length > 0 && (
+                <div className="border rounded-lg p-4 bg-green-50">
+                  <h3 className="font-semibold mb-3 text-green-800">Codici Disponibili per Riassegnazione</h3>
+                  <div className="space-y-2">
+                    {availableCodesData.codes.map((codeData: any, index: number) => (
+                      <div key={index} className="flex justify-between items-center bg-white p-3 rounded border">
+                        <div className="flex items-center gap-3">
+                          <Badge className="bg-green-600 text-white">{codeData.code}</Badge>
+                          <span className="text-xs text-gray-600">
+                            Liberato da: {codeData.originalGuestName} • {codeData.reason}
+                          </span>
+                        </div>
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() => {
+                            const guestName = `${selectedGuestForManagement.firstName} ${selectedGuestForManagement.lastName}`;
+                            if (confirm(`Assegnare il codice ${codeData.code} a ${guestName}?`)) {
+                              handleAssignAvailableCode(codeData.code, selectedGuestForManagement.id, guestName);
+                            }
+                          }}
+                        >
+                          <Gift size={14} className="mr-1" />
+                          Assegna
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               {/* Assegnazione Nuovi Codici */}
               {packagesData?.packages && packagesData.packages.length > 0 && (

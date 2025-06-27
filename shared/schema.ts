@@ -49,9 +49,24 @@ export const generatedEmotionalCodes = pgTable("generated_emotional_codes", {
   guestId: integer("guest_id"), // ID ospite dalla gestione ospiti
   country: text("country").notNull(), // Paese (IT, FR, ES, etc.)
   emotionalWord: text("emotional_word").notNull(), // Parola emozionale usata
-  status: text("status").notNull().default("active"), // active (permanente)
+  status: text("status").notNull().default("assigned"), // assigned, available, used
   generatedAt: timestamp("generated_at").notNull().defaultNow(),
-  assignedAt: timestamp("assigned_at").notNull().defaultNow()
+  assignedAt: timestamp("assigned_at"),
+  removedAt: timestamp("removed_at"), // Quando è stato rimosso dall'ospite
+  removedReason: text("removed_reason") // Motivo rimozione
+});
+
+// Tabella per tracciare i codici IQ disponibili per riassegnazione
+export const availableIqCodes = pgTable("available_iq_codes", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(), // Codice IQ disponibile
+  structureCode: text("structure_code").notNull(), // Struttura proprietaria
+  originalGuestId: integer("original_guest_id"), // Ospite originale (se rimosso)
+  originalGuestName: text("original_guest_name"), // Nome ospite originale
+  packageId: integer("package_id").notNull(), // Pacchetto di provenienza
+  madeAvailableAt: timestamp("made_available_at").notNull().defaultNow(),
+  reason: text("reason").default("removed_from_guest"), // removed_from_guest, generated_unused
+  createdAt: timestamp("created_at").notNull().defaultNow()
 });
 
 // Tabella ospiti per gestione completa da parte delle strutture
@@ -176,6 +191,11 @@ export const insertStructureSettingsSchema = createInsertSchema(structureSetting
   updatedAt: true,
 });
 
+export const insertAvailableIqCodeSchema = createInsertSchema(availableIqCodes).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const loginSchema = z.object({
   iqCode: z.string().min(1, "Codice IQ richiesto").max(20),
 });
@@ -188,6 +208,8 @@ export type AssignedPackage = typeof assignedPackages.$inferSelect;
 export type InsertAssignedPackage = z.infer<typeof insertAssignedPackageSchema>;
 export type GeneratedEmotionalCode = typeof generatedEmotionalCodes.$inferSelect;
 export type InsertGeneratedEmotionalCode = z.infer<typeof insertGeneratedEmotionalCodeSchema>;
+export type AvailableIqCode = typeof availableIqCodes.$inferSelect;
+export type InsertAvailableIqCode = z.infer<typeof insertAvailableIqCodeSchema>;
 export type Guest = typeof guests.$inferSelect;
 export type InsertGuest = typeof guests.$inferInsert;
 export type AdminCredits = typeof adminCredits.$inferSelect;

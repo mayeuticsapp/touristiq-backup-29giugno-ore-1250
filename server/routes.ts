@@ -681,6 +681,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint per ottenere IQCode assegnati a un ospite
+  app.get("/api/guest/:guestId/codes", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const guestId = parseInt(req.params.guestId);
+      const assignedCodes = await storage.getAssignedCodesByGuest(guestId);
+      
+      res.json({ codes: assignedCodes });
+    } catch (error) {
+      console.error("Errore recupero codici ospite:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Endpoint per rimuovere un IQCode da un ospite
+  app.post("/api/guest/:guestId/remove-code", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const guestId = parseInt(req.params.guestId);
+      const { code, reason } = req.body;
+
+      if (!code || !reason) {
+        return res.status(400).json({ message: "Codice e motivo richiesti" });
+      }
+
+      await storage.removeCodeFromGuest(code, guestId, reason);
+      
+      res.json({ 
+        success: true, 
+        message: `Codice ${code} rimosso dall'ospite`,
+        code: code
+      });
+    } catch (error) {
+      console.error("Errore rimozione codice:", error);
+      res.status(500).json({ message: error.message || "Errore del server" });
+    }
+  });
+
+  // Endpoint per ottenere IQCode disponibili per riassegnazione
+  app.get("/api/available-codes", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const availableCodes = await storage.getAvailableCodesForStructure(session.iqCode);
+      
+      res.json({ codes: availableCodes });
+    } catch (error) {
+      console.error("Errore recupero codici disponibili:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Endpoint per assegnare un IQCode disponibile a un ospite
+  app.post("/api/assign-available-code", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const { code, guestId, guestName } = req.body;
+
+      if (!code || !guestId || !guestName) {
+        return res.status(400).json({ message: "Codice, ID ospite e nome richiesti" });
+      }
+
+      await storage.assignAvailableCodeToGuest(code, guestId, guestName);
+      
+      res.json({ 
+        success: true, 
+        message: `Codice ${code} assegnato a ${guestName}`,
+        code: code
+      });
+    } catch (error) {
+      console.error("Errore assegnazione codice disponibile:", error);
+      res.status(500).json({ message: error.message || "Errore del server" });
+    }
+  });
+
   // Admin endpoint per cestino temporaneo
   app.get("/api/admin/trash", async (req, res) => {
     try {

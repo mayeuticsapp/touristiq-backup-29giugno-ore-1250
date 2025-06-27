@@ -38,6 +38,12 @@ export interface IStorage {
   generateEmotionalIQCode(structureCode: string, packageId: number, guestName: string, guestId?: number): Promise<{ code: string; remainingCredits: number }>;
   decrementPackageCredits(packageId: number): Promise<void>;
 
+  // IQCode management methods - Rimozione e riassegnazione
+  getAssignedCodesByGuest(guestId: number): Promise<any[]>;
+  removeCodeFromGuest(code: string, guestId: number, reason: string): Promise<void>;
+  getAvailableCodesForStructure(structureCode: string): Promise<any[]>;
+  assignAvailableCodeToGuest(code: string, guestId: number, guestName: string): Promise<void>;
+
   // Admin credits methods - Pacchetto RobS
   getAdminCredits(adminCode: string): Promise<AdminCredits | undefined>;
   createAdminCredits(adminCredits: InsertAdminCredits): Promise<AdminCredits>;
@@ -71,6 +77,8 @@ export class MemStorage implements IStorage {
   private purchasedPackages: Map<number, PurchasedPackage>;
   private accountingMovements: Map<number, AccountingMovement>;
   private structureSettings: Map<string, StructureSettings>;
+  private generatedCodes: Map<number, any>; // Generated emotional codes
+  private availableCodes: Map<number, any>; // Available codes for reassignment
   private currentIqCodeId: number;
   private currentSessionId: number;
   private currentPackageId: number;
@@ -79,6 +87,8 @@ export class MemStorage implements IStorage {
   private currentPurchasedPackageId: number;
   private currentAccountingMovementId: number;
   private currentStructureSettingsId: number;
+  private currentGeneratedCodeId: number;
+  private currentAvailableCodeId: number;
 
   constructor() {
     this.iqCodes = new Map();
@@ -86,11 +96,21 @@ export class MemStorage implements IStorage {
     this.assignedPackages = new Map();
     this.guests = new Map();
     this.adminCredits = new Map();
+    this.purchasedPackages = new Map();
+    this.accountingMovements = new Map();
+    this.structureSettings = new Map();
+    this.generatedCodes = new Map();
+    this.availableCodes = new Map();
     this.currentIqCodeId = 1;
     this.currentSessionId = 1;
     this.currentPackageId = 1;
     this.currentGuestId = 1;
     this.currentAdminCreditsId = 1;
+    this.currentPurchasedPackageId = 1;
+    this.currentAccountingMovementId = 1;
+    this.currentStructureSettingsId = 1;
+    this.currentGeneratedCodeId = 1;
+    this.currentAvailableCodeId = 1;
 
     // Initialize with default IQ codes
     this.initializeDefaultCodes();
@@ -371,7 +391,7 @@ export class MemStorage implements IStorage {
     }
 
     // Import emotional words for code generation
-    const { generateEmotionalIQCode } = await import('./iq-generator');
+    const { generateEmotionalIQCode, parseIQCode } = await import('./iq-generator');
     
     // Generate unique emotional code (TIQ-IT-ROSA format)
     let uniqueCode: string;
@@ -384,6 +404,26 @@ export class MemStorage implements IStorage {
     if (attempts >= 50) {
       throw new Error("Impossibile generare codice univoco");
     }
+
+    // Parse the generated code to extract country and word
+    const parsedCode = parseIQCode(uniqueCode);
+    
+    // Save generated code for tracking
+    const generatedCode = {
+      id: this.currentGeneratedCodeId++,
+      code: uniqueCode,
+      generatedBy: structureCode,
+      packageId: packageId,
+      assignedTo: guestName,
+      guestId: guestId || null,
+      country: parsedCode?.country || 'IT',
+      emotionalWord: parsedCode?.word || 'UNKNOWN',
+      status: 'assigned',
+      generatedAt: new Date(),
+      assignedAt: new Date()
+    };
+    
+    this.generatedCodes.set(generatedCode.id, generatedCode);
 
     // Decrement credits
     targetPackage.creditsRemaining--;
@@ -453,6 +493,105 @@ export class MemStorage implements IStorage {
       (code) => code.role === 'tourist' && code.assignedTo?.includes(adminCode)
     );
   }
+
+  // IQCode management methods - Rimozione e riassegnazione
+  async getAssignedCodesByGuest(guestId: number): Promise<any[]> {
+    return Array.from(this.generatedCodes.values()).filter(code => 
+      code.guestId === guestId && code.status === 'assigned'
+    );
+  }
+
+  async removeCodeFromGuest(code: string, guestId: number, reason: string): Promise<void> {
+    // Find the generated code
+    const generatedCode = Array.from(this.generatedCodes.values()).find(gc => 
+      gc.code === code && gc.guestId === guestId
+    );
+    
+    if (!generatedCode) {
+      throw new Error("Codice non trovato per questo ospite");
+    }
+
+    // Update generated code status
+    generatedCode.status = 'available';
+    generatedCode.removedAt = new Date();
+    generatedCode.removedReason = reason;
+    generatedCode.guestId = null;
+    generatedCode.assignedTo = null;
+
+    // Add to available codes pool
+    const availableCode = {
+      id: this.currentAvailableCodeId++,
+      code: code,
+      structureCode: generatedCode.generatedBy,
+      originalGuestId: guestId,
+      originalGuestName: '',
+      packageId: generatedCode.packageId,
+      madeAvailableAt: new Date(),
+      reason: reason,
+      createdAt: new Date()
+    };
+    
+    this.availableCodes.set(availableCode.id, availableCode);
+
+    // Update guest assigned codes count
+    const guest = this.guests.get(guestId);
+    if (guest && guest.assignedCodes && guest.assignedCodes > 0) {
+      guest.assignedCodes--;
+      this.guests.set(guestId, guest);
+    }
+  }
+
+  async getAvailableCodesForStructure(structureCode: string): Promise<any[]> {
+    return Array.from(this.availableCodes.values()).filter(code => 
+      code.structureCode === structureCode
+    );
+  }
+
+  async assignAvailableCodeToGuest(code: string, guestId: number, guestName: string): Promise<void> {
+    // Find available code
+    const availableCode = Array.from(this.availableCodes.values()).find(ac => ac.code === code);
+    
+    if (!availableCode) {
+      throw new Error("Codice disponibile non trovato");
+    }
+
+    // Remove from available codes
+    const availableCodeId = Array.from(this.availableCodes.entries())
+      .find(([_, ac]) => ac.code === code)?.[0];
+    
+    if (availableCodeId) {
+      this.availableCodes.delete(availableCodeId);
+    }
+
+    // Update generated code
+    const generatedCode = Array.from(this.generatedCodes.values()).find(gc => gc.code === code);
+    if (generatedCode) {
+      generatedCode.status = 'assigned';
+      generatedCode.guestId = guestId;
+      generatedCode.assignedTo = guestName;
+      generatedCode.assignedAt = new Date();
+    }
+
+    // Update guest assigned codes count
+    const guest = this.guests.get(guestId);
+    if (guest) {
+      guest.assignedCodes = (guest.assignedCodes || 0) + 1;
+      this.guests.set(guestId, guest);
+    }
+  }
+
+  // Metodi placeholder per compatibilità con interfaccia
+  async createPurchasedPackage(): Promise<PurchasedPackage> { throw new Error("Not implemented"); }
+  async getPurchasedPackagesByStructure(): Promise<PurchasedPackage[]> { return []; }
+  async getTotalIQCodesRemaining(): Promise<number> { return 0; }
+  async useIQCodeFromPackage(): Promise<boolean> { return false; }
+  async createAccountingMovement(): Promise<AccountingMovement> { throw new Error("Not implemented"); }
+  async getAccountingMovements(): Promise<AccountingMovement[]> { return []; }
+  async getMonthlyAccountingSummary(): Promise<{income: number, expenses: number, balance: number}> { return { income: 0, expenses: 0, balance: 0 }; }
+  async getStructureSettings(): Promise<StructureSettings | undefined> { return undefined; }
+  async createStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
+  async updateStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
+  async checkGestionaleAccess(): Promise<{hasAccess: boolean, hoursRemaining?: number}> { return { hasAccess: false }; }
 }
 
 // PostgreSQL Storage Class
@@ -826,6 +965,40 @@ export class PostgreStorage implements IStorage {
     return await this.db.select().from(iqCodes)
       .where(and(eq(iqCodes.role, 'tourist'), eq(iqCodes.assignedTo, adminCode)));
   }
+
+  // IQCode management methods - Rimozione e riassegnazione per PostgreStorage
+  async getAssignedCodesByGuest(guestId: number): Promise<any[]> {
+    // Return empty for now - would need generatedEmotionalCodes table query
+    return [];
+  }
+
+  async removeCodeFromGuest(code: string, guestId: number, reason: string): Promise<void> {
+    // Implementation placeholder - would need generatedEmotionalCodes table updates
+    console.log(`Rimozione codice ${code} da ospite ${guestId}: ${reason}`);
+  }
+
+  async getAvailableCodesForStructure(structureCode: string): Promise<any[]> {
+    // Return empty for now - would need availableIqCodes table query
+    return [];
+  }
+
+  async assignAvailableCodeToGuest(code: string, guestId: number, guestName: string): Promise<void> {
+    // Implementation placeholder - would need availableIqCodes table updates
+    console.log(`Assegnazione codice ${code} a ospite ${guestId}: ${guestName}`);
+  }
+
+  // Metodi placeholder per compatibilità con interfaccia PostgreStorage
+  async createPurchasedPackage(): Promise<PurchasedPackage> { throw new Error("Not implemented"); }
+  async getPurchasedPackagesByStructure(): Promise<PurchasedPackage[]> { return []; }
+  async getTotalIQCodesRemaining(): Promise<number> { return 0; }
+  async useIQCodeFromPackage(): Promise<boolean> { return false; }
+  async createAccountingMovement(): Promise<AccountingMovement> { throw new Error("Not implemented"); }
+  async getAccountingMovements(): Promise<AccountingMovement[]> { return []; }
+  async getMonthlyAccountingSummary(): Promise<{income: number, expenses: number, balance: number}> { return { income: 0, expenses: 0, balance: 0 }; }
+  async getStructureSettings(): Promise<StructureSettings | undefined> { return undefined; }
+  async createStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
+  async updateStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
+  async checkGestionaleAccess(): Promise<{hasAccess: boolean, hoursRemaining?: number}> { return { hasAccess: false }; }
 }
 
 // Use PostgreSQL storage if DATABASE_URL exists, otherwise fallback to memory
