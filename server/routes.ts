@@ -294,6 +294,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const structureId = req.params.id;
       
+      // Verifico autenticazione
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode) {
+        return res.status(401).json({ message: "Utente non trovato" });
+      }
+
+      // Verifico che l'utente sia una struttura approvata
+      if (userIqCode.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      if (userIqCode.status !== 'approved') {
+        return res.status(403).json({ message: "Struttura non ancora approvata dall'admin" });
+      }
+
+      // Verifico che la struttura stia accedendo alla propria dashboard
+      const userStructureId = userIqCode.code.split('-').pop();
+      if (userStructureId !== structureId) {
+        return res.status(403).json({ message: "Accesso negato - puoi accedere solo alla tua dashboard" });
+      }
+      
       // Find structure by ID in any province
       const allCodes = await storage.getAllIqCodes();
       const structureCode = allCodes.find(code => 
@@ -595,6 +626,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Errore aggiornamento nota:", error);
       res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Admin endpoint per ottenere strutture e partner approvati per assegnazione pacchetti
+  app.get("/api/admin/structures", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      // Carico tutti i codici e filtro per strutture e partner approvati
+      const allCodes = await storage.getAllIqCodes();
+      
+      const structures = allCodes
+        .filter(code => code.role === 'structure' && code.status === 'approved')
+        .map(code => ({
+          id: code.id,
+          code: code.code,
+          assignedTo: code.assignedTo,
+          location: code.location
+        }));
+
+      const partners = allCodes
+        .filter(code => code.role === 'partner' && code.status === 'approved') 
+        .map(code => ({
+          id: code.id,
+          code: code.code,
+          assignedTo: code.assignedTo,
+          location: code.location
+        }));
+
+      res.json({ structures, partners });
+    } catch (error) {
+      console.error('Errore caricamento strutture:', error);
+      res.status(500).json({ message: "Errore interno del server" });
     }
   });
 
