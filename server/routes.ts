@@ -432,23 +432,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const allCodes = await storage.getAllIqCodes();
-      const structureCount = allCodes.filter(c => c.role === 'structure').length;
-      const partnerCount = allCodes.filter(c => c.role === 'partner').length;
+      const activeCodes = allCodes.filter(c => !c.isDeleted);
+      const structureCount = activeCodes.filter(c => c.role === 'structure').length;
+      const partnerCount = activeCodes.filter(c => c.role === 'partner').length;
       
       const stats = {
-        totalCodes: allCodes.length,
-        activeUsers: allCodes.filter(c => c.isActive).length,
+        totalCodes: activeCodes.length,
+        activeUsers: activeCodes.filter(c => c.isActive).length,
         structures: structureCount,
         partners: partnerCount,
         byRole: {
-          tourist: allCodes.filter(c => c.role === 'tourist').length,
+          tourist: activeCodes.filter(c => c.role === 'tourist').length,
           structure: structureCount,
           partner: partnerCount,
-          admin: allCodes.filter(c => c.role === 'admin').length
+          admin: activeCodes.filter(c => c.role === 'admin').length
         },
         byType: {
-          emotional: allCodes.filter(c => c.codeType === 'emotional').length,
-          professional: allCodes.filter(c => c.codeType === 'professional').length
+          emotional: activeCodes.filter(c => c.codeType === 'emotional').length,
+          professional: activeCodes.filter(c => c.codeType === 'professional').length
         }
       };
 
