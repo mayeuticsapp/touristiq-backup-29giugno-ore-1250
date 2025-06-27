@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star, Package, Plus, Gift, UserPlus, Phone, Mail, MessageCircle, Edit, Trash2 } from "lucide-react";
+import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star, Package, Plus, Gift, UserPlus, Phone, Mail, MessageCircle, Edit, Trash2, Send, Copy, Check } from "lucide-react";
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -56,7 +56,6 @@ export default function StructureDashboard() {
   const [newGuest, setNewGuest] = useState({
     firstName: "",
     lastName: "",
-    email: "",
     phone: "",
     roomNumber: "",
     checkinDate: "",
@@ -65,6 +64,8 @@ export default function StructureDashboard() {
   });
   const [editingGuest, setEditingGuest] = useState(null);
   const [selectedGuestId, setSelectedGuestId] = useState(0);
+  const [justCreatedGuest, setJustCreatedGuest] = useState<Guest | null>(null);
+  const [assignedCode, setAssignedCode] = useState<string>("");
   
   // Recupera dati specifici della struttura
   const { data: structureData, isLoading } = useQuery({
@@ -143,16 +144,23 @@ export default function StructureDashboard() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          ...newGuest,
+          firstName: newGuest.firstName,
+          lastName: newGuest.lastName,
+          phone: newGuest.phone,
+          roomNumber: newGuest.roomNumber,
+          checkinDate: newGuest.checkinDate,
+          checkoutDate: newGuest.checkoutDate,
+          notes: newGuest.notes,
           structureCode: structureData?.iqCode
         })
       });
 
       if (response.ok) {
+        const result = await response.json();
+        setJustCreatedGuest(result.guest);
         setNewGuest({
           firstName: "",
           lastName: "",
-          email: "",
           phone: "",
           roomNumber: "",
           checkinDate: "",
@@ -160,7 +168,6 @@ export default function StructureDashboard() {
           notes: ""
         });
         refetchGuests();
-        alert("Ospite registrato con successo!");
       } else {
         const error = await response.json();
         alert(`Errore: ${error.message}`);
@@ -168,6 +175,76 @@ export default function StructureDashboard() {
     } catch (error) {
       alert("Errore durante la registrazione dell'ospite");
     }
+  };
+
+  // Funzioni azioni rapide post-creazione
+  const handleAssignCodeToNewGuest = async () => {
+    if (!justCreatedGuest) return;
+    
+    try {
+      // Genera un codice IQ emozionale temporaneo per il nuovo ospite
+      const response = await fetch("/api/generate-tourist-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          guestName: `${justCreatedGuest.firstName} ${justCreatedGuest.lastName}`,
+          guestId: justCreatedGuest.id,
+          roomNumber: justCreatedGuest.roomNumber
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setAssignedCode(result.touristCode);
+        alert(`Codice IQ assegnato: ${result.touristCode}`);
+      } else {
+        alert("Errore durante l'assegnazione del codice");
+      }
+    } catch (error) {
+      alert("Errore durante l'assegnazione del codice");
+    }
+  };
+
+  const handleSendWhatsAppToNewGuest = async () => {
+    if (!justCreatedGuest || !assignedCode) {
+      alert("Prima assegna un codice IQ all'ospite");
+      return;
+    }
+
+    const message = `🏨 Benvenuto!\nIl tuo codice TouristIQ è: *${assignedCode}*\n\nScoprilo nei migliori locali della zona per sconti esclusivi!`;
+    const whatsappUrl = `https://wa.me/${justCreatedGuest.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+    
+    // Apri WhatsApp
+    window.open(whatsappUrl, '_blank');
+    
+    // GDPR: Cancella automaticamente il numero di telefono dal database
+    try {
+      await fetch(`/api/guests/${justCreatedGuest.id}/remove-phone`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      });
+      
+      alert("Messaggio inviato! Il numero di telefono è stato rimosso per privacy GDPR.");
+      refetchGuests();
+      setJustCreatedGuest(null);
+    } catch (error) {
+      console.error("Errore rimozione numero:", error);
+    }
+  };
+
+  const handleCopyCodeToClipboard = () => {
+    if (!assignedCode) {
+      alert("Prima assegna un codice IQ all'ospite");
+      return;
+    }
+    
+    navigator.clipboard.writeText(assignedCode).then(() => {
+      alert("Codice copiato negli appunti!");
+    }).catch(() => {
+      alert("Errore durante la copia");
+    });
   };
 
   const handleAssignCodeToGuest = async (guestId: number, packageId: number) => {
@@ -474,16 +551,7 @@ export default function StructureDashboard() {
                 placeholder="+39 123 456 7890"
               />
             </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={newGuest.email}
-                onChange={(e) => setNewGuest({...newGuest, email: e.target.value})}
-                placeholder="mario.rossi@email.com"
-              />
-            </div>
+
             <div>
               <Label htmlFor="roomNumber">Camera</Label>
               <Input
@@ -527,12 +595,66 @@ export default function StructureDashboard() {
             <Button 
               onClick={handleCreateGuest}
               className="bg-purple-600 hover:bg-purple-700"
-              disabled={!newGuest.firstName || !newGuest.lastName}
+              disabled={!newGuest.firstName || !newGuest.lastName || !newGuest.phone}
             >
               <UserPlus size={16} className="mr-2" />
               Registra Ospite
             </Button>
           </div>
+
+          {/* Pannello Azioni Rapide Post-Creazione */}
+          {justCreatedGuest && (
+            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <h4 className="font-semibold text-green-800 mb-3">
+                ✅ Ospite creato: {justCreatedGuest.firstName} {justCreatedGuest.lastName} - Camera {justCreatedGuest.roomNumber}
+              </h4>
+              <div className="flex gap-3 flex-wrap">
+                <Button 
+                  onClick={handleAssignCodeToNewGuest}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  size="sm"
+                >
+                  <Gift size={16} className="mr-2" />
+                  Assegna IQCode
+                </Button>
+                
+                <Button 
+                  onClick={handleSendWhatsAppToNewGuest}
+                  className="bg-green-600 hover:bg-green-700"
+                  size="sm"
+                  disabled={!assignedCode}
+                >
+                  <Send size={16} className="mr-2" />
+                  Invia via WhatsApp
+                </Button>
+                
+                <Button 
+                  onClick={handleCopyCodeToClipboard}
+                  className="bg-gray-600 hover:bg-gray-700"
+                  size="sm"
+                  disabled={!assignedCode}
+                >
+                  <Copy size={16} className="mr-2" />
+                  Copia Codice
+                </Button>
+                
+                <Button 
+                  onClick={() => {setJustCreatedGuest(null); setAssignedCode("");}}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Check size={16} className="mr-2" />
+                  Fatto
+                </Button>
+              </div>
+              
+              {assignedCode && (
+                <div className="mt-3 p-2 bg-white border rounded font-mono text-sm">
+                  Codice assegnato: <strong>{assignedCode}</strong>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 

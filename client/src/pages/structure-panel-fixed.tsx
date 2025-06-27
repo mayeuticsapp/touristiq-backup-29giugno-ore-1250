@@ -44,7 +44,7 @@ export default function StructurePanelFixed() {
 
   // Stati per il pannello
   const [iqCodesBalance, setIqCodesBalance] = useState(47);
-  const [selectedPackageSize, setSelectedPackageSize] = useState<'10' | '25' | '50' | '100'>('25');
+  const [selectedPackageSize, setSelectedPackageSize] = useState<'25' | '50' | '75' | '100'>('25');
   const [paymentStatus, setPaymentStatus] = useState('idle');
   const [selectedCode, setSelectedCode] = useState('TIQ-IT-MARGHERITA');
   const [gestionaleAccess, setGestionaleAccess] = useState({
@@ -178,11 +178,11 @@ export default function StructurePanelFixed() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {[
-                      { size: '10', price: '€49' },
-                      { size: '25', price: '€99' },
-                      { size: '50', price: '€179' },
-                      { size: '100', price: '€299' }
-                    ].map(({ size, price }) => (
+                      { size: '25', price: '€99', sumupLink: 'https://pay.sumup.com/b2c/QSJE461B' },
+                      { size: '50', price: '€179', sumupLink: 'https://pay.sumup.com/b2c/QK6MLJC7' },
+                      { size: '75', price: '€239', sumupLink: 'https://pay.sumup.com/b2c/Q9517L3P' },
+                      { size: '100', price: '€299', sumupLink: 'https://pay.sumup.com/b2c/Q3BWI26N' }
+                    ].map(({ size, price, sumupLink }) => (
                       <div 
                         key={size}
                         className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
@@ -190,7 +190,7 @@ export default function StructurePanelFixed() {
                             ? 'border-purple-500 bg-purple-50' 
                             : 'border-gray-200 hover:border-purple-300'
                         }`}
-                        onClick={() => setSelectedPackageSize(size as '10' | '25' | '50' | '100')}
+                        onClick={() => setSelectedPackageSize(size as '25' | '50' | '75' | '100')}
                       >
                         <div className="text-center">
                           <Package className="w-8 h-8 mx-auto mb-2 text-purple-600" />
@@ -204,18 +204,22 @@ export default function StructurePanelFixed() {
                   
                   <div className="mt-6">
                     <Button 
-                      onClick={handlePurchasePackage}
-                      disabled={paymentStatus === 'processing'}
+                      onClick={() => {
+                        const packages = [
+                          { size: '25', sumupLink: 'https://pay.sumup.com/b2c/QSJE461B' },
+                          { size: '50', sumupLink: 'https://pay.sumup.com/b2c/QK6MLJC7' },
+                          { size: '75', sumupLink: 'https://pay.sumup.com/b2c/Q9517L3P' },
+                          { size: '100', sumupLink: 'https://pay.sumup.com/b2c/Q3BWI26N' }
+                        ];
+                        const selectedPackage = packages.find(p => p.size === selectedPackageSize);
+                        if (selectedPackage) {
+                          window.open(selectedPackage.sumupLink, '_blank');
+                        }
+                      }}
                       className="w-full bg-purple-600 hover:bg-purple-700"
                     >
-                      {paymentStatus === 'processing' ? (
-                        'Elaborazione pagamento...'
-                      ) : (
-                        <>
-                          <Euro className="w-4 h-4 mr-2" />
-                          Acquista Pacchetto {selectedPackageSize} IQCode - {selectedPackageSize === '10' ? '€49' : selectedPackageSize === '25' ? '€99' : selectedPackageSize === '50' ? '€179' : '€299'}
-                        </>
-                      )}
+                      <Euro className="w-4 h-4 mr-2" />
+                      Acquista su SumUp - {selectedPackageSize} IQCode
                     </Button>
                     
                     {paymentStatus === 'completed' && (

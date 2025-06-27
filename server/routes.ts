@@ -1160,7 +1160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo strutture" });
       }
 
-      const { firstName, lastName, email, phone, roomNumber, checkinDate, checkoutDate, notes } = req.body;
+      const { firstName, lastName, phone, roomNumber, checkinDate, checkoutDate, notes } = req.body;
 
       if (!firstName || !lastName) {
         return res.status(400).json({ message: "Nome e cognome sono obbligatori" });
@@ -1170,7 +1170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         structureCode: userIqCode.code,
         firstName,
         lastName,
-        email,
+        email: "", // Email sempre vuota per GDPR
         phone,
         roomNumber,
         checkinDate,
@@ -1256,6 +1256,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Errore generazione IQCode emozionale:", error);
       res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Remove phone number from guest (GDPR compliance)
+  app.patch("/api/guests/:id/remove-phone", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const guestId = parseInt(req.params.id);
+      const updatedGuest = await storage.updateGuest(guestId, { phone: "" });
+      
+      res.json({ success: true, guest: updatedGuest });
+    } catch (error) {
+      console.error("Errore rimozione telefono:", error);
+      res.status(500).json({ message: "Errore durante la rimozione del telefono" });
+    }
+  });
+
+  // Generate tourist code for new guest
+  app.post("/api/generate-tourist-code", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const { guestName, guestId, roomNumber } = req.body;
+      
+      // Genera un codice IQ emozionale temporaneo
+      const emotions = ["ROSA", "SOLE", "MARE", "LUNA", "STELLA", "CIELO", "VERDE", "ORO", "NEVE", "VENTO"];
+      const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
+      const touristCode = `TIQ-IT-${randomEmotion}-${Math.floor(Math.random() * 9000) + 1000}`;
+      
+      // Crea il codice nel database
+      const iqCode = await storage.createIqCode({
+        code: touristCode,
+        role: "tourist",
+        status: "active",
+        isActive: true,
+        guestName,
+        roomNumber,
+        generatedBy: session.iqCode,
+        notes: `Generato per ospite: ${guestName} - Camera: ${roomNumber}`
+      });
+      
+      res.json({ success: true, touristCode, iqCode });
+    } catch (error) {
+      console.error("Errore generazione codice turistico:", error);
+      res.status(500).json({ message: "Errore durante la generazione del codice" });
     }
   });
 
