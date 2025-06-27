@@ -426,16 +426,20 @@ export class MemStorage implements IStorage {
     this.generatedCodes.set(generatedCode.id, generatedCode);
     console.log(`DEBUG: Salvato codice ${uniqueCode} con ID ${generatedCode.id} per ospite ${guestId}. Totale codici: ${this.generatedCodes.size}`);
 
-    // Save to PostgreSQL database for persistence using existing connection
+    // Save to PostgreSQL database using neon connection (sync with existing project setup)
     try {
-      const { db } = await import('../shared/db');
-      await db.execute(`
-        INSERT INTO generated_iq_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      `, [uniqueCode, structureCode, packageId, guestName, guestId, parsedCode?.country || 'IT', parsedCode?.word || 'UNKNOWN', 'assigned']);
-      console.log(`DEBUG: Codice ${uniqueCode} salvato nel database PostgreSQL`);
+      const { neon } = await import('@neondatabase/serverless');
+      const sql = neon(process.env.DATABASE_URL!);
+      
+      const result = await sql`
+        INSERT INTO generated_iq_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
+        VALUES (${uniqueCode}, ${structureCode}, ${packageId}, ${guestName}, ${guestId}, ${parsedCode?.country || 'IT'}, ${parsedCode?.word || 'UNKNOWN'}, 'assigned', NOW())
+        RETURNING id, code
+      `;
+      
+      console.log(`✅ PERSISTENZA OK: Codice ${uniqueCode} salvato con ID ${result[0].id}`);
     } catch (dbError) {
-      console.error(`ERRORE: Impossibile salvare codice ${uniqueCode} nel database:`, dbError);
+      console.error(`❌ ERRORE NEON: Salvataggio ${uniqueCode} fallito:`, dbError);
     }
 
     // Decrement credits
@@ -530,10 +534,10 @@ export class MemStorage implements IStorage {
         country: row.country
       }));
       
-      console.log(`DEBUG: Trovati ${codes.length} codici nel database per ospite ${guestId}:`, codes);
+      console.log(`✅ RECUPERO OK: Trovati ${codes.length} codici per ospite ${guestId}`);
       return codes;
     } catch (dbError) {
-      console.error(`ERRORE: Impossibile recuperare codici per ospite ${guestId}:`, dbError);
+      console.error(`❌ ERRORE RECUPERO: Impossibile ottenere codici per ospite ${guestId}`);
       // Fallback to memory storage
       const codes = Array.from(this.generatedCodes.values()).filter(code => 
         code.guestId === guestId && code.status === 'assigned'

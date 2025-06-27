@@ -288,6 +288,18 @@ export default function StructureDashboard() {
         refetchPackages();
         refetchGuests();
         
+        // Ricarica immediatamente i codici assegnati all'ospite
+        const codesResponse = await fetch(`/api/guest/${guestId}/codes`);
+        const codesData = await codesResponse.json();
+        
+        // Aggiorna i codici assegnati per l'ospite nella visualizzazione
+        if (selectedGuestForManagement && selectedGuestForManagement.id === guestId) {
+          setSelectedGuestForManagement({
+            ...selectedGuestForManagement,
+            assignedCodes: codesData.codes || []
+          });
+        }
+        
         // Mostra dettagli assegnazione con opzione WhatsApp
         const guest = guestsData?.guests?.find((g: Guest) => g.id === guestId);
         const message = `Codice IQ assegnato con successo!\n\nCodice: ${result.touristCode}\nOspite: ${guest?.firstName} ${guest?.lastName}\nCamera: ${guest?.roomNumber || 'N/A'}`;
@@ -341,7 +353,12 @@ export default function StructureDashboard() {
         credentials: "include"
       });
       const data = await response.json();
-      setGuestCodes(data.codes || []);
+      
+      // Imposta i codici assegnati per la visualizzazione immediata
+      const assignedCodes = data.codes || [];
+      setGuestCodes(assignedCodes);
+      
+      console.log(`DEBUG: Caricati ${assignedCodes.length} codici per ospite ${guestId}:`, assignedCodes);
     } catch (error) {
       console.error("Errore caricamento codici ospite:", error);
       setGuestCodes([]);
@@ -404,8 +421,8 @@ export default function StructureDashboard() {
 
   const navigation = [
     { icon: <TrendingUp size={16} />, label: "Dashboard", href: "#", onClick: () => setActiveSection("dashboard") },
-    { icon: <Bed size={16} />, label: "Camere", href: "#", onClick: () => setActiveSection("camere") },
-    { icon: <Calendar size={16} />, label: "Prenotazioni", href: "#", onClick: () => setActiveSection("prenotazioni") },
+    // { icon: <Bed size={16} />, label: "Camere", href: "#", onClick: () => setActiveSection("camere") },
+    // { icon: <Calendar size={16} />, label: "Prenotazioni", href: "#", onClick: () => setActiveSection("prenotazioni") },
     { icon: <Users size={16} />, label: "Ospiti", href: "#", onClick: () => setActiveSection("ospiti") },
     { icon: <Package size={16} />, label: "Gestione IQCode", href: "#", onClick: () => setActiveSection("iqcode") },
     { icon: <Settings size={16} />, label: "Impostazioni", href: "#", onClick: () => setActiveSection("impostazioni") },
@@ -964,11 +981,11 @@ export default function StructureDashboard() {
               )}
 
               {/* Codici Disponibili per Riassegnazione */}
-              {availableCodesData?.codes && Array.isArray(availableCodesData.codes) && availableCodesData.codes.length > 0 && (
+              {availableCodesData && Array.isArray((availableCodesData as any).codes) && (availableCodesData as any).codes.length > 0 && (
                 <div className="border rounded-lg p-4 bg-green-50">
                   <h3 className="font-semibold mb-3 text-green-800">Codici Disponibili per Riassegnazione</h3>
                   <div className="space-y-2">
-                    {availableCodesData.codes.map((codeData: any, index: number) => (
+                    {((availableCodesData as any).codes as any[]).map((codeData: any, index: number) => (
                       <div key={index} className="flex justify-between items-center bg-white p-3 rounded border">
                         <div className="flex items-center gap-3">
                           <Badge className="bg-green-600 text-white">{codeData.code}</Badge>

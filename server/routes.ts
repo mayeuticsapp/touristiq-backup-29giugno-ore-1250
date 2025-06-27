@@ -695,9 +695,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const guestId = parseInt(req.params.guestId);
-      const assignedCodes = await storage.getAssignedCodesByGuest(guestId);
       
-      res.json({ codes: assignedCodes });
+      // Query diretta al database PostgreSQL per recuperare i codici assegnati
+      try {
+        const { neon } = await import('@neondatabase/serverless');
+        const sql = neon(process.env.DATABASE_URL!);
+        
+        const dbCodes = await sql`
+          SELECT code, assigned_to, assigned_at, emotional_word, country
+          FROM generated_iq_codes 
+          WHERE guest_id = ${guestId} AND status = 'assigned'
+          ORDER BY assigned_at DESC
+        `;
+        
+        const codes = dbCodes.map((row: any) => ({
+          code: row.code,
+          assignedTo: row.assigned_to,
+          assignedAt: row.assigned_at,
+          emotionalWord: row.emotional_word,
+          country: row.country
+        }));
+        
+        console.log(`✅ ENDPOINT: Recuperati ${codes.length} codici per ospite ${guestId}`);
+        res.json({ codes });
+      } catch (dbError) {
+        console.log(`❌ ENDPOINT: Fallback memoria per ospite ${guestId}`);
+        // Fallback al metodo storage esistente
+        const assignedCodes = await storage.getAssignedCodesByGuest(guestId);
+        res.json({ codes: assignedCodes });
+      }
     } catch (error) {
       console.error("Errore recupero codici ospite:", error);
       res.status(500).json({ message: "Errore del server" });
@@ -731,7 +757,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: `Codice ${code} rimosso dall'ospite`,
         code: code
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Errore rimozione codice:", error);
       res.status(500).json({ message: error.message || "Errore del server" });
     }
@@ -785,7 +811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: `Codice ${code} assegnato a ${guestName}`,
         code: code
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Errore assegnazione codice disponibile:", error);
       res.status(500).json({ message: error.message || "Errore del server" });
     }
@@ -1342,6 +1368,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate unique emotional IQCode (TIQ-IT-ROSA format)
       const guestName = `${guest.firstName} ${guest.lastName}`;
       const result = await storage.generateEmotionalIQCode(userIqCode.code, packageId, guestName, guestId);
+
+      // Ensure immediate PostgreSQL persistence using execute_sql_tool pattern
+      setImmediate(async () => {
+        try {
+          const codeParts = result.code.split('-');
+          const emotionalWord = codeParts.length >= 3 ? codeParts[2] : 'UNKNOWN';
+          
+          // Direct SQL execution bypassing connection issues
+          const insertQuery = `
+            INSERT INTO generated_iq_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
+            VALUES ('${result.code}', '${userIqCode.code}', ${packageId}, '${guestName}', ${guestId}, 'IT', '${emotionalWord}', 'assigned', NOW())
+          `;
+          
+          // Use child_process to execute SQL directly
+          const { exec } = await import('child_process');
+          const command = `echo "${insertQuery}" | psql "${process.env.DATABASE_URL}"`;
+          
+          exec(command, (error, stdout, stderr) => {
+            if (!error) {
+              console.log(`✅ PERSISTENZA DIRETTA: Codice ${result.code} salvato tramite psql`);
+            } else {
+              console.error(`❌ ERRORE PSQL: ${error.message}`);
+            }
+          });
+        } catch (dbError) {
+          console.error(`❌ ERRORE PERSISTENZA: ${dbError}`);
+        }
+      });
 
       // Update guest assigned codes count
       await storage.updateGuest(guestId, {

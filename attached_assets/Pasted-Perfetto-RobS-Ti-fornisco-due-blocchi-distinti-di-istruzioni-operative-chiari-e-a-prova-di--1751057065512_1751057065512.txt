@@ -1,0 +1,112 @@
+Perfetto, RobS. Ti fornisco due **blocchi distinti di istruzioni operative**, chiari e **a prova di cc20**, da incollare uno alla volta.
+
+---
+
+## 🟪 PARTE 1 – MOSTRARE IL CODICE IQ ASSEGNATO NELLA DASHBOARD
+
+### ✅ Problema: il codice viene generato, ma **non appare nella scheda dell’ospite**.
+
+### 🎯 Obiettivo: **dopo ogni assegnazione**, il codice va recuperato dal backend e mostrato in frontend.
+
+### 🔧 ISTRUZIONI SPECIFICHE PER CC20
+
+#### 🔹 In `frontend/pages/structure/guest-management.tsx` (o file equivalente della modale):
+
+1. **Dopo la chiamata `POST /api/assign-code-to-guest`**, **aggiungi il fetch per ricaricare i codici assegnati**:
+
+```tsx
+await fetch(`/api/assign-code-to-guest`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ guestId, packageId }),
+});
+
+const res = await fetch(`/api/guest/${guestId}/codes`);
+const data = await res.json();
+setAssignedCodes(data.codes || []);
+```
+
+2. **Assicurati che nella modale ci sia un blocco JSX tipo**:
+
+```tsx
+{assignedCodes.length > 0 ? (
+  <ul>
+    {assignedCodes.map((code: string, index: number) => (
+      <li key={index} className="text-xl font-bold text-purple-600">{code}</li>
+    ))}
+  </ul>
+) : (
+  <p className="text-gray-500">Nessun codice assegnato</p>
+)}
+```
+
+3. Se `data.codes` è un oggetto e non un array di stringhe, usa:
+
+```tsx
+setAssignedCodes(data.codes.map((c) => c.code));
+```
+
+#### 🔹 In `server/routes.ts`:
+
+Verifica che l’endpoint `/api/guest/:id/codes` **restituisca effettivamente** questo:
+
+```ts
+res.json({
+  codes: result.rows.map((r) => ({
+    code: r.code,
+    emotional_word: r.emotional_word,
+    assigned_at: r.assigned_at,
+  })),
+});
+```
+
+---
+
+## 🟥 PARTE 2 – RIMUOVERE I DUE PULSANTI “Prenotazioni” e “Camere” DALLA DASHBOARD
+
+### ✅ Obiettivo: eliminare due pulsanti non utilizzati dalla barra principale della dashboard struttura.
+
+### 🔧 ISTRUZIONI SPECIFICHE PER CC20
+
+#### 🔹 In `frontend/components/Sidebar.tsx` (oppure `StructureSidebar.tsx` se modulare):
+
+1. Cerca questa struttura o qualcosa di simile:
+
+```tsx
+const menuItems = [
+  { label: "Dashboard", icon: Home, href: "/structure" },
+  { label: "Prenotazioni", icon: Calendar, href: "/structure/bookings" },
+  { label: "Camere", icon: BedDouble, href: "/structure/rooms" },
+  ...
+];
+```
+
+2. **Rimuovi le due voci così:**
+
+```tsx
+const menuItems = [
+  { label: "Dashboard", icon: Home, href: "/structure" },
+  // { label: "Prenotazioni", icon: Calendar, href: "/structure/bookings" },
+  // { label: "Camere", icon: BedDouble, href: "/structure/rooms" },
+  ...
+];
+```
+
+3. Oppure, se c’è direttamente JSX, elimina i due blocchi corrispondenti:
+
+```tsx
+<Link href="/structure/bookings">...Prenotazioni...</Link>
+<Link href="/structure/rooms">...Camere...</Link>
+```
+
+---
+
+## 🔚 Conclusione
+
+> **RobS vede:** pacchetti che calano, ospite aggiornato, codice visualizzato, bottone WhatsApp funzionante, nessun pulsante inutile nella sidebar.
+
+Tu sei già pronto.
+Geppo ha fatto il fratello maggiore.
+Ora cc20 deve solo copiare, incollare, salvare, fare deploy.
+
+Fammi sapere se vuoi che ti scriva io i file completi (`guest-management.tsx`, `routes.ts`, ecc.).
