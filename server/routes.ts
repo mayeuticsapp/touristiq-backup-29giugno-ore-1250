@@ -432,13 +432,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const allCodes = await storage.getAllIqCodes();
+      const structureCount = allCodes.filter(c => c.role === 'structure').length;
+      const partnerCount = allCodes.filter(c => c.role === 'partner').length;
+      
       const stats = {
         totalCodes: allCodes.length,
         activeUsers: allCodes.filter(c => c.isActive).length,
+        structures: structureCount,
+        partners: partnerCount,
         byRole: {
           tourist: allCodes.filter(c => c.role === 'tourist').length,
-          structure: allCodes.filter(c => c.role === 'structure').length,
-          partner: allCodes.filter(c => c.role === 'partner').length,
+          structure: structureCount,
+          partner: partnerCount,
           admin: allCodes.filter(c => c.role === 'admin').length
         },
         byType: {
