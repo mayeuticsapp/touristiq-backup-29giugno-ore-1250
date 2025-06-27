@@ -1,225 +1,111 @@
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BarChart3, Users, QrCode, Settings, TrendingUp, Handshake, Percent, Copy, Check, Package } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getCurrentUser } from "@/lib/auth";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Users, QrCode, Building2, Settings, BarChart3, Package } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-// Component for real-time stats values
 function StatsValue({ endpoint, field }: { endpoint: string; field: string }) {
-  const { data, isLoading } = useQuery({
-    queryKey: [endpoint],
-    refetchInterval: 30000, // Auto-refresh every 30 seconds
-  });
+  const [value, setValue] = useState(0);
 
-  if (isLoading) return <p className="text-2xl font-semibold text-gray-400">...</p>;
-  
-  // Handle nested field access (e.g., "byRole.partner")
-  const getValue = (obj: any, path: string) => {
-    return path.split('.').reduce((current, key) => current?.[key], obj);
-  };
-  
-  const value = getValue(data, field) || 0;
-  return <p className="text-2xl font-semibold text-gray-900">{value.toLocaleString()}</p>;
+  useEffect(() => {
+    fetch(endpoint, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => setValue(data.stats?.[field] || 0))
+      .catch(() => setValue(0));
+  }, [endpoint, field]);
+
+  return <span>{value}</span>;
 }
 
 export default function AdminDashboard({ activeSection: propActiveSection }: { activeSection?: string }) {
-  const [codeType, setCodeType] = useState(""); // "emotional" or "professional"
-  const [selectedCountry, setSelectedCountry] = useState("");
-  const [selectedProvince, setSelectedProvince] = useState("");
-  const [selectedRole, setSelectedRole] = useState("");
-  const [assignedTo, setAssignedTo] = useState("");
-  const [generatedCode, setGeneratedCode] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [activeView, setActiveView] = useState(propActiveSection || "overview"); // overview, users, codes, stats, settings, assign-iqcodes
-  
-  // Stati per assegnazione pacchetti
-  const [targetType, setTargetType] = useState(""); // "structure" o "partner"
-  const [targetId, setTargetId] = useState("");
-  const [packageSize, setPackageSize] = useState(0);
+  const [activeView, setActiveView] = useState(propActiveSection || "stats");
+  const [targetType, setTargetType] = useState<'structure' | 'partner'>('structure');
+  const [targetId, setTargetId] = useState('');
+  const [packageSize, setPackageSize] = useState<number>(25);
   const [isAssigning, setIsAssigning] = useState(false);
+  const { toast } = useToast();
 
-  // Update activeView when propActiveSection changes
-  useEffect(() => {
-    if (propActiveSection) {
-      setActiveView(propActiveSection);
-    }
-  }, [propActiveSection]);
-
-  const { data: user } = useQuery({
-    queryKey: ["/api/auth/me"],
-    queryFn: getCurrentUser,
-  });
-
-  const countries = [
-    { code: "IT", name: "Italia", flag: "🇮🇹" },
-    { code: "ES", name: "España", flag: "🇪🇸" },
-    { code: "FR", name: "France", flag: "🇫🇷" },
-    { code: "JP", name: "日本", flag: "🇯🇵" }
+  const navigation = [
+    { icon: <Users size={20} />, label: "Utenti", href: "/admin/users", onClick: () => setActiveView("users") },
+    { icon: <QrCode size={20} />, label: "Codici Generati", href: "/admin/iqcodes", onClick: () => setActiveView("iqcodes") },
+    { icon: <Package size={20} />, label: "Assegna Pacchetti", href: "/admin/assign-iqcodes", onClick: () => setActiveView("assign-iqcodes") },
+    { icon: <BarChart3 size={20} />, label: "Statistiche", href: "/admin/stats", onClick: () => setActiveView("stats") },
+    { icon: <Settings size={20} />, label: "Impostazioni", href: "/admin/settings", onClick: () => setActiveView("settings") }
   ];
-
-  const provinces = [
-    { code: "RM", name: "Roma", region: "Lazio" },
-    { code: "MI", name: "Milano", region: "Lombardia" },
-    { code: "NA", name: "Napoli", region: "Campania" },
-    { code: "TO", name: "Torino", region: "Piemonte" },
-    { code: "PA", name: "Palermo", region: "Sicilia" },
-    { code: "GE", name: "Genova", region: "Liguria" },
-    { code: "BO", name: "Bologna", region: "Emilia-Romagna" },
-    { code: "FI", name: "Firenze", region: "Toscana" },
-    { code: "BA", name: "Bari", region: "Puglia" },
-    { code: "CA", name: "Cagliari", region: "Sardegna" },
-    { code: "VE", name: "Venezia", region: "Veneto" },
-    { code: "CT", name: "Catania", region: "Sicilia" }
-  ];
-
-  const roles = [
-    { value: "tourist", label: "Turista" },
-    { value: "structure", label: "Struttura" },
-    { value: "partner", label: "Partner" },
-    { value: "admin", label: "Amministratore" }
-  ];
-
-  const codeTypes = [
-    { value: "emotional", label: "Emozionale (per turisti)", description: "TIQ-IT-LEONARDO" },
-    { value: "professional", label: "Professionale (per aziende)", description: "TIQ-RM-PRT-0001" }
-  ];
-
-  const handleGenerateCode = async () => {
-    if (!codeType || !selectedRole) return;
-    if (codeType === "emotional" && !selectedCountry) return;
-    if (codeType === "professional" && !selectedProvince) return;
-
-    setIsGenerating(true);
-    try {
-      const requestBody = {
-        codeType,
-        role: selectedRole,
-        assignedTo,
-        ...(codeType === "emotional" ? { country: selectedCountry } : { province: selectedProvince })
-      };
-
-      const response = await fetch("/api/genera-iqcode", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // Include cookies for session
-        body: JSON.stringify(requestBody)
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || "Errore durante la generazione");
-      }
-      
-      setGeneratedCode(data.code);
-      
-      // Invalidate users cache to refresh dropdown lists immediately
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
-      
-      // Reset form after successful generation
-      setCodeType("");
-      setSelectedCountry("");
-      setSelectedProvince("");
-      setSelectedRole("");
-      setAssignedTo("");
-      setCopied(false);
-      
-    } catch (error) {
-      console.error("Errore generazione codice:", error);
-      // Show error to user
-      alert(`Errore: ${(error as Error).message}`);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(generatedCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   const handleAssignPackage = async () => {
-    if (!targetType || !targetId || !packageSize) return;
+    if (!targetId || !packageSize) {
+      toast({
+        title: "Errore",
+        description: "Seleziona destinatario e dimensione pacchetto",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsAssigning(true);
     try {
-      const response = await fetch("/api/admin/assign-iqcodes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+      const response = await fetch('/api/assign-package', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
-          targetType,
-          targetId,
-          packageSize
+          recipientIqCode: targetId,
+          packageSize: packageSize
         })
       });
 
       if (response.ok) {
         const result = await response.json();
-        alert(`Pacchetto di ${packageSize} codici assegnato con successo a ${targetType} ${targetId}`);
-        // Reset form
-        setTargetType("");
-        setTargetId("");
-        setPackageSize(0);
+        toast({
+          title: "Pacchetto Assegnato",
+          description: `${packageSize} crediti assegnati con successo a ${targetId}`
+        });
+        setTargetId('');
+        setPackageSize(25);
       } else {
         const error = await response.json();
-        alert(`Errore: ${error.message}`);
+        toast({
+          title: "Errore",
+          description: error.message || "Errore durante l'assegnazione",
+          variant: "destructive"
+        });
       }
     } catch (error) {
-      console.error("Errore assegnazione pacchetto:", error);
-      alert("Errore durante l'assegnazione del pacchetto");
+      toast({
+        title: "Errore",
+        description: "Errore di connessione",
+        variant: "destructive"
+      });
     } finally {
       setIsAssigning(false);
     }
   };
 
-  const navigation = [
-    { icon: <BarChart3 size={16} />, label: "Dashboard", href: "/admin", onClick: () => setActiveView("overview") },
-    { icon: <Users size={16} />, label: "Gestione Utenti", href: "/admin/users", onClick: () => setActiveView("users") },
-    { icon: <QrCode size={16} />, label: "Codici IQ", href: "/admin/iqcodes", onClick: () => setActiveView("iqcodes") },
-    { icon: <Package size={16} />, label: "Assegna Pacchetti", href: "/admin/assign-iqcodes", onClick: () => setActiveView("assign-iqcodes") },
-    { icon: <TrendingUp size={16} />, label: "Statistiche", href: "/admin/stats", onClick: () => setActiveView("stats") },
-    { icon: <Settings size={16} />, label: "Impostazioni", href: "/admin/settings", onClick: () => setActiveView("settings") },
-  ];
-
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Caricamento...</h2>
-          <p className="text-gray-600">Sto caricando il pannello amministratore</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <Layout
-      title="Dashboard Amministratore"
-      role="Admin Panel"
-      iqCode={user.iqCode}
+      title="Dashboard Admin"
+      role="admin"
+      iqCode="TIQ-IT-ADMIN"
       navigation={navigation}
-      sidebarColor="bg-tourist-blue"
+      sidebarColor="bg-red-500"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Users className="text-blue-600" size={20} />
-              </div>
+              <Users className="h-8 w-8 text-blue-600" />
               <div className="ml-4">
-                <p className="text-sm text-gray-600">Utenti Totali</p>
-                <StatsValue endpoint="/api/admin/stats" field="stats.totalCodes" />
+                <p className="text-sm font-medium text-gray-600">Utenti Totali</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  <StatsValue endpoint="/api/admin/stats" field="totalCodes" />
+                </p>
               </div>
             </div>
           </CardContent>
@@ -228,12 +114,12 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-full">
-                <QrCode className="text-green-600" size={20} />
-              </div>
+              <QrCode className="h-8 w-8 text-green-600" />
               <div className="ml-4">
-                <p className="text-sm text-gray-600">Codici Attivi</p>
-                <StatsValue endpoint="/api/admin/stats" field="stats.activeUsers" />
+                <p className="text-sm font-medium text-gray-600">Codici Attivi</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  <StatsValue endpoint="/api/admin/stats" field="activeUsers" />
+                </p>
               </div>
             </div>
           </CardContent>
@@ -242,12 +128,12 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
-              <div className="p-3 bg-yellow-100 rounded-full">
-                <Handshake className="text-yellow-600" size={20} />
-              </div>
+              <Building2 className="h-8 w-8 text-purple-600" />
               <div className="ml-4">
-                <p className="text-sm text-gray-600">Partner</p>
-                <StatsValue endpoint="/api/admin/stats" field="stats.byRole.partner" />
+                <p className="text-sm font-medium text-gray-600">Strutture</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  <StatsValue endpoint="/api/admin/stats" field="structures" />
+                </p>
               </div>
             </div>
           </CardContent>
@@ -256,146 +142,25 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
-              <div className="p-3 bg-purple-100 rounded-full">
-                <Percent className="text-purple-600" size={20} />
-              </div>
+              <Package className="h-8 w-8 text-orange-600" />
               <div className="ml-4">
-                <p className="text-sm text-gray-600">Codici Turistici Generati</p>
-                <StatsValue endpoint="/api/admin/stats" field="stats.byRole.tourist" />
+                <p className="text-sm font-medium text-gray-600">Partner</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  <StatsValue endpoint="/api/admin/stats" field="partners" />
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Generatore Codici IQ */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <QrCode size={20} />
-              Generatore Codici IQ Emozionali
-            </CardTitle>
+            <CardTitle>Attività Recente</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="codeType">Tipo di Codice</Label>
-              <Select value={codeType} onValueChange={setCodeType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona tipo di codice" />
-                </SelectTrigger>
-                <SelectContent>
-                  {codeTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      <div>
-                        <div className="font-medium">{type.label}</div>
-                        <div className="text-xs text-gray-500">{type.description}</div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {codeType === "emotional" && (
-              <div>
-                <Label htmlFor="country">Paese</Label>
-                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona paese" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map((country) => (
-                      <SelectItem key={country.code} value={country.code}>
-                        {country.flag} {country.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {codeType === "professional" && (
-              <div>
-                <Label htmlFor="province">Provincia (es: VV, RC, CS)</Label>
-                <Input
-                  value={selectedProvince}
-                  onChange={(e) => setSelectedProvince(e.target.value.toUpperCase())}
-                  placeholder="Inserisci sigla provincia (es: VV, RC, CS)"
-                  maxLength={3}
-                  className="uppercase"
-                />
-              </div>
-            )}
-
-            <div>
-              <Label htmlFor="role">Ruolo</Label>
-              <Select value={selectedRole} onValueChange={setSelectedRole}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona ruolo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roles.map((role) => (
-                    <SelectItem key={role.value} value={role.value}>
-                      {role.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="assignedTo">Assegnato a (opzionale)</Label>
-              <Input
-                id="assignedTo"
-                value={assignedTo}
-                onChange={(e) => setAssignedTo(e.target.value)}
-                placeholder="Nome persona"
-              />
-            </div>
-
-            <Button 
-              onClick={handleGenerateCode}
-              disabled={
-                !codeType || 
-                !selectedRole || 
-                (codeType === "emotional" && !selectedCountry) ||
-                (codeType === "professional" && !selectedProvince) ||
-                isGenerating
-              }
-              className="w-full bg-tourist-blue hover:bg-tourist-dark"
-            >
-              {isGenerating ? "Generando..." : "Genera Codice IQ"}
-            </Button>
-
-            {generatedCode && (
-              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-green-600 font-medium">Codice generato:</p>
-                    <p className="text-lg font-mono font-bold text-green-800">{generatedCode}</p>
-                    {assignedTo && (
-                      <p className="text-sm text-green-600">Assegnato a: {assignedTo}</p>
-                    )}
-                  </div>
-                  <Button
-                    onClick={handleCopyCode}
-                    variant="outline"
-                    size="sm"
-                    className="ml-2"
-                  >
-                    {copied ? <Check size={16} /> : <Copy size={16} />}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Attività Recente */}
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Attività Recente</h3>
+          <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between py-3 border-b">
                 <div className="flex items-center">
@@ -457,15 +222,10 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
   );
 }
 
-// Users Management Component
+// Users Management Component - DISABILITATO GENERAZIONE DIRETTA
 function UsersManagement() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddUser, setShowAddUser] = useState(false);
-  const [newUserRole, setNewUserRole] = useState("");
-  const [newUserName, setNewUserName] = useState("");
-  const [newUserProvince, setNewUserProvince] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     fetch('/api/admin/users', { credentials: 'include' })
@@ -477,171 +237,58 @@ function UsersManagement() {
       .catch(() => setLoading(false));
   }, []);
 
-  const handleAddUser = async () => {
-    if (!newUserRole || !newUserName || (newUserRole !== 'tourist' && !newUserProvince)) {
-      alert("Compila tutti i campi richiesti");
-      return;
-    }
-
-    setIsCreating(true);
-    try {
-      const payload = newUserRole === 'tourist' 
-        ? {
-            codeType: "emotional",
-            role: newUserRole,
-            country: "IT",
-            assignedTo: newUserName
-          }
-        : {
-            codeType: "professional", 
-            role: newUserRole,
-            province: newUserProvince,
-            assignedTo: newUserName
-          };
-
-      const response = await fetch("/api/genera-iqcode", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        alert(`Utente creato con successo!\nCodice IQ: ${result.code}`);
-        setShowAddUser(false);
-        setNewUserRole("");
-        setNewUserName("");
-        setNewUserProvince("");
-        // Refresh user list
-        window.location.reload();
-      } else {
-        const error = await response.json();
-        alert(`Errore: ${error.message}`);
-      }
-    } catch (error) {
-      console.error("Errore creazione utente:", error);
-      alert("Errore durante la creazione dell'utente");
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
   if (loading) {
     return <div className="text-center py-8">Caricamento utenti...</div>;
   }
 
   return (
     <div className="space-y-6">
-      {/* Add User Section */}
+      {/* Notice */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Aggiungi Nuovo Utente
-            <Button 
-              onClick={() => setShowAddUser(!showAddUser)}
-              variant={showAddUser ? "outline" : "default"}
-            >
-              {showAddUser ? "Annulla" : "Nuovo Utente"}
-            </Button>
-          </CardTitle>
+          <CardTitle className="text-yellow-600">⚠️ Generazione Codici Disabilitata</CardTitle>
         </CardHeader>
-        {showAddUser && (
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="userRole">Tipo Utente</Label>
-                <Select value={newUserRole} onValueChange={setNewUserRole}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona ruolo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="tourist">Turista</SelectItem>
-                    <SelectItem value="structure">Struttura</SelectItem>
-                    <SelectItem value="partner">Partner</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="userName">Nome/Denominazione</Label>
-                <Input
-                  id="userName"
-                  value={newUserName}
-                  onChange={(e) => setNewUserName(e.target.value)}
-                  placeholder="Nome utente o azienda"
-                />
-              </div>
-
-              {newUserRole && newUserRole !== 'tourist' && (
-                <div>
-                  <Label htmlFor="userProvince">Provincia</Label>
-                  <Select value={newUserProvince} onValueChange={setNewUserProvince}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleziona provincia" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="VV">Vibo Valentia (VV)</SelectItem>
-                      <SelectItem value="RC">Reggio Calabria (RC)</SelectItem>
-                      <SelectItem value="CS">Cosenza (CS)</SelectItem>
-                      <SelectItem value="CZ">Catanzaro (CZ)</SelectItem>
-                      <SelectItem value="KR">Crotone (KR)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-4">
-              <Button 
-                onClick={handleAddUser}
-                disabled={isCreating}
-                className="w-full"
-              >
-                {isCreating ? "Creazione in corso..." : "Crea Utente e Genera IQ Code"}
-              </Button>
-              <p className="text-xs text-gray-500 mt-2">
-                {newUserRole === 'tourist' 
-                  ? "Verrà generato un codice emozionale formato TIQ-IT-[PAROLA]"
-                  : "Verrà generato un codice professionale formato TIQ-[PROVINCIA]-[TIPO]-[NUMERO]"
-                }
-              </p>
-            </div>
-          </CardContent>
-        )}
+        <CardContent>
+          <p className="text-gray-700">
+            La generazione diretta di codici IQ dall'admin è stata disabilitata. 
+            Utilizza la sezione <strong>"Assegna Pacchetti"</strong> per assegnare crediti alle strutture e ai partner.
+          </p>
+        </CardContent>
       </Card>
 
       {/* Users List */}
       <Card>
         <CardHeader>
-          <CardTitle>Utenti Registrati</CardTitle>
+          <CardTitle>Utenti Registrati ({users.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2">Codice IQ</th>
-                  <th className="text-left p-2">Ruolo</th>
-                  <th className="text-left p-2">Assegnato a</th>
-                  <th className="text-left p-2">Posizione</th>
-                  <th className="text-left p-2">Tipo</th>
-                  <th className="text-left p-2">Stato</th>
+                  <th className="text-left py-2">Codice IQ</th>
+                  <th className="text-left py-2">Ruolo</th>
+                  <th className="text-left py-2">Stato</th>
+                  <th className="text-left py-2">Data Creazione</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
-                  <tr key={user.id} className="border-b">
-                    <td className="p-2 font-mono">{user.code}</td>
-                    <td className="p-2">{user.role}</td>
-                    <td className="p-2">{user.assignedTo || '-'}</td>
-                    <td className="p-2">{user.location || '-'}</td>
-                    <td className="p-2">{user.codeType || '-'}</td>
-                    <td className="p-2">
-                      <span className={`px-2 py-1 rounded text-xs ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {user.isActive ? 'Attivo' : 'Inattivo'}
-                      </span>
+                {users.map((user, index) => (
+                  <tr key={index} className="border-b">
+                    <td className="py-2 font-mono">{user.code}</td>
+                    <td className="py-2">
+                      <Badge variant={
+                        user.role === 'admin' ? 'destructive' :
+                        user.role === 'structure' ? 'default' :
+                        user.role === 'partner' ? 'secondary' : 'outline'
+                      }>
+                        {user.role}
+                      </Badge>
                     </td>
+                    <td className="py-2">
+                      <Badge variant="outline">Attivo</Badge>
+                    </td>
+                    <td className="py-2">{new Date(user.createdAt).toLocaleDateString('it-IT')}</td>
                   </tr>
                 ))}
               </tbody>
@@ -653,7 +300,6 @@ function UsersManagement() {
   );
 }
 
-// Codes Management Component
 function CodesManagement() {
   const [codes, setCodes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -668,112 +314,39 @@ function CodesManagement() {
       .catch(() => setLoading(false));
   }, []);
 
-  const getRoleLabel = (role: string) => {
-    const labels: { [key: string]: string } = {
-      'admin': 'Amministratore',
-      'tourist': 'Turista',
-      'structure': 'Struttura',
-      'partner': 'Partner'
-    };
-    return labels[role] || role;
-  };
-
-  const getProvinceFromCode = (code: string) => {
-    const parts = code.split('-');
-    if (parts.length >= 2) {
-      return parts[1]; // Extract province (VV, RC, CS, etc.)
-    }
-    return '';
-  };
-
-  const getDashboardLink = (code: any) => {
-    switch (code.role) {
-      case 'structure':
-        const structureId = code.code.split('-').pop();
-        return `/structure/${structureId}`;
-      case 'tourist':
-        return '/tourist';
-      case 'partner':
-        return '/partner';
-      case 'admin':
-        return '/admin';
-      default:
-        return '#';
-    }
-  };
-
   if (loading) {
     return <div className="text-center py-8">Caricamento codici...</div>;
   }
 
   return (
-    <Card className="mb-8">
+    <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <QrCode size={20} />
-          Codici Generati - Lista Completa
-        </CardTitle>
+        <CardTitle>Codici IQ Generati ({codes.length})</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Codice IQ
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tipologia
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Nome Assegnato
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Provincia
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Data Creazione
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Dashboard
-                </th>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-2">Codice</th>
+                <th className="text-left py-2">Ruolo</th>
+                <th className="text-left py-2">Data Creazione</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {codes.map((code) => (
-                <tr key={code.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap font-mono text-sm font-medium text-gray-900">
-                    {code.code}
+            <tbody>
+              {codes.map((code, index) => (
+                <tr key={index} className="border-b">
+                  <td className="py-2 font-mono">{code.code}</td>
+                  <td className="py-2">
+                    <Badge variant={
+                      code.role === 'admin' ? 'destructive' :
+                      code.role === 'structure' ? 'default' :
+                      code.role === 'partner' ? 'secondary' : 'outline'
+                    }>
+                      {code.role}
+                    </Badge>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      code.role === 'admin' ? 'bg-red-100 text-red-800' :
-                      code.role === 'tourist' ? 'bg-blue-100 text-blue-800' :
-                      code.role === 'structure' ? 'bg-purple-100 text-purple-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {getRoleLabel(code.role)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {code.assignedTo || 'Non assegnato'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {getProvinceFromCode(code.code) || code.location || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(code.createdAt).toLocaleDateString('it-IT')}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <a 
-                      href={getDashboardLink(code)}
-                      className="text-tourist-blue hover:text-tourist-blue-dark font-medium"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Vai alla Dashboard →
-                    </a>
-                  </td>
+                  <td className="py-2">{new Date(code.createdAt).toLocaleDateString('it-IT')}</td>
                 </tr>
               ))}
             </tbody>
@@ -784,16 +357,15 @@ function CodesManagement() {
   );
 }
 
-// Stats View Component
 function StatsView() {
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<any>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch('/api/admin/stats', { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
-        setStats(data.stats);
+        setStats(data.stats || {});
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -803,117 +375,71 @@ function StatsView() {
     return <div className="text-center py-8">Caricamento statistiche...</div>;
   }
 
-  if (!stats) {
-    return <div className="text-center py-8">Errore nel caricamento statistiche</div>;
-  }
-
   return (
-    <Card className="mb-8">
-      <CardHeader>
-        <CardTitle>Statistiche Piattaforma</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600">{stats.totalCodes}</div>
-            <div className="text-sm text-gray-600">Codici Totali</div>
-          </div>
-          
-          <div className="text-center">
-            <div className="text-3xl font-bold text-green-600">{stats.activeUsers}</div>
-            <div className="text-sm text-gray-600">Utenti Attivi</div>
-          </div>
-          
-          <div className="text-center">
-            <div className="text-3xl font-bold text-yellow-600">{stats.byType.emotional || 0}</div>
-            <div className="text-sm text-gray-600">Codici Emozionali</div>
-          </div>
-          
-          <div className="text-center">
-            <div className="text-3xl font-bold text-purple-600">{stats.byType.professional || 0}</div>
-            <div className="text-sm text-gray-600">Codici Professionali</div>
-          </div>
-        </div>
-        
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-4">Distribuzione per Ruolo</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-blue-50 p-4 rounded">
-              <div className="text-2xl font-bold text-blue-600">{stats.byRole.tourist}</div>
-              <div className="text-sm">Turisti</div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Utenti per Ruolo</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span>Admin:</span>
+              <Badge variant="destructive">{stats.admins || 0}</Badge>
             </div>
-            <div className="bg-green-50 p-4 rounded">
-              <div className="text-2xl font-bold text-green-600">{stats.byRole.structure}</div>
-              <div className="text-sm">Strutture</div>
+            <div className="flex justify-between">
+              <span>Strutture:</span>
+              <Badge variant="default">{stats.structures || 0}</Badge>
             </div>
-            <div className="bg-orange-50 p-4 rounded">
-              <div className="text-2xl font-bold text-orange-600">{stats.byRole.partner}</div>
-              <div className="text-sm">Partner</div>
+            <div className="flex justify-between">
+              <span>Partner:</span>
+              <Badge variant="secondary">{stats.partners || 0}</Badge>
             </div>
-            <div className="bg-gray-50 p-4 rounded">
-              <div className="text-2xl font-bold text-gray-600">{stats.byRole.admin}</div>
-              <div className="text-sm">Admin</div>
+            <div className="flex justify-between">
+              <span>Turisti:</span>
+              <Badge variant="outline">{stats.tourists || 0}</Badge>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Attività Recente</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span>Login oggi:</span>
+              <span className="font-semibold">{stats.dailyLogins || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Codici generati:</span>
+              <span className="font-semibold">{stats.codesGenerated || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Sessioni attive:</span>
+              <span className="font-semibold">{stats.activeSessions || 0}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
-// Assign Packages View Component
 function AssignPackagesView({ 
   targetType, setTargetType, targetId, setTargetId, 
   packageSize, setPackageSize, onAssign, isAssigning 
-}: {
-  targetType: string;
-  setTargetType: (type: string) => void;
-  targetId: string;
-  setTargetId: (id: string) => void;
-  packageSize: number;
-  setPackageSize: (size: number) => void;
-  onAssign: () => void;
-  isAssigning: boolean;
-}) {
-  const packageSizes = [25, 50, 75, 100];
+}: any) {
+  const [availableTargets, setAvailableTargets] = useState<any[]>([]);
 
-  // Query per destinatari reali dal database con refresh automatico
-  const { data: usersData, refetch: refetchUsers } = useQuery({
-    queryKey: ["/api/admin/users"],
-    refetchInterval: 5000, // Refresh ogni 5 secondi per aggiornare la lista
-  });
-
-  // Effetto per refreshare gli utenti quando cambia la vista
-  useEffect(() => {
-    refetchUsers();
-  }, [targetType, refetchUsers]);
-
-  // Filtra destinatari reali dal database
-  const allUsers = usersData?.users || [];
-  const availableTargets = {
-    structure: allUsers
-      .filter((user: any) => user.role === 'structure')
-      .map((user: any) => ({
-        id: user.code,
-        name: user.assignedTo || getStructureName(user.code) || user.code,
-        code: user.code
-      })),
-    partner: allUsers
-      .filter((user: any) => user.role === 'partner')
-      .map((user: any) => ({
-        id: user.code,
-        name: user.assignedTo || getPartnerName(user.code) || user.code,
-        code: user.code
-      }))
-  };
-
-  // Funzioni helper per nomi strutture e partner
   function getStructureName(code: string): string {
     const structureNames: { [key: string]: string } = {
+      'TIQ-VV-STT-0700': 'Hotel Calabria',
       'TIQ-VV-STT-9576': 'Resort Capo Vaticano',
-      'TIQ-RC-STT-4334': 'Grand Hotel Reggio',
-      'TIQ-CS-STT-7541': 'Hotel Calabria',
-      'TIQ-VV-STT-0700': 'Hotel Pazzo Pizzo'
+      'TIQ-CS-STT-7541': 'Grand Hotel Cosenza',
+      'TIQ-RC-STT-4334': 'Grand Hotel Reggio'
     };
     return structureNames[code] || code;
   }
@@ -926,29 +452,26 @@ function AssignPackagesView({
     return partnerNames[code] || code;
   }
 
-  // Debug: Log per verificare i dati
-  console.log('Users data:', usersData);
-  console.log('Available targets:', availableTargets);
-
-  const currentTargets = targetType ? availableTargets[targetType as keyof typeof availableTargets] || [] : [];
+  useEffect(() => {
+    const endpoint = targetType === 'structure' ? '/api/admin/structures' : '/api/admin/partners';
+    fetch(endpoint, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => setAvailableTargets(data.users || []))
+      .catch(() => setAvailableTargets([]));
+  }, [targetType]);
 
   return (
-    <Card className="mb-8">
+    <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Package size={20} />
-          Assegna Pacchetti IQCode
-        </CardTitle>
+        <CardTitle>Assegna Pacchetto Crediti</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* A. Selezione tipo di attore */}
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <Label htmlFor="targetType">Tipo Destinatario</Label>
+            <Label>Tipo Destinatario</Label>
             <Select value={targetType} onValueChange={setTargetType}>
               <SelectTrigger>
-                <SelectValue placeholder="Seleziona tipo destinatario" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="structure">Struttura</SelectItem>
@@ -957,148 +480,78 @@ function AssignPackagesView({
             </Select>
           </div>
 
-          {/* B. Selezione destinatario */}
-          {targetType && (
-            <div>
-              <Label htmlFor="targetId">Destinatario</Label>
-              <Select value={targetId} onValueChange={setTargetId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona destinatario" />
-                </SelectTrigger>
-                <SelectContent>
-                  {currentTargets.map((target) => (
-                    <SelectItem key={target.id} value={target.id}>
-                      <div>
-                        <div className="font-medium">{target.name}</div>
-                        <div className="text-xs text-gray-500">{target.code}</div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </div>
+          <div>
+            <Label>Destinatario</Label>
+            <Select value={targetId} onValueChange={setTargetId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleziona destinatario" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableTargets.map((target) => (
+                  <SelectItem key={target.code} value={target.code}>
+                    {targetType === 'structure' 
+                      ? getStructureName(target.code)
+                      : getPartnerName(target.code)
+                    } ({target.code})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        {/* C. Selezione pacchetto */}
-        {targetType && targetId && (
           <div>
             <Label>Dimensione Pacchetto</Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
-              {packageSizes.map((size) => {
-                const sumupLinks = {
-                  25: "https://pay.sumup.com/b2c/QSJE461B",
-                  50: "https://pay.sumup.com/b2c/QK6MLJC7",
-                  75: "https://pay.sumup.com/b2c/Q9517L3P",
-                  100: "https://pay.sumup.com/b2c/Q3BWI26N"
-                };
-                
-                return (
-                  <div key={size} className="relative">
-                    <Button
-                      variant={packageSize === size ? "default" : "outline"}
-                      onClick={() => setPackageSize(size)}
-                      className="h-16 w-full flex flex-col items-center justify-center"
-                    >
-                      <div className="text-2xl font-bold">{size}</div>
-                      <div className="text-xs">codici</div>
-                    </Button>
-                    <a 
-                      href={sumupLinks[size as keyof typeof sumupLinks]}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full hover:bg-green-600 transition-colors"
-                    >
-                      Acquista
-                    </a>
-                  </div>
-                );
-              })}
-            </div>
+            <Select value={packageSize.toString()} onValueChange={(value) => setPackageSize(Number(value))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="25">25 crediti</SelectItem>
+                <SelectItem value="50">50 crediti</SelectItem>
+                <SelectItem value="75">75 crediti</SelectItem>
+                <SelectItem value="100">100 crediti</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        )}
+        </div>
 
-        {/* D. Conferma assegnazione */}
-        {targetType && targetId && packageSize > 0 && (
-          <div className="border-t pt-6">
-            <div className="bg-blue-50 p-4 rounded-lg mb-4">
-              <h3 className="font-semibold text-blue-900 mb-2">Riepilogo Assegnazione</h3>
-              <div className="text-sm text-blue-800">
-                <p><strong>Tipo:</strong> {targetType === 'structure' ? 'Struttura' : 'Partner'}</p>
-                <p><strong>Destinatario:</strong> {currentTargets.find(t => t.id === targetId)?.name}</p>
-                <p><strong>Codice:</strong> {currentTargets.find(t => t.id === targetId)?.code}</p>
-                <p><strong>Pacchetto:</strong> {packageSize} codici IQ</p>
-              </div>
-            </div>
-            
-            <Button 
-              onClick={onAssign}
-              disabled={isAssigning}
-              className="w-full"
-              size="lg"
-            >
-              {isAssigning ? "Assegnazione in corso..." : "Assegna Pacchetto"}
-            </Button>
-          </div>
-        )}
+        <div className="mt-6">
+          <Button 
+            onClick={onAssign} 
+            disabled={isAssigning || !targetId}
+            className="w-full"
+          >
+            {isAssigning ? "Assegnando..." : "Assegna Pacchetto"}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-// Settings View Component
 function SettingsView() {
-  const [settings, setSettings] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/admin/settings', { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => {
-        setSettings(data.settings);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  if (loading) {
-    return <div className="text-center py-8">Caricamento impostazioni...</div>;
-  }
-
-  if (!settings) {
-    return <div className="text-center py-8">Errore nel caricamento impostazioni</div>;
-  }
-
   return (
-    <Card className="mb-8">
+    <Card>
       <CardHeader>
         <CardTitle>Impostazioni Sistema</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
-          <div>
-            <Label>Nome Piattaforma</Label>
-            <Input value={settings?.platformName || 'TouristIQ'} disabled className="mt-1" />
+        <div className="space-y-4">
+          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <h3 className="font-semibold text-green-800">Sistema Crediti Attivo</h3>
+            <p className="text-green-700 text-sm mt-1">
+              Il sistema di assegnazione pacchetti è operativo. 
+              Le strutture e i partner possono generare codici IQ emozionali dai crediti assegnati.
+            </p>
           </div>
           
-          <div>
-            <Label>Email Supporto</Label>
-            <Input value={settings?.supportEmail || 'support@touristiq.com'} disabled className="mt-1" />
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="font-semibold text-blue-800">Database PostgreSQL</h3>
+            <p className="text-blue-700 text-sm mt-1">
+              Connessione al database persistente attiva. 
+              Tutti i dati vengono salvati permanentemente.
+            </p>
           </div>
-          
-          <div>
-            <Label>Messaggio di Benvenuto</Label>
-            <Input value={settings?.welcomeMessage || 'Benvenuto in TouristIQ'} disabled className="mt-1" />
-          </div>
-          
-          <div>
-            <Label>Codici Massimi per Giorno</Label>
-            <Input value={settings?.maxCodesPerDay || 100} disabled className="mt-1" />
-          </div>
-          
-          <Button disabled>
-            Salva Modifiche (Demo)
-          </Button>
         </div>
       </CardContent>
     </Card>

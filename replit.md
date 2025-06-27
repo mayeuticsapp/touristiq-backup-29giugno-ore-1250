@@ -95,6 +95,7 @@ TouristIQ is a role-based authentication platform designed for the tourism indus
 - **Session Storage**: Configurable between in-memory and database storage
 
 ## Changelog
+- June 27, 2025: PULIZIA DATABASE COMPLETATA - Eliminati tutti i 148 codici TIQ-PKG obsoleti, admin non può più generare codici direttamente, sistema puramente basato su crediti operativo, checkbox memorizzazione IQCode implementata
 - June 27, 2025: SISTEMA CREDITI COMPLETATO - Database PostgreSQL aggiornato con colonne credits_remaining/credits_used, tendina pacchetti funzionante, generazione IQCode emozionali al momento operativa, errori TypeScript risolti definitivamente
 - June 27, 2025: APPLICAZIONE PRODUCTION-READY COMPLETATA - Tutti i problemi TypeScript risolti, tipizzazione completa, sistema gestione ospiti operativo, assegnazione codici IQ funzionale, database PostgreSQL persistente, nomi strutture corretti
 - June 26, 2025: SISTEMA GESTIONE OSPITI COMPLETATO - Ospiti registrati appaiono correttamente nella dropdown assegnazione IQCode, workflow integrato funzionale

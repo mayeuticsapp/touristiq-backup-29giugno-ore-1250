@@ -610,9 +610,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if package has available codes
-      const codesUsed = targetPackage.codesUsed || 0;
-      if (codesUsed >= targetPackage.packageSize) {
-        return res.status(400).json({ message: "Pacchetto esaurito - nessun codice disponibile" });
+      const creditsUsed = targetPackage.creditsUsed || 0;
+      if (creditsUsed >= targetPackage.packageSize) {
+        return res.status(400).json({ message: "Pacchetto esaurito - nessun credito disponibile" });
       }
 
       // Generate unique tourist code
@@ -630,14 +630,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Update package usage count (simplified in memory storage)
-      targetPackage.codesUsed = codesUsed + 1;
+      targetPackage.creditsUsed = creditsUsed + 1;
 
       res.json({
         success: true,
         touristCode: newTouristCode.code,
         guestName: guestName || "Ospite anonimo",
         packageId: packageId,
-        remainingCodes: targetPackage.packageSize - targetPackage.codesUsed,
+        remainingCodes: targetPackage.packageSize - targetPackage.creditsUsed,
         generatedAt: new Date().toISOString()
       });
 
