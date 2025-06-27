@@ -13,7 +13,10 @@ export const iqCodes = pgTable("iq_codes", {
   location: text("location"), // IT, VV, RC, etc.
   codeType: text("code_type"), // emotional, professional
   approvedAt: timestamp("approved_at"),
-  approvedBy: text("approved_by")
+  approvedBy: text("approved_by"),
+  internalNote: text("internal_note"), // Note private dell'admin
+  isDeleted: boolean("is_deleted").notNull().default(false), // Cestino temporaneo
+  deletedAt: timestamp("deleted_at"), // Data eliminazione per auto-cleanup
 });
 
 export const sessions = pgTable("sessions", {

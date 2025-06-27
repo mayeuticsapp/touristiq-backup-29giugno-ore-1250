@@ -10,6 +10,11 @@ export interface IStorage {
   getAllIqCodes(): Promise<IqCode[]>;
   updateIqCodeStatus(id: number, status: string, approvedBy?: string): Promise<IqCode>;
   deleteIqCode(id: number): Promise<void>;
+  updateIqCodeNote(id: number, note: string): Promise<IqCode>;
+  softDeleteIqCode(id: number, deletedBy: string): Promise<IqCode>;
+  getDeletedIqCodes(): Promise<IqCode[]>;
+  restoreIqCode(id: number): Promise<IqCode>;
+  cleanupExpiredDeleted(): Promise<void>;
 
   // Session methods
   createSession(session: InsertSession): Promise<Session>;
@@ -92,10 +97,16 @@ export class MemStorage implements IStorage {
       code: insertIqCode.code,
       role: insertIqCode.role,
       isActive: insertIqCode.isActive ?? true,
+      status: insertIqCode.status ?? "pending",
       createdAt: new Date(),
       assignedTo: insertIqCode.assignedTo || null,
       location: insertIqCode.location || null,
       codeType: insertIqCode.codeType || null,
+      approvedAt: null,
+      approvedBy: null,
+      internalNote: null,
+      isDeleted: false,
+      deletedAt: null,
     };
     this.iqCodes.set(id, iqCode);
     return iqCode;
@@ -115,7 +126,7 @@ export class MemStorage implements IStorage {
       ...iqCode,
       status,
       approvedAt: status === 'approved' ? new Date() : iqCode.approvedAt,
-      approvedBy: status === 'approved' ? approvedBy : iqCode.approvedBy
+      approvedBy: status === 'approved' ? (approvedBy || null) : iqCode.approvedBy
     };
 
     this.iqCodes.set(id, updatedIqCode);
@@ -124,6 +135,70 @@ export class MemStorage implements IStorage {
 
   async deleteIqCode(id: number): Promise<void> {
     this.iqCodes.delete(id);
+  }
+
+  async updateIqCodeNote(id: number, note: string): Promise<IqCode> {
+    const iqCode = this.iqCodes.get(id);
+    if (!iqCode) {
+      throw new Error("Codice IQ non trovato");
+    }
+
+    const updatedIqCode: IqCode = {
+      ...iqCode,
+      internalNote: note
+    };
+
+    this.iqCodes.set(id, updatedIqCode);
+    return updatedIqCode;
+  }
+
+  async softDeleteIqCode(id: number, deletedBy: string): Promise<IqCode> {
+    const iqCode = this.iqCodes.get(id);
+    if (!iqCode) {
+      throw new Error("Codice IQ non trovato");
+    }
+
+    const updatedIqCode: IqCode = {
+      ...iqCode,
+      isDeleted: true,
+      deletedAt: new Date()
+    };
+
+    this.iqCodes.set(id, updatedIqCode);
+    return updatedIqCode;
+  }
+
+  async getDeletedIqCodes(): Promise<IqCode[]> {
+    return Array.from(this.iqCodes.values()).filter(iqCode => iqCode.isDeleted);
+  }
+
+  async restoreIqCode(id: number): Promise<IqCode> {
+    const iqCode = this.iqCodes.get(id);
+    if (!iqCode) {
+      throw new Error("Codice IQ non trovato");
+    }
+
+    const updatedIqCode: IqCode = {
+      ...iqCode,
+      isDeleted: false,
+      deletedAt: null
+    };
+
+    this.iqCodes.set(id, updatedIqCode);
+    return updatedIqCode;
+  }
+
+  async cleanupExpiredDeleted(): Promise<void> {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const expiredIds: number[] = [];
+
+    for (const [id, iqCode] of Array.from(this.iqCodes.entries())) {
+      if (iqCode.isDeleted && iqCode.deletedAt && iqCode.deletedAt < twentyFourHoursAgo) {
+        expiredIds.push(id);
+      }
+    }
+
+    expiredIds.forEach(id => this.iqCodes.delete(id));
   }
 
   async createSession(insertSession: InsertSession): Promise<Session> {
@@ -487,6 +562,68 @@ export class PostgreStorage implements IStorage {
 
   async deleteIqCode(id: number): Promise<void> {
     await this.db.delete(iqCodes).where(eq(iqCodes.id, id));
+  }
+
+  async updateIqCodeNote(id: number, note: string): Promise<IqCode> {
+    const result = await this.db
+      .update(iqCodes)
+      .set({ internalNote: note })
+      .where(eq(iqCodes.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      throw new Error("Codice IQ non trovato");
+    }
+
+    return result[0];
+  }
+
+  async softDeleteIqCode(id: number, deletedBy: string): Promise<IqCode> {
+    const result = await this.db
+      .update(iqCodes)
+      .set({ 
+        isDeleted: true, 
+        deletedAt: new Date() 
+      })
+      .where(eq(iqCodes.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      throw new Error("Codice IQ non trovato");
+    }
+
+    return result[0];
+  }
+
+  async getDeletedIqCodes(): Promise<IqCode[]> {
+    return await this.db.select().from(iqCodes).where(eq(iqCodes.isDeleted, true));
+  }
+
+  async restoreIqCode(id: number): Promise<IqCode> {
+    const result = await this.db
+      .update(iqCodes)
+      .set({ 
+        isDeleted: false, 
+        deletedAt: null 
+      })
+      .where(eq(iqCodes.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      throw new Error("Codice IQ non trovato");
+    }
+
+    return result[0];
+  }
+
+  async cleanupExpiredDeleted(): Promise<void> {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    await this.db
+      .delete(iqCodes)
+      .where(and(
+        eq(iqCodes.isDeleted, true),
+        lt(iqCodes.deletedAt, twentyFourHoursAgo)
+      ));
   }
 
   async createSession(insertSession: InsertSession): Promise<Session> {

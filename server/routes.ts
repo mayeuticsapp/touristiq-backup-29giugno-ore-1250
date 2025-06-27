@@ -332,16 +332,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const allCodes = await storage.getAllIqCodes();
-      const users = allCodes.map(code => ({
-        id: code.id,
-        code: code.code,
-        role: code.role,
-        assignedTo: code.assignedTo,
-        location: code.location,
-        codeType: code.codeType,
-        isActive: code.isActive,
-        createdAt: code.createdAt
-      }));
+      const users = allCodes
+        .filter(code => !code.isDeleted) // Esclude utenti nel cestino
+        .map(code => ({
+          id: code.id,
+          code: code.code,
+          role: code.role,
+          assignedTo: code.assignedTo,
+          location: code.location,
+          codeType: code.codeType,
+          status: code.status,
+          isActive: code.isActive,
+          createdAt: code.createdAt,
+          approvedAt: code.approvedAt,
+          approvedBy: code.approvedBy,
+          internalNote: code.internalNote
+        }));
 
       res.json({ users });
     } catch (error) {
@@ -560,6 +566,217 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ settings });
     } catch (error) {
       console.error("Errore impostazioni:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Admin endpoint per aggiornare note interne utente
+  app.patch("/api/admin/users/:id/note", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const userId = parseInt(req.params.id);
+      const { note } = req.body;
+
+      if (typeof note !== 'string') {
+        return res.status(400).json({ message: "Nota deve essere una stringa" });
+      }
+
+      const updatedUser = await storage.updateIqCodeNote(userId, note);
+      res.json({ success: true, user: updatedUser });
+    } catch (error) {
+      console.error("Errore aggiornamento nota:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Admin endpoint per cestino temporaneo
+  app.get("/api/admin/trash", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const deletedUsers = await storage.getDeletedIqCodes();
+      const users = deletedUsers.map(user => ({
+        id: user.id,
+        code: user.code,
+        role: user.role,
+        assignedTo: user.assignedTo,
+        location: user.location,
+        codeType: user.codeType,
+        status: user.status,
+        deletedAt: user.deletedAt,
+        internalNote: user.internalNote
+      }));
+
+      res.json({ users });
+    } catch (error) {
+      console.error("Errore recupero cestino:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Admin endpoint per spostare utente nel cestino
+  app.patch("/api/admin/users/:id/trash", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const userId = parseInt(req.params.id);
+      
+      // Protezione: admin non può cancellare se stesso
+      const userToDelete = await storage.getIqCodeByCode(session.iqCode);
+      if (userToDelete && userToDelete.id === userId) {
+        return res.status(400).json({ message: "Non puoi cancellare il tuo stesso account" });
+      }
+
+      const deletedUser = await storage.softDeleteIqCode(userId, session.iqCode);
+      res.json({ success: true, user: deletedUser });
+    } catch (error) {
+      console.error("Errore spostamento cestino:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Admin endpoint per ripristinare utente dal cestino
+  app.patch("/api/admin/users/:id/restore", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const userId = parseInt(req.params.id);
+      const restoredUser = await storage.restoreIqCode(userId);
+      res.json({ success: true, user: restoredUser });
+    } catch (error) {
+      console.error("Errore ripristino utente:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Admin endpoint per reportistica strategica IQCode
+  app.get("/api/admin/reports", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const allCodes = await storage.getAllIqCodes();
+      const activeCodes = allCodes.filter(code => !code.isDeleted && code.isActive);
+
+      // Analisi per tipologia
+      const professionalCodes = activeCodes.filter(code => code.codeType === 'professional');
+      const emotionalCodes = activeCodes.filter(code => code.codeType === 'emotional');
+
+      // Analisi per ruolo
+      const roleStats = {
+        admin: activeCodes.filter(code => code.role === 'admin').length,
+        tourist: activeCodes.filter(code => code.role === 'tourist').length,
+        structure: activeCodes.filter(code => code.role === 'structure').length,
+        partner: activeCodes.filter(code => code.role === 'partner').length
+      };
+
+      // Analisi per location
+      const locationStats: { [key: string]: number } = {};
+      activeCodes.forEach(code => {
+        if (code.location) {
+          locationStats[code.location] = (locationStats[code.location] || 0) + 1;
+        }
+      });
+
+      // Analisi per status
+      const statusStats = {
+        pending: activeCodes.filter(code => code.status === 'pending').length,
+        approved: activeCodes.filter(code => code.status === 'approved').length,
+        blocked: activeCodes.filter(code => code.status === 'blocked').length
+      };
+
+      // Top strutture/partner per attivazioni
+      const topStructures = activeCodes
+        .filter(code => code.role === 'structure' && code.assignedTo)
+        .reduce((acc: { [key: string]: number }, code) => {
+          const name = code.assignedTo!;
+          acc[name] = (acc[name] || 0) + 1;
+          return acc;
+        }, {});
+
+      const topPartners = activeCodes
+        .filter(code => code.role === 'partner' && code.assignedTo)
+        .reduce((acc: { [key: string]: number }, code) => {
+          const name = code.assignedTo!;
+          acc[name] = (acc[name] || 0) + 1;
+          return acc;
+        }, {});
+
+      // Crescita per mese
+      const growthByMonth: { [key: string]: number } = {};
+      activeCodes.forEach(code => {
+        const month = code.createdAt.toISOString().substring(0, 7); // YYYY-MM
+        growthByMonth[month] = (growthByMonth[month] || 0) + 1;
+      });
+
+      const reportData = {
+        overview: {
+          totalActiveCodes: activeCodes.length,
+          professionalCodes: professionalCodes.length,
+          emotionalCodes: emotionalCodes.length,
+          pendingApproval: statusStats.pending,
+          approvedCodes: statusStats.approved,
+          blockedCodes: statusStats.blocked
+        },
+        roleDistribution: roleStats,
+        locationDistribution: locationStats,
+        topStructures: Object.entries(topStructures)
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 10)
+          .map(([name, count]) => ({ name, count })),
+        topPartners: Object.entries(topPartners)
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 10)
+          .map(([name, count]) => ({ name, count })),
+        growthByMonth: Object.entries(growthByMonth)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([month, count]) => ({ month, count })),
+        lastUpdated: new Date().toISOString()
+      };
+
+      res.json(reportData);
+    } catch (error) {
+      console.error("Errore generazione report:", error);
       res.status(500).json({ message: "Errore del server" });
     }
   });
