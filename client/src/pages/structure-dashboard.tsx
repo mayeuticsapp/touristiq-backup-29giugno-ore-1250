@@ -206,9 +206,29 @@ export default function StructureDashboard() {
   };
 
   const handleSendWhatsApp = (phone: string, code: string, guest: any) => {
+    // Rimuovi tutti i caratteri non numerici
+    let cleanPhone = phone.replace(/[^0-9]/g, '');
+    
+    // Verifica se il numero inizia con 39 (Italia)
+    if (cleanPhone.startsWith('39')) {
+      cleanPhone = cleanPhone;
+    } else if (cleanPhone.startsWith('3')) {
+      // Se inizia con 3, aggiungi il prefisso italiano
+      cleanPhone = '39' + cleanPhone;
+    } else {
+      alert('Numero WhatsApp non valido. Deve essere un numero italiano che inizia con 3 (es. 391234567890)');
+      return;
+    }
+    
+    // Verifica lunghezza minima (11-13 cifre per numeri italiani)
+    if (cleanPhone.length < 11 || cleanPhone.length > 13) {
+      alert('Numero WhatsApp non valido. Formato corretto: +39 3xx xxx xxxx');
+      return;
+    }
+    
     const message = `🏨 ${structureData?.name || 'Hotel'}\n\n✨ Il tuo codice sconto personale: *${code}*\n\n🎉 Ciao ${guest.firstName}! Ecco il tuo codice IQ per scoprire sconti esclusivi nei migliori locali della zona.\n\n📱 Usa questo codice per ottenere vantaggi speciali durante il tuo soggiorno!\n\n🌟 Buon divertimento!`;
     
-    const whatsappUrl = `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
@@ -641,13 +661,20 @@ export default function StructureDashboard() {
                     <span>📊 Mini Gestionale</span>
                   </div>
                 </div>
-                <div>
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={() => setActiveSection("ospiti")}
+                    className="bg-purple-200 text-purple-800 hover:bg-purple-300 font-semibold px-4 py-2"
+                    size="sm"
+                  >
+                    👥 Ospiti
+                  </Button>
                   <Button 
                     onClick={() => window.location.href = `/structure/${structureId}/panel`}
                     className="bg-white text-purple-600 hover:bg-gray-100 font-semibold px-6 py-3"
                     size="lg"
                   >
-                    Apri Pannello Completo
+                    🏢 Pannello Completo
                   </Button>
                 </div>
               </div>
