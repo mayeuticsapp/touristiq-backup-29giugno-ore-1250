@@ -451,16 +451,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Log assignment
-      console.log(`Admin ${userIqCode.code} ha assegnato pacchetto di ${packageSize} codici a ${targetType} ${targetCode.code}`);
+      console.log(`Admin ${userIqCode.code} ha assegnato pacchetto di ${packageSize} CREDITI a ${targetType} ${targetCode.code}`);
 
       res.json({
         success: true,
-        message: `Pacchetto di ${packageSize} codici assegnato con successo a ${targetCode.code}`,
+        message: `Pacchetto di ${packageSize} crediti assegnato con successo a ${targetCode.code}`,
         targetType,
         targetCode: targetCode.code,
         packageSize,
         packageId: packageAssignment.id,
-        codesGenerated: generatedCodes,
+        creditsRemaining: packageSize,
         assignedAt: packageAssignment.assignedAt.toISOString()
       });
     } catch (error) {
