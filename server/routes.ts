@@ -440,30 +440,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Destinatario non trovato nel database" });
       }
 
-      // Generate tourist codes for the package
-      const generatedCodes = [];
-      for (let i = 0; i < packageSize; i++) {
-        try {
-          const packageCodeId = Math.floor(Math.random() * 9000) + 1000;
-          const packageCode = `TIQ-PKG-${targetType.toUpperCase()}-${targetId}-${packageCodeId}`;
-          
-          const newCodeData = {
-            code: packageCode,
-            role: 'tourist' as const,
-            assignedTo: `Pacchetto per ${targetCode.code}`,
-            location: 'IT',
-            codeType: 'package',
-            isActive: true
-          };
-          
-          const savedCode = await storage.createIqCode(newCodeData);
-          generatedCodes.push(savedCode.code);
-        } catch (error) {
-          console.error(`Errore generazione codice ${i + 1}:`, error);
-        }
-      }
-
-      // Save package assignment to database
+      // Save package assignment to database (SOLO CREDITI, non liste pregenerate)
       const packageAssignment = await storage.createAssignedPackage({
         recipientIqCode: targetCode.code,
         packageSize,
