@@ -807,7 +807,10 @@ export default function StructureDashboard() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => setSelectedGuestForManagement(guest)}
+                          onClick={async () => {
+                            setSelectedGuestForManagement(guest);
+                            await loadGuestCodes(guest.id);
+                          }}
                           className="text-purple-600 border-purple-200 hover:bg-purple-50"
                         >
                           <Settings size={14} className="mr-1" />
@@ -896,14 +899,6 @@ export default function StructureDashboard() {
               <p className="text-gray-600 mt-1">
                 Camera {selectedGuestForManagement.roomNumber} • {selectedGuestForManagement.assignedCodes || 0} codici assegnati
               </p>
-              <Button
-                onClick={() => loadGuestCodes(selectedGuestForManagement.id)}
-                size="sm"
-                className="mt-2 bg-blue-600 hover:bg-blue-700"
-                disabled={loadingCodes}
-              >
-                {loadingCodes ? "Caricamento..." : "Carica Codici Assegnati"}
-              </Button>
             </div>
             
             <div className="p-6 space-y-6">
@@ -969,7 +964,7 @@ export default function StructureDashboard() {
               )}
 
               {/* Codici Disponibili per Riassegnazione */}
-              {availableCodesData?.codes && availableCodesData.codes.length > 0 && (
+              {availableCodesData?.codes && Array.isArray(availableCodesData.codes) && availableCodesData.codes.length > 0 && (
                 <div className="border rounded-lg p-4 bg-green-50">
                   <h3 className="font-semibold mb-3 text-green-800">Codici Disponibili per Riassegnazione</h3>
                   <div className="space-y-2">
