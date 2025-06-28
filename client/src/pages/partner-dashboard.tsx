@@ -16,6 +16,7 @@ import {
 import { useState, useRef } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { AdvancedAccounting } from "@/components/advanced-accounting";
+import { PartnerOnboarding } from "@/components/partner-onboarding";
 
 interface TouristLinkRequest {
   id: string;

@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, boolean, timestamp, decimal, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
 
 export const iqCodes = pgTable("iq_codes", {
   id: serial("id").primaryKey(),
@@ -173,6 +174,105 @@ export const settingsConfig = pgTable("settings_config", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// Tabella per il completamento onboarding partner
+export const partnerOnboarding = pgTable("partner_onboarding", {
+  id: serial("id").primaryKey(),
+  partnerCode: text("partner_code").notNull().unique(), // Codice IQ del partner
+  isCompleted: boolean("is_completed").notNull().default(false),
+  completedAt: timestamp("completed_at"),
+  businessInfo: boolean("business_info_completed").notNull().default(false),
+  accessibilityInfo: boolean("accessibility_info_completed").notNull().default(false),
+  allergyInfo: boolean("allergy_info_completed").notNull().default(false),
+  familyInfo: boolean("family_info_completed").notNull().default(false),
+  specialtyInfo: boolean("specialty_info_completed").notNull().default(false),
+  servicesInfo: boolean("services_info_completed").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Tabella per informazioni dettagliate partner per TIQai
+export const partnerDetails = pgTable("partner_details", {
+  id: serial("id").primaryKey(),
+  partnerCode: text("partner_code").notNull().unique(),
+  
+  // Informazioni Business Base
+  businessName: text("business_name").notNull(),
+  businessType: text("business_type").notNull(), // ristorante, hotel, attrazione, negozio, etc.
+  description: text("description").notNull(),
+  address: text("address").notNull(),
+  city: text("city").notNull(),
+  province: text("province").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email").notNull(),
+  website: text("website"),
+  
+  // Orari di apertura
+  openingHours: text("opening_hours").notNull(), // JSON string con orari settimanali
+  seasonalHours: text("seasonal_hours"), // JSON per orari stagionali
+  
+  // Accessibilità
+  wheelchairAccessible: boolean("wheelchair_accessible").notNull().default(false),
+  rampWidth: text("ramp_width"), // Larghezza rampa in cm
+  rampSlope: text("ramp_slope"), // Pendenza rampa
+  elevatorAccess: boolean("elevator_access").notNull().default(false),
+  accessibleBathroom: boolean("accessible_bathroom").notNull().default(false),
+  parkingSpaces: integer("parking_spaces").default(0),
+  accessibleParking: integer("accessible_parking").default(0),
+  assistanceAvailable: boolean("assistance_available").notNull().default(false),
+  accessibilityNotes: text("accessibility_notes"),
+  
+  // Allergie e intolleranze
+  glutenFree: boolean("gluten_free").notNull().default(false),
+  glutenFreeKitchen: boolean("gluten_free_kitchen").notNull().default(false), // Cucina separata
+  dairyFree: boolean("dairy_free").notNull().default(false),
+  nutFree: boolean("nut_free").notNull().default(false),
+  vegetarianOptions: boolean("vegetarian_options").notNull().default(false),
+  veganOptions: boolean("vegan_options").notNull().default(false),
+  halalCertified: boolean("halal_certified").notNull().default(false),
+  kosherCertified: boolean("kosher_certified").notNull().default(false),
+  allergyTraining: boolean("allergy_training").notNull().default(false), // Staff formato
+  allergyMenu: boolean("allergy_menu").notNull().default(false), // Menu specifico
+  allergyNotes: text("allergy_notes"),
+  
+  // Famiglia e bambini
+  childFriendly: boolean("child_friendly").notNull().default(false),
+  highChairs: boolean("high_chairs").notNull().default(false),
+  kidsMenu: boolean("kids_menu").notNull().default(false),
+  changingTable: boolean("changing_table").notNull().default(false),
+  playArea: boolean("play_area").notNull().default(false),
+  babyFriendly: boolean("baby_friendly").notNull().default(false), // 0-2 anni
+  toddlerFriendly: boolean("toddler_friendly").notNull().default(false), // 2-5 anni
+  childFriendly6plus: boolean("child_friendly_6plus").notNull().default(false), // 6+ anni
+  teenFriendly: boolean("teen_friendly").notNull().default(false), // 13+ anni
+  familyPackages: boolean("family_packages").notNull().default(false),
+  babysittingService: boolean("babysitting_service").notNull().default(false),
+  familyNotes: text("family_notes"),
+  
+  // Specialità uniche
+  uniqueSpecialties: text("unique_specialties"), // JSON array di specialità uniche
+  localTraditions: text("local_traditions"), // Tradizioni locali offerte
+  experienceTypes: text("experience_types"), // JSON array tipologie esperienza
+  skillLevels: text("skill_levels"), // JSON array livelli difficoltà
+  equipmentProvided: text("equipment_provided"), // JSON array attrezzature fornite
+  languagesSpoken: text("languages_spoken"), // JSON array lingue parlate
+  certifications: text("certifications"), // JSON array certificazioni
+  awards: text("awards"), // JSON array premi/riconoscimenti
+  
+  // Servizi aggiuntivi
+  wifiAvailable: boolean("wifi_available").notNull().default(false),
+  petsAllowed: boolean("pets_allowed").notNull().default(false),
+  smokingAllowed: boolean("smoking_allowed").notNull().default(false),
+  creditCardsAccepted: boolean("credit_cards_accepted").notNull().default(false),
+  deliveryService: boolean("delivery_service").notNull().default(false),
+  takeawayService: boolean("takeaway_service").notNull().default(false),
+  reservationsRequired: boolean("reservations_required").notNull().default(false),
+  groupBookings: boolean("group_bookings").notNull().default(false),
+  privateEvents: boolean("private_events").notNull().default(false),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 export const insertIqCodeSchema = createInsertSchema(iqCodes).omit({
   id: true,
   createdAt: true,
@@ -194,6 +294,18 @@ export const insertGeneratedEmotionalCodeSchema = createInsertSchema(generatedEm
 });
 
 export const insertGuestSchema = createInsertSchema(guests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPartnerOnboardingSchema = createInsertSchema(partnerOnboarding).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPartnerDetailsSchema = createInsertSchema(partnerDetails).omit({
   id: true,
   createdAt: true,
   updatedAt: true,

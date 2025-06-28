@@ -1618,6 +1618,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check partner onboarding status
+  app.get("/api/partner/onboarding-status/:partnerCode", async (req, res) => {
+    try {
+      const { partnerCode } = req.params;
+      
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'partner') {
+        return res.status(401).json({ message: "Accesso negato" });
+      }
+
+      const onboardingStatus = await storage.getPartnerOnboardingStatus(partnerCode);
+      res.json(onboardingStatus);
+    } catch (error) {
+      console.error("Errore recupero stato onboarding:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Save partner onboarding step
+  app.post("/api/partner/onboarding-step", async (req, res) => {
+    try {
+      const { partnerCode, step, data } = req.body;
+      
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'partner') {
+        return res.status(401).json({ message: "Accesso negato" });
+      }
+
+      await storage.savePartnerOnboardingStep(partnerCode, step, data);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Errore salvataggio step onboarding:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Complete partner onboarding
+  app.post("/api/partner/complete-onboarding", async (req, res) => {
+    try {
+      const { partnerCode } = req.body;
+      
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'partner') {
+        return res.status(401).json({ message: "Accesso negato" });
+      }
+
+      await storage.completePartnerOnboarding(partnerCode);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Errore completamento onboarding:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // Get approved structures for assignment (accessible by structures)
   app.get("/api/structures", async (req, res) => {
     try {

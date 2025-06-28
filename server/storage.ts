@@ -77,6 +77,11 @@ export interface IStorage {
   createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void>;
   createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any>;
   createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any>;
+  
+  // Partner onboarding methods
+  getPartnerOnboardingStatus(partnerCode: string): Promise<any>;
+  savePartnerOnboardingStep(partnerCode: string, step: string, data: any): Promise<void>;
+  completePartnerOnboarding(partnerCode: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -1299,6 +1304,109 @@ class ExtendedPostgreStorage extends PostgreStorage {
     };
     return newClient;
   }
+
+  async getPartnerOnboardingStatus(partnerCode: string): Promise<any> {
+    const [onboarding] = await this.db
+      .select()
+      .from(partnerOnboarding)
+      .where(eq(partnerOnboarding.partnerCode, partnerCode));
+    
+    if (!onboarding) {
+      // Crea record onboarding se non esiste
+      await this.db.insert(partnerOnboarding).values({
+        partnerCode,
+        isCompleted: false,
+        businessInfo: false,
+        accessibilityInfo: false,
+        allergyInfo: false,
+        familyInfo: false,
+        specialtyInfo: false,
+        servicesInfo: false
+      });
+      
+      return {
+        businessInfo: false,
+        accessibilityInfo: false,
+        allergyInfo: false,
+        familyInfo: false,
+        specialtyInfo: false,
+        servicesInfo: false,
+        isCompleted: false
+      };
+    }
+    
+    return {
+      businessInfo: onboarding.businessInfo,
+      accessibilityInfo: onboarding.accessibilityInfo,
+      allergyInfo: onboarding.allergyInfo,
+      familyInfo: onboarding.familyInfo,
+      specialtyInfo: onboarding.specialtyInfo,
+      servicesInfo: onboarding.servicesInfo,
+      isCompleted: onboarding.isCompleted
+    };
+  }
+
+  async savePartnerOnboardingStep(partnerCode: string, step: string, data: any): Promise<void> {
+    // Aggiorna o crea partner_details
+    const existingDetails = await this.db
+      .select()
+      .from(partnerDetails)
+      .where(eq(partnerDetails.partnerCode, partnerCode));
+    
+    if (existingDetails.length === 0) {
+      // Crea nuovo record partner_details
+      const defaultData = {
+        partnerCode,
+        businessName: '',
+        businessType: '',
+        description: '',
+        address: '',
+        city: '',
+        province: '',
+        phone: '',
+        email: '',
+        openingHours: JSON.stringify({
+          monday: { open: '09:00', close: '18:00', closed: false },
+          tuesday: { open: '09:00', close: '18:00', closed: false },
+          wednesday: { open: '09:00', close: '18:00', closed: false },
+          thursday: { open: '09:00', close: '18:00', closed: false },
+          friday: { open: '09:00', close: '18:00', closed: false },
+          saturday: { open: '09:00', close: '18:00', closed: false },
+          sunday: { open: '09:00', close: '18:00', closed: true }
+        }),
+        ...data
+      };
+      
+      await this.db.insert(partnerDetails).values(defaultData);
+    } else {
+      // Aggiorna dati esistenti
+      await this.db
+        .update(partnerDetails)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(partnerDetails.partnerCode, partnerCode));
+    }
+    
+    // Aggiorna status onboarding
+    const stepColumn = `${step}Info` as keyof typeof partnerOnboarding.$inferSelect;
+    await this.db
+      .update(partnerOnboarding)
+      .set({ 
+        [stepColumn]: true,
+        updatedAt: new Date()
+      })
+      .where(eq(partnerOnboarding.partnerCode, partnerCode));
+  }
+
+  async completePartnerOnboarding(partnerCode: string): Promise<void> {
+    await this.db
+      .update(partnerOnboarding)
+      .set({ 
+        isCompleted: true,
+        completedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(partnerOnboarding.partnerCode, partnerCode));
+  }
 }
 
 // Extend MemStorage con metodi impostazioni
@@ -1356,6 +1464,49 @@ class ExtendedMemStorage extends MemStorage {
     
     this.settingsConfigMap.set(structureCode, updated);
     return updated;
+  }
+
+  async createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void> {
+    // Mock implementation for MemStorage
+  }
+
+  async createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any> {
+    return {
+      id: Math.random().toString(36).substr(2, 9),
+      ...offer,
+      createdAt: new Date(),
+      isActive: true
+    };
+  }
+
+  async createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any> {
+    return {
+      id: Math.random().toString(36).substr(2, 9),
+      ...client,
+      createdAt: new Date(),
+      visits: 0,
+      rewards: 0
+    };
+  }
+
+  async getPartnerOnboardingStatus(partnerCode: string): Promise<any> {
+    return {
+      businessInfo: false,
+      accessibilityInfo: false,
+      allergyInfo: false,
+      familyInfo: false,
+      specialtyInfo: false,
+      servicesInfo: false,
+      isCompleted: false
+    };
+  }
+
+  async savePartnerOnboardingStep(partnerCode: string, step: string, data: any): Promise<void> {
+    // Mock implementation for MemStorage
+  }
+
+  async completePartnerOnboarding(partnerCode: string): Promise<void> {
+    // Mock implementation for MemStorage
   }
 }
 
