@@ -824,9 +824,9 @@ export default function StructureDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {guestsData?.guests && guestsData.guests.length > 0 ? (
+          {guestsData?.guests && guestsData.guests.filter(guest => guest.assignedCodes === 0).length > 0 ? (
             <div className="space-y-4">
-              {guestsData?.guests?.map((guest: Guest) => (
+              {guestsData?.guests?.filter(guest => guest.assignedCodes === 0).map((guest: Guest) => (
                 <Card key={guest.id} className="border border-gray-200">
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-3">
@@ -1102,7 +1102,7 @@ export default function StructureDashboard() {
                       </div>
 
                       {/* Azioni Rapide */}
-                      <div className="flex gap-2 pt-2 border-t">
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t">
                         <Button
                           size="sm"
                           variant="outline"
@@ -1110,7 +1110,7 @@ export default function StructureDashboard() {
                             setSelectedGuestForManagement(guest);
                             await loadGuestCodes(guest.id);
                           }}
-                          className="flex-1 text-xs"
+                          className="text-xs"
                         >
                           <Edit className="h-3 w-3 mr-1" />
                           Gestisci
@@ -1118,10 +1118,65 @@ export default function StructureDashboard() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="flex-1 text-xs"
+                          onClick={async () => {
+                            // Carica i codici dell'ospite per WhatsApp
+                            const response = await fetch(`/api/guest/${guest.id}/codes`);
+                            const data = await response.json();
+                            if (data.codes && data.codes.length > 0) {
+                              const firstCode = data.codes[0].code;
+                              // Invia WhatsApp con il primo codice
+                              if (guest.phone) {
+                                const whatsappUrl = `https://wa.me/${guest.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`🎁 Ciao ${guest.firstName}! Ecco il tuo codice sconto TouristIQ: ${firstCode}\\n\\nUsa questo codice per ottenere sconti esclusivi presso i nostri partner! 🌟`)}`;
+                                window.open(whatsappUrl, '_blank');
+                              } else {
+                                alert("Numero di telefono non disponibile per questo ospite");
+                              }
+                            } else {
+                              alert("Nessun codice IQ trovato per questo ospite");
+                            }
+                          }}
+                          className="text-xs bg-green-50 hover:bg-green-100 text-green-700"
+                          disabled={!guest.phone}
                         >
                           <MessageCircle className="h-3 w-3 mr-1" />
-                          Contatta
+                          WhatsApp
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            // Carica e copia il primo codice IQ dell'ospite
+                            const response = await fetch(`/api/guest/${guest.id}/codes`);
+                            const data = await response.json();
+                            if (data.codes && data.codes.length > 0) {
+                              const firstCode = data.codes[0].code;
+                              await navigator.clipboard.writeText(firstCode);
+                              alert(`Codice ${firstCode} copiato negli appunti!`);
+                            } else {
+                              alert("Nessun codice IQ trovato per questo ospite");
+                            }
+                          }}
+                          className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700"
+                        >
+                          <Copy className="h-3 w-3 mr-1" />
+                          Copia IQ
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            if (guest.phone) {
+                              const whatsappUrl = `https://wa.me/${guest.phone.replace(/[^0-9]/g, '')}`;
+                              window.open(whatsappUrl, '_blank');
+                            } else {
+                              alert("Numero di telefono non disponibile per questo ospite");
+                            }
+                          }}
+                          className="text-xs"
+                          disabled={!guest.phone}
+                        >
+                          <Phone className="h-3 w-3 mr-1" />
+                          Chiama
                         </Button>
                       </div>
                     </div>
