@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Layout } from "@/components/layout";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,62 +7,97 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Layout } from "@/components/layout";
 import { 
-  BarChart3, 
-  Tags, 
-  QrCode, 
-  TrendingUp, 
-  Settings, 
-  Ticket, 
-  Euro, 
-  Users, 
-  Star, 
-  Camera, 
-  Package,
-  Plus,
-  Download,
-  Heart,
-  CheckCircle,
-  Clock,
-  Gift,
-  Trophy
+  Users, BarChart3, Plus, TrendingUp, Package, Heart, Star, 
+  Download, QrCode, Camera, Tags, Trophy, Calendar, Settings
 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getCurrentUser } from "@/lib/auth";
+import { useState } from "react";
+import { apiRequest } from "@/lib/queryClient";
+
+interface User {
+  iqCode: string;
+  role: string;
+}
 
 export default function PartnerDashboard() {
   const [currentView, setCurrentView] = useState<'main' | 'special-clients'>('main');
   const [showNewOfferDialog, setShowNewOfferDialog] = useState(false);
+  const [showSpecialClientDialog, setShowSpecialClientDialog] = useState(false);
+  const [touristCode, setTouristCode] = useState('');
   const [newOffer, setNewOffer] = useState({
     title: '',
     description: '',
     discount: '',
     validUntil: ''
   });
-  const [touristCode, setTouristCode] = useState('');
-  const [showSpecialClientDialog, setShowSpecialClientDialog] = useState(false);
   const [newSpecialClient, setNewSpecialClient] = useState({
     name: '',
-    email: '',
-    phone: '',
     notes: ''
   });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: user } = useQuery({
+  // Fetch user data
+  const { data: user } = useQuery<User>({
     queryKey: ["/api/auth/me"],
-    queryFn: getCurrentUser,
   });
 
-  // Query per pacchetti assegnati
-  const { data: packagesData, refetch: refetchPackages } = useQuery({
-    queryKey: ["/api/my-packages"],
-    enabled: !!user,
+  // Link tourist mutation
+  const linkTouristMutation = useMutation({
+    mutationFn: (data: { touristCode: string }) => 
+      apiRequest("/api/partner/link-tourist", "POST", data),
+    onSuccess: () => {
+      toast({ title: "Richiesta inviata", description: "Attendi la conferma del turista" });
+      setTouristCode('');
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Errore", 
+        description: error.message || "Errore nell'invio della richiesta",
+        variant: "destructive" 
+      });
+    }
   });
 
-  // Mock data per statistiche e promozioni (sostituire con dati reali)
+  // Create offer mutation
+  const createOfferMutation = useMutation({
+    mutationFn: (data: typeof newOffer) => 
+      apiRequest("/api/partner/offers", "POST", data),
+    onSuccess: () => {
+      toast({ title: "Successo", description: "Offerta creata con successo" });
+      setShowNewOfferDialog(false);
+      setNewOffer({ title: '', description: '', discount: '', validUntil: '' });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Errore", 
+        description: error.message || "Errore nella creazione dell'offerta",
+        variant: "destructive" 
+      });
+    }
+  });
+
+  // Create special client mutation
+  const createSpecialClientMutation = useMutation({
+    mutationFn: (data: typeof newSpecialClient) => 
+      apiRequest("/api/partner/special-clients", "POST", data),
+    onSuccess: () => {
+      toast({ title: "Successo", description: "Cliente speciale aggiunto" });
+      setShowSpecialClientDialog(false);
+      setNewSpecialClient({ name: '', notes: '' });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Errore", 
+        description: error.message || "Errore nell'aggiunta del cliente",
+        variant: "destructive" 
+      });
+    }
+  });
+
+  // Sample data
   const stats = {
     touristToday: 3,
     thisWeek: 8,
@@ -72,205 +106,93 @@ export default function PartnerDashboard() {
   };
 
   const activePromotions = [
-    {
-      id: 1,
-      title: "Sconto Benvenuto 15%",
-      description: "Sconto del 15% per tutti i turisti TouristIQ",
-      discount: 15,
-      validUntil: "28/07/2025",
-      usedCount: 0
-    }
+    { id: 1, title: "Sconto Benvenuto", description: "15% su primo acquisto", discount: 15, validUntil: "31/12/2024", usedCount: 12 },
+    { id: 2, title: "Aperitivo Happy Hour", description: "2x1 dalle 18:00", discount: 50, validUntil: "28/02/2025", usedCount: 8 }
+  ];
+
+  const pendingTourists = [
+    { id: 1, code: "TIQ-2024-ABC123", country: "Germany", status: "In attesa" },
+    { id: 2, code: "TIQ-2024-DEF456", country: "France", status: "In attesa" }
+  ];
+
+  const activeTourists = [
+    { id: 1, code: "TIQ-2024-GHI789", country: "Italy", linkedDate: "27/06/2025" },
+    { id: 2, code: "TIQ-2024-JKL012", country: "Germany", linkedDate: "26/06/2025" }
   ];
 
   const specialClients = [
-    {
-      id: 1,
-      name: "Mario R.",
-      status: "Attivo",
-      visits: 3,
-      lastVisit: "15/12/2024",
-      reward: "Nessuno"
-    },
-    {
-      id: 2,
-      name: "Giulia M.",
-      status: "Attivo", 
-      visits: 5,
-      lastVisit: "10/12/2024",
-      reward: "Cena Omaggio"
-    },
-    {
-      id: 3,
-      name: "Francesco T.",
-      status: "Attivo",
-      visits: 2,
-      lastVisit: "20/12/2024", 
-      reward: "Sconto 10%"
-    },
-    {
-      id: 4,
-      name: "Elena S.",
-      status: "Attivo",
-      visits: 7,
-      lastVisit: "05/12/2024",
-      reward: "Aperitivo Gratis"
-    }
+    { id: 1, name: "Marco B.", status: "Attivo", visits: 12, reward: "Caffè Gratis", lastVisit: "25/06/25" },
+    { id: 2, name: "Anna R.", status: "Attivo", visits: 8, reward: "Sconto 20%", lastVisit: "24/06/25" },
+    { id: 3, name: "Luigi P.", status: "Attivo", visits: 15, reward: "Menu Degustazione", lastVisit: "23/06/25" },
+    { id: 4, name: "Sofia M.", status: "Attivo", visits: 6, reward: "Nessuno", lastVisit: "22/06/25" }
   ];
 
-  const handleTouristCodeSubmit = async () => {
-    if (!touristCode.trim()) {
-      toast({
-        title: "Errore",
-        description: "Inserisci un codice IQ valido",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Simulate API call
-    toast({
-      title: "Turista collegato!",
-      description: `Codice ${touristCode} collegato al tuo circuito con successo`
-    });
-    setTouristCode('');
-  };
-
-  const createOfferMutation = useMutation({
-    mutationFn: async (offerData: typeof newOffer) => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return offerData;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Offerta creata!",
-        description: "La tua nuova promozione è ora attiva"
-      });
-      setShowNewOfferDialog(false);
-      setNewOffer({ title: '', description: '', discount: '', validUntil: '' });
-    }
-  });
-
-  const createSpecialClientMutation = useMutation({
-    mutationFn: async (clientData: typeof newSpecialClient) => {
-      // Simulate API call  
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return clientData;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Cliente speciale aggiunto!",
-        description: "Il cliente è stato aggiunto al programma fedeltà"
-      });
-      setShowSpecialClientDialog(false);
-      setNewSpecialClient({ name: '', email: '', phone: '', notes: '' });
-    }
-  });
-
-  // Main Dashboard View
   const renderMainDashboard = () => (
     <div className="space-y-6">
-      {/* Hero Section */}
-      <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0">
-        <CardContent className="p-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="w-6 h-6" />
-                <h1 className="text-2xl font-bold">Benvenuto nel tuo Spazio Partner</h1>
-              </div>
-              <p className="text-green-100 text-lg">
-                Qui comincia il tuo vero viaggio dentro l'ecosistema TouristIQ
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold">12</div>
-              <div className="text-green-100">Turisti Collegati</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Welcome Header */}
+      <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
+        <h1 className="text-2xl font-bold mb-2">Benvenuto nel tuo Spazio Partner</h1>
+        <p className="text-green-100">Gestisci i turisti collegati e crea promozioni esclusive per far crescere il tuo business</p>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Main Actions */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Insert Tourist Code */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column */}
+        <div className="space-y-6">
+          {/* Tourist Link Form */}
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Plus className="w-4 h-4 text-green-600" />
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Plus className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">Inserisci l'IQcode del Turista</h3>
-                  <p className="text-gray-600 text-sm">Accogli nel tuo circuito e inizia il collegamento</p>
+                  <h3 className="font-semibold">Inserisci l'IQcode del Turista</h3>
+                  <p className="text-gray-600 text-sm">Collega un nuovo turista al tuo circuito sconti</p>
                 </div>
               </div>
               
               <div className="space-y-3">
-                <Label htmlFor="tourist-code">IQcode Turista</Label>
                 <Input
-                  id="tourist-code"
                   placeholder="es. TIQ-2024-ABC123"
                   value={touristCode}
                   onChange={(e) => setTouristCode(e.target.value)}
-                  className="text-lg"
                 />
                 <Button 
-                  onClick={handleTouristCodeSubmit}
-                  className="w-full bg-green-600 hover:bg-green-700"
-                  disabled={!touristCode.trim()}
+                  onClick={() => linkTouristMutation.mutate({ touristCode })}
+                  disabled={!touristCode || linkTouristMutation.isPending}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
                 >
-                  Collega Turista
+                  {linkTouristMutation.isPending ? "Inviando..." : "Conferma"}
                 </Button>
               </div>
             </CardContent>
           </Card>
 
-          {/* Pending Connections */}
+          {/* Pending Links */}
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Clock className="w-4 h-4 text-yellow-600" />
+                  <Calendar className="w-4 h-4 text-yellow-600" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Collegamenti in Attesa</h3>
-                  <p className="text-gray-600 text-sm">Turisti che devono ancora confermare</p>
+                  <p className="text-gray-600 text-sm">Turisti che devono ancora confermare il collegamento</p>
                 </div>
-                <Badge variant="secondary" className="ml-auto">2</Badge>
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-yellow-200 rounded-full flex items-center justify-center text-sm font-medium">
-                      JS
-                    </div>
+                {pendingTourists.map((tourist) => (
+                  <div key={tourist.id} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
                     <div>
-                      <div className="font-medium">TIQ-2024-ABC123</div>
-                      <div className="text-sm text-gray-600">Richiesta inviata 28/06/2025, 15:40:37</div>
+                      <div className="font-medium">{tourist.code}</div>
+                      <div className="text-sm text-gray-600">{tourist.country}</div>
                     </div>
+                    <Badge className="bg-yellow-100 text-yellow-700">
+                      {tourist.status}
+                    </Badge>
                   </div>
-                  <Badge variant="outline" className="text-yellow-600 border-yellow-600">
-                    In attesa
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-yellow-200 rounded-full flex items-center justify-center text-sm font-medium">
-                      MD
-                    </div>
-                    <div>
-                      <div className="font-medium">TIQ-2024-XYZ789</div>
-                      <div className="text-sm text-gray-600">Richiesta inviata 28/06/2025, 14:40:37</div>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className="text-yellow-600 border-yellow-600">
-                    In attesa
-                  </Badge>
-                </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -279,46 +201,27 @@ export default function PartnerDashboard() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-4 h-4 text-blue-600" />
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Users className="w-4 h-4 text-green-600" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Turisti Attivi</h3>
-                  <p className="text-gray-600 text-sm">Partner collegati e attivi nel circuito</p>
+                  <p className="text-gray-600 text-sm">Turisti collegati al tuo circuito</p>
                 </div>
-                <Badge variant="secondary" className="ml-auto">2</Badge>
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-sm font-medium">
-                      HM
-                    </div>
+                {activeTourists.map((tourist) => (
+                  <div key={tourist.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                     <div>
-                      <div className="font-medium">TIQ-2024-DEF456</div>
-                      <div className="text-sm text-gray-600">Collegato 27/06/2025 • Germany</div>
+                      <div className="font-medium">{tourist.code}</div>
+                      <div className="text-sm text-gray-600">Collegato {tourist.linkedDate} • {tourist.country}</div>
                     </div>
+                    <Badge className="bg-green-100 text-green-700">
+                      Attivo
+                    </Badge>
                   </div>
-                  <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                    Attivo
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-sm font-medium">
-                      ER
-                    </div>
-                    <div>
-                      <div className="font-medium">TIQ-2024-GHI789</div>
-                      <div className="text-sm text-gray-600">Collegato 26/06/2025 • Italy</div>
-                    </div>
-                  </div>
-                  <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                    Attivo
-                  </Badge>
-                </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -370,7 +273,7 @@ export default function PartnerDashboard() {
           </Card>
         </div>
 
-        {/* Right Column - Stats and Materials */}
+        {/* Right Column */}
         <div className="space-y-6">
           {/* Quick Stats */}
           <Card>
@@ -409,18 +312,39 @@ export default function PartnerDashboard() {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start bg-blue-50 border-blue-200 hover:bg-blue-100">
-                <Download className="w-4 h-4 mr-2" />
-                Scarica Locandina PDF
-              </Button>
-              <Button variant="outline" className="w-full justify-start bg-purple-50 border-purple-200 hover:bg-purple-100">
-                <QrCode className="w-4 h-4 mr-2" />
-                QR Code Personalizzato
-              </Button>
-              <Button variant="outline" className="w-full justify-start bg-green-50 border-green-200 hover:bg-green-100">
-                <Camera className="w-4 h-4 mr-2" />
-                Adesivi "Benvenuti TouristIQ"
-              </Button>
+              <a 
+                href="/api/partner/materials/pdf" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block"
+              >
+                <Button variant="outline" className="w-full justify-start bg-blue-50 border-blue-200 hover:bg-blue-100">
+                  <Download className="w-4 h-4 mr-2" />
+                  Scarica Locandina PDF
+                </Button>
+              </a>
+              <a 
+                href="/api/partner/materials/qr" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block"
+              >
+                <Button variant="outline" className="w-full justify-start bg-purple-50 border-purple-200 hover:bg-purple-100">
+                  <QrCode className="w-4 h-4 mr-2" />
+                  QR Code Personalizzato
+                </Button>
+              </a>
+              <a 
+                href="https://www.vistaprint.it/adesivi-personalizzati" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block"
+              >
+                <Button variant="outline" className="w-full justify-start bg-green-50 border-green-200 hover:bg-green-100">
+                  <Camera className="w-4 h-4 mr-2" />
+                  Adesivi "Benvenuti TouristIQ"
+                </Button>
+              </a>
               <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                 <div className="flex items-start gap-2">
                   <div className="w-4 h-4 text-blue-600 mt-0.5">💡</div>
@@ -451,55 +375,18 @@ export default function PartnerDashboard() {
               </Button>
             </CardContent>
           </Card>
-
-          {/* TouristIQ Alliance */}
-          <Card className="bg-green-50 border-green-200">
-            <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-              <h3 className="font-semibold mb-2 text-green-800">TouristIQ è un'alleanza</h3>
-              <p className="text-sm text-green-700">
-                Sei parte attiva di una rete che valorizza il commercio locale
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
   );
 
-  // Special Clients View
   const renderSpecialClients = () => (
     <div className="space-y-6">
-      {/* Hero Section */}
-      <Card className="bg-gradient-to-r from-pink-500 to-purple-600 text-white border-0">
-        <CardContent className="p-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Gift className="w-6 h-6" />
-                <h1 className="text-2xl font-bold">Premia i tuoi Clienti</h1>
-              </div>
-              <p className="text-pink-100 text-lg">
-                Con TouristIQ puoi fidelizzare non solo i turisti, ma anche i tuoi clienti abituali.
-              </p>
-              <p className="text-pink-100 text-sm mt-2">
-                Acquistando uno dei pacchetti IQcode, regali loro l'accesso a un ecosistema nazionale di vantaggi e 
-                promozioni. Il tuo cliente riceverà una vera e propria "carta digitale" che potrà usare in tutta Italia, in 
-                ogni città dove è attivo il circuito TouristIQ.
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                <Heart className="w-8 h-8 text-white" />
-              </div>
-              <div className="text-lg font-bold mt-2">4</div>
-              <div className="text-pink-100">Clienti Speciali</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Header */}
+      <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-6 text-white">
+        <h1 className="text-2xl font-bold mb-2">Premia i tuoi Clienti</h1>
+        <p className="text-purple-100">Trasforma i tuoi clienti abituali in ambasciatori TouristIQ. Regala loro l'accesso al circuito nazionale e monitora i risultati.</p>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Package Selection */}
@@ -518,7 +405,12 @@ export default function PartnerDashboard() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 border-2 border-gray-200 rounded-lg text-center hover:border-purple-300 transition-colors cursor-pointer">
+                <a 
+                  href="https://pay.sumup.com/b2c/QSJE461B" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block p-4 border-2 border-gray-200 rounded-lg text-center hover:border-purple-300 transition-colors cursor-pointer"
+                >
                   <div className="text-2xl font-bold">25</div>
                   <div className="text-sm text-gray-600 mb-2">codici IQcode</div>
                   <div className="text-xl font-bold text-purple-600">€50</div>
@@ -527,9 +419,14 @@ export default function PartnerDashboard() {
                     <Package className="w-4 h-4 mr-2" />
                     Acquista 25 codici
                   </Button>
-                </div>
+                </a>
 
-                <div className="p-4 border-2 border-purple-300 rounded-lg text-center bg-purple-50 hover:border-purple-400 transition-colors cursor-pointer">
+                <a 
+                  href="https://pay.sumup.com/b2c/QK6MLJC7" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block p-4 border-2 border-purple-300 rounded-lg text-center bg-purple-50 hover:border-purple-400 transition-colors cursor-pointer"
+                >
                   <div className="text-2xl font-bold">50</div>
                   <div className="text-sm text-gray-600 mb-2">codici IQcode</div>
                   <div className="text-xl font-bold text-purple-600">€90</div>
@@ -538,9 +435,14 @@ export default function PartnerDashboard() {
                     <Package className="w-4 h-4 mr-2" />
                     Acquista 50 codici
                   </Button>
-                </div>
+                </a>
 
-                <div className="p-4 border-2 border-gray-200 rounded-lg text-center hover:border-purple-300 transition-colors cursor-pointer">
+                <a 
+                  href="https://pay.sumup.com/b2c/Q9517L3P" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block p-4 border-2 border-gray-200 rounded-lg text-center hover:border-purple-300 transition-colors cursor-pointer"
+                >
                   <div className="text-2xl font-bold">75</div>
                   <div className="text-sm text-gray-600 mb-2">codici IQcode</div>
                   <div className="text-xl font-bold text-purple-600">€130</div>
@@ -549,9 +451,14 @@ export default function PartnerDashboard() {
                     <Package className="w-4 h-4 mr-2" />
                     Acquista 75 codici
                   </Button>
-                </div>
+                </a>
 
-                <div className="p-4 border-2 border-gray-200 rounded-lg text-center hover:border-purple-300 transition-colors cursor-pointer">
+                <a 
+                  href="https://pay.sumup.com/b2c/Q3BWI26N" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block p-4 border-2 border-gray-200 rounded-lg text-center hover:border-purple-300 transition-colors cursor-pointer"
+                >
                   <div className="text-2xl font-bold">100</div>
                   <div className="text-sm text-gray-600 mb-2">codici IQcode</div>
                   <div className="text-xl font-bold text-purple-600">€160</div>
@@ -560,7 +467,7 @@ export default function PartnerDashboard() {
                     <Package className="w-4 h-4 mr-2" />
                     Acquista 100 codici
                   </Button>
-                </div>
+                </a>
               </div>
 
               <div className="mt-4 p-3 bg-blue-50 rounded-lg">
@@ -648,9 +555,9 @@ export default function PartnerDashboard() {
 
               <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
                 <div className="flex items-start gap-2">
-                  <div className="w-4 h-4 text-yellow-600 mt-0.5">⚠️</div>
+                  <Trophy className="w-4 h-4 text-yellow-600 mt-0.5" />
                   <div className="text-sm text-yellow-800">
-                    <strong>Nota:</strong> Questi dati sono simulati per la demo. Verranno attivati quando la logica di tracciamento sarà operativa.
+                    <strong>Suggerimento:</strong> Premia i clienti più attivi con sconti esclusivi o omaggi per incentivare la fedeltà.
                   </div>
                 </div>
               </div>
@@ -658,51 +565,48 @@ export default function PartnerDashboard() {
           </Card>
         </div>
 
-        {/* Right Column - Stats and System Info */}
+        {/* Right Column - Stats and Info */}
         <div className="space-y-6">
-          {/* System Benefits */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <Heart className="w-5 h-5 text-pink-600" />
-                <CardTitle className="text-lg">Vantaggi del Sistema</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-green-600">1</span>
+          {/* How it Works */}
+          <Card className="bg-purple-50 border-purple-200">
+            <CardContent className="p-6">
+              <h3 className="font-semibold text-purple-900 mb-4">Come Funziona</h3>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-xs font-bold text-purple-600">1</span>
+                  </div>
+                  <div>
+                    <div className="font-medium text-sm">Acquisti IQcode</div>
+                    <div className="text-xs text-gray-600">Ordini i pacchetti per i tuoi clienti</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-medium text-sm">Fidelizzazione Automatica</div>
-                  <div className="text-xs text-gray-600">I clienti ricevono vantaggi in tutta Italia</div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-xs font-bold text-purple-600">2</span>
+                  </div>
+                  <div>
+                    <div className="font-medium text-sm">Assegni ai Clienti</div>
+                    <div className="text-xs text-gray-600">Regali i codici ai tuoi clienti abituali</div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-blue-600">2</span>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-xs font-bold text-purple-600">3</span>
+                  </div>
+                  <div>
+                    <div className="font-medium text-sm">Accesso Nazionale</div>
+                    <div className="text-xs text-gray-600">I clienti usano gli sconti in tutta Italia</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-medium text-sm">Tracciamento Completo</div>
-                  <div className="text-xs text-gray-600">Monitora visite, acquisti e comportamenti</div>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-purple-600">3</span>
-                </div>
-                <div>
-                  <div className="font-medium text-sm">Innovazione Locale</div>
-                  <div className="text-xs text-gray-600">Diventi un punto di riferimento tecnologico</div>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-yellow-600">4</span>
-                </div>
-                <div>
-                  <div className="font-medium text-sm">Rete Nazionale</div>
-                  <div className="text-xs text-gray-600">I tuoi clienti accedono a migliaia di partner</div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-xs font-bold text-yellow-600">4</span>
+                  </div>
+                  <div>
+                    <div className="font-medium text-sm">Rete Nazionale</div>
+                    <div className="text-xs text-gray-600">I tuoi clienti accedono a migliaia di partner</div>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -865,27 +769,11 @@ export default function PartnerDashboard() {
                 id="client-name"
                 value={newSpecialClient.name}
                 onChange={(e) => setNewSpecialClient({ ...newSpecialClient, name: e.target.value })}
-                placeholder="Mario Rossi"
+                placeholder="Nome generico (es. Mario, Cliente Abituale)"
               />
-            </div>
-            <div>
-              <Label htmlFor="client-email">Email (opzionale)</Label>
-              <Input
-                id="client-email"
-                type="email"
-                value={newSpecialClient.email}
-                onChange={(e) => setNewSpecialClient({ ...newSpecialClient, email: e.target.value })}
-                placeholder="mario@email.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="client-phone">Telefono (opzionale)</Label>
-              <Input
-                id="client-phone"
-                value={newSpecialClient.phone}
-                onChange={(e) => setNewSpecialClient({ ...newSpecialClient, phone: e.target.value })}
-                placeholder="+39 123 456 7890"
-              />
+              <p className="text-xs text-gray-500 mt-1">
+                TouristIQ non raccoglie dati sensibili. Il nome è solo per la tua memoria personale.
+              </p>
             </div>
             <div>
               <Label htmlFor="client-notes">Note</Label>

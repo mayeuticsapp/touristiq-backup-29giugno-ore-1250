@@ -898,6 +898,182 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PARTNER ENDPOINTS
+
+  // Richiesta collegamento turista
+  app.post("/api/partner/link-tourist", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'partner') {
+        return res.status(403).json({ message: "Accesso negato - solo partner" });
+      }
+
+      const { touristCode } = req.body;
+      if (!touristCode) {
+        return res.status(400).json({ message: "Codice turista richiesto" });
+      }
+
+      // Verifica che il codice turista esista
+      const touristIqCode = await storage.getIqCodeByCode(touristCode.toUpperCase());
+      if (!touristIqCode || touristIqCode.role !== 'tourist') {
+        return res.status(404).json({ message: "Codice turista non valido" });
+      }
+
+      // Crea richiesta di collegamento
+      await storage.createTouristLinkRequest(session.iqCode, touristCode.toUpperCase());
+
+      res.json({ 
+        success: true, 
+        message: `Richiesta di collegamento inviata al turista ${touristCode}. Attendi la conferma.`
+      });
+    } catch (error) {
+      console.error("Errore richiesta collegamento:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Crea offerta partner
+  app.post("/api/partner/offers", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'partner') {
+        return res.status(403).json({ message: "Accesso negato - solo partner" });
+      }
+
+      const { title, description, discount, validUntil } = req.body;
+      if (!title || !discount) {
+        return res.status(400).json({ message: "Titolo e sconto richiesti" });
+      }
+
+      const offer = await storage.createPartnerOffer({
+        partnerCode: session.iqCode,
+        title,
+        description,
+        discount: parseInt(discount),
+        validUntil
+      });
+
+      res.json({ success: true, offer });
+    } catch (error) {
+      console.error("Errore creazione offerta:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Aggiungi cliente speciale
+  app.post("/api/partner/special-clients", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'partner') {
+        return res.status(403).json({ message: "Accesso negato - solo partner" });
+      }
+
+      const { name, notes } = req.body;
+      if (!name) {
+        return res.status(400).json({ message: "Nome cliente richiesto" });
+      }
+
+      const client = await storage.createSpecialClient({
+        partnerCode: session.iqCode,
+        name,
+        notes: notes || ''
+      });
+
+      res.json({ success: true, client });
+    } catch (error) {
+      console.error("Errore aggiunta cliente speciale:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Download materiali promozionali
+  app.get("/api/partner/materials/:type", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'partner') {
+        return res.status(403).json({ message: "Accesso negato - solo partner" });
+      }
+
+      const { type } = req.params;
+      const partnerInfo = await storage.getIqCodeByCode(session.iqCode);
+
+      if (type === 'pdf') {
+        // Genera locandina HTML personalizzata
+        const posterHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Locandina TouristIQ - ${partnerInfo?.assignedTo || session.iqCode}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #10b981, #059669); }
+        .poster { background: white; padding: 40px; border-radius: 20px; text-align: center; max-width: 400px; margin: 0 auto; }
+        .title { font-size: 28px; font-weight: bold; color: #10b981; margin-bottom: 10px; }
+        .subtitle { font-size: 16px; color: #6b7280; margin-bottom: 30px; }
+        .description { font-size: 14px; color: #374151; margin-bottom: 20px; }
+        .code { background: #f3f4f6; padding: 10px; border-radius: 8px; font-family: monospace; font-weight: bold; }
+        .footer { margin-top: 30px; font-size: 12px; color: #9ca3af; }
+    </style>
+</head>
+<body>
+    <div class="poster">
+        <h1 class="title">Benvenuti da ${partnerInfo?.assignedTo || 'Partner TouristIQ'}</h1>
+        <p class="subtitle">Partner Ufficiale TouristIQ</p>
+        <p class="description">Mostra il tuo IQcode e ricevi vantaggi esclusivi!</p>
+        <div class="code">Codice Partner: ${session.iqCode}</div>
+        <p class="footer">TouristIQ - Il primo ecosistema turistico che non raccoglie dati sensibili</p>
+    </div>
+</body>
+</html>
+        `;
+        
+        res.setHeader('Content-Type', 'text/html');
+        res.setHeader('Content-Disposition', `inline; filename="locandina-${session.iqCode}.html"`);
+        res.send(posterHTML);
+      } else if (type === 'qr') {
+        // Genera QR Code SVG semplice
+        const qrSVG = `
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="white"/>
+  <rect x="20" y="20" width="160" height="160" fill="black"/>
+  <rect x="40" y="40" width="120" height="120" fill="white"/>
+  <text x="100" y="105" text-anchor="middle" font-family="Arial" font-size="12" fill="black">${session.iqCode}</text>
+  <text x="100" y="190" text-anchor="middle" font-family="Arial" font-size="10" fill="gray">TouristIQ QR Code</text>
+</svg>
+        `;
+        
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.setHeader('Content-Disposition', `attachment; filename="qr-${session.iqCode}.svg"`);
+        res.send(qrSVG);
+      } else {
+        res.status(400).json({ message: "Tipo materiale non valido" });
+      }
+    } catch (error) {
+      console.error("Errore download materiali:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // Admin endpoint per ripristinare utente dal cestino
   app.patch("/api/admin/users/:id/restore", async (req, res) => {
     try {

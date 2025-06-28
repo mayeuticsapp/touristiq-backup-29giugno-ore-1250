@@ -72,6 +72,11 @@ export interface IStorage {
   // Settings config methods - Impostazioni generali persistenti
   getSettingsConfig(structureCode: string): Promise<any>;
   updateSettingsConfig(structureCode: string, settings: any): Promise<any>;
+
+  // Partner methods
+  createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void>;
+  createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any>;
+  createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -618,6 +623,41 @@ export class MemStorage implements IStorage {
       guest.assignedCodes = (guest.assignedCodes || 0) + 1;
       this.guests.set(guestId, guest);
     }
+  }
+
+  // Partner methods implementation
+  async createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void> {
+    // Mock implementation - in real app would create notification
+    console.log(`Partner ${partnerCode} requested link with tourist ${touristCode}`);
+  }
+
+  async createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any> {
+    const newOffer = {
+      id: Date.now(),
+      ...offer,
+      createdAt: new Date(),
+      isActive: true
+    };
+    return newOffer;
+  }
+
+  async createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any> {
+    const newClient = {
+      id: Date.now(),
+      ...client,
+      createdAt: new Date(),
+      visits: 0,
+      rewards: 0
+    };
+    return newClient;
+  }
+
+  async getSettingsConfig(structureCode: string): Promise<any> {
+    return {};
+  }
+
+  async updateSettingsConfig(structureCode: string, settings: any): Promise<any> {
+    return {};
   }
 
   // Metodi placeholder per compatibilità con interfaccia
@@ -1231,6 +1271,33 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .returning();
     
     return updated;
+  }
+
+  // Partner methods implementation
+  async createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void> {
+    // In real implementation would create notification record
+    console.log(`Partner ${partnerCode} requested link with tourist ${touristCode}`);
+  }
+
+  async createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any> {
+    const newOffer = {
+      id: Date.now(),
+      ...offer,
+      createdAt: new Date(),
+      isActive: true
+    };
+    return newOffer;
+  }
+
+  async createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any> {
+    const newClient = {
+      id: Date.now(),
+      ...client,
+      createdAt: new Date(),
+      visits: 0,
+      rewards: 0
+    };
+    return newClient;
   }
 }
 
