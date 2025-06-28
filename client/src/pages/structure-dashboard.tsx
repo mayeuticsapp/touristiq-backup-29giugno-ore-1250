@@ -10,6 +10,7 @@ import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
+import { AdvancedAccounting } from "@/components/advanced-accounting";
 
 // Interfacce TypeScript per tipizzazione completa
 interface Guest {
@@ -421,11 +422,7 @@ export default function StructureDashboard() {
 
 
   const navigation = [
-    { icon: <TrendingUp size={16} />, label: "Dashboard", href: "#", onClick: () => setActiveSection("dashboard") },
-    // { icon: <Bed size={16} />, label: "Camere", href: "#", onClick: () => setActiveSection("camere") },
-    // { icon: <Calendar size={16} />, label: "Prenotazioni", href: "#", onClick: () => setActiveSection("prenotazioni") },
-    { icon: <Users size={16} />, label: "Ospiti", href: "#", onClick: () => setActiveSection("ospiti") },
-    { icon: <Package size={16} />, label: "Gestione IQCode", href: "#", onClick: () => setActiveSection("iqcode") },
+    { icon: <TrendingUp size={16} />, label: "Dashboard Struttura", href: `/structure/${structureId}` },
     { icon: <Settings size={16} />, label: "Impostazioni", href: "#", onClick: () => setActiveSection("impostazioni") },
   ];
 
@@ -891,8 +888,71 @@ export default function StructureDashboard() {
       navigation={navigation}
       sidebarColor="bg-purple-600"
     >
-      {activeSection === "iqcode" && renderIQCodeManagement()}
-      {activeSection === "ospiti" && renderGuestManagement()}
+      {/* Pannello Completo sempre visibile */}
+      <div className="space-y-6">
+        {/* Statistiche principali */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <Bed className="text-blue-600" size={20} />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm text-gray-600">Camere Occupate</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {structureData ? `${structureData.occupiedRooms}/${structureData.totalRooms}` : "10/15"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-green-100 rounded-full">
+                  <CalendarCheck className="text-green-600" size={20} />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm text-gray-600">Check-in Oggi</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {structureData ? structureData.checkinToday : "7"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-yellow-100 rounded-full">
+                  <Star className="text-yellow-600" size={20} />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm text-gray-600">Rating Medio</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {structureData ? structureData.rating : "4"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Gestione ospiti integrata */}
+        {renderGuestManagement()}
+        
+        {/* Gestione IQCode integrata */}
+        {renderIQCodeManagement()}
+        
+        {/* Mini gestionale contabile integrato */}
+        <AdvancedAccounting 
+          structureCode={structureData?.iqCode || `TIQ-VV-STT-${structureId}`}
+          hasAccess={true}
+        />
+      </div>
       
       {/* Pannello Gestione Dettagliata Ospite */}
       {selectedGuestForManagement && (
@@ -1043,134 +1103,7 @@ export default function StructureDashboard() {
         </div>
       )}
       
-      {activeSection === "dashboard" && (
-        <div>
-          {/* Banner Pannello Struttura Completo */}
-          <Card className="mb-6 bg-gradient-to-r from-purple-600 to-purple-800 text-white">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-2xl font-bold mb-2">🎟 Pannello Struttura Completo</h2>
-                  <p className="text-purple-100 mb-4">
-                    Accedi al pannello completo per acquistare pacchetti IQCode, assegnare codici via WhatsApp e gestire la contabilità
-                  </p>
-                  <div className="flex gap-4 text-sm">
-                    <span>🛒 Acquisto Pacchetti</span>
-                    <span>📲 Invio WhatsApp</span>
-                    <span>📊 Mini Gestionale</span>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <Button 
-                    onClick={() => setActiveSection("ospiti")}
-                    className="bg-purple-200 text-purple-800 hover:bg-purple-300 font-semibold px-4 py-2"
-                    size="sm"
-                  >
-                    👥 Ospiti
-                  </Button>
-                  <Button 
-                    onClick={() => window.location.href = `/structure/${structureId}/panel`}
-                    className="bg-white text-purple-600 hover:bg-gray-100 font-semibold px-6 py-3"
-                    size="lg"
-                  >
-                    🏢 Pannello Completo
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Statistiche principali */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center">
-                  <div className="p-3 bg-blue-100 rounded-full">
-                    <Bed className="text-blue-600" size={20} />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-gray-600">Camere Occupate</p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {structureData ? `${structureData.occupiedRooms}/${structureData.totalRooms}` : "Caricamento..."}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center">
-                  <div className="p-3 bg-green-100 rounded-full">
-                    <CalendarCheck className="text-green-600" size={20} />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-gray-600">Check-in Oggi</p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {structureData ? structureData.checkinToday : "Caricamento..."}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center">
-                  <div className="p-3 bg-yellow-100 rounded-full">
-                    <Star className="text-yellow-600" size={20} />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-gray-600">Rating Medio</p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {structureData ? structureData.rating : "Caricamento..."}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Prenotazioni recenti */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Prenotazioni Recenti</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ospite</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Camera</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stato</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {structureData?.recentBookings?.map((booking: any, index: number) => (
-                      <tr key={booking.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{booking.guest}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Camera {booking.room}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{booking.checkin} - {booking.checkout}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge className={booking.status === 'Attivo' ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
-                            {booking.status}
-                          </Badge>
-                        </td>
-                      </tr>
-                    )) || (
-                      <tr>
-                        <td colSpan={4} className="px-6 py-4 text-center text-gray-500">Caricamento prenotazioni...</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
       
       {activeSection !== "dashboard" && activeSection !== "iqcode" && (
         <div className="text-center py-8">
