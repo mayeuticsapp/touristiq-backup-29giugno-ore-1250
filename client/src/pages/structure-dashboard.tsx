@@ -1073,16 +1073,7 @@ export default function StructureDashboard() {
       )}
       
 
-      
-      {activeSection === "contabilita" && (
-        <div className="space-y-6">
-          <AdvancedAccounting structureCode={`TIQ-VV-STT-${structureId}`} hasAccess={true} />
-        </div>
-      )}
 
-      {activeSection === "elimina-account" && (
-        <DeleteAccountSection structureId={structureId} />
-      )}
 
       {activeSection !== "dashboard" && activeSection !== "iqcode" && activeSection !== "contabilita" && activeSection !== "elimina-account" && (
         <div className="text-center py-8">
