@@ -427,7 +427,7 @@ export default function StructureDashboard() {
 
   const navigation = [
     { icon: <TrendingUp size={16} />, label: "Dashboard Struttura", href: `/structure/${structureId}` },
-    { icon: <Settings size={16} />, label: "Impostazioni", href: "#", onClick: () => setActiveSection("impostazioni") },
+    { icon: <Trash2 size={16} />, label: "Elimina Account", href: "#", onClick: () => setActiveSection("elimina-account") },
   ];
 
   if (isLoading) {
@@ -1060,11 +1060,11 @@ export default function StructureDashboard() {
       
 
       
-      {activeSection === "impostazioni" && (
-        <SettingsSection structureId={structureId} />
+      {activeSection === "elimina-account" && (
+        <DeleteAccountSection structureId={structureId} />
       )}
 
-      {activeSection !== "dashboard" && activeSection !== "iqcode" && activeSection !== "impostazioni" && (
+      {activeSection !== "dashboard" && activeSection !== "iqcode" && activeSection !== "elimina-account" && (
         <div className="text-center py-8">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Sezione in Sviluppo</h3>
           <p className="text-gray-500">La sezione "{activeSection}" sarà implementata prossimamente.</p>
@@ -1074,7 +1074,147 @@ export default function StructureDashboard() {
   );
 }
 
-// Componente Impostazioni con persistenza PostgreSQL
+// Componente Elimina Account con soft delete PostgreSQL
+function DeleteAccountSection({ structureId }: { structureId: string }) {
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const expectedText = "ELIMINA DEFINITIVAMENTE";
+
+  const deleteAccount = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/structure/${structureId}/delete-account`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ confirmation: confirmText })
+      });
+      if (!response.ok) throw new Error('Errore eliminazione account');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Account eliminato",
+        description: "Il tuo account è stato eliminato. I dati rimarranno nel nostro database per 90 giorni per sicurezza, poi saranno cancellati definitivamente.",
+      });
+      // Reindirizza al login dopo 3 secondi
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 3000);
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile eliminare l'account. Riprova più tardi.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleDelete = () => {
+    if (confirmText === expectedText) {
+      deleteAccount.mutate();
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card className="border-red-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-red-600">
+            <Trash2 className="h-5 w-5" />
+            Elimina Account
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Avvertenze */}
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <h3 className="font-semibold text-red-800 mb-2">⚠️ Attenzione: Azione Irreversibile</h3>
+            <div className="text-red-700 space-y-2 text-sm">
+              <p>• L'eliminazione dell'account comporterà la perdita di tutti i dati:</p>
+              <ul className="ml-4 space-y-1">
+                <li>- Dati della struttura e configurazioni</li>
+                <li>- Ospiti registrati e relative informazioni</li>
+                <li>- Codici IQ generati e assegnati</li>
+                <li>- Pacchetti acquistati e crediti rimanenti</li>
+                <li>- Storico contabile e movimenti finanziari</li>
+              </ul>
+              <p>• I dati rimarranno nel nostro database per <strong>90 giorni</strong> per sicurezza</p>
+              <p>• Dopo 90 giorni, tutti i dati saranno cancellati definitivamente</p>
+              <p>• Non sarà possibile recuperare l'account una volta eliminato</p>
+            </div>
+          </div>
+
+          {/* Informazioni Account */}
+          <div className="bg-gray-50 border rounded-lg p-4">
+            <h3 className="font-semibold mb-2">Account da eliminare:</h3>
+            <div className="space-y-1 text-sm">
+              <p><strong>Codice IQ:</strong> TIQ-VV-STT-{structureId}</p>
+              <p><strong>Tipo:</strong> Struttura Ricettiva</p>
+              <p><strong>Data eliminazione:</strong> {new Date().toLocaleDateString('it-IT')}</p>
+              <p><strong>Rimozione definitiva:</strong> {new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString('it-IT')}</p>
+            </div>
+          </div>
+
+          {/* Campo Conferma */}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="confirmText" className="text-red-600">
+                Per confermare l'eliminazione, digita esattamente: <strong>{expectedText}</strong>
+              </Label>
+              <Input
+                id="confirmText"
+                type="text"
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder="Digita la frase di conferma"
+                className="mt-2 border-red-300 focus:border-red-500"
+              />
+            </div>
+
+            {confirmText && confirmText !== expectedText && (
+              <p className="text-red-500 text-sm">
+                Il testo non corrisponde. Digita esattamente: {expectedText}
+              </p>
+            )}
+          </div>
+
+          {/* Pulsanti Azione */}
+          <div className="flex justify-between pt-4 border-t">
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.reload()}
+              disabled={deleteAccount.isPending}
+            >
+              Annulla
+            </Button>
+            
+            <Button 
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={confirmText !== expectedText || deleteAccount.isPending}
+              className="flex items-center gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              {deleteAccount.isPending ? "Eliminazione..." : "Elimina Account Definitivamente"}
+            </Button>
+          </div>
+
+          {/* Messaggio finale */}
+          {deleteAccount.isPending && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <p className="text-yellow-800 text-sm">
+                ⏳ Eliminazione in corso... Verrai reindirizzato al login tra pochi secondi.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Componente Impostazioni con persistenza PostgreSQL (RIMOSSO - NON PIÙ UTILIZZATO)
 function SettingsSection({ structureId }: { structureId: string }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();

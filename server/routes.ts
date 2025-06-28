@@ -1820,3 +1820,54 @@ function generateRoomTypes(seed: number) {
     { type: 'Suite', count: 2 + (seed % 2), price: 200 + (seed % 80) }
   ];
 }
+
+  // ELIMINAZIONE ACCOUNT STRUTTURA - Soft delete 90 giorni
+  app.post("/api/structure/:structureId/delete-account", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const structureId = req.params.structureId;
+      const structureCode = `TIQ-VV-STT-${structureId}`;
+      const { confirmation } = req.body;
+
+      // Verifica conferma
+      if (confirmation !== "ELIMINA DEFINITIVAMENTE") {
+        return res.status(400).json({ message: "Conferma non valida" });
+      }
+
+      // Trova IQCode della struttura
+      const allCodes = await storage.getAllIqCodes();
+      const structureIQCode = allCodes.find(code => code.code === structureCode);
+      
+      if (!structureIQCode) {
+        return res.status(404).json({ message: "Struttura non trovata" });
+      }
+
+      // Soft delete con data di eliminazione (90 giorni)
+      const finalDeletionDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+      
+      await storage.softDeleteIqCode(structureIQCode.id, `AUTO_DELETE_${structureCode}`);
+      
+      // Elimina sessione attiva
+      await storage.deleteSession(sessionToken);
+      
+      console.log(`✅ ACCOUNT ELIMINATO: Struttura ${structureCode} soft-deleted, rimozione definitiva: ${finalDeletionDate.toLocaleDateString('it-IT')}`);
+      
+      res.json({ 
+        success: true, 
+        message: "Account eliminato con successo",
+        finalDeletionDate: finalDeletionDate.toLocaleDateString('it-IT')
+      });
+    } catch (error) {
+      console.error("Errore eliminazione account:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
