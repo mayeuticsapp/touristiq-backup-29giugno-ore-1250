@@ -9,6 +9,7 @@ import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star, Packag
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import type { ReactNode } from "react";
 
 // Interfacce TypeScript per tipizzazione completa
 interface Guest {
@@ -68,7 +69,7 @@ export default function StructureDashboard() {
   const [assignedCode, setAssignedCode] = useState<string>("");
   const [selectedGuestForManagement, setSelectedGuestForManagement] = useState<Guest | null>(null);
   const [guestHistory, setGuestHistory] = useState<any[]>([]);
-  const [guestCodes, setGuestCodes] = useState<any[]>([]);
+  const [guestCodes, setGuestCodes] = useState<{code: string; assignedAt?: string}[]>([]);
   const [availableCodes, setAvailableCodes] = useState<any[]>([]);
   const [loadingCodes, setLoadingCodes] = useState(false);
   
@@ -936,11 +937,11 @@ export default function StructureDashboard() {
               </div>
 
               {/* Codici IQ Assegnati all'Ospite */}
-              {guestCodes.length > 0 && (
+              {guestCodes && guestCodes.length > 0 ? (
                 <div className="border rounded-lg p-4 bg-blue-50">
                   <h3 className="font-semibold mb-3 text-blue-800">Codici IQ Assegnati</h3>
                   <div className="space-y-2">
-                    {guestCodes.map((codeData: any, index: number) => (
+                    {guestCodes.map((codeData, index: number) => (
                       <div key={index} className="flex justify-between items-center bg-white p-3 rounded border">
                         <div className="flex items-center gap-3">
                           <Badge className="bg-blue-600 text-white">{codeData.code}</Badge>
@@ -965,7 +966,7 @@ export default function StructureDashboard() {
                             variant="destructive"
                             onClick={() => {
                               const reason = prompt("Motivo rimozione codice:", "Assegnato per errore");
-                              if (reason) {
+                              if (reason && selectedGuestForManagement) {
                                 handleRemoveCodeFromGuest(codeData.code, selectedGuestForManagement.id, reason);
                               }
                             }}
@@ -978,7 +979,7 @@ export default function StructureDashboard() {
                     ))}
                   </div>
                 </div>
-              )}
+              ) : null}
 
               {/* Codici Disponibili per Riassegnazione */}
               {availableCodesData && Array.isArray((availableCodesData as any).codes) && (availableCodesData as any).codes.length > 0 && (

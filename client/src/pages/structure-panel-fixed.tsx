@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AdvancedAccounting } from '@/components/advanced-accounting';
 
 // Prezzi dei pacchetti IQCode
-const PACKAGE_PRICES = 
+const PACKAGE_PRICES = {
   25: '€50', 
   50: '€90',
   75: '€130', 
