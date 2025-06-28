@@ -129,3 +129,11 @@ TouristIQ is a role-based authentication platform designed for the tourism indus
 
 Preferred communication style: Simple, everyday language.
 Language: Italian only - all interface text, comments, and communication in Italian.
+
+## Flusso di Lavoro - Regole Inderogabili
+
+🔍 **VERIFICA INCROCIATA OBBLIGATORIA**: Prima di dichiarare qualsiasi attività completata, sempre richiedere:
+- Verifica visiva diretta nella pagina modificata, oppure
+- Riscontro esplicito da RobS se impossibilitato a raggiungere la sezione
+- Mai fidarsi solo del tool automatico mark_completed_and_get_feedback
+- Evitare falsi positivi e mantenere integrità progetto TouristIQ
