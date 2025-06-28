@@ -1917,6 +1917,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo strutture" });
       }
 
+      // CONTROLLO OBBLIGATORIO: Verifica pacchetti acquistati o ricevuti
+      const assignedPackages = await storage.getPackagesByRecipient(userIqCode.code);
+      const hasActivePackages = assignedPackages.length > 0 && assignedPackages.some(pkg => pkg.creditsRemaining > 0);
+      
+      if (!hasActivePackages) {
+        return res.status(403).json({ 
+          message: "Accesso negato - il gestionale è disponibile solo per strutture con pacchetti IQ attivi. Contatta l'admin per richiedere un pacchetto." 
+        });
+      }
+
       const movements = await storage.getAccountingMovements(userIqCode.code);
       res.json(movements);
     } catch (error) {
@@ -1941,6 +1951,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userIqCode = await storage.getIqCodeByCode(session.iqCode);
       if (!userIqCode || userIqCode.role !== 'structure') {
         return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      // CONTROLLO OBBLIGATORIO: Verifica pacchetti acquistati o ricevuti
+      const assignedPackages = await storage.getPackagesByRecipient(userIqCode.code);
+      const hasActivePackages = assignedPackages.length > 0 && assignedPackages.some(pkg => pkg.creditsRemaining > 0);
+      
+      if (!hasActivePackages) {
+        return res.status(403).json({ 
+          message: "Accesso negato - il gestionale è disponibile solo per strutture con pacchetti IQ attivi. Contatta l'admin per richiedere un pacchetto." 
+        });
       }
 
       const { type, category, description, amount, movementDate, paymentMethod, clientsServed, iqcodesUsed, notes } = req.body;

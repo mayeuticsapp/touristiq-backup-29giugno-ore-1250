@@ -244,7 +244,104 @@ export function PartnerOnboarding({ partnerCode, onComplete }: PartnerOnboarding
     }
   });
 
+  // Funzione di validazione per ogni sezione
+  const validateCurrentStep = () => {
+    const stepId = steps[currentStep].id;
+    const errors: string[] = [];
+    let filledFields = 0;
+    
+    switch (stepId) {
+      case 'business':
+        if (formData.businessName.trim()) filledFields++;
+        if (formData.businessType) filledFields++;
+        if (formData.description.trim()) filledFields++;
+        if (formData.address.trim()) filledFields++;
+        if (formData.city.trim()) filledFields++;
+        if (formData.phone.trim()) filledFields++;
+        if (formData.email.trim()) filledFields++;
+        if (formData.website.trim()) filledFields++;
+        if (formData.openingHours.trim()) filledFields++;
+        break;
+        
+      case 'accessibility':
+        if (formData.wheelchairAccessible) filledFields++;
+        if (formData.accessibleParking) filledFields++;
+        if (formData.accessibleBathroom) filledFields++;
+        if (formData.elevatorAccess) filledFields++;
+        if (formData.rampWidth.trim()) filledFields++;
+        if (formData.rampSlope.trim()) filledFields++;
+        if (formData.accessibilityNotes.trim()) filledFields++;
+        break;
+        
+      case 'allergies':
+        if (formData.glutenFree) filledFields++;
+        if (formData.dairyFree) filledFields++;
+        if (formData.nutFree) filledFields++;
+        if (formData.vegetarianOptions) filledFields++;
+        if (formData.veganOptions) filledFields++;
+        if (formData.halalCertified) filledFields++;
+        if (formData.kosherCertified) filledFields++;
+        if (formData.allergyTraining) filledFields++;
+        if (formData.allergyMenu) filledFields++;
+        if (formData.allergyNotes.trim()) filledFields++;
+        break;
+        
+      case 'family':
+        if (formData.childFriendly) filledFields++;
+        if (formData.highChairs) filledFields++;
+        if (formData.kidsMenu) filledFields++;
+        if (formData.changingTable) filledFields++;
+        if (formData.playArea) filledFields++;
+        if (formData.babyFriendly) filledFields++;
+        if (formData.toddlerFriendly) filledFields++;
+        if (formData.familyPackages) filledFields++;
+        if (formData.babysittingService) filledFields++;
+        if (formData.familyNotes.trim()) filledFields++;
+        break;
+        
+      case 'specialties':
+        if (formData.uniqueSpecialties.length > 2) filledFields++;
+        if (formData.localTraditions.trim()) filledFields++;
+        if (formData.experienceTypes.length > 0) filledFields++;
+        if (formData.skillLevels.length > 0) filledFields++;
+        if (formData.equipmentProvided.length > 0) filledFields++;
+        if (formData.languagesSpoken.length > 1) filledFields++;
+        if (formData.certifications.length > 0) filledFields++;
+        if (formData.awards.length > 0) filledFields++;
+        break;
+        
+      case 'services':
+        if (formData.wifiAvailable) filledFields++;
+        if (formData.petsAllowed) filledFields++;
+        if (formData.creditCardsAccepted) filledFields++;
+        if (formData.deliveryService) filledFields++;
+        if (formData.takeawayService) filledFields++;
+        if (formData.reservationsRequired) filledFields++;
+        if (formData.groupBookings) filledFields++;
+        if (formData.privateEvents) filledFields++;
+        break;
+    }
+    
+    // Controllo minimo 2 campi compilati
+    if (filledFields < 2) {
+      errors.push(`Devi compilare almeno 2 campi in questa sezione per poter procedere. Attualmente: ${filledFields}/2 minimi richiesti.`);
+    }
+    
+    return { isValid: errors.length === 0, errors, filledFields };
+  };
+
   const handleStepSubmit = () => {
+    // Validazione prima del salvataggio
+    const validation = validateCurrentStep();
+    if (!validation.isValid) {
+      toast({
+        title: "Validazione fallita",
+        description: validation.errors[0],
+        variant: "destructive"
+      });
+      return;
+    }
+
     const currentStepId = steps[currentStep].id;
     let stepData = {};
 
