@@ -1063,7 +1063,10 @@ export function PartnerOnboarding({ partnerCode, onComplete }: PartnerOnboarding
         <Card>
           <CardHeader>
             <div className="flex items-center space-x-2">
-              {React.createElement(steps[currentStep].icon, { size: 24 })}
+              {(() => {
+                const IconComponent = steps[currentStep].icon;
+                return <IconComponent size={24} />;
+              })()}
               <div>
                 <CardTitle>{steps[currentStep].title}</CardTitle>
                 <p className="text-gray-600">{steps[currentStep].description}</p>
