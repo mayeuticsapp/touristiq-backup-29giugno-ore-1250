@@ -1011,75 +1011,7 @@ export default function StructureDashboard() {
                   </div>
                 </div>
               )}
-              
-              {/* Assegnazione Nuovi Codici */}
-              {packagesData?.packages && packagesData.packages.length > 0 && (
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold mb-3">Assegna Nuovo Codice IQ</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    {packagesData.packages.map((pkg: Package) => (
-                      <Button
-                        key={pkg.id}
-                        onClick={() => {
-                          handleAssignCodeToGuest(selectedGuestForManagement.id, pkg.id);
-                          setSelectedGuestForManagement(null);
-                        }}
-                        disabled={(pkg.availableCodes || 0) <= 0}
-                        className="bg-purple-600 hover:bg-purple-700"
-                      >
-                        <Gift size={16} className="mr-2" />
-                        Pacchetto {pkg.packageSize}
-                        <Badge className="ml-2 bg-white text-purple-600">
-                          {pkg.availableCodes || 0} disponibili
-                        </Badge>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {/* Azioni WhatsApp e Copia */}
-              {selectedGuestForManagement.phone && (
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold mb-3">Comunicazioni</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      onClick={() => {
-                        if (assignedCode) {
-                          handleSendWhatsApp(selectedGuestForManagement.phone, assignedCode, selectedGuestForManagement);
-                        } else {
-                          alert("Prima assegna un codice IQ per inviarlo via WhatsApp");
-                        }
-                      }}
-                      className="bg-green-600 hover:bg-green-700"
-                      disabled={!assignedCode}
-                    >
-                      <MessageCircle size={16} className="mr-2" />
-                      Invia via WhatsApp
-                    </Button>
-                    
-                    <Button
-                      onClick={() => {
-                        if (assignedCode) {
-                          navigator.clipboard.writeText(assignedCode);
-                          alert(`Codice ${assignedCode} copiato negli appunti`);
-                        }
-                      }}
-                      className="bg-gray-600 hover:bg-gray-700"
-                      disabled={!assignedCode}
-                    >
-                      <Copy size={16} className="mr-2" />
-                      Copia Ultimo Codice
-                    </Button>
-                  </div>
-                  
-                  {!selectedGuestForManagement.phone && (
-                    <p className="text-sm text-orange-600 mt-2">
-                      Numero di telefono non disponibile per questo ospite
-                    </p>
-                  )}
-                </div>
-              )}
+
               
               {/* Note Ospite */}
               {selectedGuestForManagement.notes && (

@@ -752,6 +752,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await storage.removeCodeFromGuest(code, guestId, reason);
       
+      // Remove from PostgreSQL database directly using execute_sql_tool pattern
+      setImmediate(async () => {
+        try {
+          const { exec } = await import('child_process');
+          const deleteQuery = `DELETE FROM generated_iq_codes WHERE code = '${code}' AND guest_id = ${guestId};`;
+          const command = `echo "${deleteQuery}" | psql "${process.env.DATABASE_URL}"`;
+          
+          exec(command, (error, stdout, stderr) => {
+            if (!error) {
+              console.log(`✅ RIMOZIONE DEFINITIVA: Codice ${code} eliminato dal database PostgreSQL`);
+            } else {
+              console.error(`❌ ERRORE RIMOZIONE PSQL: ${error.message}`);
+            }
+          });
+        } catch (dbError) {
+          console.error(`❌ ERRORE RIMOZIONE DB: ${dbError}`);
+        }
+      });
+      
       res.json({ 
         success: true, 
         message: `Codice ${code} rimosso dall'ospite`,
