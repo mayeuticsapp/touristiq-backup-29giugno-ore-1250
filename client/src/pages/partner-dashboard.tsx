@@ -10,799 +10,883 @@ import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/layout";
 import { 
   Users, BarChart3, Plus, TrendingUp, Package, Heart, Star, 
-  Download, QrCode, Camera, Tags, Trophy, Calendar, Settings
+  Download, QrCode, Camera, Tags, Trophy, Calendar, Settings,
+  Trash2, Calculator
 } from "lucide-react";
 import { useState } from "react";
 import { apiRequest } from "@/lib/queryClient";
+import { AdvancedAccounting } from "@/components/advanced-accounting";
 
-interface User {
-  iqCode: string;
-  role: string;
+interface TouristLinkRequest {
+  id: string;
+  touristCode: string;
+  requestDate: string;
+  status: "pending" | "approved" | "rejected";
+  country: string;
+}
+
+interface ActiveTourist {
+  id: string;
+  code: string;
+  linkedDate: string;
+  country: string;
+  totalSpent: number;
+}
+
+interface PartnerOffer {
+  id: string;
+  title: string;
+  description: string;
+  discount: string;
+  validUntil: string;
+  isActive: boolean;
+}
+
+interface SpecialClient {
+  id: string;
+  name: string;
+  notes: string;
+  status: "attivo" | "inattivo";
+  visits: number;
+  rewardsGiven: number;
+  joinDate: string;
 }
 
 export default function PartnerDashboard() {
-  const [currentView, setCurrentView] = useState<'main' | 'special-clients'>('main');
-  const [showNewOfferDialog, setShowNewOfferDialog] = useState(false);
-  const [showSpecialClientDialog, setShowSpecialClientDialog] = useState(false);
-  const [touristCode, setTouristCode] = useState('');
-  const [newOffer, setNewOffer] = useState({
-    title: '',
-    description: '',
-    discount: '',
-    validUntil: ''
-  });
-  const [newSpecialClient, setNewSpecialClient] = useState({
-    name: '',
-    notes: ''
-  });
-
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // Fetch user data
-  const { data: user } = useQuery<User>({
-    queryKey: ["/api/auth/me"],
+  
+  // Stati per i dialogs
+  const [showNewOfferDialog, setShowNewOfferDialog] = useState(false);
+  const [showSpecialClientDialog, setShowSpecialClientDialog] = useState(false);
+  const [showAccountDeleteDialog, setShowAccountDeleteDialog] = useState(false);
+  const [showMiniGestionale, setShowMiniGestionale] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  
+  // Stati per i form
+  const [touristCode, setTouristCode] = useState("");
+  const [newOffer, setNewOffer] = useState({
+    title: "",
+    description: "",
+    discount: "",
+    validUntil: ""
+  });
+  const [newClient, setNewClient] = useState({
+    name: "",
+    notes: ""
   });
 
-  // Link tourist mutation
+  // Dati fittizi per il prototipo
+  const pendingRequests: TouristLinkRequest[] = [
+    {
+      id: "1",
+      touristCode: "TIQ-IT-ROMA",
+      requestDate: "2025-01-15",
+      status: "pending",
+      country: "Italia"
+    }
+  ];
+
+  const activeTourists: ActiveTourist[] = [
+    {
+      id: "1",
+      code: "TIQ-DE-BERLINO",
+      linkedDate: "3 giorni fa",
+      country: "Germania",
+      totalSpent: 150
+    },
+    {
+      id: "2", 
+      code: "TIQ-FR-PARIS",
+      linkedDate: "1 settimana fa",
+      country: "Francia",
+      totalSpent: 230
+    }
+  ];
+
+  const partnerOffers: PartnerOffer[] = [
+    {
+      id: "1",
+      title: "Sconto Aperitivo",
+      description: "20% su tutti gli aperitivi dalle 18:00 alle 20:00",
+      discount: "20%",
+      validUntil: "2025-02-28",
+      isActive: true
+    }
+  ];
+
+  const specialClients: SpecialClient[] = [
+    {
+      id: "1",
+      name: "Marco R.",
+      notes: "Cliente abituale, preferisce tavoli all'esterno",
+      status: "attivo",
+      visits: 8,
+      rewardsGiven: 2,
+      joinDate: "2024-12-01"
+    },
+    {
+      id: "2",
+      name: "Giulia S.",
+      notes: "Vegetariana, allergica ai crostacei",
+      status: "attivo", 
+      visits: 5,
+      rewardsGiven: 1,
+      joinDate: "2024-12-15"
+    }
+  ];
+
+  // Mutations
   const linkTouristMutation = useMutation({
-    mutationFn: (data: { touristCode: string }) => 
-      apiRequest("/api/partner/link-tourist", "POST", data),
-    onSuccess: () => {
-      toast({ title: "Richiesta inviata", description: "Attendi la conferma del turista" });
-      setTouristCode('');
+    mutationFn: async (code: string) => {
+      return apiRequest(`/api/partner/link-tourist`, {
+        method: "POST",
+        body: JSON.stringify({ touristCode: code })
+      });
     },
-    onError: (error: any) => {
+    onSuccess: () => {
+      toast({ title: "Richiesta collegamento inviata!" });
+      setTouristCode("");
+    },
+    onError: () => {
       toast({ 
         title: "Errore", 
-        description: error.message || "Errore nell'invio della richiesta",
-        variant: "destructive" 
+        description: "Impossibile inviare la richiesta",
+        variant: "destructive"
       });
     }
   });
 
-  // Create offer mutation
   const createOfferMutation = useMutation({
-    mutationFn: (data: typeof newOffer) => 
-      apiRequest("/api/partner/offers", "POST", data),
+    mutationFn: async (offer: typeof newOffer) => {
+      const response = await fetch('/api/partner/offers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(offer)
+      });
+      if (!response.ok) throw new Error('Errore creazione offerta');
+      return response.json();
+    },
     onSuccess: () => {
-      toast({ title: "Successo", description: "Offerta creata con successo" });
+      toast({ title: "Offerta creata con successo!" });
+      setNewOffer({ title: "", description: "", discount: "", validUntil: "" });
       setShowNewOfferDialog(false);
-      setNewOffer({ title: '', description: '', discount: '', validUntil: '' });
     },
-    onError: (error: any) => {
+    onError: () => {
       toast({ 
         title: "Errore", 
-        description: error.message || "Errore nella creazione dell'offerta",
-        variant: "destructive" 
+        description: "Impossibile creare l'offerta",
+        variant: "destructive"
       });
     }
   });
 
-  // Create special client mutation
-  const createSpecialClientMutation = useMutation({
-    mutationFn: (data: typeof newSpecialClient) => 
-      apiRequest("/api/partner/special-clients", "POST", data),
+  const addSpecialClientMutation = useMutation({
+    mutationFn: async (client: typeof newClient) => {
+      const response = await fetch('/api/partner/special-clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(client)
+      });
+      if (!response.ok) throw new Error('Errore aggiunta cliente');
+      return response.json();
+    },
     onSuccess: () => {
-      toast({ title: "Successo", description: "Cliente speciale aggiunto" });
+      toast({ title: "Cliente aggiunto con successo!" });
+      setNewClient({ name: "", notes: "" });
       setShowSpecialClientDialog(false);
-      setNewSpecialClient({ name: '', notes: '' });
     },
-    onError: (error: any) => {
+    onError: () => {
       toast({ 
         title: "Errore", 
-        description: error.message || "Errore nell'aggiunta del cliente",
-        variant: "destructive" 
+        description: "Impossibile aggiungere il cliente",
+        variant: "destructive"
       });
     }
   });
 
-  // Sample data
-  const stats = {
-    touristToday: 3,
-    thisWeek: 8,
-    activePromotions: 2,
-    returnRate: 65
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Errore eliminazione account');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Account eliminato. Sarai disconnesso tra 5 secondi." });
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 5000);
+    },
+    onError: () => {
+      toast({ 
+        title: "Errore", 
+        description: "Impossibile eliminare l'account",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Handlers
+  const handleLinkTourist = () => {
+    if (touristCode.trim()) {
+      linkTouristMutation.mutate(touristCode.trim());
+    }
   };
 
-  const activePromotions = [
-    { id: 1, title: "Sconto Benvenuto", description: "15% su primo acquisto", discount: 15, validUntil: "31/12/2024", usedCount: 12 },
-    { id: 2, title: "Aperitivo Happy Hour", description: "2x1 dalle 18:00", discount: 50, validUntil: "28/02/2025", usedCount: 8 }
-  ];
+  const handleCreateOffer = () => {
+    if (newOffer.title && newOffer.description && newOffer.discount) {
+      createOfferMutation.mutate(newOffer);
+    }
+  };
 
-  const pendingTourists = [
-    { id: 1, code: "TIQ-2024-ABC123", country: "Germany", status: "In attesa" },
-    { id: 2, code: "TIQ-2024-DEF456", country: "France", status: "In attesa" }
-  ];
+  const handleAddSpecialClient = () => {
+    if (newClient.name.trim()) {
+      addSpecialClientMutation.mutate(newClient);
+    }
+  };
 
-  const activeTourists = [
-    { id: 1, code: "TIQ-2024-GHI789", country: "Italy", linkedDate: "27/06/2025" },
-    { id: 2, code: "TIQ-2024-JKL012", country: "Germany", linkedDate: "26/06/2025" }
-  ];
+  const handleDeleteAccount = () => {
+    if (deleteConfirmText === "ELIMINA DEFINITIVAMENTE") {
+      deleteAccountMutation.mutate();
+    } else {
+      toast({
+        title: "Testo di conferma errato",
+        description: "Scrivi esattamente: ELIMINA DEFINITIVAMENTE",
+        variant: "destructive"
+      });
+    }
+  };
 
-  const specialClients = [
-    { id: 1, name: "Marco B.", status: "Attivo", visits: 12, reward: "Caffè Gratis", lastVisit: "25/06/25" },
-    { id: 2, name: "Anna R.", status: "Attivo", visits: 8, reward: "Sconto 20%", lastVisit: "24/06/25" },
-    { id: 3, name: "Luigi P.", status: "Attivo", visits: 15, reward: "Menu Degustazione", lastVisit: "23/06/25" },
-    { id: 4, name: "Sofia M.", status: "Attivo", visits: 6, reward: "Nessuno", lastVisit: "22/06/25" }
-  ];
+  const downloadPDF = () => {
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Partner TouristIQ - Locandina Promozionale</title>
+        <style>
+          body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+          .header { color: #4CAF50; font-size: 24px; font-weight: bold; }
+          .qr-placeholder { width: 150px; height: 150px; border: 2px solid #ccc; margin: 20px auto; }
+        </style>
+      </head>
+      <body>
+        <div class="header">🎯 TouristIQ Partner</div>
+        <h2>Scopri Sconti Esclusivi!</h2>
+        <p>Presenta il tuo IQCode e ottieni vantaggi speciali</p>
+        <div class="qr-placeholder">QR CODE</div>
+        <p>Scansiona per accedere agli sconti</p>
+      </body>
+      </html>
+    `;
+    
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'touristiq-partner-locandina.html';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
-  const renderMainDashboard = () => (
-    <div className="space-y-6">
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">Benvenuto nel tuo Spazio Partner</h1>
-        <p className="text-green-100">Gestisci i turisti collegati e crea promozioni esclusive per far crescere il tuo business</p>
-      </div>
+  const downloadQR = () => {
+    const svgContent = `
+      <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+        <rect width="200" height="200" fill="white"/>
+        <rect x="10" y="10" width="20" height="20" fill="black"/>
+        <rect x="30" y="10" width="20" height="20" fill="black"/>
+        <rect x="70" y="10" width="20" height="20" fill="black"/>
+        <rect x="10" y="30" width="20" height="20" fill="black"/>
+        <rect x="50" y="30" width="20" height="20" fill="black"/>
+        <rect x="90" y="30" width="20" height="20" fill="black"/>
+        <text x="100" y="190" text-anchor="middle" font-size="12">TouristIQ Partner</text>
+      </svg>
+    `;
+    
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'touristiq-qr-code.svg';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column */}
-        <div className="space-y-6">
-          {/* Tourist Link Form */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Plus className="w-4 h-4 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Inserisci l'IQcode del Turista</h3>
-                  <p className="text-gray-600 text-sm">Collega un nuovo turista al tuo circuito sconti</p>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <Input
-                  placeholder="es. TIQ-2024-ABC123"
-                  value={touristCode}
-                  onChange={(e) => setTouristCode(e.target.value)}
-                />
-                <Button 
-                  onClick={() => linkTouristMutation.mutate({ touristCode })}
-                  disabled={!touristCode || linkTouristMutation.isPending}
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                >
-                  {linkTouristMutation.isPending ? "Inviando..." : "Conferma"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+  if (showMiniGestionale) {
+    return <AdvancedAccounting onBack={() => setShowMiniGestionale(false)} />;
+  }
 
-          {/* Pending Links */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-4 h-4 text-yellow-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Collegamenti in Attesa</h3>
-                  <p className="text-gray-600 text-sm">Turisti che devono ancora confermare il collegamento</p>
-                </div>
-              </div>
+  return (
+    <Layout>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Dashboard Partner</h1>
+              <p className="text-gray-600">Gestisci i tuoi turisti e le tue offerte speciali</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowMiniGestionale(true)}
+                variant="outline"
+                className="border-blue-200 hover:bg-blue-50"
+              >
+                <Calculator className="w-4 h-4 mr-2" />
+                Mini-gestionale
+              </Button>
+              <Button
+                onClick={() => setShowAccountDeleteDialog(true)}
+                variant="destructive"
+                size="sm"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Elimina Account
+              </Button>
+            </div>
+          </div>
+        </div>
 
-              <div className="space-y-3">
-                {pendingTourists.map((tourist) => (
-                  <div key={tourist.id} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                    <div>
-                      <div className="font-medium">{tourist.code}</div>
-                      <div className="text-sm text-gray-600">{tourist.country}</div>
-                    </div>
-                    <Badge className="bg-yellow-100 text-yellow-700">
-                      {tourist.status}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Active Tourists */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-4 h-4 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Turisti Attivi</h3>
-                  <p className="text-gray-600 text-sm">Turisti collegati al tuo circuito</p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {activeTourists.map((tourist) => (
-                  <div key={tourist.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                    <div>
-                      <div className="font-medium">{tourist.code}</div>
-                      <div className="text-sm text-gray-600">Collegato {tourist.linkedDate} • {tourist.country}</div>
-                    </div>
-                    <Badge className="bg-green-100 text-green-700">
-                      Attivo
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Offers and Promotions */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
+        <div className="p-6">
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <Card className="bg-green-50 border-green-200">
+              <CardContent className="p-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <Tags className="w-4 h-4 text-orange-600" />
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Users className="w-5 h-5 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">Crea Offerte e Promozioni</h3>
-                    <p className="text-gray-600 text-sm">Il cuore pulsante del pannello per attirarre turisti</p>
+                    <div className="text-2xl font-bold text-green-700">2</div>
+                    <div className="text-sm text-green-600">Turisti Attivi</div>
                   </div>
                 </div>
-                <Button 
-                  onClick={() => setShowNewOfferDialog(true)}
-                  className="bg-orange-500 hover:bg-orange-600"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nuova Offerta
-                </Button>
-              </div>
+              </CardContent>
+            </Card>
 
-              <div className="space-y-3">
-                <h4 className="font-medium text-gray-900">Promozioni Attive</h4>
-                {activePromotions.map((promo) => (
-                  <div key={promo.id} className="p-4 bg-orange-50 rounded-lg">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <Badge className="bg-orange-500 text-white">
-                          -{promo.discount}%
-                        </Badge>
-                        <div>
-                          <div className="font-medium">{promo.title}</div>
-                          <div className="text-sm text-gray-600">{promo.description}</div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Scade: {promo.validUntil} • Utilizzata: {promo.usedCount} volte
+            <Card className="bg-blue-50 border-blue-200">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-blue-700">€380</div>
+                    <div className="text-sm text-blue-600">Fatturato Mese</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-orange-50 border-orange-200">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <Tags className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-orange-700">1</div>
+                    <div className="text-sm text-orange-600">Offerte Attive</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-purple-50 border-purple-200">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Star className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-purple-700">2</div>
+                    <div className="text-sm text-purple-600">Clienti Speciali</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Tourist Link Request */}
+            <Card className="bg-green-50 border-green-200">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Users className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Collega Nuovo Turista</h3>
+                    <p className="text-gray-600 text-sm">Inserisci il codice IQ del turista per iniziare la collaborazione</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Inserisci IQCode (es: TIQ-IT-ROMA)"
+                      value={touristCode}
+                      onChange={(e) => setTouristCode(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button 
+                      onClick={handleLinkTourist}
+                      disabled={linkTouristMutation.isPending}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      {linkTouristMutation.isPending ? "Invio..." : "Collega"}
+                    </Button>
+                  </div>
+
+                  {pendingRequests.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="font-medium mb-2">Richieste in Attesa</h4>
+                      {pendingRequests.map((request) => (
+                        <div key={request.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-200">
+                          <div>
+                            <div className="font-medium">{request.touristCode}</div>
+                            <div className="text-sm text-gray-600">{request.requestDate} • {request.country}</div>
                           </div>
+                          <Badge className="bg-yellow-100 text-yellow-700">
+                            In Attesa
+                          </Badge>
                         </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Active Tourists */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Users className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Turisti Attivi</h3>
+                    <p className="text-gray-600 text-sm">Turisti collegati al tuo circuito</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {activeTourists.map((tourist) => (
+                    <div key={tourist.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <div>
+                        <div className="font-medium">{tourist.code}</div>
+                        <div className="text-sm text-gray-600">Collegato {tourist.linkedDate} • {tourist.country}</div>
                       </div>
+                      <Badge className="bg-green-100 text-green-700">
+                        Attivo
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Offers and Promotions */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                      <Tags className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Crea Offerte e Promozioni</h3>
+                      <p className="text-gray-600 text-sm">Il cuore pulsante del pannello per attirarre turisti</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  <Button 
+                    onClick={() => setShowNewOfferDialog(true)}
+                    className="bg-orange-500 hover:bg-orange-600"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nuova Offerta
+                  </Button>
+                </div>
 
-        {/* Right Column */}
-        <div className="space-y-6">
-          {/* Quick Stats */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-blue-600" />
-                <CardTitle className="text-lg">Statistiche Rapide</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Turisti Oggi</span>
-                <span className="text-2xl font-bold">{stats.touristToday}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Questa Settimana</span>
-                <span className="text-2xl font-bold">{stats.thisWeek}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Promozioni Attive</span>
-                <span className="text-2xl font-bold text-orange-600">{stats.activePromotions}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Tasso Ritorno</span>
-                <span className="text-2xl font-bold text-blue-600">{stats.returnRate}%</span>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="space-y-3">
+                  {partnerOffers.map((offer) => (
+                    <div key={offer.id} className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium">{offer.title}</div>
+                          <div className="text-sm text-gray-600 mt-1">{offer.description}</div>
+                          <div className="flex items-center gap-4 mt-2">
+                            <Badge className="bg-orange-100 text-orange-700">
+                              Sconto {offer.discount}
+                            </Badge>
+                            <span className="text-xs text-gray-500">
+                              Valido fino al {offer.validUntil}
+                            </span>
+                          </div>
+                        </div>
+                        <Badge className="bg-green-100 text-green-700 ml-2">
+                          Attiva
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Promotional Materials */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <Download className="w-5 h-5 text-purple-600" />
-                <CardTitle className="text-lg">Materiali Promozionali</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <a 
-                href="/api/partner/materials/pdf" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="block"
-              >
-                <Button variant="outline" className="w-full justify-start bg-blue-50 border-blue-200 hover:bg-blue-100">
-                  <Download className="w-4 h-4 mr-2" />
-                  Scarica Locandina PDF
-                </Button>
-              </a>
-              <a 
-                href="/api/partner/materials/qr" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="block"
-              >
-                <Button variant="outline" className="w-full justify-start bg-purple-50 border-purple-200 hover:bg-purple-100">
-                  <QrCode className="w-4 h-4 mr-2" />
-                  QR Code Personalizzato
-                </Button>
-              </a>
-              <a 
-                href="https://www.vistaprint.it/adesivi-personalizzati" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="block"
-              >
-                <Button variant="outline" className="w-full justify-start bg-green-50 border-green-200 hover:bg-green-100">
-                  <Camera className="w-4 h-4 mr-2" />
-                  Adesivi "Benvenuti TouristIQ"
-                </Button>
-              </a>
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <div className="w-4 h-4 text-blue-600 mt-0.5">💡</div>
-                  <div className="text-sm text-blue-800">
-                    <strong>Suggerimento:</strong> Posiziona i materiali in punti visibili per massimizzare l'engagement
+            {/* Promotional Materials */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Download className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Materiali Promozionali</h3>
+                    <p className="text-gray-600 text-sm">Scarica e stampa i materiali per il tuo locale</p>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Special Clients Teaser */}
-          <Card>
-            <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Heart className="w-6 h-6 text-pink-600" />
-              </div>
-              <h3 className="font-semibold mb-2">Novità: Clienti Speciali</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Ora puoi fidelizzare anche i tuoi clienti abituali! 
-                Regala loro l'accesso al circuito nazionale TouristIQ.
-              </p>
-              <Button 
-                onClick={() => setCurrentView('special-clients')}
-                className="bg-pink-500 hover:bg-pink-600 w-full"
-              >
-                Scopri come Funziona
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
+                <div className="grid grid-cols-1 gap-3">
+                  <Button 
+                    onClick={downloadPDF}
+                    variant="outline" 
+                    className="justify-start h-auto p-3 border-blue-200 hover:bg-blue-50"
+                  >
+                    <Download className="w-4 h-4 mr-3" />
+                    <div className="text-left">
+                      <div className="font-medium">Scarica PDF</div>
+                      <div className="text-xs text-gray-600">Locandina promozionale per il tuo locale</div>
+                    </div>
+                  </Button>
 
-  const renderSpecialClients = () => (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">Premia i tuoi Clienti</h1>
-        <p className="text-purple-100">Trasforma i tuoi clienti abituali in ambasciatori TouristIQ. Regala loro l'accesso al circuito nazionale e monitora i risultati.</p>
-      </div>
+                  <Button 
+                    onClick={downloadQR}
+                    variant="outline" 
+                    className="justify-start h-auto p-3 border-blue-200 hover:bg-blue-50"
+                  >
+                    <QrCode className="w-4 h-4 mr-3" />
+                    <div className="text-left">
+                      <div className="font-medium">QR Code</div>
+                      <div className="text-xs text-gray-600">Codice QR per accesso rapido agli sconti</div>
+                    </div>
+                  </Button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Package Selection */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Package Selection */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Package className="w-4 h-4 text-purple-600" />
+                  <a 
+                    href="https://www.vistaprint.it/adesivi"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start h-auto p-3 border-blue-200 hover:bg-blue-50"
+                    >
+                      <Camera className="w-4 h-4 mr-3" />
+                      <div className="text-left">
+                        <div className="font-medium">Adesivi Personalizzati</div>
+                        <div className="text-xs text-gray-600">Ordina adesivi su Vistaprint</div>
+                      </div>
+                    </Button>
+                  </a>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Special Clients Section */}
+          <div className="mt-8">
+            <div className="bg-gradient-to-r from-purple-600 to-purple-800 rounded-lg p-6 text-white mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Heart className="w-8 h-8" />
                 <div>
-                  <h3 className="font-semibold text-lg">Ordina IQcode per i tuoi Clienti</h3>
-                  <p className="text-gray-600 text-sm">Scegli il pacchetto più adatto alle tue esigenze. Dopo l'acquisto, i codici saranno caricati automaticamente nel tuo spazio partner.</p>
+                  <h2 className="text-xl font-bold">Clienti Speciali - Sistema Fidelizzazione</h2>
+                  <p className="text-purple-100">Premia i tuoi clienti più fedeli con codici IQ esclusivi</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
                 <a 
-                  href="https://pay.sumup.com/b2c/QSJE461B" 
-                  target="_blank" 
+                  href="https://pay.sumup.com/b2c/QSJE461B"
+                  target="_blank"
                   rel="noopener noreferrer"
-                  className="block p-4 border-2 border-gray-200 rounded-lg text-center hover:border-purple-300 transition-colors cursor-pointer"
+                  className="block p-4 border-2 border-purple-300 rounded-lg text-center hover:border-white transition-colors cursor-pointer"
                 >
                   <div className="text-2xl font-bold">25</div>
-                  <div className="text-sm text-gray-600 mb-2">codici IQcode</div>
-                  <div className="text-xl font-bold text-purple-600">€50</div>
-                  <div className="text-xs text-gray-500">€2.00 per codice</div>
-                  <Button className="w-full mt-3 bg-purple-600 hover:bg-purple-700" size="sm">
+                  <div className="text-sm text-purple-100 mb-2">codici IQcode</div>
+                  <div className="text-xl font-bold">€50</div>
+                  <div className="text-xs text-purple-200">€2.00 per codice</div>
+                  <Button className="w-full mt-3 bg-white text-purple-600 hover:bg-gray-100" size="sm">
                     <Package className="w-4 h-4 mr-2" />
                     Acquista 25 codici
                   </Button>
                 </a>
 
                 <a 
-                  href="https://pay.sumup.com/b2c/QK6MLJC7" 
-                  target="_blank" 
+                  href="https://pay.sumup.com/b2c/QK6MLJC7"
+                  target="_blank"
                   rel="noopener noreferrer"
-                  className="block p-4 border-2 border-purple-300 rounded-lg text-center bg-purple-50 hover:border-purple-400 transition-colors cursor-pointer"
+                  className="block p-4 border-2 border-purple-300 rounded-lg text-center hover:border-white transition-colors cursor-pointer"
                 >
                   <div className="text-2xl font-bold">50</div>
-                  <div className="text-sm text-gray-600 mb-2">codici IQcode</div>
-                  <div className="text-xl font-bold text-purple-600">€90</div>
-                  <div className="text-xs text-gray-500">€1.80 per codice</div>
-                  <Button className="w-full mt-3 bg-purple-600 hover:bg-purple-700" size="sm">
+                  <div className="text-sm text-purple-100 mb-2">codici IQcode</div>
+                  <div className="text-xl font-bold">€90</div>
+                  <div className="text-xs text-purple-200">€1.80 per codice</div>
+                  <Button className="w-full mt-3 bg-white text-purple-600 hover:bg-gray-100" size="sm">
                     <Package className="w-4 h-4 mr-2" />
                     Acquista 50 codici
                   </Button>
                 </a>
 
                 <a 
-                  href="https://pay.sumup.com/b2c/Q9517L3P" 
-                  target="_blank" 
+                  href="https://pay.sumup.com/b2c/Q9517L3P"
+                  target="_blank"
                   rel="noopener noreferrer"
-                  className="block p-4 border-2 border-gray-200 rounded-lg text-center hover:border-purple-300 transition-colors cursor-pointer"
+                  className="block p-4 border-2 border-purple-300 rounded-lg text-center hover:border-white transition-colors cursor-pointer"
                 >
                   <div className="text-2xl font-bold">75</div>
-                  <div className="text-sm text-gray-600 mb-2">codici IQcode</div>
-                  <div className="text-xl font-bold text-purple-600">€130</div>
-                  <div className="text-xs text-gray-500">€1.73 per codice</div>
-                  <Button className="w-full mt-3 bg-purple-600 hover:bg-purple-700" size="sm">
+                  <div className="text-sm text-purple-100 mb-2">codici IQcode</div>
+                  <div className="text-xl font-bold">€130</div>
+                  <div className="text-xs text-purple-200">€1.73 per codice</div>
+                  <Button className="w-full mt-3 bg-white text-purple-600 hover:bg-gray-100" size="sm">
                     <Package className="w-4 h-4 mr-2" />
                     Acquista 75 codici
                   </Button>
                 </a>
 
                 <a 
-                  href="https://pay.sumup.com/b2c/Q3BWI26N" 
-                  target="_blank" 
+                  href="https://pay.sumup.com/b2c/Q3BWI26N"
+                  target="_blank"
                   rel="noopener noreferrer"
-                  className="block p-4 border-2 border-gray-200 rounded-lg text-center hover:border-purple-300 transition-colors cursor-pointer"
+                  className="block p-4 border-2 border-purple-300 rounded-lg text-center hover:border-white transition-colors cursor-pointer"
                 >
                   <div className="text-2xl font-bold">100</div>
-                  <div className="text-sm text-gray-600 mb-2">codici IQcode</div>
-                  <div className="text-xl font-bold text-purple-600">€160</div>
-                  <div className="text-xs text-gray-500">€1.60 per codice</div>
-                  <Button className="w-full mt-3 bg-purple-600 hover:bg-purple-700" size="sm">
+                  <div className="text-sm text-purple-100 mb-2">codici IQcode</div>
+                  <div className="text-xl font-bold">€160</div>
+                  <div className="text-xs text-purple-200">€1.60 per codice</div>
+                  <Button className="w-full mt-3 bg-white text-purple-600 hover:bg-gray-100" size="sm">
                     <Package className="w-4 h-4 mr-2" />
                     Acquista 100 codici
                   </Button>
                 </a>
               </div>
+            </div>
 
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <TrendingUp className="w-4 h-4 text-blue-600 mt-0.5" />
-                  <div className="text-sm text-blue-800">
-                    <strong>Tu potrai monitorare i risultati</strong><br/>
-                    Premi i più attivi e diventa un punto di riferimento locale per innovazione e fidelizzazione.
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                      <Star className="w-4 h-4 text-yellow-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">I tuoi Clienti Fidelizzati</h3>
+                      <p className="text-gray-600 text-sm">Monitora l'attività dei tuoi clienti fedeli e i premi assegnati</p>
+                    </div>
                   </div>
+                  <Button 
+                    onClick={() => setShowSpecialClientDialog(true)}
+                    variant="outline" 
+                    size="sm"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Aggiungi Cliente
+                  </Button>
                 </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="text-left border-b">
+                        <th className="pb-3 text-sm font-medium text-gray-600">Cliente</th>
+                        <th className="pb-3 text-sm font-medium text-gray-600">Stato</th>
+                        <th className="pb-3 text-sm font-medium text-gray-600">Visite</th>
+                        <th className="pb-3 text-sm font-medium text-gray-600">Premi Assegnati</th>
+                        <th className="pb-3 text-sm font-medium text-gray-600">Iscrizione</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {specialClients.map((client) => (
+                        <tr key={client.id}>
+                          <td className="py-3">
+                            <div>
+                              <div className="font-medium">{client.name}</div>
+                              <div className="text-sm text-gray-600">{client.notes}</div>
+                            </div>
+                          </td>
+                          <td className="py-3">
+                            <Badge className={client.status === "attivo" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
+                              {client.status}
+                            </Badge>
+                          </td>
+                          <td className="py-3 font-medium">{client.visits}</td>
+                          <td className="py-3">
+                            <div className="flex items-center gap-1">
+                              <Trophy className="w-4 h-4 text-yellow-500" />
+                              <span className="font-medium">{client.rewardsGiven}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 text-sm text-gray-600">{client.joinDate}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Dialogs */}
+        <Dialog open={showNewOfferDialog} onOpenChange={setShowNewOfferDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Crea Nuova Offerta</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="title">Titolo Offerta</Label>
+                <Input
+                  id="title"
+                  value={newOffer.title}
+                  onChange={(e) => setNewOffer({...newOffer, title: e.target.value})}
+                  placeholder="es: Sconto Aperitivo"
+                />
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <Label htmlFor="description">Descrizione</Label>
+                <Textarea
+                  id="description"
+                  value={newOffer.description}
+                  onChange={(e) => setNewOffer({...newOffer, description: e.target.value})}
+                  placeholder="Descrivi l'offerta in dettaglio..."
+                />
+              </div>
+              <div>
+                <Label htmlFor="discount">Sconto</Label>
+                <Input
+                  id="discount"
+                  value={newOffer.discount}
+                  onChange={(e) => setNewOffer({...newOffer, discount: e.target.value})}
+                  placeholder="es: 20%"
+                />
+              </div>
+              <div>
+                <Label htmlFor="validUntil">Valido Fino Al</Label>
+                <Input
+                  id="validUntil"
+                  type="date"
+                  value={newOffer.validUntil}
+                  onChange={(e) => setNewOffer({...newOffer, validUntil: e.target.value})}
+                />
+              </div>
+              <Button 
+                onClick={handleCreateOffer}
+                disabled={createOfferMutation.isPending}
+                className="w-full"
+              >
+                {createOfferMutation.isPending ? "Creazione..." : "Crea Offerta"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-          {/* Special Clients List */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <Star className="w-4 h-4 text-yellow-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">I tuoi Clienti Fidelizzati</h3>
-                    <p className="text-gray-600 text-sm">Monitora l'attività dei tuoi clienti fedeli e i premi assegnati</p>
-                  </div>
-                </div>
-                <Button 
-                  onClick={() => setShowSpecialClientDialog(true)}
-                  variant="outline" 
-                  size="sm"
+        <Dialog open={showSpecialClientDialog} onOpenChange={setShowSpecialClientDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Aggiungi Cliente Fidelizzato</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="clientName">Nome Cliente</Label>
+                <Input
+                  id="clientName"
+                  value={newClient.name}
+                  onChange={(e) => setNewClient({...newClient, name: e.target.value})}
+                  placeholder="es: Marco R."
+                />
+              </div>
+              <div>
+                <Label htmlFor="clientNotes">Note (Facoltative)</Label>
+                <Textarea
+                  id="clientNotes"
+                  value={newClient.notes}
+                  onChange={(e) => setNewClient({...newClient, notes: e.target.value})}
+                  placeholder="Preferenze, allergie, note particolari..."
+                />
+              </div>
+              <Button 
+                onClick={handleAddSpecialClient}
+                disabled={addSpecialClientMutation.isPending}
+                className="w-full"
+              >
+                {addSpecialClientMutation.isPending ? "Aggiunta..." : "Aggiungi Cliente"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showAccountDeleteDialog} onOpenChange={setShowAccountDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-red-600">Elimina Account</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                <h4 className="font-semibold text-red-800 mb-2">⚠️ Attenzione: Azione Irreversibile</h4>
+                <p className="text-sm text-red-700">
+                  L'eliminazione dell'account comporterà:
+                </p>
+                <ul className="text-sm text-red-700 mt-2 space-y-1">
+                  <li>• Cancellazione definitiva di tutti i tuoi dati</li>
+                  <li>• Perdita di tutti i collegamenti con i turisti</li>
+                  <li>• Rimozione di tutte le offerte create</li>
+                  <li>• Impossibilità di recuperare l'account</li>
+                </ul>
+              </div>
+              
+              <div>
+                <Label htmlFor="confirmText" className="text-red-600">
+                  Per confermare, scrivi: <strong>ELIMINA DEFINITIVAMENTE</strong>
+                </Label>
+                <Input
+                  id="confirmText"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="ELIMINA DEFINITIVAMENTE"
+                  className="border-red-300 focus:border-red-500"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAccountDeleteDialog(false)}
+                  className="flex-1"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Aggiungi Cliente
+                  Annulla
+                </Button>
+                <Button
+                  onClick={handleDeleteAccount}
+                  disabled={deleteAccountMutation.isPending || deleteConfirmText !== "ELIMINA DEFINITIVAMENTE"}
+                  variant="destructive"
+                  className="flex-1"
+                >
+                  {deleteAccountMutation.isPending ? "Eliminazione..." : "Elimina Account"}
                 </Button>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-left border-b">
-                      <th className="pb-3 text-sm font-medium text-gray-600">Cliente</th>
-                      <th className="pb-3 text-sm font-medium text-gray-600">Stato</th>
-                      <th className="pb-3 text-sm font-medium text-gray-600">Visite</th>
-                      <th className="pb-3 text-sm font-medium text-gray-600">Premi Assegnati</th>
-                      <th className="pb-3 text-sm font-medium text-gray-600">Iscrizione</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {specialClients.map((client) => (
-                      <tr key={client.id}>
-                        <td className="py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium">
-                              {client.name.split(' ').map(n => n[0]).join('')}
-                            </div>
-                            <span className="font-medium">{client.name}</span>
-                          </div>
-                        </td>
-                        <td className="py-3">
-                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                            {client.status}
-                          </Badge>
-                        </td>
-                        <td className="py-3">
-                          <div className="flex items-center gap-1">
-                            <span className="text-lg font-bold">{client.visits}</span>
-                            <TrendingUp className="w-3 h-3 text-green-600" />
-                          </div>
-                        </td>
-                        <td className="py-3">
-                          <div className="flex items-center gap-1">
-                            {client.reward !== "Nessuno" && (
-                              <Trophy className="w-4 h-4 text-yellow-600" />
-                            )}
-                            <span className="text-sm">{client.reward}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 text-sm text-gray-600">{client.lastVisit}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="text-xs text-gray-500 text-center">
+                Hai problemi? Contatta il supporto: info@touristiq.it
               </div>
-
-              <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <Trophy className="w-4 h-4 text-yellow-600 mt-0.5" />
-                  <div className="text-sm text-yellow-800">
-                    <strong>Suggerimento:</strong> Premia i clienti più attivi con sconti esclusivi o omaggi per incentivare la fedeltà.
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right Column - Stats and Info */}
-        <div className="space-y-6">
-          {/* How it Works */}
-          <Card className="bg-purple-50 border-purple-200">
-            <CardContent className="p-6">
-              <h3 className="font-semibold text-purple-900 mb-4">Come Funziona</h3>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-xs font-bold text-purple-600">1</span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm">Acquisti IQcode</div>
-                    <div className="text-xs text-gray-600">Ordini i pacchetti per i tuoi clienti</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-xs font-bold text-purple-600">2</span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm">Assegni ai Clienti</div>
-                    <div className="text-xs text-gray-600">Regali i codici ai tuoi clienti abituali</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-xs font-bold text-purple-600">3</span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm">Accesso Nazionale</div>
-                    <div className="text-xs text-gray-600">I clienti usano gli sconti in tutta Italia</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-xs font-bold text-yellow-600">4</span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm">Rete Nazionale</div>
-                    <div className="text-xs text-gray-600">I tuoi clienti accedono a migliaia di partner</div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Stats for Special Clients */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Statistiche Rapide</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Clienti Attivi</span>
-                <span className="text-2xl font-bold">4</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Visite Totali</span>
-                <span className="text-2xl font-bold">17</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Premi Assegnati</span>
-                <span className="text-2xl font-bold">3</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Tasso Ritorno</span>
-                <span className="text-2xl font-bold text-green-600">85%</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* System Evolution */}
-          <Card className="bg-gray-50 border-gray-200">
-            <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Settings className="w-6 h-6 text-gray-600" />
-              </div>
-              <h3 className="font-semibold mb-2 text-gray-800">Sistema in Evoluzione</h3>
-              <p className="text-sm text-gray-600">
-                Questa è la versione base. Nuove funzionalità di monitoraggio e premi automatici saranno aggiunte presto.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Back to Dashboard */}
-          <Button 
-            onClick={() => setCurrentView('main')}
-            variant="outline" 
-            className="w-full"
-          >
-            Torna a Dashboard
-          </Button>
-        </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
-    </div>
-  );
-
-  const navigation = [
-    { icon: <BarChart3 size={16} />, label: "Dashboard", href: "#" },
-    { icon: <Tags size={16} />, label: "Gestione Sconti", href: "#" },
-    { icon: <QrCode size={16} />, label: "Scansiona Codici", href: "#" },
-    { icon: <TrendingUp size={16} />, label: "Statistiche", href: "#" },
-    { icon: <Settings size={16} />, label: "Impostazioni", href: "#" },
-  ];
-
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Caricamento...</h2>
-          <p className="text-gray-600">Sto caricando il tuo dashboard partner</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <Layout
-      title="Dashboard Partner"
-      role="Area Partner"
-      iqCode={user.iqCode}
-      navigation={navigation}
-      sidebarColor="bg-orange-500"
-    >
-      {currentView === 'main' ? renderMainDashboard() : renderSpecialClients()}
-
-      {/* New Offer Dialog */}
-      <Dialog open={showNewOfferDialog} onOpenChange={setShowNewOfferDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Crea Nuova Offerta</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="offer-title">Titolo Offerta</Label>
-              <Input
-                id="offer-title"
-                value={newOffer.title}
-                onChange={(e) => setNewOffer({ ...newOffer, title: e.target.value })}
-                placeholder="es. Sconto Benvenuto"
-              />
-            </div>
-            <div>
-              <Label htmlFor="offer-description">Descrizione</Label>
-              <Textarea
-                id="offer-description"
-                value={newOffer.description}
-                onChange={(e) => setNewOffer({ ...newOffer, description: e.target.value })}
-                placeholder="Descrivi la tua offerta..."
-              />
-            </div>
-            <div>
-              <Label htmlFor="offer-discount">Sconto (%)</Label>
-              <Input
-                id="offer-discount"
-                type="number"
-                value={newOffer.discount}
-                onChange={(e) => setNewOffer({ ...newOffer, discount: e.target.value })}
-                placeholder="15"
-              />
-            </div>
-            <div>
-              <Label htmlFor="offer-valid-until">Valido fino a</Label>
-              <Input
-                id="offer-valid-until"
-                type="date"
-                value={newOffer.validUntil}
-                onChange={(e) => setNewOffer({ ...newOffer, validUntil: e.target.value })}
-              />
-            </div>
-            <div className="flex gap-2 pt-4">
-              <Button 
-                onClick={() => createOfferMutation.mutate(newOffer)}
-                disabled={createOfferMutation.isPending || !newOffer.title || !newOffer.discount}
-                className="flex-1"
-              >
-                {createOfferMutation.isPending ? "Creando..." : "Crea Offerta"}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowNewOfferDialog(false)}
-                className="flex-1"
-              >
-                Annulla
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Special Client Dialog */}
-      <Dialog open={showSpecialClientDialog} onOpenChange={setShowSpecialClientDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Aggiungi Cliente Speciale</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="client-name">Nome Cliente</Label>
-              <Input
-                id="client-name"
-                value={newSpecialClient.name}
-                onChange={(e) => setNewSpecialClient({ ...newSpecialClient, name: e.target.value })}
-                placeholder="Nome generico (es. Mario, Cliente Abituale)"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                TouristIQ non raccoglie dati sensibili. Il nome è solo per la tua memoria personale.
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="client-notes">Note</Label>
-              <Textarea
-                id="client-notes"
-                value={newSpecialClient.notes}
-                onChange={(e) => setNewSpecialClient({ ...newSpecialClient, notes: e.target.value })}
-                placeholder="Cliente abituale, preferisce..."
-              />
-            </div>
-            <div className="flex gap-2 pt-4">
-              <Button 
-                onClick={() => createSpecialClientMutation.mutate(newSpecialClient)}
-                disabled={createSpecialClientMutation.isPending || !newSpecialClient.name}
-                className="flex-1"
-              >
-                {createSpecialClientMutation.isPending ? "Aggiungendo..." : "Aggiungi Cliente"}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowSpecialClientDialog(false)}
-                className="flex-1"
-              >
-                Annulla
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </Layout>
   );
 }
