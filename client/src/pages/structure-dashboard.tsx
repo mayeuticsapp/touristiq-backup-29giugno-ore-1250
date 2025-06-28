@@ -7,8 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star, Package, Plus, Gift, UserPlus, Phone, Mail, MessageCircle, Edit, Trash2, Send, Copy, Check } from "lucide-react";
 import { useParams } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ReactNode } from "react";
 import { AdvancedAccounting } from "@/components/advanced-accounting";
 
@@ -1209,18 +1213,13 @@ function SettingsSection({ structureId }: { structureId: string }) {
                 
                 <div>
                   <Label htmlFor="businessType">Tipo Struttura</Label>
-                  <Select {...form.register("businessType")}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleziona tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="hotel">Hotel</SelectItem>
-                      <SelectItem value="b&b">B&B</SelectItem>
-                      <SelectItem value="resort">Resort</SelectItem>
-                      <SelectItem value="appartamento">Appartamento</SelectItem>
-                      <SelectItem value="villa">Villa</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <select {...form.register("businessType")} className="w-full border rounded px-3 py-2">
+                    <option value="hotel">Hotel</option>
+                    <option value="b&b">B&B</option>
+                    <option value="resort">Resort</option>
+                    <option value="appartamento">Appartamento</option>
+                    <option value="villa">Villa</option>
+                  </select>
                 </div>
               </div>
 
@@ -1257,7 +1256,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
               </div>
             </div>
 
-            <Separator />
+            <div className="border-t my-6"></div>
 
             {/* Indirizzo */}
             <div className="space-y-4">
@@ -1302,7 +1301,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
               </div>
             </div>
 
-            <Separator />
+            <div className="border-t my-6"></div>
 
             {/* Orari e Servizi */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1375,7 +1374,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
               </div>
             </div>
 
-            <Separator />
+            <div className="border-t my-6"></div>
 
             {/* Messaggio Benvenuto */}
             <div className="space-y-4">
