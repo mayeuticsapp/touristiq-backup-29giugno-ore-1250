@@ -3,73 +3,20 @@ import { useParams } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
 import { 
   ShoppingCart, 
-  MessageCircle, 
-  Copy, 
-  Download, 
-  Plus, 
-  Minus, 
   BarChart3,
   Package,
   Euro,
-  AlertTriangle,
-  CheckCircle,
-  Filter,
-  Calendar,
-  FileText,
-  TrendingUp,
-  Users,
-  CreditCard
+  CheckCircle
 } from 'lucide-react';
 import { Layout } from '@/components/layout';
 import { useToast } from '@/hooks/use-toast';
 import { AdvancedAccounting } from '@/components/advanced-accounting';
 
-// Import categorie settore turistico
-const INCOME_CATEGORIES = [
-  { id: 'rooms', label: 'Camere', icon: '🏨' },
-  { id: 'breakfast', label: 'Colazioni', icon: '☕' },
-  { id: 'extra_services', label: 'Extra Servizi', icon: '🛎️' },
-  { id: 'iqcodes_sold', label: 'IQCode Venduti', icon: '🎫' },
-  { id: 'parking', label: 'Parcheggio', icon: '🚗' },
-  { id: 'restaurant', label: 'Ristorazione', icon: '🍽️' },
-  { id: 'wellness', label: 'Wellness/SPA', icon: '💆' },
-  { id: 'tours', label: 'Tour/Escursioni', icon: '🗺️' },
-  { id: 'other_income', label: 'Altre Entrate', icon: '💰' }
-];
-
-const EXPENSE_CATEGORIES = [
-  { id: 'ota_commissions', label: 'Commissioni OTA', icon: '💳' },
-  { id: 'iqcodes_cost', label: 'Costo IQCode', icon: '🎫' },
-  { id: 'supplies', label: 'Forniture', icon: '📦' },
-  { id: 'cleaning', label: 'Pulizie', icon: '🧹' },
-  { id: 'laundry', label: 'Lavanderia', icon: '👕' },
-  { id: 'maintenance', label: 'Manutenzioni', icon: '🔧' },
-  { id: 'utilities', label: 'Utenze', icon: '⚡' },
-  { id: 'marketing', label: 'Marketing', icon: '📢' },
-  { id: 'staff', label: 'Personale', icon: '👥' },
-  { id: 'other_expense', label: 'Altre Spese', icon: '💸' }
-];
-
-const PAYMENT_METHODS = [
-  { id: 'cash', label: 'Contanti', icon: '💵' },
-  { id: 'card', label: 'Carta', icon: '💳' },
-  { id: 'bank_transfer', label: 'Bonifico', icon: '🏦' },
-  { id: 'paypal', label: 'PayPal', icon: '📱' },
-  { id: 'sumup', label: 'SumUp', icon: '📲' },
-  { id: 'other', label: 'Altro', icon: '❓' }
-];
-
-// Prezzi dei pacchetti IQCode
 const PACKAGE_PRICES = {
   10: "49.90",
   25: "99.90", 
@@ -82,7 +29,6 @@ export default function StructurePanel() {
   const structureId = params.id;
   const { toast } = useToast();
   
-  // Query per ottenere i dati della struttura
   const { data: structureData } = useQuery({
     queryKey: ['/api/structure', structureId],
     enabled: !!structureId
@@ -94,21 +40,11 @@ export default function StructurePanel() {
   const [iqCodesBalance, setIqCodesBalance] = useState(0);
   const [selectedPackageSize, setSelectedPackageSize] = useState(25);
   const [paymentStatus, setPaymentStatus] = useState('pending');
-  const [selectedCode, setSelectedCode] = useState('');
-  const [availableCodes, setAvailableCodes] = useState<string[]>([]);
   const [gestionaleAccess, setGestionaleAccess] = useState({ hasAccess: true, hoursRemaining: 48 });
-  const [movements, setMovements] = useState<any[]>([]);
-  const [newMovement, setNewMovement] = useState({
-    type: 'income',
-    description: '',
-    amount: '',
-    date: new Date().toISOString().split('T')[0]
-  });
 
   const navigation = [
-    { icon: <ShoppingCart size={20} />, label: "Acquista Pacchetti", href: "#", onClick: () => {} },
-    { icon: <MessageCircle size={20} />, label: "Assegna Codici", href: "#", onClick: () => {} },
-    { icon: <BarChart3 size={20} />, label: "Mini Gestionale", href: "#", onClick: () => {} }
+    { icon: <ShoppingCart size={20} />, label: "Dashboard Struttura", href: `/structure/${structureId}` },
+    { icon: <BarChart3 size={20} />, label: "Pannello Completo", href: `/structure/${structureId}/panel` }
   ];
 
   useEffect(() => {
@@ -117,121 +53,24 @@ export default function StructurePanel() {
 
   const loadStructureData = async () => {
     try {
-      // Simulo caricamento dati struttura
       setIqCodesBalance(18);
-      setAvailableCodes(['TIQ-IT-MARE', 'TIQ-IT-SOLE', 'TIQ-IT-VACANZA']);
-      
-      // Movimento contabile di esempio
-      setMovements([
-        { id: 1, type: 'income', description: 'Vendita pacchetto 25 IQCode', amount: 99.90, date: '2025-06-27' },
-        { id: 2, type: 'expense', description: 'Commissione SumUp', amount: 2.50, date: '2025-06-27' }
-      ]);
     } catch (error) {
       console.error('Errore caricamento dati:', error);
     }
   };
 
-  const handlePurchasePackage = async () => {
-    try {
-      setPaymentStatus('processing');
-      
-      // Simulo processo di pagamento SumUp
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Aggiorno il saldo IQCode
-      const newBalance = iqCodesBalance + selectedPackageSize;
-      setIqCodesBalance(newBalance);
-      
-      // Aggiungo movimento contabile
-      const newMovementEntry = {
-        id: movements.length + 1,
-        type: 'income',
-        description: `Acquisto pacchetto ${selectedPackageSize} IQCode`,
-        amount: parseFloat(PACKAGE_PRICES[selectedPackageSize as keyof typeof PACKAGE_PRICES]),
-        date: new Date().toISOString().split('T')[0]
-      };
-      setMovements([...movements, newMovementEntry]);
-      
+  const handlePurchasePackage = () => {
+    setPaymentStatus('processing');
+    
+    setTimeout(() => {
       setPaymentStatus('completed');
+      setIqCodesBalance(prev => prev + selectedPackageSize);
+      
       toast({
         title: "Acquisto completato!",
-        description: `Pacchetto ${selectedPackageSize} IQCode acquistato con successo. Nuovo saldo: ${newBalance}`,
+        description: `Pacchetto da ${selectedPackageSize} IQCode aggiunto al tuo saldo`,
       });
-    } catch (error) {
-      setPaymentStatus('failed');
-      toast({
-        title: "Errore pagamento",
-        description: "Si è verificato un errore durante l'acquisto.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleAssignCodeWhatsApp = async (phoneNumber: string) => {
-    if (!selectedCode) {
-      toast({
-        title: "Errore",
-        description: "Seleziona un codice IQ da assegnare",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      // Simulo assegnazione codice
-      const whatsappUrl = `https://wa.me/${phoneNumber}?text=🎟 Il tuo codice TouristIQ: ${selectedCode}%0A%0AUsa questo codice per accedere agli sconti esclusivi della zona!`;
-      window.open(whatsappUrl, '_blank');
-      
-      // Riduco il saldo
-      setIqCodesBalance(prev => Math.max(0, prev - 1));
-      
-      toast({
-        title: "Codice assegnato!",
-        description: `Codice ${selectedCode} inviato via WhatsApp`,
-      });
-    } catch (error) {
-      toast({
-        title: "Errore invio",
-        description: "Errore durante l'invio del codice",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleAddMovement = () => {
-    if (!newMovement.description || !newMovement.amount) {
-      toast({
-        title: "Errore",
-        description: "Compila tutti i campi obbligatori",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const movement = {
-      id: movements.length + 1,
-      ...newMovement,
-      amount: parseFloat(newMovement.amount)
-    };
-    
-    setMovements([...movements, movement]);
-    setNewMovement({
-      type: 'income',
-      description: '',
-      amount: '',
-      date: new Date().toISOString().split('T')[0]
-    });
-    
-    toast({
-      title: "Movimento aggiunto",
-      description: "Movimento contabile registrato con successo",
-    });
-  };
-
-  const calculateBalance = () => {
-    const income = movements.filter(m => m.type === 'income').reduce((sum, m) => sum + m.amount, 0);
-    const expenses = movements.filter(m => m.type === 'expense').reduce((sum, m) => sum + m.amount, 0);
-    return income - expenses;
+    }, 2000);
   };
 
   return (
@@ -243,19 +82,20 @@ export default function StructurePanel() {
       sidebarColor="bg-purple-600"
     >
       <div className="min-h-screen bg-gray-50">
-        {/* Header del Pannello */}
         <div className="bg-white shadow-sm border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="py-6">
               <div className="flex justify-between items-center">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">🎟 Pannello Struttura Completo</h1>
-                  <p className="text-gray-600 mt-1">{structureName} • {structureCode}</p>
+                  <h1 className="text-2xl font-bold text-gray-900">Pannello Completo Struttura</h1>
+                  <p className="text-gray-600">Struttura {structureId} - {structureCode}</p>
                 </div>
-                <div className="flex items-center space-x-4">
+                <div className="flex gap-4">
                   <Badge variant="outline" className="px-3 py-1">
-                    <Package className="w-4 h-4 mr-2" />
-                    Saldo: {iqCodesBalance} IQCode
+                    Saldo IQCode: {iqCodesBalance}
+                  </Badge>
+                  <Badge variant="secondary" className="px-3 py-1">
+                    Gestionale: 42h
                   </Badge>
                 </div>
               </div>
@@ -263,17 +103,12 @@ export default function StructurePanel() {
           </div>
         </div>
 
-        {/* Contenuto Principale */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Tabs defaultValue="purchase" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="purchase" className="flex items-center gap-2">
                 <ShoppingCart size={16} />
                 Acquista Pacchetti
-              </TabsTrigger>
-              <TabsTrigger value="assign" className="flex items-center gap-2">
-                <MessageCircle size={16} />
-                Assegna WhatsApp
               </TabsTrigger>
               <TabsTrigger value="accounting" className="flex items-center gap-2">
                 <BarChart3 size={16} />
@@ -322,18 +157,22 @@ export default function StructurePanel() {
                     <Button 
                       onClick={handlePurchasePackage}
                       disabled={paymentStatus === 'processing'}
-                      className="w-full bg-blue-600 hover:bg-blue-700"
-                      size="lg"
+                      className="w-full"
                     >
                       {paymentStatus === 'processing' ? (
                         <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Elaborazione SumUp...
+                          <Package className="w-4 h-4 mr-2 animate-spin" />
+                          Elaborazione in corso...
+                        </>
+                      ) : paymentStatus === 'completed' ? (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Acquisto Completato
                         </>
                       ) : (
                         <>
                           <Euro className="w-4 h-4 mr-2" />
-                          Acquista con SumUp
+                          Procedi all'Acquisto
                         </>
                       )}
                     </Button>
@@ -345,202 +184,37 @@ export default function StructurePanel() {
                     <CardTitle>Riepilogo Saldo</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-center space-y-4">
-                      <div>
+                    <div className="space-y-4">
+                      <div className="p-4 bg-blue-50 rounded-lg text-center">
                         <div className="text-3xl font-bold text-blue-600">{iqCodesBalance}</div>
-                        <div className="text-gray-600">IQCode Disponibili</div>
+                        <div className="text-sm text-blue-700">IQCode Disponibili</div>
                       </div>
                       
-                      {paymentStatus === 'completed' && (
-                        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                          <div className="flex items-center justify-center text-green-700">
-                            <CheckCircle className="w-5 h-5 mr-2" />
-                            Acquisto completato con successo!
-                          </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>Saldo attuale:</span>
+                          <span className="font-semibold">{iqCodesBalance} codici</span>
                         </div>
-                      )}
+                        <div className="flex justify-between">
+                          <span>Dopo acquisto:</span>
+                          <span className="font-semibold text-green-600">
+                            {iqCodesBalance + selectedPackageSize} codici
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
             </TabsContent>
 
-            {/* TAB 2: Assegnazione WhatsApp */}
-            <TabsContent value="assign">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5" />
-                    Assegna Codice via WhatsApp
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="selectCode">Seleziona Codice IQ</Label>
-                      <Select value={selectedCode} onValueChange={setSelectedCode}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Scegli un codice..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableCodes.map((code) => (
-                            <SelectItem key={code} value={code}>
-                              {code}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="whatsappNumber">Numero WhatsApp</Label>
-                      <div className="flex gap-2">
-                        <Input 
-                          id="whatsappNumber"
-                          placeholder="es. 3331234567"
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              const input = e.target as HTMLInputElement;
-                              handleAssignCodeWhatsApp(input.value);
-                            }
-                          }}
-                        />
-                        <Button 
-                          onClick={(e) => {
-                            const input = (e.target as HTMLElement).parentElement?.querySelector('input') as HTMLInputElement;
-                            if (input) handleAssignCodeWhatsApp(input.value);
-                          }}
-                          disabled={!selectedCode}
-                        >
-                          Invia
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <div className="flex items-start">
-                      <AlertTriangle className="w-5 h-5 text-amber-600 mr-2 mt-0.5" />
-                      <div className="text-sm text-amber-800">
-                        <strong>IMPORTANTE:</strong> Per policy aziendale, NON raccogliamo mai indirizzi email. 
-                        Tutti i codici vengono inviati esclusivamente via WhatsApp per garantire privacy e immediatezza.
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* TAB 3: Mini Gestionale */}
+            {/* TAB 2: Mini Gestionale */}
             <TabsContent value="accounting">
               <AdvancedAccounting 
                 structureCode={structureCode}
                 hasAccess={gestionaleAccess.hasAccess || iqCodesBalance > 0}
               />
             </TabsContent>
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                          <span className="flex items-center gap-2">
-                            <BarChart3 className="w-5 h-5" />
-                            Aggiungi Movimento
-                          </span>
-                          <Badge variant="outline">
-                            Accesso: {gestionaleAccess.hoursRemaining}h rimaste
-                          </Badge>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                          <Select value={newMovement.type} onValueChange={(value) => setNewMovement({...newMovement, type: value})}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="income">Entrata</SelectItem>
-                              <SelectItem value="expense">Uscita</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          
-                          <Input
-                            placeholder="Descrizione"
-                            value={newMovement.description}
-                            onChange={(e) => setNewMovement({...newMovement, description: e.target.value})}
-                          />
-                          
-                          <Input
-                            type="number"
-                            placeholder="Importo"
-                            value={newMovement.amount}
-                            onChange={(e) => setNewMovement({...newMovement, amount: e.target.value})}
-                          />
-                          
-                          <Button onClick={handleAddMovement}>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Aggiungi
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Riepilogo Contabile</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-3 gap-4 text-center">
-                            <div className="p-3 bg-green-50 rounded-lg">
-                              <div className="text-2xl font-bold text-green-600">
-                                €{movements.filter(m => m.type === 'income').reduce((sum, m) => sum + m.amount, 0).toFixed(2)}
-                              </div>
-                              <div className="text-sm text-green-700">Entrate</div>
-                            </div>
-                            <div className="p-3 bg-red-50 rounded-lg">
-                              <div className="text-2xl font-bold text-red-600">
-                                €{movements.filter(m => m.type === 'expense').reduce((sum, m) => sum + m.amount, 0).toFixed(2)}
-                              </div>
-                              <div className="text-sm text-red-700">Uscite</div>
-                            </div>
-                            <div className="p-3 bg-blue-50 rounded-lg">
-                              <div className="text-2xl font-bold text-blue-600">
-                                €{calculateBalance().toFixed(2)}
-                              </div>
-                              <div className="text-sm text-blue-700">Saldo</div>
-                            </div>
-                          </div>
-                          
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Data</TableHead>
-                                <TableHead>Tipo</TableHead>
-                                <TableHead>Descrizione</TableHead>
-                                <TableHead className="text-right">Importo</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {movements.map((movement) => (
-                                <TableRow key={movement.id}>
-                                  <TableCell>{movement.date}</TableCell>
-                                  <TableCell>
-                                    <Badge variant={movement.type === 'income' ? 'default' : 'destructive'}>
-                                      {movement.type === 'income' ? 'Entrata' : 'Uscita'}
-                                    </Badge>
-                                  </TableCell>
-                                  <TableCell>{movement.description}</TableCell>
-                                  <TableCell className="text-right">
-                                    <span className={movement.type === 'income' ? 'text-green-600' : 'text-red-600'}>
-                                      {movement.type === 'income' ? '+' : '-'}€{movement.amount.toFixed(2)}
-                                    </span>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </CardContent>
-                    </Card>
           </Tabs>
         </div>
       </div>

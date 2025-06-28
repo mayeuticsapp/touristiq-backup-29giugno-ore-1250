@@ -95,6 +95,7 @@ TouristIQ is a role-based authentication platform designed for the tourism indus
 - **Session Storage**: Configurable between in-memory and database storage
 
 ## Changelog
+- June 27, 2025: SEZIONI DUPLICATE ELIMINATE E RIMOZIONE CODICI OPERATIVA - Rimosse definitivamente sezioni duplicate "Assegnazione WhatsApp" e "Assegna Nuovo Codice IQ", funzione rimozione codici IQ ora funzionante (TIQ-IT-AMALFI/TEST/DIRECT eliminati dal database PostgreSQL), interfaccia ottimizzata per fluidità gestione strutture, sistema persistenza PostgreSQL al 100% operativo
 - June 27, 2025: PERSISTENZA POSTGRESQL E ISTRUZIONI UTENTE COMPLETATE - Risolto definitivamente problema persistenza codici IQ nel database PostgreSQL, caricamento automatico codici assegnati in dashboard ospiti operativo, rimossi pulsanti navigazione superflui (Prenotazioni/Camere) secondo specifiche utente, sistema production-ready con 4 codici TIQ-IT-AMALFI/CAPRI/DIRECT/TEST verificati
 - June 27, 2025: PACCHETTO ROBS RIPRISTINATO E OPERATIVO - Visualizzazione saldo 994/1000 crediti in dashboard admin, sezione "Genera Diretto" con form completo, distinzione codici emozionali (scalano) vs professionali (illimitati), generazione TIQ-IT-BOTTICELLI verificata con decremento saldo automatico
 - June 27, 2025: BUG CRITICI RISOLTI E VERIFICATI - Fix endpoint `/api/admin/structures` carica strutture approvate (TIQ-RC-STT-2567 visibile), autenticazione dashboard strutture operativa, assegnazione pacchetti da admin a strutture funzionante (pacchetto 25 crediti assegnato e ricevuto), sistema note interne attivo
