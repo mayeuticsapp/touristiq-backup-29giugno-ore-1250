@@ -1,4 +1,4 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type UserRole } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt, desc, like } from "drizzle-orm";
@@ -68,6 +68,10 @@ export interface IStorage {
   createStructureSettings(settings: InsertStructureSettings): Promise<StructureSettings>;
   updateStructureSettings(structureCode: string, settings: Partial<InsertStructureSettings>): Promise<StructureSettings>;
   checkGestionaleAccess(structureCode: string): Promise<{hasAccess: boolean, hoursRemaining?: number}>;
+
+  // Settings config methods - Impostazioni generali persistenti
+  getSettingsConfig(structureCode: string): Promise<any>;
+  updateSettingsConfig(structureCode: string, settings: any): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -1156,5 +1160,137 @@ export class PostgreStorage implements IStorage {
   async checkGestionaleAccess(): Promise<{hasAccess: boolean, hoursRemaining?: number}> { return { hasAccess: false }; }
 }
 
+// Extend PostgreStorage con metodi impostazioni
+class ExtendedPostgreStorage extends PostgreStorage {
+  async getSettingsConfig(structureCode: string): Promise<SettingsConfig | null> {
+    const result = await this.db
+      .select()
+      .from(settingsConfig)
+      .where(eq(settingsConfig.structureCode, structureCode))
+      .limit(1);
+    
+    if (result.length === 0) {
+      // Crea impostazioni default se non esistono
+      const defaultSettings = {
+        structureCode,
+        structureName: `Struttura ${structureCode.split('-').pop()}`,
+        ownerName: "",
+        contactEmail: "",
+        contactPhone: "",
+        address: "",
+        city: "",
+        province: structureCode.split('-')[1] || "VV",
+        postalCode: "",
+        businessType: "hotel",
+        checkinTime: "15:00",
+        checkoutTime: "11:00",
+        maxGuestsPerRoom: 4,
+        welcomeMessage: "Benvenuto nella nostra struttura!",
+        additionalServices: "",
+        wifiPassword: "",
+        emergencyContact: "",
+        taxRate: "3.00",
+        defaultCurrency: "EUR",
+        languagePreference: "it",
+        notificationPreferences: "{}",
+        backupFrequency: "daily",
+        autoLogoutMinutes: 30,
+        enableGuestPortal: true,
+        enableWhatsappIntegration: false
+      };
+      
+      const [created] = await this.db
+        .insert(settingsConfig)
+        .values(defaultSettings)
+        .returning();
+      
+      return created;
+    }
+    
+    return result[0];
+  }
+
+  async updateSettingsConfig(structureCode: string, settings: Partial<InsertSettingsConfig>): Promise<SettingsConfig> {
+    // Prima verifica se esistono già impostazioni
+    const existing = await this.getSettingsConfig(structureCode);
+    
+    if (!existing) {
+      // Crea nuove impostazioni
+      const [created] = await this.db
+        .insert(settingsConfig)
+        .values({ structureCode, ...settings })
+        .returning();
+      return created;
+    }
+    
+    // Aggiorna esistenti
+    const [updated] = await this.db
+      .update(settingsConfig)
+      .set({ ...settings, updatedAt: new Date() })
+      .where(eq(settingsConfig.structureCode, structureCode))
+      .returning();
+    
+    return updated;
+  }
+}
+
+// Extend MemStorage con metodi impostazioni
+class ExtendedMemStorage extends MemStorage {
+  private settingsConfigMap: Map<string, SettingsConfig> = new Map();
+
+  async getSettingsConfig(structureCode: string): Promise<SettingsConfig | null> {
+    if (!this.settingsConfigMap.has(structureCode)) {
+      // Crea impostazioni default
+      const defaultSettings: SettingsConfig = {
+        id: 1,
+        structureCode,
+        structureName: `Struttura ${structureCode.split('-').pop()}`,
+        ownerName: "",
+        contactEmail: "",
+        contactPhone: "",
+        address: "",
+        city: "",
+        province: structureCode.split('-')[1] || "VV",
+        postalCode: "",
+        businessType: "hotel",
+        checkinTime: "15:00",
+        checkoutTime: "11:00",
+        maxGuestsPerRoom: 4,
+        welcomeMessage: "Benvenuto nella nostra struttura!",
+        additionalServices: "",
+        wifiPassword: "",
+        emergencyContact: "",
+        taxRate: "3.00",
+        defaultCurrency: "EUR",
+        languagePreference: "it",
+        notificationPreferences: "{}",
+        backupFrequency: "daily",
+        autoLogoutMinutes: 30,
+        enableGuestPortal: true,
+        enableWhatsappIntegration: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      this.settingsConfigMap.set(structureCode, defaultSettings);
+    }
+    
+    return this.settingsConfigMap.get(structureCode) || null;
+  }
+
+  async updateSettingsConfig(structureCode: string, settings: Partial<InsertSettingsConfig>): Promise<SettingsConfig> {
+    const existing = await this.getSettingsConfig(structureCode);
+    if (!existing) throw new Error("Settings not found");
+    
+    const updated = {
+      ...existing,
+      ...settings,
+      updatedAt: new Date()
+    };
+    
+    this.settingsConfigMap.set(structureCode, updated);
+    return updated;
+  }
+}
+
 // Use PostgreSQL storage if DATABASE_URL exists, otherwise fallback to memory
-export const storage = process.env.DATABASE_URL ? new PostgreStorage() : new MemStorage();
+export const storage = process.env.DATABASE_URL ? new ExtendedPostgreStorage() : new ExtendedMemStorage();

@@ -1056,12 +1056,355 @@ export default function StructureDashboard() {
       
 
       
-      {activeSection !== "dashboard" && activeSection !== "iqcode" && (
+      {activeSection === "impostazioni" && (
+        <SettingsSection structureId={structureId} />
+      )}
+
+      {activeSection !== "dashboard" && activeSection !== "iqcode" && activeSection !== "impostazioni" && (
         <div className="text-center py-8">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Sezione in Sviluppo</h3>
           <p className="text-gray-500">La sezione "{activeSection}" sarà implementata prossimamente.</p>
         </div>
       )}
     </Layout>
+  );
+}
+
+// Componente Impostazioni con persistenza PostgreSQL
+function SettingsSection({ structureId }: { structureId: string }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const form = useForm({
+    defaultValues: {
+      structureName: "",
+      ownerName: "",
+      contactEmail: "",
+      contactPhone: "",
+      address: "",
+      city: "",
+      province: "",
+      postalCode: "",
+      businessType: "hotel",
+      checkinTime: "15:00",
+      checkoutTime: "11:00",
+      maxGuestsPerRoom: 4,
+      welcomeMessage: "Benvenuto nella nostra struttura!",
+      wifiPassword: "",
+      emergencyContact: "",
+      taxRate: "3.00",
+      defaultCurrency: "EUR",
+      enableGuestPortal: true,
+      enableWhatsappIntegration: false,
+      autoLogoutMinutes: 30
+    }
+  });
+
+  // Carica impostazioni esistenti
+  const { data: settings } = useQuery({
+    queryKey: [`/api/structure/${structureId}/settings`],
+    queryFn: async () => {
+      const response = await fetch(`/api/structure/${structureId}/settings`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Errore caricamento impostazioni');
+      const data = await response.json();
+      return data.settings;
+    }
+  });
+
+  // Aggiorna form quando i dati vengono caricati
+  useEffect(() => {
+    if (settings) {
+      form.reset({
+        structureName: settings.structureName || "",
+        ownerName: settings.ownerName || "",
+        contactEmail: settings.contactEmail || "",
+        contactPhone: settings.contactPhone || "",
+        address: settings.address || "",
+        city: settings.city || "",
+        province: settings.province || "",
+        postalCode: settings.postalCode || "",
+        businessType: settings.businessType || "hotel",
+        checkinTime: settings.checkinTime || "15:00",
+        checkoutTime: settings.checkoutTime || "11:00",
+        maxGuestsPerRoom: settings.maxGuestsPerRoom || 4,
+        welcomeMessage: settings.welcomeMessage || "Benvenuto nella nostra struttura!",
+        wifiPassword: settings.wifiPassword || "",
+        emergencyContact: settings.emergencyContact || "",
+        taxRate: settings.taxRate || "3.00",
+        defaultCurrency: settings.defaultCurrency || "EUR",
+        enableGuestPortal: settings.enableGuestPortal !== false,
+        enableWhatsappIntegration: settings.enableWhatsappIntegration || false,
+        autoLogoutMinutes: settings.autoLogoutMinutes || 30
+      });
+    }
+  }, [settings, form]);
+
+  // Salva impostazioni con persistenza PostgreSQL
+  const saveSettings = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch(`/api/structure/${structureId}/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Errore salvataggio impostazioni');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Impostazioni salvate",
+        description: "Le modifiche sono state salvate con successo nel database PostgreSQL",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/structure/${structureId}/settings`] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile salvare le impostazioni",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const onSubmit = (data: any) => {
+    saveSettings.mutate(data);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Impostazioni Struttura
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Informazioni Generali */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Informazioni Generali</h3>
+                
+                <div>
+                  <Label htmlFor="structureName">Nome Struttura</Label>
+                  <Input
+                    id="structureName"
+                    {...form.register("structureName")}
+                    placeholder="Hotel Pazzo Calabria"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="ownerName">Nome Proprietario</Label>
+                  <Input
+                    id="ownerName"
+                    {...form.register("ownerName")}
+                    placeholder="Mario Rossi"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="businessType">Tipo Struttura</Label>
+                  <Select {...form.register("businessType")}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleziona tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="hotel">Hotel</SelectItem>
+                      <SelectItem value="b&b">B&B</SelectItem>
+                      <SelectItem value="resort">Resort</SelectItem>
+                      <SelectItem value="appartamento">Appartamento</SelectItem>
+                      <SelectItem value="villa">Villa</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Contatti</h3>
+                
+                <div>
+                  <Label htmlFor="contactEmail">Email</Label>
+                  <Input
+                    id="contactEmail"
+                    type="email"
+                    {...form.register("contactEmail")}
+                    placeholder="info@hotel.com"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="contactPhone">Telefono</Label>
+                  <Input
+                    id="contactPhone"
+                    {...form.register("contactPhone")}
+                    placeholder="+39 123 456 7890"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="emergencyContact">Contatto Emergenza</Label>
+                  <Input
+                    id="emergencyContact"
+                    {...form.register("emergencyContact")}
+                    placeholder="+39 333 123 4567"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Indirizzo */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Indirizzo</h3>
+              
+              <div>
+                <Label htmlFor="address">Via/Piazza</Label>
+                <Input
+                  id="address"
+                  {...form.register("address")}
+                  placeholder="Via Roma 123"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="city">Città</Label>
+                  <Input
+                    id="city"
+                    {...form.register("city")}
+                    placeholder="Vibo Valentia"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="province">Provincia</Label>
+                  <Input
+                    id="province"
+                    {...form.register("province")}
+                    placeholder="VV"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="postalCode">CAP</Label>
+                  <Input
+                    id="postalCode"
+                    {...form.register("postalCode")}
+                    placeholder="89900"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Orari e Servizi */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Orari</h3>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="checkinTime">Check-in</Label>
+                    <Input
+                      id="checkinTime"
+                      type="time"
+                      {...form.register("checkinTime")}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="checkoutTime">Check-out</Label>
+                    <Input
+                      id="checkoutTime"
+                      type="time"
+                      {...form.register("checkoutTime")}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="maxGuestsPerRoom">Max Ospiti per Camera</Label>
+                  <Input
+                    id="maxGuestsPerRoom"
+                    type="number"
+                    min="1"
+                    max="10"
+                    {...form.register("maxGuestsPerRoom")}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Servizi</h3>
+                
+                <div>
+                  <Label htmlFor="wifiPassword">Password WiFi</Label>
+                  <Input
+                    id="wifiPassword"
+                    {...form.register("wifiPassword")}
+                    placeholder="Password123"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="taxRate">Tassa di Soggiorno (€)</Label>
+                  <Input
+                    id="taxRate"
+                    {...form.register("taxRate")}
+                    placeholder="3.00"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="autoLogoutMinutes">Auto-logout (minuti)</Label>
+                  <Input
+                    id="autoLogoutMinutes"
+                    type="number"
+                    min="5"
+                    max="120"
+                    {...form.register("autoLogoutMinutes")}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Messaggio Benvenuto */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Messaggio di Benvenuto</h3>
+              <div>
+                <Label htmlFor="welcomeMessage">Testo personalizzato per gli ospiti</Label>
+                <Textarea
+                  id="welcomeMessage"
+                  rows={3}
+                  {...form.register("welcomeMessage")}
+                  placeholder="Benvenuto nella nostra struttura! Siamo felici di ospitarvi..."
+                />
+              </div>
+            </div>
+
+            {/* Pulsante Salva */}
+            <div className="flex justify-end pt-6">
+              <Button 
+                type="submit" 
+                disabled={saveSettings.isPending}
+                className="flex items-center gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                {saveSettings.isPending ? "Salvataggio..." : "Salva Impostazioni"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

@@ -141,6 +141,38 @@ export const structureSettings = pgTable("structure_settings", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// Impostazioni generali struttura con persistenza PostgreSQL
+export const settingsConfig = pgTable("settings_config", {
+  id: serial("id").primaryKey(),
+  structureCode: text("structure_code").notNull().unique(),
+  structureName: text("structure_name").notNull().default(""),
+  ownerName: text("owner_name").notNull().default(""),
+  contactEmail: text("contact_email").notNull().default(""),
+  contactPhone: text("contact_phone").notNull().default(""),
+  address: text("address").notNull().default(""),
+  city: text("city").notNull().default(""),
+  province: text("province").notNull().default(""),
+  postalCode: text("postal_code").notNull().default(""),
+  businessType: text("business_type").notNull().default("hotel"), // hotel, b&b, resort, etc.
+  checkinTime: text("checkin_time").notNull().default("15:00"),
+  checkoutTime: text("checkout_time").notNull().default("11:00"),
+  maxGuestsPerRoom: integer("max_guests_per_room").notNull().default(4),
+  welcomeMessage: text("welcome_message").notNull().default("Benvenuto nella nostra struttura!"),
+  additionalServices: text("additional_services").notNull().default(""), // JSON string
+  wifiPassword: text("wifi_password").notNull().default(""),
+  emergencyContact: text("emergency_contact").notNull().default(""),
+  taxRate: text("tax_rate").notNull().default("3.00"), // Tassa di soggiorno
+  defaultCurrency: text("default_currency").notNull().default("EUR"),
+  languagePreference: text("language_preference").notNull().default("it"),
+  notificationPreferences: text("notification_preferences").notNull().default("{}"), // JSON string
+  backupFrequency: text("backup_frequency").notNull().default("daily"),
+  autoLogoutMinutes: integer("auto_logout_minutes").notNull().default(30),
+  enableGuestPortal: boolean("enable_guest_portal").notNull().default(true),
+  enableWhatsappIntegration: boolean("enable_whatsapp_integration").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 export const insertIqCodeSchema = createInsertSchema(iqCodes).omit({
   id: true,
   createdAt: true,
@@ -191,6 +223,12 @@ export const insertStructureSettingsSchema = createInsertSchema(structureSetting
   updatedAt: true,
 });
 
+export const insertSettingsConfigSchema = createInsertSchema(settingsConfig).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertAvailableIqCodeSchema = createInsertSchema(availableIqCodes).omit({
   id: true,
   createdAt: true,
@@ -223,6 +261,9 @@ export type InsertAccountingMovement = z.infer<typeof insertAccountingMovementSc
 
 export type StructureSettings = typeof structureSettings.$inferSelect;
 export type InsertStructureSettings = z.infer<typeof insertStructureSettingsSchema>;
+
+export type SettingsConfig = typeof settingsConfig.$inferSelect;
+export type InsertSettingsConfig = z.infer<typeof insertSettingsConfigSchema>;
 
 export type LoginRequest = z.infer<typeof loginSchema>;
 

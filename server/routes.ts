@@ -1495,6 +1495,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // IMPOSTAZIONI STRUTTURA ENDPOINTS - PERSISTENZA POSTGRESQL
+
+  // Get structure settings
+  app.get("/api/structure/:structureId/settings", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const structureId = req.params.structureId;
+      const structureCode = `TIQ-VV-STT-${structureId}`;
+
+      const settings = await (storage as any).getSettingsConfig(structureCode);
+      res.json({ settings });
+    } catch (error) {
+      console.error("Errore recupero impostazioni:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Update structure settings with PostgreSQL persistence
+  app.put("/api/structure/:structureId/settings", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const structureId = req.params.structureId;
+      const structureCode = `TIQ-VV-STT-${structureId}`;
+
+      const settingsData = {
+        structureCode,
+        ...req.body
+      };
+
+      const updatedSettings = await (storage as any).updateSettingsConfig(structureCode, settingsData);
+      
+      console.log(`✅ IMPOSTAZIONI AGGIORNATE: Struttura ${structureCode} salvata con persistenza PostgreSQL`);
+      
+      res.json({ 
+        success: true, 
+        settings: updatedSettings,
+        message: "Impostazioni salvate con successo"
+      });
+    } catch (error) {
+      console.error("Errore salvataggio impostazioni:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
 
 
   // ACCOUNTING MOVEMENTS ENDPOINTS
