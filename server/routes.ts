@@ -1759,8 +1759,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Complete partner onboarding
   app.post("/api/partner/complete-onboarding", async (req, res) => {
     try {
-      const { partnerCode } = req.body;
-      
       const sessionToken = req.cookies.session_token;
       if (!sessionToken) {
         return res.status(401).json({ message: "Non autenticato" });
@@ -1771,6 +1769,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Accesso negato" });
       }
 
+      // Usa il codice dalla sessione
+      const partnerCode = session.iqCode;
+      
       await storage.completePartnerOnboarding(partnerCode);
       res.json({ success: true });
     } catch (error) {

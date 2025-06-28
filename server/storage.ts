@@ -3,6 +3,9 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt, desc, like } from "drizzle-orm";
 
+// Memoria globale condivisa per onboarding partner
+const globalPartnerOnboardingData = new Map<string, any>();
+
 export interface IStorage {
   // IQ Code methods
   getIqCodeByCode(code: string): Promise<IqCode | undefined>;
@@ -1237,6 +1240,7 @@ export class PostgreStorage implements IStorage {
 
 // Extend PostgreStorage con metodi impostazioni
 class ExtendedPostgreStorage extends PostgreStorage {
+  private partnerOnboardingData: Map<string, any> = new Map();
   async getSettingsConfig(structureCode: string): Promise<SettingsConfig | null> {
     const result = await this.db
       .select()
@@ -1336,7 +1340,48 @@ class ExtendedPostgreStorage extends PostgreStorage {
   }
 
   async getPartnerOnboardingStatus(partnerCode: string): Promise<any> {
-    // SISTEMA ONBOARDING OBBLIGATORIO - Tutti i partner devono completare
+    try {
+      // Verifica nel database se il partner ha completato l'onboarding
+      const iqCodeRecord = await this.getIqCodeByCode(partnerCode);
+      
+      if (iqCodeRecord && iqCodeRecord.internalNote && iqCodeRecord.internalNote.includes('ONBOARDING_COMPLETED')) {
+        return {
+          completed: true,
+          currentStep: 'completed',
+          completedSteps: ['business', 'accessibility', 'allergies', 'family', 'specialties', 'services'],
+          partnerCode: partnerCode,
+          businessInfo: true,
+          accessibilityInfo: true,
+          allergyInfo: true,
+          familyInfo: true,
+          specialtyInfo: true,
+          servicesInfo: true,
+          isCompleted: true
+        };
+      }
+    } catch (error) {
+      console.log('Errore verifica onboarding database:', error);
+    }
+    
+    // Fallback alla memoria globale
+    const isCompleted = globalPartnerOnboardingData.get(`completed_${partnerCode}`) || false;
+    
+    if (isCompleted) {
+      return {
+        completed: true,
+        currentStep: 'completed',
+        completedSteps: ['business', 'accessibility', 'allergies', 'family', 'specialties', 'services'],
+        partnerCode: partnerCode,
+        businessInfo: true,
+        accessibilityInfo: true,
+        allergyInfo: true,
+        familyInfo: true,
+        specialtyInfo: true,
+        servicesInfo: true,
+        isCompleted: true
+      };
+    }
+    
     return {
       completed: false,
       currentStep: 'business',
@@ -1353,13 +1398,43 @@ class ExtendedPostgreStorage extends PostgreStorage {
   }
 
   async savePartnerOnboardingStep(partnerCode: string, step: string, data: any): Promise<void> {
-    // IMPLEMENTAZIONE TEMPORANEA - Salvataggio in memoria locale
+    // Inizializza memoria se non esiste
+    if (!this.partnerOnboardingData) {
+      this.partnerOnboardingData = new Map();
+    }
+    
+    const stepsKey = `onboarding_steps_${partnerCode}`;
+    const currentSteps = this.partnerOnboardingData.get(stepsKey) || [];
+    
+    // Aggiungi step completato se non già presente
+    if (!currentSteps.includes(step)) {
+      currentSteps.push(step);
+      this.partnerOnboardingData.set(stepsKey, currentSteps);
+    }
+    
+    // Salva i dati dello step
+    this.partnerOnboardingData.set(`${partnerCode}_${step}_data`, data);
+    
     console.log(`Salvato step ${step} per partner ${partnerCode}:`, data);
   }
 
   async completePartnerOnboarding(partnerCode: string): Promise<void> {
-    // IMPLEMENTAZIONE TEMPORANEA - Completamento onboarding
-    console.log(`Onboarding completato per partner ${partnerCode}`);
+    try {
+      const iqCodeRecord = await this.getIqCodeByCode(partnerCode);
+      
+      if (iqCodeRecord) {
+        // Aggiorna la nota interna usando il metodo esistente che funziona
+        const newNote = `${iqCodeRecord.internalNote || ''} ONBOARDING_COMPLETED_${new Date().toISOString()}`.trim();
+        await this.updateIqCodeNote(iqCodeRecord.id, newNote);
+        
+        // Marca anche nella memoria globale come backup
+        globalPartnerOnboardingData.set(`completed_${partnerCode}`, true);
+        
+        console.log(`Onboarding completato e salvato per partner ${partnerCode}`);
+      }
+    } catch (error) {
+      console.log('Errore salvataggio completamento onboarding:', error);
+    }
   }
 }
 
@@ -1444,7 +1519,30 @@ class ExtendedMemStorage extends MemStorage {
   }
 
   async getPartnerOnboardingStatus(partnerCode: string): Promise<any> {
+    // Usa la memoria globale condivisa
+    const isCompleted = globalPartnerOnboardingData.get(`completed_${partnerCode}`) || false;
+    
+    if (isCompleted) {
+      return {
+        completed: true,
+        currentStep: 'completed',
+        completedSteps: ['business', 'accessibility', 'allergies', 'family', 'specialties', 'services'],
+        partnerCode: partnerCode,
+        businessInfo: true,
+        accessibilityInfo: true,
+        allergyInfo: true,
+        familyInfo: true,
+        specialtyInfo: true,
+        servicesInfo: true,
+        isCompleted: true
+      };
+    }
+    
     return {
+      completed: false,
+      currentStep: 'business',
+      completedSteps: [],
+      partnerCode: partnerCode,
       businessInfo: false,
       accessibilityInfo: false,
       allergyInfo: false,
@@ -1456,11 +1554,14 @@ class ExtendedMemStorage extends MemStorage {
   }
 
   async savePartnerOnboardingStep(partnerCode: string, step: string, data: any): Promise<void> {
-    // Mock implementation for MemStorage
+    // Salva step nella memoria globale
+    globalPartnerOnboardingData.set(`${partnerCode}_step_${step}`, data);
   }
 
   async completePartnerOnboarding(partnerCode: string): Promise<void> {
-    // Mock implementation for MemStorage
+    // Marca come completato nella memoria globale
+    globalPartnerOnboardingData.set(`completed_${partnerCode}`, true);
+    console.log(`Onboarding completato per partner ${partnerCode}`);
   }
 }
 
