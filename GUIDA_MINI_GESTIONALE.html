@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Guida Mini-Gestionale TouristIQ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3498db;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section h3 {
+            color: #34495e;
+            font-size: 16px;
+            margin: 15px 0 10px 0;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .feature-card h4 {
+            color: #e74c3c;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .feature-card p {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .step-list {
+            background: #ecf0f1;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .step-list ol {
+            padding-left: 20px;
+        }
+        
+        .step-list li {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        
+        .step-list li strong {
+            color: #2c3e50;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .highlight-box h4 {
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .highlight-box p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        
+        .example-box {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+        }
+        
+        .example-box strong {
+            color: #155724;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+        }
+        
+        .warning-box strong {
+            color: #856404;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #3498db;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .footer {
+            background: #34495e;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                margin: 5px;
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .section h2 {
+                font-size: 18px;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Mini-Gestionale TouristIQ</h1>
+            <p>Guida Completa per Strutture Ricettive</p>
+        </div>
+        
+        <div class="content">
+            <!-- PANORAMICA -->
+            <div class="section">
+                <h2>🎯 Panoramica Sistema</h2>
+                <p>Il Mini-Gestionale è la sezione contabile integrata di TouristIQ che permette di monitorare tutti i movimenti economici legati ai codici IQ e agli ospiti della struttura.</p>
+                
+                <div class="highlight-box">
+                    <h4>Accesso Rapido</h4>
+                    <p>Menu Laterale → "Mini-gestionale" oppure Dashboard → Sezione Contabilità</p>
+                </div>
+            </div>
+
+            <!-- DASHBOARD CONTABILE -->
+            <div class="section">
+                <h2>💰 Dashboard Contabile</h2>
+                
+                <h3>📈 Indicatori Principali</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-number">€ 2.450</span>
+                        <span class="stat-label">Ricavi Mese</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">47</span>
+                        <span class="stat-label">Codici Attivi</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">€ 185</span>
+                        <span class="stat-label">Commissioni</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">23</span>
+                        <span class="stat-label">Utilizzi Oggi</span>
+                    </div>
+                </div>
+
+                <h3>📊 Grafici Interattivi</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>Ricavi Mensili</h4>
+                        <p>Grafico a linee che mostra l'andamento dei ricavi mese per mese con confronto anno precedente</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Utilizzo Codici</h4>
+                        <p>Istogramma utilizzi giornalieri con picchi e trend settimanali</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Top Partner</h4>
+                        <p>Classifica partner che generano più commissioni e volume transazioni</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Distribuzione Sconti</h4>
+                        <p>Grafico a torta che mostra tipologie di sconti più utilizzati</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MOVIMENTI -->
+            <div class="section">
+                <h2>💸 Registro Movimenti</h2>
+                
+                <h3>📋 Elenco Transazioni</h3>
+                <div class="step-list">
+                    <p><strong>Cosa trovi:</strong></p>
+                    <ol>
+                        <li><strong>Data e ora</strong> esatta della transazione</li>
+                        <li><strong>Codice IQ utilizzato</strong> (es: TIQ-IT-COLOSSEO)</li>
+                        <li><strong>Nome ospite</strong> che ha utilizzato il codice</li>
+                        <li><strong>Partner/Esercizio</strong> dove è stato utilizzato</li>
+                        <li><strong>Importo transazione</strong> originale</li>
+                        <li><strong>Sconto applicato</strong> (% e €)</li>
+                        <li><strong>Commissione struttura</strong> ricevuta</li>
+                        <li><strong>Stato</strong> (Confermato, In Attesa, Contestato)</li>
+                    </ol>
+                </div>
+
+                <div class="example-box">
+                    <strong>Esempio movimento:</strong><br>
+                    28/06/2025 14:30 | TIQ-IT-GNOCCHI | Mario Rossi | Ristorante Da Gino<br>
+                    Conto: €45,00 | Sconto: €9,00 (20%) | Commissione: €1,80 | ✅ Confermato
+                </div>
+
+                <h3>🔍 Filtri e Ricerche</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>Per Data</h4>
+                        <p>Filtra per giorno, settimana, mese o periodo personalizzato</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Per Ospite</h4>
+                        <p>Cerca tutti i movimenti di un ospite specifico</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Per Partner</h4>
+                        <p>Visualizza attività per singolo esercizio commerciale</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Per Importo</h4>
+                        <p>Range di importi o transazioni sopra/sotto soglia</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COMMISSIONI -->
+            <div class="section">
+                <h2>💵 Gestione Commissioni</h2>
+                
+                <h3>💰 Calcolo Automatico</h3>
+                <div class="step-list">
+                    <p><strong>Come funziona:</strong></p>
+                    <ol>
+                        <li><strong>Ospite usa codice</strong> presso partner</li>
+                        <li><strong>Sistema registra</strong> transazione automaticamente</li>
+                        <li><strong>Calcola commissione</strong> base (di solito 4-6% dello sconto)</li>
+                        <li><strong>Aggiorna saldo</strong> in tempo reale</li>
+                        <li><strong>Genera report</strong> mensile per pagamenti</li>
+                    </ol>
+                </div>
+
+                <div class="warning-box">
+                    <strong>Attenzione:</strong> Le commissioni vengono accreditate solo dopo conferma del partner. Tempi di attesa: 24-48 ore per conferma automatica.
+                </div>
+
+                <h3>📑 Report Commissioni</h3>
+                <div class="example-box">
+                    <strong>Report mensile include:</strong><br>
+                    • Totale commissioni guadagnate<br>
+                    • Numero transazioni processate<br>
+                    • Partner più attivi<br>
+                    • Codici più utilizzati<br>
+                    • Trend crescita/calo utilizzi
+                </div>
+            </div>
+
+            <!-- ANALISI -->
+            <div class="section">
+                <h2>📊 Analisi e Report</h2>
+                
+                <h3>📈 Metriche Chiave</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>ROI Pacchetti</h4>
+                        <p>Ritorno investimento per ogni pacchetto di codici acquistato</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Tasso Utilizzo</h4>
+                        <p>% codici utilizzati vs. codici distribuiti agli ospiti</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Valore Medio</h4>
+                        <p>Importo medio transazioni e commissioni per utilizzo</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Trend Stagionali</h4>
+                        <p>Andamento utilizzi per stagione e periodi dell'anno</p>
+                    </div>
+                </div>
+
+                <h3>🎯 KPI Operativi</h3>
+                <div class="step-list">
+                    <p><strong>Indicatori da monitorare:</strong></p>
+                    <ol>
+                        <li><strong>Tasso conversione:</strong> Ospiti che usano effettivamente i codici</li>
+                        <li><strong>Tempo medio utilizzo:</strong> Giorni tra assegnazione e uso</li>
+                        <li><strong>Partner preferiti:</strong> Dove vanno più spesso gli ospiti</li>
+                        <li><strong>Fasce orarie:</strong> Quando vengono utilizzati i codici</li>
+                        <li><strong>Feedback ospiti:</strong> Soddisfazione e recensioni</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- EXPORT E BACKUP -->
+            <div class="section">
+                <h2>💾 Export e Backup</h2>
+                
+                <h3>📁 Formati Disponibili</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>Excel (.xlsx)</h4>
+                        <p>Completo di grafici e formule per analisi approfondite</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>PDF Report</h4>
+                        <p>Report formattato per stampa o invio contabilità</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>CSV Dati</h4>
+                        <p>Dati grezzi per import in altri sistemi contabili</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>API Access</h4>
+                        <p>Connessione diretta per software gestionale esterno</p>
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    <h4>🔄 Backup Automatico</h4>
+                    <p>Tutti i dati vengono salvati automaticamente ogni ora. Storico disponibile per 5 anni.</p>
+                </div>
+            </div>
+
+            <!-- CASI PRATICI -->
+            <div class="section">
+                <h2>🎯 Casi d'Uso Pratici</h2>
+                
+                <h3>📋 Scenario 1: Controllo Ricavi Settimanali</h3>
+                <div class="step-list">
+                    <ol>
+                        <li><strong>Apri Mini-gestionale</strong> dal menu laterale</li>
+                        <li><strong>Filtra per "Ultima settimana"</strong> nel registro movimenti</li>
+                        <li><strong>Verifica totale commissioni</strong> nella dashboard</li>
+                        <li><strong>Confronta con settimana precedente</strong> nei grafici</li>
+                        <li><strong>Identifica giorni di picco</strong> per ottimizzare servizio</li>
+                    </ol>
+                </div>
+
+                <h3>📋 Scenario 2: Report Mensile per Direzione</h3>
+                <div class="step-list">
+                    <ol>
+                        <li><strong>Seleziona mese corrente</strong> nei filtri</li>
+                        <li><strong>Esporta report PDF</strong> completo di grafici</li>
+                        <li><strong>Include metriche chiave:</strong> ROI, utilizzi, commissioni</li>
+                        <li><strong>Aggiungi note</strong> su trend e osservazioni</li>
+                        <li><strong>Condividi con management</strong> per decisioni strategiche</li>
+                    </ol>
+                </div>
+
+                <h3>📋 Scenario 3: Analisi Partner Performance</h3>
+                <div class="step-list">
+                    <ol>
+                        <li><strong>Filtra per partner specifico</strong> nel registro</li>
+                        <li><strong>Analizza frequenza utilizzi</strong> e importi medi</li>
+                        <li><strong>Verifica tempi di conferma</strong> transazioni</li>
+                        <li><strong>Confronta con altri partner</strong> simili</li>
+                        <li><strong>Pianifica azioni miglioramento</strong> partnership</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- TROUBLESHOOTING -->
+            <div class="section">
+                <h2>🔧 Risoluzione Problemi</h2>
+                
+                <h3>❓ Problemi Comuni</h3>
+                
+                <div class="warning-box">
+                    <strong>I dati non si aggiornano:</strong><br>
+                    • Ricarica la pagina (F5)<br>
+                    • Verifica connessione internet<br>
+                    • Controlla se ci sono manutenzioni programmate
+                </div>
+
+                <div class="warning-box">
+                    <strong>Commissioni mancanti:</strong><br>
+                    • Verifica stato transazione (potrebbe essere "In Attesa")<br>
+                    • Controlla se partner ha confermato l'utilizzo<br>
+                    • Tempi di elaborazione: 24-48 ore massimo
+                </div>
+
+                <div class="warning-box">
+                    <strong>Export non funziona:</strong><br>
+                    • Disabilita popup blocker del browser<br>
+                    • Prova con browser diverso (Chrome consigliato)<br>
+                    • Verifica spazio disponibile sul dispositivo
+                </div>
+            </div>
+
+            <!-- SUPPORTO -->
+            <div class="section">
+                <h2>📞 Supporto e Assistenza</h2>
+                
+                <div class="highlight-box">
+                    <h4>🆘 Contatti Rapidi</h4>
+                    <p><strong>Assistenza Tecnica:</strong> Disponibile 24/7 via chat<br>
+                    <strong>Supporto Contabile:</strong> Lun-Ven 9:00-18:00<br>
+                    <strong>Formazione Staff:</strong> Su appuntamento</p>
+                </div>
+
+                <div class="example-box">
+                    <strong>Prima di contattare supporto:</strong><br>
+                    • Prova a riavviare l'app<br>
+                    • Verifica di avere ultima versione<br>
+                    • Prepara screenshot del problema<br>
+                    • Annota orario e azioni che hanno causato l'errore
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            📱 Guida ottimizzata per mobile | TouristIQ Mini-Gestionale v2.0 | Aggiornato: Giugno 2025
+        </div>
+    </div>
+</body>
+</html>
