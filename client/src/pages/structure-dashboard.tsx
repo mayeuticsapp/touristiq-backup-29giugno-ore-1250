@@ -890,56 +890,7 @@ export default function StructureDashboard() {
     >
       {/* Pannello Completo sempre visibile */}
       <div className="space-y-6">
-        {/* Statistiche principali */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <Bed className="text-blue-600" size={20} />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm text-gray-600">Camere Occupate</p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {structureData ? `${structureData.occupiedRooms}/${structureData.totalRooms}` : "10/15"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-green-100 rounded-full">
-                  <CalendarCheck className="text-green-600" size={20} />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm text-gray-600">Check-in Oggi</p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {structureData ? structureData.checkinToday : "7"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-yellow-100 rounded-full">
-                  <Star className="text-yellow-600" size={20} />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm text-gray-600">Rating Medio</p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {structureData ? structureData.rating : "4"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Gestione ospiti integrata */}
         {renderGuestManagement()}
