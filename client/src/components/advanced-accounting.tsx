@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -95,6 +95,9 @@ export function AdvancedAccounting({ structureCode, hasAccess }: AdvancedAccount
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [showNewMovementForm, setShowNewMovementForm] = useState(false);
   
+  // Refs per focus automatico check-in → check-out
+  const checkoutDateRef = useRef<HTMLInputElement>(null);
+  
   // Form states
   const [formData, setFormData] = useState({
     type: 'income' as 'income' | 'expense',
@@ -102,6 +105,8 @@ export function AdvancedAccounting({ structureCode, hasAccess }: AdvancedAccount
     description: '',
     amount: '',
     date: new Date().toISOString().split('T')[0],
+    checkInDate: '',
+    checkOutDate: '',
     paymentMethod: 'cash',
     clientsServed: '',
     iqcodesUsed: '',

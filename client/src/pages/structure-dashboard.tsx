@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star, Package, Plus, Gift, UserPlus, Phone, Mail, MessageCircle, Edit, Trash2, Send, Copy, Check, DollarSign, Search, Filter, MapPin, Clock, User } from "lucide-react";
 import { useParams } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { Separator } from "@/components/ui/separator";
@@ -77,6 +77,9 @@ export default function StructureDashboard() {
   const [guestCodes, setGuestCodes] = useState<{code: string; assignedAt?: string}[]>([]);
   const [availableCodes, setAvailableCodes] = useState<any[]>([]);
   const [loadingCodes, setLoadingCodes] = useState(false);
+  
+  // Refs per focus automatico check-in → check-out
+  const checkoutDateRef = useRef<HTMLInputElement>(null);
   
   // Stati per ricerca ospiti con IQ code
   const [searchQuery, setSearchQuery] = useState("");
@@ -724,12 +727,21 @@ export default function StructureDashboard() {
                 id="checkinDate"
                 type="date"
                 value={newGuest.checkinDate}
-                onChange={(e) => setNewGuest({...newGuest, checkinDate: e.target.value})}
+                onChange={(e) => {
+                  setNewGuest({...newGuest, checkinDate: e.target.value});
+                  // Focus automatico su check-out quando si seleziona check-in
+                  if (e.target.value && checkoutDateRef.current) {
+                    setTimeout(() => {
+                      checkoutDateRef.current?.focus();
+                    }, 100);
+                  }
+                }}
               />
             </div>
             <div>
               <Label htmlFor="checkoutDate">Check-out</Label>
               <Input
+                ref={checkoutDateRef}
                 id="checkoutDate"
                 type="date"
                 value={newGuest.checkoutDate}
