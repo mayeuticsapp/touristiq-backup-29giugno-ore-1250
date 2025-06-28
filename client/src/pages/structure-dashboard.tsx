@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star, Package, Plus, Gift, UserPlus, Phone, Mail, MessageCircle, Edit, Trash2, Send, Copy, Check, DollarSign } from "lucide-react";
+import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star, Package, Plus, Gift, UserPlus, Phone, Mail, MessageCircle, Edit, Trash2, Send, Copy, Check, DollarSign, Search, Filter, MapPin, Clock, User } from "lucide-react";
 import { useParams } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -78,6 +78,11 @@ export default function StructureDashboard() {
   const [availableCodes, setAvailableCodes] = useState<any[]>([]);
   const [loadingCodes, setLoadingCodes] = useState(false);
   
+  // Stati per ricerca ospiti con IQ code
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFilter, setSearchFilter] = useState("all");
+  const [filteredGuests, setFilteredGuests] = useState<Guest[]>([]);
+  
   // Recupera dati specifici della struttura
   const { data: structureData, isLoading } = useQuery({
     queryKey: ['structure', structureId],
@@ -103,6 +108,46 @@ export default function StructureDashboard() {
     queryKey: ["/api/available-codes"],
     enabled: !!structureId,
   });
+
+  // Filtra ospiti con IQ code in base a ricerca e filtri
+  useEffect(() => {
+    if (!guestsData?.guests) {
+      setFilteredGuests([]);
+      return;
+    }
+
+    // Solo ospiti con IQ code assegnati
+    const guestsWithCodes = guestsData.guests.filter(guest => guest.assignedCodes > 0);
+
+    if (!searchQuery) {
+      setFilteredGuests(guestsWithCodes);
+      return;
+    }
+
+    const filtered = guestsWithCodes.filter(guest => {
+      const searchLower = searchQuery.toLowerCase();
+      const fullName = `${guest.firstName} ${guest.lastName}`.toLowerCase();
+      
+      // Ricerca in base al filtro selezionato
+      switch (searchFilter) {
+        case "name":
+          return fullName.includes(searchLower);
+        case "location":
+          return guest.notes?.toLowerCase().includes(searchLower) || false;
+        case "room":
+          return guest.roomNumber?.toLowerCase().includes(searchLower) || false;
+        case "phone":
+          return guest.phone?.includes(searchQuery) || false;
+        default: // "all"
+          return fullName.includes(searchLower) || 
+                 guest.notes?.toLowerCase().includes(searchLower) ||
+                 guest.roomNumber?.toLowerCase().includes(searchLower) ||
+                 guest.phone?.includes(searchQuery);
+      }
+    });
+
+    setFilteredGuests(filtered);
+  }, [guestsData?.guests, searchQuery, searchFilter]);
 
   const handleGenerateTouristCode = async (packageId: number) => {
     if (selectedGuestId === 0) {
@@ -427,6 +472,7 @@ export default function StructureDashboard() {
 
   const navigation = [
     { icon: <TrendingUp size={16} />, label: "Dashboard Struttura", href: "#", onClick: () => setActiveSection("dashboard") },
+    { icon: <Users size={16} />, label: "Ospiti con IQ Code", href: "#", onClick: () => setActiveSection("ospiti-iqcode") },
     { icon: <DollarSign size={16} />, label: "Mini-gestionale", href: "#", onClick: () => setActiveSection("contabilita") },
     { icon: <Trash2 size={16} className="text-red-500" />, label: "Elimina Account", href: "#", onClick: () => setActiveSection("elimina-account") },
   ];
@@ -919,6 +965,200 @@ export default function StructureDashboard() {
         </div>
       )}
 
+      {activeSection === "ospiti-iqcode" && (
+        <div className="space-y-6">
+          {/* Header Sezione Ospiti con IQ Code */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-blue-600" />
+                Ospiti con IQ Code Assegnati
+                <Badge className="ml-2 bg-blue-100 text-blue-800">
+                  {filteredGuests.length} ospiti trovati
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Barra di Ricerca Avanzata */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="md:col-span-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Cerca ospiti per nome, luogo di provenienza, camera..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <Select value={searchFilter} onValueChange={setSearchFilter}>
+                  <SelectTrigger>
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Cerca in tutto</SelectItem>
+                    <SelectItem value="name">Solo nome ospite</SelectItem>
+                    <SelectItem value="location">Luogo provenienza</SelectItem>
+                    <SelectItem value="room">Numero camera</SelectItem>
+                    <SelectItem value="phone">Telefono</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Filtri Rapidi */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                <Button
+                  size="sm"
+                  variant={searchFilter === "all" && !searchQuery ? "default" : "outline"}
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchFilter("all");
+                  }}
+                >
+                  Tutti gli ospiti
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery("roma");
+                    setSearchFilter("location");
+                  }}
+                >
+                  <MapPin className="h-3 w-3 mr-1" />
+                  Roma
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery("napoli");
+                    setSearchFilter("location");
+                  }}
+                >
+                  <MapPin className="h-3 w-3 mr-1" />
+                  Napoli
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const today = new Date().toLocaleDateString();
+                    setSearchQuery(today);
+                    setSearchFilter("all");
+                  }}
+                >
+                  <Clock className="h-3 w-3 mr-1" />
+                  Oggi
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Lista Ospiti con IQ Code */}
+          {filteredGuests.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredGuests.map((guest) => (
+                <Card key={guest.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      {/* Header Ospite */}
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold text-gray-900">
+                            {guest.firstName} {guest.lastName}
+                          </h3>
+                          <p className="text-sm text-gray-500">Camera {guest.roomNumber}</p>
+                        </div>
+                        <Badge className="bg-green-100 text-green-800">
+                          {guest.assignedCodes} IQ Code
+                        </Badge>
+                      </div>
+
+                      {/* Informazioni Ospite */}
+                      <div className="space-y-2 text-sm">
+                        {guest.phone && (
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Phone className="h-3 w-3" />
+                            {guest.phone}
+                          </div>
+                        )}
+                        {guest.notes && (
+                          <div className="flex items-start gap-2 text-gray-600">
+                            <MapPin className="h-3 w-3 mt-0.5" />
+                            <span className="text-xs">{guest.notes}</span>
+                          </div>
+                        )}
+                        {guest.checkIn && guest.checkOut && (
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Calendar className="h-3 w-3" />
+                            <span className="text-xs">
+                              {guest.checkIn} - {guest.checkOut}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Azioni Rapide */}
+                      <div className="flex gap-2 pt-2 border-t">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            setSelectedGuestForManagement(guest);
+                            await loadGuestCodes(guest.id);
+                          }}
+                          className="flex-1 text-xs"
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          Gestisci
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 text-xs"
+                        >
+                          <MessageCircle className="h-3 w-3 mr-1" />
+                          Contatta
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {searchQuery ? "Nessun ospite trovato" : "Nessun ospite con IQ Code"}
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  {searchQuery 
+                    ? `La ricerca "${searchQuery}" non ha prodotto risultati`
+                    : "Gli ospiti con IQ Code assegnati appariranno qui"
+                  }
+                </p>
+                {searchQuery && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSearchFilter("all");
+                    }}
+                  >
+                    Cancella ricerca
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
       {activeSection === "elimina-account" && (
         <DeleteAccountSection structureId={structureId || ""} />
       )}
@@ -1075,7 +1315,7 @@ export default function StructureDashboard() {
 
 
 
-      {activeSection !== "dashboard" && activeSection !== "iqcode" && activeSection !== "contabilita" && activeSection !== "elimina-account" && (
+      {activeSection !== "dashboard" && activeSection !== "iqcode" && activeSection !== "contabilita" && activeSection !== "ospiti-iqcode" && activeSection !== "elimina-account" && (
         <div className="text-center py-8">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Sezione in Sviluppo</h3>
           <p className="text-gray-500">La sezione "{activeSection}" sarà implementata prossimamente.</p>
