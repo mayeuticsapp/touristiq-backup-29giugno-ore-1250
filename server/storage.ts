@@ -1,7 +1,7 @@
 import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type UserRole } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { eq, and, lt } from "drizzle-orm";
+import { eq, and, lt, desc, like } from "drizzle-orm";
 
 export interface IStorage {
   // IQ Code methods
@@ -59,6 +59,8 @@ export interface IStorage {
   // Accounting movements methods
   createAccountingMovement(movement: InsertAccountingMovement): Promise<AccountingMovement>;
   getAccountingMovements(structureCode: string): Promise<AccountingMovement[]>;
+  updateAccountingMovement(id: number, updates: Partial<InsertAccountingMovement>): Promise<AccountingMovement>;
+  deleteAccountingMovement(id: number): Promise<void>;
   getMonthlyAccountingSummary(structureCode: string, month: string): Promise<{income: number, expenses: number, balance: number}>;
 
   // Structure settings methods
@@ -619,9 +621,73 @@ export class MemStorage implements IStorage {
   async getPurchasedPackagesByStructure(): Promise<PurchasedPackage[]> { return []; }
   async getTotalIQCodesRemaining(): Promise<number> { return 0; }
   async useIQCodeFromPackage(): Promise<boolean> { return false; }
-  async createAccountingMovement(): Promise<AccountingMovement> { throw new Error("Not implemented"); }
-  async getAccountingMovements(): Promise<AccountingMovement[]> { return []; }
-  async getMonthlyAccountingSummary(): Promise<{income: number, expenses: number, balance: number}> { return { income: 0, expenses: 0, balance: 0 }; }
+  async createAccountingMovement(movement: InsertAccountingMovement): Promise<AccountingMovement> {
+    const newMovement: AccountingMovement = {
+      id: this.currentAccountingMovementId++,
+      structureCode: movement.structureCode,
+      type: movement.type,
+      category: movement.category,
+      description: movement.description,
+      amount: movement.amount,
+      movementDate: movement.movementDate,
+      paymentMethod: movement.paymentMethod,
+      clientsServed: movement.clientsServed || null,
+      iqcodesUsed: movement.iqcodesUsed || null,
+      notes: movement.notes || null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.accountingMovements.set(newMovement.id, newMovement);
+    return newMovement;
+  }
+
+  async getAccountingMovements(structureCode: string): Promise<AccountingMovement[]> {
+    return Array.from(this.accountingMovements.values())
+      .filter(movement => movement.structureCode === structureCode)
+      .sort((a, b) => new Date(b.movementDate).getTime() - new Date(a.movementDate).getTime());
+  }
+
+  async updateAccountingMovement(id: number, updates: Partial<InsertAccountingMovement>): Promise<AccountingMovement> {
+    const existingMovement = this.accountingMovements.get(id);
+    if (!existingMovement) {
+      throw new Error("Movimento non trovato");
+    }
+    
+    const updatedMovement: AccountingMovement = {
+      ...existingMovement,
+      ...updates,
+      updatedAt: new Date()
+    };
+    
+    this.accountingMovements.set(id, updatedMovement);
+    return updatedMovement;
+  }
+
+  async deleteAccountingMovement(id: number): Promise<void> {
+    this.accountingMovements.delete(id);
+  }
+
+  async getMonthlyAccountingSummary(structureCode: string, month: string): Promise<{income: number, expenses: number, balance: number}> {
+    const movements = Array.from(this.accountingMovements.values())
+      .filter(movement => 
+        movement.structureCode === structureCode && 
+        movement.movementDate.startsWith(month)
+      );
+
+    const income = movements
+      .filter(m => m.type === 'income')
+      .reduce((sum, m) => sum + parseFloat(m.amount), 0);
+
+    const expenses = movements
+      .filter(m => m.type === 'expense')
+      .reduce((sum, m) => sum + parseFloat(m.amount), 0);
+
+    return {
+      income,
+      expenses,
+      balance: income - expenses
+    };
+  }
   async getStructureSettings(): Promise<StructureSettings | undefined> { return undefined; }
   async createStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
   async updateStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
@@ -1026,9 +1092,64 @@ export class PostgreStorage implements IStorage {
   async getPurchasedPackagesByStructure(): Promise<PurchasedPackage[]> { return []; }
   async getTotalIQCodesRemaining(): Promise<number> { return 0; }
   async useIQCodeFromPackage(): Promise<boolean> { return false; }
-  async createAccountingMovement(): Promise<AccountingMovement> { throw new Error("Not implemented"); }
-  async getAccountingMovements(): Promise<AccountingMovement[]> { return []; }
-  async getMonthlyAccountingSummary(): Promise<{income: number, expenses: number, balance: number}> { return { income: 0, expenses: 0, balance: 0 }; }
+
+  // ACCOUNTING MOVEMENTS - Implementazione reale PostgreSQL
+  async createAccountingMovement(movement: InsertAccountingMovement): Promise<AccountingMovement> {
+    const [newMovement] = await this.db
+      .insert(accountingMovements)
+      .values(movement)
+      .returning();
+    return newMovement;
+  }
+
+  async getAccountingMovements(structureCode: string): Promise<AccountingMovement[]> {
+    return await this.db
+      .select()
+      .from(accountingMovements)
+      .where(eq(accountingMovements.structureCode, structureCode))
+      .orderBy(desc(accountingMovements.movementDate));
+  }
+
+  async updateAccountingMovement(id: number, updates: Partial<InsertAccountingMovement>): Promise<AccountingMovement> {
+    const [updatedMovement] = await this.db
+      .update(accountingMovements)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(accountingMovements.id, id))
+      .returning();
+    return updatedMovement;
+  }
+
+  async deleteAccountingMovement(id: number): Promise<void> {
+    await this.db
+      .delete(accountingMovements)
+      .where(eq(accountingMovements.id, id));
+  }
+
+  async getMonthlyAccountingSummary(structureCode: string, month: string): Promise<{income: number, expenses: number, balance: number}> {
+    const movements = await this.db
+      .select()
+      .from(accountingMovements)
+      .where(
+        and(
+          eq(accountingMovements.structureCode, structureCode),
+          like(accountingMovements.movementDate, `${month}%`)
+        )
+      );
+
+    const income = movements
+      .filter(m => m.type === 'income')
+      .reduce((sum, m) => sum + parseFloat(m.amount), 0);
+
+    const expenses = movements
+      .filter(m => m.type === 'expense')
+      .reduce((sum, m) => sum + parseFloat(m.amount), 0);
+
+    return {
+      income,
+      expenses,
+      balance: income - expenses
+    };
+  }
   async getStructureSettings(): Promise<StructureSettings | undefined> { return undefined; }
   async createStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
   async updateStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }

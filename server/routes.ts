@@ -1497,6 +1497,145 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // ACCOUNTING MOVEMENTS ENDPOINTS
+  
+  // Get accounting movements for structure
+  app.get("/api/accounting/movements", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const movements = await storage.getAccountingMovements(userIqCode.code);
+      res.json(movements);
+    } catch (error) {
+      console.error("Errore recupero movimenti:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Create new accounting movement
+  app.post("/api/accounting/movements", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const { type, category, description, amount, movementDate, paymentMethod, clientsServed, iqcodesUsed, notes } = req.body;
+
+      if (!type || !category || !description || !amount || !movementDate) {
+        return res.status(400).json({ message: "Campi obbligatori mancanti" });
+      }
+
+      const movement = await storage.createAccountingMovement({
+        structureCode: userIqCode.code,
+        type,
+        category,
+        description,
+        amount: amount.toString(),
+        movementDate,
+        paymentMethod,
+        clientsServed,
+        iqcodesUsed,
+        notes
+      });
+
+      res.json(movement);
+    } catch (error) {
+      console.error("Errore creazione movimento:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Update accounting movement
+  app.put("/api/accounting/movements/:id", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const movementId = parseInt(req.params.id);
+      const { type, category, description, amount, movementDate, paymentMethod, clientsServed, iqcodesUsed, notes } = req.body;
+
+      const updatedMovement = await storage.updateAccountingMovement(movementId, {
+        type,
+        category,
+        description,
+        amount: amount.toString(),
+        movementDate,
+        paymentMethod,
+        clientsServed,
+        iqcodesUsed,
+        notes
+      });
+
+      res.json(updatedMovement);
+    } catch (error) {
+      console.error("Errore aggiornamento movimento:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Delete accounting movement
+  app.delete("/api/accounting/movements/:id", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const movementId = parseInt(req.params.id);
+      await storage.deleteAccountingMovement(movementId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Errore eliminazione movimento:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
