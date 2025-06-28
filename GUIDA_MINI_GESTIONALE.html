@@ -241,11 +241,11 @@
             <!-- PANORAMICA -->
             <div class="section">
                 <h2>🎯 Panoramica Sistema</h2>
-                <p>Il Mini-Gestionale è la sezione contabile integrata di TouristIQ che permette di monitorare tutti i movimenti economici legati ai codici IQ e agli ospiti della struttura.</p>
+                <p>Il Mini-Gestionale è un sistema di contabilità semplificato per strutture ricettive che permette di registrare e monitorare entrate e spese quotidiane.</p>
                 
                 <div class="highlight-box">
                     <h4>Accesso Rapido</h4>
-                    <p>Menu Laterale → "Mini-gestionale" oppure Dashboard → Sezione Contabilità</p>
+                    <p>Menu Laterale → "Mini-gestionale" (disponibile solo con pacchetti IQCode attivi)</p>
                 </div>
             </div>
 
@@ -253,188 +253,115 @@
             <div class="section">
                 <h2>💰 Dashboard Contabile</h2>
                 
-                <h3>📈 Indicatori Principali</h3>
+                <h3>📈 4 Indicatori Principali</h3>
                 <div class="stats-grid">
                     <div class="stat-card">
                         <span class="stat-number">€ 2.450</span>
-                        <span class="stat-label">Ricavi Mese</span>
+                        <span class="stat-label">Entrate Totali</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">€ 890</span>
+                        <span class="stat-label">Spese Totali</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">€ 1.560</span>
+                        <span class="stat-label">Saldo</span>
                     </div>
                     <div class="stat-card">
                         <span class="stat-number">47</span>
-                        <span class="stat-label">Codici Attivi</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-number">€ 185</span>
-                        <span class="stat-label">Commissioni</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-number">23</span>
-                        <span class="stat-label">Utilizzi Oggi</span>
+                        <span class="stat-label">Clienti Serviti</span>
                     </div>
                 </div>
 
-                <h3>📊 Grafici Interattivi</h3>
+                <h3>📊 Categorie Predefinite</h3>
                 <div class="feature-grid">
                     <div class="feature-card">
-                        <h4>Ricavi Mensili</h4>
-                        <p>Grafico a linee che mostra l'andamento dei ricavi mese per mese con confronto anno precedente</p>
+                        <h4>🏨 Entrate</h4>
+                        <p>Camere • Colazioni • Extra Servizi • IQCode Venduti • Parcheggio • Ristorazione • Wellness/SPA • Tour/Escursioni • Altre Entrate</p>
                     </div>
                     <div class="feature-card">
-                        <h4>Utilizzo Codici</h4>
-                        <p>Istogramma utilizzi giornalieri con picchi e trend settimanali</p>
-                    </div>
-                    <div class="feature-card">
-                        <h4>Top Partner</h4>
-                        <p>Classifica partner che generano più commissioni e volume transazioni</p>
-                    </div>
-                    <div class="feature-card">
-                        <h4>Distribuzione Sconti</h4>
-                        <p>Grafico a torta che mostra tipologie di sconti più utilizzati</p>
+                        <h4>💳 Spese</h4>
+                        <p>Commissioni OTA • Costo IQCode • Forniture • Pulizie • Lavanderia • Manutenzioni • Utenze • Staff • Tasse • Altre Spese</p>
                     </div>
                 </div>
             </div>
 
             <!-- MOVIMENTI -->
             <div class="section">
-                <h2>💸 Registro Movimenti</h2>
+                <h2>💸 Gestione Movimenti</h2>
                 
-                <h3>📋 Elenco Transazioni</h3>
+                <h3>📋 Registra Nuovo Movimento</h3>
                 <div class="step-list">
-                    <p><strong>Cosa trovi:</strong></p>
+                    <p><strong>Campi del form:</strong></p>
                     <ol>
-                        <li><strong>Data e ora</strong> esatta della transazione</li>
-                        <li><strong>Codice IQ utilizzato</strong> (es: TIQ-IT-COLOSSEO)</li>
-                        <li><strong>Nome ospite</strong> che ha utilizzato il codice</li>
-                        <li><strong>Partner/Esercizio</strong> dove è stato utilizzato</li>
-                        <li><strong>Importo transazione</strong> originale</li>
-                        <li><strong>Sconto applicato</strong> (% e €)</li>
-                        <li><strong>Commissione struttura</strong> ricevuta</li>
-                        <li><strong>Stato</strong> (Confermato, In Attesa, Contestato)</li>
+                        <li><strong>Tipo:</strong> Entrata o Spesa</li>
+                        <li><strong>Categoria:</strong> Seleziona da elenco predefinito</li>
+                        <li><strong>Descrizione:</strong> Dettaglio del movimento</li>
+                        <li><strong>Importo:</strong> Valore in euro</li>
+                        <li><strong>Data:</strong> Quando è avvenuto</li>
+                        <li><strong>Metodo pagamento:</strong> Contanti, Carta, Bonifico</li>
+                        <li><strong>Clienti serviti:</strong> Numero ospiti (opzionale)</li>
+                        <li><strong>IQCodes usati:</strong> Quanti codici (opzionale)</li>
+                        <li><strong>Note aggiuntive:</strong> Informazioni extra</li>
                     </ol>
                 </div>
 
                 <div class="example-box">
-                    <strong>Esempio movimento:</strong><br>
-                    28/06/2025 14:30 | TIQ-IT-GNOCCHI | Mario Rossi | Ristorante Da Gino<br>
-                    Conto: €45,00 | Sconto: €9,00 (20%) | Commissione: €1,80 | ✅ Confermato
+                    <strong>Esempio movimento entrata:</strong><br>
+                    Tipo: Entrata | Categoria: Camere | Descrizione: Pernottamento camera 101<br>
+                    Importo: €85,00 | Data: 28/06/2025 | Pagamento: Carta | Clienti: 2
                 </div>
 
-                <h3>🔍 Filtri e Ricerche</h3>
+                <h3>🔍 Tabella Movimenti</h3>
                 <div class="feature-grid">
                     <div class="feature-card">
-                        <h4>Per Data</h4>
-                        <p>Filtra per giorno, settimana, mese o periodo personalizzato</p>
+                        <h4>Visualizzazione</h4>
+                        <p>Tabella con tutti i movimenti ordinati per data</p>
                     </div>
                     <div class="feature-card">
-                        <h4>Per Ospite</h4>
-                        <p>Cerca tutti i movimenti di un ospite specifico</p>
+                        <h4>Modifica</h4>
+                        <p>Click per modificare qualsiasi movimento esistente</p>
                     </div>
                     <div class="feature-card">
-                        <h4>Per Partner</h4>
-                        <p>Visualizza attività per singolo esercizio commerciale</p>
+                        <h4>Elimina</h4>
+                        <p>Rimuovi movimenti errati o duplicati</p>
                     </div>
                     <div class="feature-card">
-                        <h4>Per Importo</h4>
-                        <p>Range di importi o transazioni sopra/sotto soglia</p>
+                        <h4>Export</h4>
+                        <p>Scarica dati in formato CSV per contabilità</p>
                     </div>
                 </div>
             </div>
 
-            <!-- COMMISSIONI -->
+            <!-- FUNZIONI BASE -->
             <div class="section">
-                <h2>💵 Gestione Commissioni</h2>
+                <h2>🔧 Funzioni Disponibili</h2>
                 
-                <h3>💰 Calcolo Automatico</h3>
+                <h3>➕ Aggiungi Movimento</h3>
                 <div class="step-list">
                     <p><strong>Come funziona:</strong></p>
                     <ol>
-                        <li><strong>Ospite usa codice</strong> presso partner</li>
-                        <li><strong>Sistema registra</strong> transazione automaticamente</li>
-                        <li><strong>Calcola commissione</strong> base (di solito 4-6% dello sconto)</li>
-                        <li><strong>Aggiorna saldo</strong> in tempo reale</li>
-                        <li><strong>Genera report</strong> mensile per pagamenti</li>
+                        <li><strong>Click "Nuovo Movimento"</strong> nel mini-gestionale</li>
+                        <li><strong>Compila il form</strong> con tutti i campi necessari</li>
+                        <li><strong>Seleziona categoria</strong> da elenco predefinito</li>
+                        <li><strong>Salva</strong> - il movimento appare immediatamente</li>
+                        <li><strong>I totali si aggiornano</strong> automaticamente</li>
+                    </ol>
+                </div>
+
+                <h3>✏️ Modifica/Elimina</h3>
+                <div class="step-list">
+                    <p><strong>Azioni possibili:</strong></p>
+                    <ol>
+                        <li><strong>Click sull'icona matita</strong> per modificare movimento</li>
+                        <li><strong>Click sull'icona cestino</strong> per eliminare</li>
+                        <li><strong>Conferma modifiche</strong> - tutto si aggiorna subito</li>
+                        <li><strong>Export CSV</strong> per backup dati</li>
                     </ol>
                 </div>
 
                 <div class="warning-box">
-                    <strong>Attenzione:</strong> Le commissioni vengono accreditate solo dopo conferma del partner. Tempi di attesa: 24-48 ore per conferma automatica.
-                </div>
-
-                <h3>📑 Report Commissioni</h3>
-                <div class="example-box">
-                    <strong>Report mensile include:</strong><br>
-                    • Totale commissioni guadagnate<br>
-                    • Numero transazioni processate<br>
-                    • Partner più attivi<br>
-                    • Codici più utilizzati<br>
-                    • Trend crescita/calo utilizzi
-                </div>
-            </div>
-
-            <!-- ANALISI -->
-            <div class="section">
-                <h2>📊 Analisi e Report</h2>
-                
-                <h3>📈 Metriche Chiave</h3>
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <h4>ROI Pacchetti</h4>
-                        <p>Ritorno investimento per ogni pacchetto di codici acquistato</p>
-                    </div>
-                    <div class="feature-card">
-                        <h4>Tasso Utilizzo</h4>
-                        <p>% codici utilizzati vs. codici distribuiti agli ospiti</p>
-                    </div>
-                    <div class="feature-card">
-                        <h4>Valore Medio</h4>
-                        <p>Importo medio transazioni e commissioni per utilizzo</p>
-                    </div>
-                    <div class="feature-card">
-                        <h4>Trend Stagionali</h4>
-                        <p>Andamento utilizzi per stagione e periodi dell'anno</p>
-                    </div>
-                </div>
-
-                <h3>🎯 KPI Operativi</h3>
-                <div class="step-list">
-                    <p><strong>Indicatori da monitorare:</strong></p>
-                    <ol>
-                        <li><strong>Tasso conversione:</strong> Ospiti che usano effettivamente i codici</li>
-                        <li><strong>Tempo medio utilizzo:</strong> Giorni tra assegnazione e uso</li>
-                        <li><strong>Partner preferiti:</strong> Dove vanno più spesso gli ospiti</li>
-                        <li><strong>Fasce orarie:</strong> Quando vengono utilizzati i codici</li>
-                        <li><strong>Feedback ospiti:</strong> Soddisfazione e recensioni</li>
-                    </ol>
-                </div>
-            </div>
-
-            <!-- EXPORT E BACKUP -->
-            <div class="section">
-                <h2>💾 Export e Backup</h2>
-                
-                <h3>📁 Formati Disponibili</h3>
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <h4>Excel (.xlsx)</h4>
-                        <p>Completo di grafici e formule per analisi approfondite</p>
-                    </div>
-                    <div class="feature-card">
-                        <h4>PDF Report</h4>
-                        <p>Report formattato per stampa o invio contabilità</p>
-                    </div>
-                    <div class="feature-card">
-                        <h4>CSV Dati</h4>
-                        <p>Dati grezzi per import in altri sistemi contabili</p>
-                    </div>
-                    <div class="feature-card">
-                        <h4>API Access</h4>
-                        <p>Connessione diretta per software gestionale esterno</p>
-                    </div>
-                </div>
-
-                <div class="highlight-box">
-                    <h4>🔄 Backup Automatico</h4>
-                    <p>Tutti i dati vengono salvati automaticamente ogni ora. Storico disponibile per 5 anni.</p>
+                    <strong>Nota importante:</strong> Il mini-gestionale è disponibile solo quando hai pacchetti IQCode attivi. Se non vedi la sezione, contatta l'amministratore per acquistare crediti.
                 </div>
             </div>
 
@@ -442,36 +369,38 @@
             <div class="section">
                 <h2>🎯 Casi d'Uso Pratici</h2>
                 
-                <h3>📋 Scenario 1: Controllo Ricavi Settimanali</h3>
+                <h3>📋 Scenario 1: Check-in con Incasso Camera</h3>
                 <div class="step-list">
                     <ol>
-                        <li><strong>Apri Mini-gestionale</strong> dal menu laterale</li>
-                        <li><strong>Filtra per "Ultima settimana"</strong> nel registro movimenti</li>
-                        <li><strong>Verifica totale commissioni</strong> nella dashboard</li>
-                        <li><strong>Confronta con settimana precedente</strong> nei grafici</li>
-                        <li><strong>Identifica giorni di picco</strong> per ottimizzare servizio</li>
+                        <li><strong>Ospite paga camera</strong> €85,00 in contanti</li>
+                        <li><strong>Apri Mini-gestionale</strong> → "Nuovo Movimento"</li>
+                        <li><strong>Tipo:</strong> Entrata | <strong>Categoria:</strong> Camere</li>
+                        <li><strong>Descrizione:</strong> "Camera 101 - Mario Rossi"</li>
+                        <li><strong>Importo:</strong> €85,00 | <strong>Clienti serviti:</strong> 2</li>
+                        <li><strong>Salva</strong> - il totale entrate si aggiorna subito</li>
                     </ol>
                 </div>
 
-                <h3>📋 Scenario 2: Report Mensile per Direzione</h3>
+                <h3>📋 Scenario 2: Registra Spesa Forniture</h3>
                 <div class="step-list">
                     <ol>
-                        <li><strong>Seleziona mese corrente</strong> nei filtri</li>
-                        <li><strong>Esporta report PDF</strong> completo di grafici</li>
-                        <li><strong>Include metriche chiave:</strong> ROI, utilizzi, commissioni</li>
-                        <li><strong>Aggiungi note</strong> su trend e osservazioni</li>
-                        <li><strong>Condividi con management</strong> per decisioni strategiche</li>
+                        <li><strong>Acquisti prodotti pulizia</strong> €45,50 con carta</li>
+                        <li><strong>Nuovo Movimento</strong> → Tipo: Spesa</li>
+                        <li><strong>Categoria:</strong> Forniture | <strong>Pagamento:</strong> Carta</li>
+                        <li><strong>Descrizione:</strong> "Detergenti e carta igienica"</li>
+                        <li><strong>Le spese totali aumentano</strong> automaticamente</li>
+                        <li><strong>Il saldo si ricalcola</strong> in tempo reale</li>
                     </ol>
                 </div>
 
-                <h3>📋 Scenario 3: Analisi Partner Performance</h3>
+                <h3>📋 Scenario 3: Controllo Situazione Mensile</h3>
                 <div class="step-list">
                     <ol>
-                        <li><strong>Filtra per partner specifico</strong> nel registro</li>
-                        <li><strong>Analizza frequenza utilizzi</strong> e importi medi</li>
-                        <li><strong>Verifica tempi di conferma</strong> transazioni</li>
-                        <li><strong>Confronta con altri partner</strong> simili</li>
-                        <li><strong>Pianifica azioni miglioramento</strong> partnership</li>
+                        <li><strong>Visualizza i 4 KPI</strong> nella dashboard</li>
+                        <li><strong>Controlla entrate vs spese</strong> del mese</li>
+                        <li><strong>Verifica saldo positivo/negativo</strong></li>
+                        <li><strong>Esporta CSV</strong> per invio al commercialista</li>
+                        <li><strong>Pianifica azioni</strong> se saldo negativo</li>
                     </ol>
                 </div>
             </div>
