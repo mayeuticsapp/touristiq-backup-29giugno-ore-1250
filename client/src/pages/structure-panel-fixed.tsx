@@ -22,10 +22,10 @@ import { AdvancedAccounting } from '@/components/advanced-accounting';
 
 // Prezzi dei pacchetti IQCode
 const PACKAGE_PRICES = {
-  25: '€50', 
-  50: '€90',
-  75: '€130', 
-  100: '€160',
+  '25': '€50', 
+  '50': '€90',
+  '75': '€130', 
+  '100': '€160',
 };
 
 export default function StructurePanelFixed() {
@@ -178,10 +178,10 @@ export default function StructurePanelFixed() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {[
-                      { size: '25', price: '€99', sumupLink: 'https://pay.sumup.com/b2c/QSJE461B' },
-                      { size: '50', price: '€179', sumupLink: 'https://pay.sumup.com/b2c/QK6MLJC7' },
-                      { size: '75', price: '€239', sumupLink: 'https://pay.sumup.com/b2c/Q9517L3P' },
-                      { size: '100', price: '€299', sumupLink: 'https://pay.sumup.com/b2c/Q3BWI26N' }
+                      { size: '25', price: '€50', sumupLink: 'https://pay.sumup.com/b2c/QSJE461B' },
+                      { size: '50', price: '€90', sumupLink: 'https://pay.sumup.com/b2c/QK6MLJC7' },
+                      { size: '75', price: '€130', sumupLink: 'https://pay.sumup.com/b2c/Q9517L3P' },
+                      { size: '100', price: '€160', sumupLink: 'https://pay.sumup.com/b2c/Q3BWI26N' }
                     ].map(({ size, price, sumupLink }) => (
                       <div 
                         key={size}

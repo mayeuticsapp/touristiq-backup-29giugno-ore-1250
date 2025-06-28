@@ -937,49 +937,51 @@ export default function StructureDashboard() {
               </div>
 
               {/* Codici IQ Assegnati all'Ospite */}
-              {guestCodes && guestCodes.length > 0 ? (
-                <div className="border rounded-lg p-4 bg-blue-50">
-                  <h3 className="font-semibold mb-3 text-blue-800">Codici IQ Assegnati</h3>
-                  <div className="space-y-2">
-                    {guestCodes.map((codeData, index: number) => (
-                      <div key={index} className="flex justify-between items-center bg-white p-3 rounded border">
-                        <div className="flex items-center gap-3">
-                          <Badge className="bg-blue-600 text-white">{codeData.code}</Badge>
-                          <span className="text-sm text-gray-600">
-                            Assegnato: {codeData.assignedAt ? new Date(codeData.assignedAt).toLocaleDateString() : 'Oggi'}
-                          </span>
+              <div>
+                {guestCodes && guestCodes.length > 0 && (
+                  <div className="border rounded-lg p-4 bg-blue-50">
+                    <h3 className="font-semibold mb-3 text-blue-800">Codici IQ Assegnati</h3>
+                    <div className="space-y-2">
+                      {guestCodes.map((codeData, index: number) => (
+                        <div key={index} className="flex justify-between items-center bg-white p-3 rounded border">
+                          <div className="flex items-center gap-3">
+                            <Badge className="bg-blue-600 text-white">{codeData.code}</Badge>
+                            <span className="text-sm text-gray-600">
+                              Assegnato: {codeData.assignedAt ? new Date(codeData.assignedAt).toLocaleDateString() : 'Oggi'}
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                navigator.clipboard.writeText(codeData.code);
+                                alert(`Codice ${codeData.code} copiato negli appunti`);
+                              }}
+                            >
+                              <Copy size={14} className="mr-1" />
+                              Copia
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                const reason = prompt("Motivo rimozione codice:", "Assegnato per errore");
+                                if (reason && selectedGuestForManagement) {
+                                  handleRemoveCodeFromGuest(codeData.code, selectedGuestForManagement.id, reason);
+                                }
+                              }}
+                            >
+                              <Trash2 size={14} className="mr-1" />
+                              Rimuovi
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              navigator.clipboard.writeText(codeData.code);
-                              alert(`Codice ${codeData.code} copiato negli appunti`);
-                            }}
-                          >
-                            <Copy size={14} className="mr-1" />
-                            Copia
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => {
-                              const reason = prompt("Motivo rimozione codice:", "Assegnato per errore");
-                              if (reason && selectedGuestForManagement) {
-                                handleRemoveCodeFromGuest(codeData.code, selectedGuestForManagement.id, reason);
-                              }
-                            }}
-                          >
-                            <Trash2 size={14} className="mr-1" />
-                            Rimuovi
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ) : null}
+                )}
+              </div>
 
               {/* Codici Disponibili per Riassegnazione */}
               {availableCodesData && Array.isArray((availableCodesData as any).codes) && (availableCodesData as any).codes.length > 0 && (
