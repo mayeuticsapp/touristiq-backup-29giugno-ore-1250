@@ -1445,6 +1445,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PARTNER ONBOARDING ENDPOINTS
+  
+  // Get partner onboarding status
+  app.get("/api/partner/onboarding-status", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'partner') {
+        return res.status(403).json({ message: "Accesso negato - solo partner" });
+      }
+
+      // Per ora, tutti i partner esistenti sono considerati NON completati
+      // Solo i nuovi partner devono completare l'onboarding
+      const onboardingStatus = await storage.getPartnerOnboardingStatus(userIqCode.code);
+      
+      res.json({ 
+        completed: onboardingStatus?.completed || false,
+        currentStep: onboardingStatus?.currentStep || 'business',
+        completedSteps: onboardingStatus?.completedSteps || []
+      });
+    } catch (error) {
+      console.error("Errore controllo onboarding:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Save partner onboarding step
+  app.post("/api/partner/onboarding/:step", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'partner') {
+        return res.status(403).json({ message: "Accesso negato - solo partner" });
+      }
+
+      const step = req.params.step;
+      const stepData = req.body;
+
+      await storage.savePartnerOnboardingStep(userIqCode.code, step, stepData);
+      
+      res.json({ success: true, message: "Dati salvati con successo" });
+    } catch (error) {
+      console.error("Errore salvataggio onboarding:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Complete partner onboarding
+  app.post("/api/partner/onboarding/complete", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'partner') {
+        return res.status(403).json({ message: "Accesso negato - solo partner" });
+      }
+
+      await storage.completePartnerOnboarding(userIqCode.code);
+      
+      res.json({ success: true, message: "Onboarding completato con successo" });
+    } catch (error) {
+      console.error("Errore completamento onboarding:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // GUEST MANAGEMENT ENDPOINTS
   
   // Get guests for current structure

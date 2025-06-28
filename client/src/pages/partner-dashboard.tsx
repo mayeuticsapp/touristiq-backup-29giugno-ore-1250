@@ -67,6 +67,12 @@ export default function PartnerDashboard() {
   // Ref per focus automatico check-in → check-out
   const validUntilDateRef = useRef<HTMLInputElement>(null);
   
+  // Verifica stato onboarding OBBLIGATORIO
+  const { data: onboardingStatus, isLoading: isLoadingOnboarding } = useQuery({
+    queryKey: ['/api/partner/onboarding-status'],
+    enabled: true
+  });
+
   // Stati per i form
   const [touristCode, setTouristCode] = useState("");
   const [newOffer, setNewOffer] = useState({
@@ -315,6 +321,19 @@ export default function PartnerDashboard() {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  // CONTROLLO ONBOARDING OBBLIGATORIO
+  if (isLoadingOnboarding) {
+    return <div className="flex items-center justify-center min-h-screen">Caricamento...</div>;
+  }
+
+  // Se onboarding non completato, mostra flusso obbligatorio
+  if (!onboardingStatus?.completed) {
+    return <PartnerOnboarding 
+      partnerCode={onboardingStatus?.partnerCode || "partner"} 
+      onComplete={() => window.location.reload()} 
+    />;
+  }
 
   if (showMiniGestionale) {
     return <AdvancedAccounting structureCode="partner" hasAccess={true} />;

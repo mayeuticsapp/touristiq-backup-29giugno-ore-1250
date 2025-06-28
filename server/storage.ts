@@ -77,6 +77,11 @@ export interface IStorage {
   createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void>;
   createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any>;
   createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any>;
+
+  // Partner onboarding methods
+  getPartnerOnboardingStatus(partnerCode: string): Promise<{completed: boolean, currentStep?: string, completedSteps?: string[]} | undefined>;
+  savePartnerOnboardingStep(partnerCode: string, step: string, data: any): Promise<void>;
+  completePartnerOnboarding(partnerCode: string): Promise<void>;
   
   // Partner onboarding methods
   getPartnerOnboardingStatus(partnerCode: string): Promise<any>;
@@ -741,6 +746,31 @@ export class MemStorage implements IStorage {
   async createStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
   async updateStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
   async checkGestionaleAccess(): Promise<{hasAccess: boolean, hoursRemaining?: number}> { return { hasAccess: false }; }
+
+  // Settings config methods
+  async getSettingsConfig(structureCode: string): Promise<any> { return {}; }
+  async updateSettingsConfig(structureCode: string, settings: any): Promise<any> { return settings; }
+
+  // Partner methods
+  async createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void> { return; }
+  async createPartnerOffer(offer: any): Promise<any> { return offer; }
+  async createSpecialClient(client: any): Promise<any> { return client; }
+
+  // Partner onboarding methods - IMPLEMENTAZIONE BASE
+  async getPartnerOnboardingStatus(partnerCode: string): Promise<{completed: boolean, currentStep?: string, completedSteps?: string[]} | undefined> {
+    // Tutti i partner esistenti devono completare l'onboarding
+    return { completed: false, currentStep: 'business', completedSteps: [] };
+  }
+
+  async savePartnerOnboardingStep(partnerCode: string, step: string, data: any): Promise<void> {
+    // Implementazione base - in memoria
+    return;
+  }
+
+  async completePartnerOnboarding(partnerCode: string): Promise<void> {
+    // Implementazione base - in memoria
+    return;
+  }
 }
 
 // PostgreSQL Storage Class
