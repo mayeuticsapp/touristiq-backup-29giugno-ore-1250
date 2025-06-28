@@ -143,10 +143,7 @@ export default function PartnerDashboard() {
   // Mutations
   const linkTouristMutation = useMutation({
     mutationFn: async (code: string) => {
-      return apiRequest(`/api/partner/link-tourist`, {
-        method: "POST",
-        body: JSON.stringify({ touristCode: code })
-      });
+      return apiRequest(`/api/partner/link-tourist`, "POST", { touristCode: code });
     },
     onSuccess: () => {
       toast({ title: "Richiesta collegamento inviata!" });
@@ -320,11 +317,29 @@ export default function PartnerDashboard() {
   };
 
   if (showMiniGestionale) {
-    return <AdvancedAccounting onBack={() => setShowMiniGestionale(false)} />;
+    return <AdvancedAccounting structureCode="partner" hasAccess={true} />;
   }
 
   return (
-    <Layout>
+    <Layout
+      title="Dashboard Partner"
+      role="partner"
+      navigation={[
+        {
+          label: "Elimina Account",
+          icon: <Trash2 className="h-4 w-4" />,
+          href: "#",
+          onClick: () => setShowAccountDeleteDialog(true)
+        },
+        {
+          label: "Mini-gestionale",
+          icon: <Calculator className="h-4 w-4" />,
+          href: "#",
+          onClick: () => setShowMiniGestionale(true)
+        }
+      ]}
+      sidebarColor="bg-orange-600"
+    >
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
