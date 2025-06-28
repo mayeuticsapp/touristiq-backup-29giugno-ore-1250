@@ -893,22 +893,35 @@ export default function StructureDashboard() {
       navigation={navigation}
       sidebarColor="bg-purple-600"
     >
-      {/* Pannello Completo sempre visibile */}
-      <div className="space-y-6">
+      {/* Contenuto basato su sezione attiva */}
+      {activeSection === "dashboard" && (
+        <div className="space-y-6">
+          {/* Gestione ospiti integrata */}
+          {renderGuestManagement()}
+          
+          {/* Gestione IQCode integrata */}
+          {renderIQCodeManagement()}
+          
+          {/* Mini gestionale contabile integrato */}
+          <AdvancedAccounting 
+            structureCode={structureData?.iqCode || `TIQ-VV-STT-${structureId}`}
+            hasAccess={true}
+          />
+        </div>
+      )}
 
+      {activeSection === "contabilita" && (
+        <div className="space-y-6">
+          <AdvancedAccounting 
+            structureCode={structureData?.iqCode || `TIQ-VV-STT-${structureId}`}
+            hasAccess={true}
+          />
+        </div>
+      )}
 
-        {/* Gestione ospiti integrata */}
-        {renderGuestManagement()}
-        
-        {/* Gestione IQCode integrata */}
-        {renderIQCodeManagement()}
-        
-        {/* Mini gestionale contabile integrato */}
-        <AdvancedAccounting 
-          structureCode={structureData?.iqCode || `TIQ-VV-STT-${structureId}`}
-          hasAccess={true}
-        />
-      </div>
+      {activeSection === "elimina-account" && (
+        <DeleteAccountSection structureId={structureId || ""} />
+      )}
       
       {/* Pannello Gestione Dettagliata Ospite */}
       {selectedGuestForManagement && (
