@@ -51,7 +51,11 @@ export function Layout({ children, title, role, iqCode, navigation, sidebarColor
               <li key={index}>
                 <button 
                   onClick={item.onClick || (() => window.location.href = item.href)}
-                  className="w-full flex items-center p-3 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-left"
+                  className={`w-full flex items-center p-3 rounded-lg transition-colors text-left ${
+                    item.label === "Elimina Account" 
+                      ? "text-red-600 hover:bg-red-50 hover:text-red-700" 
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
                 >
                   {item.icon}
                   <span className="ml-3">{item.label}</span>

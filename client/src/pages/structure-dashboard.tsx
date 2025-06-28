@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star, Package, Plus, Gift, UserPlus, Phone, Mail, MessageCircle, Edit, Trash2, Send, Copy, Check } from "lucide-react";
+import { TrendingUp, Bed, Calendar, Users, Settings, CalendarCheck, Star, Package, Plus, Gift, UserPlus, Phone, Mail, MessageCircle, Edit, Trash2, Send, Copy, Check, DollarSign } from "lucide-react";
 import { useParams } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -426,8 +426,9 @@ export default function StructureDashboard() {
 
 
   const navigation = [
-    { icon: <TrendingUp size={16} />, label: "Dashboard Struttura", href: `/structure/${structureId}` },
-    { icon: <Trash2 size={16} />, label: "Elimina Account", href: "#", onClick: () => setActiveSection("elimina-account") },
+    { icon: <TrendingUp size={16} />, label: "Dashboard Struttura", href: "#", onClick: () => setActiveSection("dashboard") },
+    { icon: <DollarSign size={16} />, label: "Mini-gestionale", href: "#", onClick: () => setActiveSection("contabilita") },
+    { icon: <Trash2 size={16} className="text-red-500" />, label: "Elimina Account", href: "#", onClick: () => setActiveSection("elimina-account") },
   ];
 
   if (isLoading) {
@@ -1060,11 +1061,17 @@ export default function StructureDashboard() {
       
 
       
+      {activeSection === "contabilita" && (
+        <div className="space-y-6">
+          <AdvancedAccounting structureCode={`TIQ-VV-STT-${structureId}`} hasAccess={true} />
+        </div>
+      )}
+
       {activeSection === "elimina-account" && (
         <DeleteAccountSection structureId={structureId} />
       )}
 
-      {activeSection !== "dashboard" && activeSection !== "iqcode" && activeSection !== "elimina-account" && (
+      {activeSection !== "dashboard" && activeSection !== "iqcode" && activeSection !== "contabilita" && activeSection !== "elimina-account" && (
         <div className="text-center py-8">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Sezione in Sviluppo</h3>
           <p className="text-gray-500">La sezione "{activeSection}" sarà implementata prossimamente.</p>
