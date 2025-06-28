@@ -5,12 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { 
   ShoppingCart, 
-  MessageCircle, 
   BarChart3,
   Package,
   Euro,
@@ -22,23 +20,23 @@ import { AdvancedAccounting } from '@/components/advanced-accounting';
 
 // Prezzi dei pacchetti IQCode
 const PACKAGE_PRICES = {
-  '25': '€50', 
-  '50': '€90',
-  '75': '€130', 
-  '100': '€160',
+  10: '€49',
+  25: '€99', 
+  50: '€179',
+  100: '€299'
 };
 
 export default function StructurePanelFixed() {
   const params = useParams();
   const structureId = params.id;
   const { toast } = useToast();
-  
+
   // Query per ottenere i dati della struttura
   const { data: structureData } = useQuery({
     queryKey: ['/api/structure', structureId],
     enabled: !!structureId
   });
-  
+
   const structureCode = (structureData as any)?.iqCode || `TIQ-VV-STT-${structureId}`;
   const structureName = (structureData as any)?.name || `Struttura ${structureId}`;
 
@@ -46,7 +44,6 @@ export default function StructurePanelFixed() {
   const [iqCodesBalance, setIqCodesBalance] = useState(47);
   const [selectedPackageSize, setSelectedPackageSize] = useState<'25' | '50' | '75' | '100'>('25');
   const [paymentStatus, setPaymentStatus] = useState('idle');
-  const [selectedCode, setSelectedCode] = useState('TIQ-IT-MARGHERITA');
   const [gestionaleAccess, setGestionaleAccess] = useState({
     hasAccess: true,
     hoursRemaining: 42
@@ -61,16 +58,12 @@ export default function StructurePanelFixed() {
 
   const handlePurchasePackage = async () => {
     setPaymentStatus('processing');
-    
+
     try {
-      // Simulo elaborazione pagamento SumUp
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Aggiorno il saldo
       const packageSize = parseInt(selectedPackageSize);
       const newBalance = iqCodesBalance + packageSize;
       setIqCodesBalance(newBalance);
-      
       setPaymentStatus('completed');
       toast({
         title: "Acquisto completato!",
@@ -86,37 +79,6 @@ export default function StructurePanelFixed() {
     }
   };
 
-  const handleAssignCodeWhatsApp = async (phoneNumber: string) => {
-    if (!selectedCode) {
-      toast({
-        title: "Errore",
-        description: "Seleziona un codice IQ da assegnare",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      // Assegnazione codice via WhatsApp
-      const whatsappUrl = `https://wa.me/${phoneNumber}?text=🎟 Il tuo codice TouristIQ: ${selectedCode}%0A%0AUsa questo codice per accedere agli sconti esclusivi della zona!`;
-      window.open(whatsappUrl, '_blank');
-      
-      // Riduco il saldo
-      setIqCodesBalance(prev => Math.max(0, prev - 1));
-      
-      toast({
-        title: "Codice assegnato!",
-        description: `Codice ${selectedCode} inviato via WhatsApp`,
-      });
-    } catch (error) {
-      toast({
-        title: "Errore invio",
-        description: "Errore durante l'invio del codice",
-        variant: "destructive"
-      });
-    }
-  };
-
   return (
     <Layout
       title={`Pannello Struttura - ${structureName}`}
@@ -126,7 +88,6 @@ export default function StructurePanelFixed() {
       sidebarColor="bg-purple-600"
     >
       <div className="min-h-screen bg-gray-50">
-        {/* Header del Pannello */}
         <div className="bg-white shadow-sm border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="py-6">
@@ -148,17 +109,12 @@ export default function StructurePanelFixed() {
           </div>
         </div>
 
-        {/* Contenuto Principale */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Tabs defaultValue="packages" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="packages" className="flex items-center gap-2">
                 <ShoppingCart className="w-4 h-4" />
                 Acquista Pacchetti
-              </TabsTrigger>
-              <TabsTrigger value="whatsapp" className="flex items-center gap-2">
-                <MessageCircle className="w-4 h-4" />
-                Assegnazione WhatsApp
               </TabsTrigger>
               <TabsTrigger value="accounting" className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
@@ -178,10 +134,10 @@ export default function StructurePanelFixed() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {[
-                      { size: '25', price: '€50', sumupLink: 'https://pay.sumup.com/b2c/QSJE461B' },
-                      { size: '50', price: '€90', sumupLink: 'https://pay.sumup.com/b2c/QK6MLJC7' },
-                      { size: '75', price: '€130', sumupLink: 'https://pay.sumup.com/b2c/Q9517L3P' },
-                      { size: '100', price: '€160', sumupLink: 'https://pay.sumup.com/b2c/Q3BWI26N' }
+                      { size: '25', price: '€99', sumupLink: 'https://pay.sumup.com/b2c/QSJE461B' },
+                      { size: '50', price: '€179', sumupLink: 'https://pay.sumup.com/b2c/QK6MLJC7' },
+                      { size: '75', price: '€239', sumupLink: 'https://pay.sumup.com/b2c/Q9517L3P' },
+                      { size: '100', price: '€299', sumupLink: 'https://pay.sumup.com/b2c/Q3BWI26N' }
                     ].map(({ size, price, sumupLink }) => (
                       <div 
                         key={size}
@@ -201,7 +157,7 @@ export default function StructurePanelFixed() {
                       </div>
                     ))}
                   </div>
-                  
+
                   <div className="mt-6">
                     <Button 
                       onClick={() => {
@@ -221,7 +177,7 @@ export default function StructurePanelFixed() {
                       <Euro className="w-4 h-4 mr-2" />
                       Acquista su SumUp - {selectedPackageSize} IQCode
                     </Button>
-                    
+
                     {paymentStatus === 'completed' && (
                       <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
                         <div className="flex items-center gap-2 text-green-700">
@@ -235,52 +191,7 @@ export default function StructurePanelFixed() {
               </Card>
             </TabsContent>
 
-            {/* TAB 2: Assegnazione WhatsApp */}
-            <TabsContent value="whatsapp" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5" />
-                    Assegnazione Codici via WhatsApp
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Numero WhatsApp Cliente</Label>
-                      <Input 
-                        placeholder="Es: +393901234567"
-                        className="mt-1"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label>Codice IQ da Assegnare</Label>
-                      <Select value={selectedCode} onValueChange={setSelectedCode}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="TIQ-IT-MARGHERITA">TIQ-IT-MARGHERITA</SelectItem>
-                          <SelectItem value="TIQ-IT-LEONARDO">TIQ-IT-LEONARDO</SelectItem>
-                          <SelectItem value="TIQ-IT-DANTE">TIQ-IT-DANTE</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <Button 
-                      onClick={() => handleAssignCodeWhatsApp('+393901234567')}
-                      className="w-full bg-green-600 hover:bg-green-700"
-                    >
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Invia Codice via WhatsApp
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* TAB 3: Mini Gestionale Avanzato */}
+            {/* TAB 2: Mini Gestionale */}
             <TabsContent value="accounting">
               <AdvancedAccounting 
                 structureCode={structureCode}
