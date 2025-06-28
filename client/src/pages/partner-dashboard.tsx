@@ -13,7 +13,7 @@ import {
   Download, QrCode, Camera, Tags, Trophy, Calendar, Settings,
   Trash2, Calculator
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { AdvancedAccounting } from "@/components/advanced-accounting";
 
@@ -62,6 +62,9 @@ export default function PartnerDashboard() {
   const [showAccountDeleteDialog, setShowAccountDeleteDialog] = useState(false);
   const [showMiniGestionale, setShowMiniGestionale] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  
+  // Ref per focus automatico check-in → check-out
+  const validUntilDateRef = useRef<HTMLInputElement>(null);
   
   // Stati per i form
   const [touristCode, setTouristCode] = useState("");
