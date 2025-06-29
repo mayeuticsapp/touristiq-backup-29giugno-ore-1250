@@ -1344,20 +1344,44 @@ class ExtendedPostgreStorage extends PostgreStorage {
       // Verifica nel database se il partner ha completato l'onboarding
       const iqCodeRecord = await this.getIqCodeByCode(partnerCode);
       
-      if (iqCodeRecord && iqCodeRecord.internalNote && iqCodeRecord.internalNote.includes('ONBOARDING_COMPLETED')) {
-        return {
-          completed: true,
-          currentStep: 'completed',
-          completedSteps: ['business', 'accessibility', 'allergies', 'family', 'specialties', 'services'],
-          partnerCode: partnerCode,
-          businessInfo: true,
-          accessibilityInfo: true,
-          allergyInfo: true,
-          familyInfo: true,
-          specialtyInfo: true,
-          servicesInfo: true,
-          isCompleted: true
-        };
+      if (iqCodeRecord && iqCodeRecord.internalNote) {
+        // Controlla se c'è il bypass admin o onboarding completato
+        try {
+          const noteData = JSON.parse(iqCodeRecord.internalNote);
+          if (noteData.completed === true || noteData.bypassed === true) {
+            return {
+              completed: true,
+              currentStep: 'completed',
+              completedSteps: ['business', 'accessibility', 'allergies', 'family', 'specialties', 'services'],
+              partnerCode: partnerCode,
+              businessInfo: true,
+              accessibilityInfo: true,
+              allergyInfo: true,
+              familyInfo: true,
+              specialtyInfo: true,
+              servicesInfo: true,
+              isCompleted: true,
+              bypassed: noteData.bypassed || false
+            };
+          }
+        } catch (jsonError) {
+          // Se non è JSON valido, prova il controllo stringa legacy
+          if (iqCodeRecord.internalNote.includes('ONBOARDING_COMPLETED')) {
+            return {
+              completed: true,
+              currentStep: 'completed',
+              completedSteps: ['business', 'accessibility', 'allergies', 'family', 'specialties', 'services'],
+              partnerCode: partnerCode,
+              businessInfo: true,
+              accessibilityInfo: true,
+              allergyInfo: true,
+              familyInfo: true,
+              specialtyInfo: true,
+              servicesInfo: true,
+              isCompleted: true
+            };
+          }
+        }
       }
     } catch (error) {
       console.log('Errore verifica onboarding database:', error);
@@ -1519,6 +1543,36 @@ class ExtendedMemStorage extends MemStorage {
   }
 
   async getPartnerOnboardingStatus(partnerCode: string): Promise<any> {
+    // Prima controlla se il partner ha bypass nelle note interne
+    try {
+      const iqCodeRecord = await this.getIqCodeByCode(partnerCode);
+      if (iqCodeRecord && iqCodeRecord.internalNote) {
+        try {
+          const noteData = JSON.parse(iqCodeRecord.internalNote);
+          if (noteData.completed === true || noteData.bypassed === true) {
+            return {
+              completed: true,
+              currentStep: 'completed',
+              completedSteps: ['business', 'accessibility', 'allergies', 'family', 'specialties', 'services'],
+              partnerCode: partnerCode,
+              businessInfo: true,
+              accessibilityInfo: true,
+              allergyInfo: true,
+              familyInfo: true,
+              specialtyInfo: true,
+              servicesInfo: true,
+              isCompleted: true,
+              bypassed: noteData.bypassed || false
+            };
+          }
+        } catch (jsonError) {
+          // Ignora errori di parsing JSON
+        }
+      }
+    } catch (error) {
+      // Continua con il controllo memoria
+    }
+
     // Usa la memoria globale condivisa
     const isCompleted = globalPartnerOnboardingData.get(`completed_${partnerCode}`) || false;
     
