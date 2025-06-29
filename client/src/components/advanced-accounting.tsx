@@ -279,37 +279,15 @@ export function AdvancedAccounting({ structureCode, hasAccess }: AdvancedAccount
     });
   };
 
-  // Export PDF function
-  const exportPDF = async () => {
-    try {
-      const response = await fetch('/api/accounting/export-pdf', {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Errore durante l\'esportazione PDF');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `movimenti-contabili-${structureCode}-${new Date().toISOString().split('T')[0]}.pdf`;
-      link.click();
-      window.URL.revokeObjectURL(url);
-
-      toast({
-        title: "PDF esportato!",
-        description: "Il report PDF è stato scaricato con successo.",
-      });
-    } catch (error) {
-      toast({
-        title: "Errore",
-        description: "Errore durante l'esportazione PDF. Riprova.",
-        variant: "destructive"
-      });
-    }
+  // Export PDF function - apre pagina HTML ottimizzata per stampa
+  const exportPDF = () => {
+    // Apre la pagina HTML in una nuova scheda per stampa/salvataggio PDF
+    window.open('/api/accounting/export-pdf', '_blank');
+    
+    toast({
+      title: "Report PDF aperto!",
+      description: "Usa Ctrl+P nella nuova scheda per salvare come PDF.",
+    });
   };
 
   // Handle form submission
