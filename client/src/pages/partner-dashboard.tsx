@@ -17,6 +17,7 @@ import { useState, useRef } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { AdvancedAccounting } from "@/components/advanced-accounting";
 import { PartnerOnboarding } from "@/components/partner-onboarding";
+import { IQCodeValidation } from "@/components/iqcode-validation";
 
 interface TouristLinkRequest {
   id: string;
@@ -62,6 +63,7 @@ export default function PartnerDashboard() {
   const [showSpecialClientDialog, setShowSpecialClientDialog] = useState(false);
   const [showAccountDeleteDialog, setShowAccountDeleteDialog] = useState(false);
   const [showMiniGestionale, setShowMiniGestionale] = useState(false);
+  const [showValidationSection, setShowValidationSection] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   
   // Ref per focus automatico check-in → check-out
@@ -355,6 +357,12 @@ export default function PartnerDashboard() {
           icon: <Calculator className="h-4 w-4" />,
           href: "#",
           onClick: () => setShowMiniGestionale(true)
+        },
+        {
+          label: "Validazione IQCode",
+          icon: <QrCode className="h-4 w-4" />,
+          href: "#",
+          onClick: () => setShowValidationSection(true)
         }
       ]}
       sidebarColor="bg-orange-600"
@@ -922,6 +930,19 @@ export default function PartnerDashboard() {
                 Hai problemi? Contatta il supporto: info@touristiq.it
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Validazione IQCode */}
+        <Dialog open={showValidationSection} onOpenChange={setShowValidationSection}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <QrCode className="w-5 h-5" />
+                Sistema Validazione IQCode
+              </DialogTitle>
+            </DialogHeader>
+            <IQCodeValidation userRole="partner" />
           </DialogContent>
         </Dialog>
       </div>

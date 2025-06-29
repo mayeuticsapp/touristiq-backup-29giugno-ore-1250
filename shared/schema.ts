@@ -142,6 +142,21 @@ export const structureSettings = pgTable("structure_settings", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// Sistema validazione IQCode Partner-Turista
+export const iqcodeValidations = pgTable("iqcode_validations", {
+  id: serial("id").primaryKey(),
+  touristIqCode: text("tourist_iq_code").notNull(), // Codice turista da validare
+  partnerCode: text("partner_code").notNull(), // Partner che richiede validazione
+  partnerName: text("partner_name").notNull(), // Nome partner (es: "Forchetta d'Oro")
+  status: text("status").notNull().default("pending"), // pending, accepted, rejected
+  requestedAt: timestamp("requested_at").notNull().defaultNow(),
+  respondedAt: timestamp("responded_at"),
+  usesRemaining: integer("uses_remaining").notNull().default(5), // Utilizzi rimanenti
+  usesTotal: integer("uses_total").notNull().default(5), // Utilizzi totali iniziali
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
+
 // Impostazioni generali struttura con persistenza PostgreSQL
 export const settingsConfig = pgTable("settings_config", {
   id: serial("id").primaryKey(),
@@ -346,6 +361,12 @@ export const insertAvailableIqCodeSchema = createInsertSchema(availableIqCodes).
   createdAt: true,
 });
 
+export const insertIqcodeValidationSchema = createInsertSchema(iqcodeValidations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const loginSchema = z.object({
   iqCode: z.string().min(1, "Codice IQ richiesto").max(20),
 });
@@ -353,6 +374,8 @@ export const loginSchema = z.object({
 export type IqCode = typeof iqCodes.$inferSelect;
 export type InsertIqCode = z.infer<typeof insertIqCodeSchema>;
 export type Session = typeof sessions.$inferSelect;
+export type IqcodeValidation = typeof iqcodeValidations.$inferSelect;
+export type InsertIqcodeValidation = z.infer<typeof insertIqcodeValidationSchema>;
 export type InsertSession = z.infer<typeof insertSessionSchema>;
 export type AssignedPackage = typeof assignedPackages.$inferSelect;
 export type InsertAssignedPackage = z.infer<typeof insertAssignedPackageSchema>;

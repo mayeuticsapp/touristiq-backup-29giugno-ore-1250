@@ -2230,6 +2230,207 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== SISTEMA VALIDAZIONE IQCODE PARTNER-TURISTA =====
+  
+  // Partner invia richiesta validazione IQCode turista
+  app.post("/api/iqcode/validate-request", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const partnerIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!partnerIqCode || partnerIqCode.role !== 'partner') {
+        return res.status(403).json({ message: "Accesso negato - solo partner" });
+      }
+
+      const { touristIqCode } = req.body;
+      if (!touristIqCode) {
+        return res.status(400).json({ message: "Codice IQ turista richiesto" });
+      }
+
+      // Verifica che il codice turista esista e sia valido
+      const touristCode = await storage.getIqCodeByCode(touristIqCode);
+      if (!touristCode || touristCode.role !== 'tourist') {
+        return res.status(404).json({ message: "Codice IQ turista non valido" });
+      }
+
+      // Ottieni nome partner dal onboarding
+      const partnerStatus = await storage.getPartnerOnboardingStatus(session.iqCode);
+      const partnerName = partnerStatus?.businessInfo?.businessName || `Partner ${session.iqCode}`;
+
+      // Crea richiesta di validazione
+      const validation = await storage.createIqcodeValidation({
+        touristIqCode,
+        partnerCode: session.iqCode,
+        partnerName,
+        status: 'pending',
+        usesRemaining: 5,
+        usesTotal: 5
+      });
+
+      res.json({ 
+        success: true, 
+        message: `Richiesta inviata al turista ${touristIqCode}`,
+        validationId: validation.id 
+      });
+
+    } catch (error) {
+      console.error("Errore richiesta validazione:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Turista vede richieste di validazione in sospeso
+  app.get("/api/iqcode/validation-requests", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const touristIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!touristIqCode || touristIqCode.role !== 'tourist') {
+        return res.status(403).json({ message: "Accesso negato - solo turisti" });
+      }
+
+      const validations = await storage.getValidationsByTourist(session.iqCode);
+      res.json(validations);
+
+    } catch (error) {
+      console.error("Errore recupero richieste:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Turista accetta/rifiuta validazione
+  app.post("/api/iqcode/validate-response", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const touristIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!touristIqCode || touristIqCode.role !== 'tourist') {
+        return res.status(403).json({ message: "Accesso negato - solo turisti" });
+      }
+
+      const { validationId, status } = req.body;
+      if (!validationId || !['accepted', 'rejected'].includes(status)) {
+        return res.status(400).json({ message: "Dati non validi" });
+      }
+
+      // Verifica che la validazione appartenga al turista
+      const validation = await storage.getValidationById(validationId);
+      if (!validation || validation.touristIqCode !== session.iqCode) {
+        return res.status(404).json({ message: "Richiesta non trovata" });
+      }
+
+      // Aggiorna stato validazione
+      await storage.updateValidationStatus(validationId, status, new Date());
+
+      res.json({ 
+        success: true, 
+        message: status === 'accepted' ? "IQCode confermato" : "IQCode rifiutato"
+      });
+
+    } catch (error) {
+      console.error("Errore risposta validazione:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Partner vede stato delle sue richieste di validazione
+  app.get("/api/iqcode/validation-status", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const partnerIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!partnerIqCode || partnerIqCode.role !== 'partner') {
+        return res.status(403).json({ message: "Accesso negato - solo partner" });
+      }
+
+      const validations = await storage.getValidationsByPartner(session.iqCode);
+      res.json(validations);
+
+    } catch (error) {
+      console.error("Errore stato validazioni:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Partner utilizza IQCode validato (decrementa utilizzi)
+  app.post("/api/iqcode/use-validated", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const partnerIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!partnerIqCode || partnerIqCode.role !== 'partner') {
+        return res.status(403).json({ message: "Accesso negato - solo partner" });
+      }
+
+      const { validationId } = req.body;
+      if (!validationId) {
+        return res.status(400).json({ message: "ID validazione richiesto" });
+      }
+
+      const validation = await storage.getValidationById(validationId);
+      if (!validation || validation.partnerCode !== session.iqCode || validation.status !== 'accepted') {
+        return res.status(404).json({ message: "Validazione non trovata o non accettata" });
+      }
+
+      if (validation.usesRemaining <= 0) {
+        return res.status(400).json({ message: "Utilizzi esauriti per questo IQCode" });
+      }
+
+      // Decrementa utilizzi
+      const updated = await storage.decrementValidationUses(validationId);
+
+      res.json({ 
+        success: true, 
+        message: "IQCode utilizzato",
+        usesRemaining: updated.usesRemaining
+      });
+
+    } catch (error) {
+      console.error("Errore utilizzo IQCode:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

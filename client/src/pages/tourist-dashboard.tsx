@@ -2,19 +2,31 @@ import { Layout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TIQaiChat } from "@/components/tiqai-chat";
-import { Compass, Tags, History, Heart, User, Utensils, Check, MessageCircle } from "lucide-react";
+import { IQCodeValidation } from "@/components/iqcode-validation";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Compass, Tags, History, Heart, User, Utensils, Check, MessageCircle, QrCode } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/auth";
+import { useState } from "react";
 
 export default function TouristDashboard() {
+  const [showValidationDialog, setShowValidationDialog] = useState(false);
+  
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
     queryFn: getCurrentUser,
   });
+  
   const navigation = [
     { icon: <Compass size={16} />, label: "Esplora", href: "#" },
     { icon: <Tags size={16} />, label: "I Miei Sconti", href: "#" },
     { icon: <MessageCircle size={16} />, label: "TIQai Chat", href: "#" },
+    { 
+      icon: <QrCode size={16} />, 
+      label: "Validazione IQCode", 
+      href: "#",
+      onClick: () => setShowValidationDialog(true)
+    },
     { icon: <History size={16} />, label: "Cronologia", href: "#" },
     { icon: <Heart size={16} />, label: "Preferiti", href: "#" },
     { icon: <User size={16} />, label: "Profilo", href: "#" },
@@ -117,6 +129,19 @@ export default function TouristDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialog Validazione IQCode */}
+      <Dialog open={showValidationDialog} onOpenChange={setShowValidationDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="w-5 h-5" />
+              Richieste di Validazione IQCode
+            </DialogTitle>
+          </DialogHeader>
+          <IQCodeValidation userRole="tourist" />
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

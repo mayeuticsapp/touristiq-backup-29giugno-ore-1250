@@ -1,7 +1,7 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeValidations, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeValidation, type InsertIqcodeValidation } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { eq, and, lt, desc, like } from "drizzle-orm";
+import { eq, and, lt, desc, like, sql } from "drizzle-orm";
 
 // Memoria globale condivisa per onboarding partner
 const globalPartnerOnboardingData = new Map<string, any>();
@@ -46,6 +46,14 @@ export interface IStorage {
   removeCodeFromGuest(code: string, guestId: number, reason: string): Promise<void>;
   getAvailableCodesForStructure(structureCode: string): Promise<any[]>;
   assignAvailableCodeToGuest(code: string, guestId: number, guestName: string): Promise<void>;
+
+  // IQCode validation methods - Sistema validazione Partner-Turista
+  createIqcodeValidation(validation: any): Promise<any>;
+  getValidationsByTourist(touristCode: string): Promise<any[]>;
+  getValidationsByPartner(partnerCode: string): Promise<any[]>;
+  updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<any>;
+  getValidationById(id: number): Promise<any | undefined>;
+  decrementValidationUses(id: number): Promise<any>;
 
   // Admin credits methods - Pacchetto RobS
   getAdminCredits(adminCode: string): Promise<AdminCredits | undefined>;
@@ -1337,6 +1345,64 @@ class ExtendedPostgreStorage extends PostgreStorage {
       rewards: 0
     };
     return newClient;
+  }
+
+  // IQCode validation methods implementation
+  async createIqcodeValidation(validation: any): Promise<any> {
+    const [created] = await this.db
+      .insert(iqcodeValidations)
+      .values(validation)
+      .returning();
+    return created;
+  }
+
+  async getValidationsByTourist(touristCode: string): Promise<any[]> {
+    return await this.db
+      .select()
+      .from(iqcodeValidations)
+      .where(eq(iqcodeValidations.touristIqCode, touristCode))
+      .orderBy(desc(iqcodeValidations.requestedAt));
+  }
+
+  async getValidationsByPartner(partnerCode: string): Promise<any[]> {
+    return await this.db
+      .select()
+      .from(iqcodeValidations)
+      .where(eq(iqcodeValidations.partnerCode, partnerCode))
+      .orderBy(desc(iqcodeValidations.requestedAt));
+  }
+
+  async updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<any> {
+    const [updated] = await this.db
+      .update(iqcodeValidations)
+      .set({ 
+        status, 
+        respondedAt: respondedAt || new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(iqcodeValidations.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getValidationById(id: number): Promise<any | undefined> {
+    const [validation] = await this.db
+      .select()
+      .from(iqcodeValidations)
+      .where(eq(iqcodeValidations.id, id));
+    return validation;
+  }
+
+  async decrementValidationUses(id: number): Promise<any> {
+    const [updated] = await this.db
+      .update(iqcodeValidations)
+      .set({ 
+        usesRemaining: sql`uses_remaining - 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(iqcodeValidations.id, id))
+      .returning();
+    return updated;
   }
 
   async getPartnerOnboardingStatus(partnerCode: string): Promise<any> {
