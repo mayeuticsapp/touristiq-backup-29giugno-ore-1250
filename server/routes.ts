@@ -366,6 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allCodes = await storage.getAllIqCodes();
       const users = allCodes
         .filter(code => !code.isDeleted) // Esclude utenti nel cestino
+        .filter(code => code.role !== 'admin') // Esclude admin dalla lista
         .map(code => ({
           id: code.id,
           code: code.code,
