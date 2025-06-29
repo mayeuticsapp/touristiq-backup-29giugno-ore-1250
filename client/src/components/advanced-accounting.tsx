@@ -249,6 +249,69 @@ export function AdvancedAccounting({ structureCode, hasAccess }: AdvancedAccount
     });
   };
 
+  // Export CSV function
+  const exportCSV = () => {
+    const headers = ['Data', 'Tipo', 'Categoria', 'Descrizione', 'Importo', 'Pagamento', 'Clienti', 'Note'];
+    const rows = movements.map(movement => [
+      new Date(movement.movementDate).toLocaleDateString('it-IT'),
+      movement.type === 'income' ? 'Entrata' : 'Spesa',
+      movement.category,
+      movement.description,
+      `€${parseFloat(movement.amount.toString()).toFixed(2)}`,
+      movement.paymentMethod || '-',
+      movement.clientsServed || '-',
+      movement.notes || '-'
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `movimenti-contabili-${structureCode}-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    
+    toast({
+      title: "CSV esportato!",
+      description: "Il file CSV è stato scaricato con successo.",
+    });
+  };
+
+  // Export PDF function
+  const exportPDF = async () => {
+    try {
+      const response = await fetch('/api/accounting/export-pdf', {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Errore durante l\'esportazione PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `movimenti-contabili-${structureCode}-${new Date().toISOString().split('T')[0]}.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "PDF esportato!",
+        description: "Il report PDF è stato scaricato con successo.",
+      });
+    } catch (error) {
+      toast({
+        title: "Errore",
+        description: "Errore durante l'esportazione PDF. Riprova.",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -399,9 +462,13 @@ export function AdvancedAccounting({ structureCode, hasAccess }: AdvancedAccount
             <Filter className="w-4 h-4 mr-2" />
             Filtri e Controlli
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={exportCSV}>
             <Download className="w-4 h-4 mr-2" />
             Esporta CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportPDF}>
+            <Download className="w-4 h-4 mr-2" />
+            Esporta PDF
           </Button>
         </div>
         <Button onClick={() => setShowNewMovementForm(true)}>

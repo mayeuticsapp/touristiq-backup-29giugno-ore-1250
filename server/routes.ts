@@ -2098,6 +2098,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export accounting movements as PDF
+  app.get("/api/accounting/export-pdf", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || (userIqCode.role !== 'structure' && userIqCode.role !== 'partner')) {
+        return res.status(403).json({ message: "Accesso negato - solo strutture e partner" });
+      }
+
+      // CONTROLLO OBBLIGATORIO: Verifica pacchetti per strutture
+      if (userIqCode.role === 'structure') {
+        const assignedPackages = await storage.getPackagesByRecipient(userIqCode.code);
+        const hasActivePackages = assignedPackages.length > 0 && assignedPackages.some(pkg => pkg.creditsRemaining > 0);
+        
+        if (!hasActivePackages) {
+          return res.status(403).json({ 
+            message: "Accesso negato - il gestionale è disponibile solo per strutture con pacchetti IQ attivi." 
+          });
+        }
+      }
+
+      const movements = await storage.getAccountingMovements(userIqCode.code);
+      
+      // Importa PDFKit
+      const PDFDocument = require('pdfkit');
+      const doc = new PDFDocument({ margin: 50 });
+      
+      // Set response headers
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="movimenti-contabili-${userIqCode.code}-${new Date().toISOString().split('T')[0]}.pdf"`);
+      
+      // Pipe PDF to response
+      doc.pipe(res);
+      
+      // Header
+      doc.fontSize(20).font('Helvetica-Bold').text('REGISTRO MOVIMENTI CONTABILI', { align: 'center' });
+      doc.moveDown();
+      doc.fontSize(12).font('Helvetica').text(`Codice: ${userIqCode.code}`, { align: 'center' });
+      doc.text(`Data esportazione: ${new Date().toLocaleDateString('it-IT')}`, { align: 'center' });
+      doc.moveDown(2);
+
+      // Summary
+      const totalIncome = movements.filter(m => m.type === 'income').reduce((sum, m) => sum + parseFloat(m.amount), 0);
+      const totalExpenses = movements.filter(m => m.type === 'expense').reduce((sum, m) => sum + parseFloat(m.amount), 0);
+      const balance = totalIncome - totalExpenses;
+
+      doc.fontSize(14).font('Helvetica-Bold').text('RIEPILOGO', { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(11).font('Helvetica');
+      doc.text(`Entrate totali: €${totalIncome.toFixed(2)}`, { continued: true });
+      doc.text(`Spese totali: €${totalExpenses.toFixed(2)}`, { align: 'right' });
+      doc.text(`Saldo: €${balance.toFixed(2)}`, { align: 'center', fontSize: 12, font: 'Helvetica-Bold' });
+      doc.moveDown(2);
+
+      // Table header
+      doc.fontSize(14).font('Helvetica-Bold').text('DETTAGLIO MOVIMENTI', { underline: true });
+      doc.moveDown(1);
+      
+      const tableTop = doc.y;
+      const tableLeft = 50;
+      
+      // Column headers
+      doc.fontSize(9).font('Helvetica-Bold');
+      doc.text('Data', tableLeft, tableTop, { width: 60 });
+      doc.text('Tipo', tableLeft + 65, tableTop, { width: 50 });
+      doc.text('Categoria', tableLeft + 120, tableTop, { width: 80 });
+      doc.text('Descrizione', tableLeft + 205, tableTop, { width: 150 });
+      doc.text('Importo', tableLeft + 360, tableTop, { width: 60 });
+      doc.text('Pagamento', tableLeft + 425, tableTop, { width: 70 });
+      
+      // Draw header line
+      doc.moveTo(tableLeft, tableTop + 15).lineTo(545, tableTop + 15).stroke();
+      
+      let currentY = tableTop + 25;
+      
+      // Table rows
+      movements.forEach((movement, index) => {
+        if (currentY > 700) { // New page if needed
+          doc.addPage();
+          currentY = 50;
+        }
+        
+        doc.fontSize(8).font('Helvetica');
+        const rowColor = movement.type === 'income' ? '#e8f5e8' : '#fff2f2';
+        
+        // Background color for row
+        if (index % 2 === 0) {
+          doc.rect(tableLeft - 5, currentY - 5, 500, 20).fillOpacity(0.1).fill('#f0f0f0').fillOpacity(1);
+        }
+        
+        doc.fillColor('#000000');
+        doc.text(new Date(movement.movementDate).toLocaleDateString('it-IT'), tableLeft, currentY, { width: 60 });
+        doc.text(movement.type === 'income' ? 'Entrata' : 'Spesa', tableLeft + 65, currentY, { width: 50 });
+        doc.text(movement.category, tableLeft + 120, currentY, { width: 80 });
+        doc.text(movement.description, tableLeft + 205, currentY, { width: 150 });
+        
+        // Amount with color
+        doc.fillColor(movement.type === 'income' ? '#059669' : '#dc2626');
+        doc.text(`€${parseFloat(movement.amount).toFixed(2)}`, tableLeft + 360, currentY, { width: 60 });
+        doc.fillColor('#000000');
+        
+        doc.text(movement.paymentMethod || '-', tableLeft + 425, currentY, { width: 70 });
+        
+        currentY += 20;
+      });
+      
+      // Footer
+      doc.fontSize(8).font('Helvetica').fillColor('#666666');
+      doc.text(`Generato da TouristIQ - ${new Date().toISOString()}`, 50, doc.page.height - 50, { align: 'center' });
+      
+      doc.end();
+      
+    } catch (error) {
+      console.error("Errore esportazione PDF:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ message: "Errore durante l'esportazione PDF" });
+      }
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
