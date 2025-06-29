@@ -74,8 +74,11 @@ export function generateEmotionalIQCode(countryCode: string): string {
     throw new Error(`Country code ${countryCode} not supported`);
   }
   
+  // Genera 4 cifre casuali per sicurezza
+  const randomDigits = String(Math.floor(Math.random() * 9999) + 1).padStart(4, '0');
   const randomWord = country.words[Math.floor(Math.random() * country.words.length)];
-  return `TIQ-${countryCode.toUpperCase()}-${randomWord}`;
+  
+  return `TIQ-${countryCode.toUpperCase()}-${randomDigits}-${randomWord}`;
 }
 
 export function getAvailableCountries(): Array<{code: string, name: string, flag: string}> {
@@ -87,18 +90,38 @@ export function getAvailableCountries(): Array<{code: string, name: string, flag
 }
 
 export function validateIQCodeFormat(code: string): boolean {
-  const pattern = /^TIQ-[A-Z]{2}-[A-Z]+$/;
-  return pattern.test(code);
+  // Pattern per codici emozionali: TIQ-IT-1234-MARGHERITA
+  const emotionalPattern = /^TIQ-[A-Z]{2}-\d{4}-[A-Z]+$/;
+  // Pattern per codici professionali: TIQ-VV-STT-1234
+  const professionalPattern = /^TIQ-[A-Z]{2,3}-(STT|PRT)-\d{4}$/;
+  // Pattern legacy per retrocompatibilità: TIQ-IT-MARGHERITA
+  const legacyPattern = /^TIQ-[A-Z]{2}-[A-Z]+$/;
+  
+  return emotionalPattern.test(code) || professionalPattern.test(code) || legacyPattern.test(code);
 }
 
 export function parseIQCode(code: string): {country: string, word: string} | null {
   if (!validateIQCodeFormat(code)) return null;
   
   const parts = code.split('-');
-  return {
-    country: parts[1],
-    word: parts[2]
-  };
+  
+  // Nuovo formato emozionale: TIQ-IT-1234-MARGHERITA
+  if (parts.length === 4 && /^\d{4}$/.test(parts[2])) {
+    return {
+      country: parts[1],
+      word: parts[3]
+    };
+  }
+  
+  // Formato legacy: TIQ-IT-MARGHERITA (mantenuto per retrocompatibilità)
+  if (parts.length === 3) {
+    return {
+      country: parts[1],
+      word: parts[2]
+    };
+  }
+  
+  return null;
 }
 
 // Professional IQ Codes: TIQ-VV-PRT/STT-0001
