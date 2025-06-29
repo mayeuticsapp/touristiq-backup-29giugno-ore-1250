@@ -491,6 +491,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint per bypass onboarding partner (test)
+  app.post("/api/admin/users/:id/bypass-onboarding", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const userId = parseInt(req.params.id);
+      const targetUser = await storage.getAllIqCodes().then(codes => codes.find(c => c.id === userId));
+      
+      if (!targetUser || targetUser.role !== 'partner') {
+        return res.status(400).json({ message: "Solo i partner possono avere l'onboarding bypassato" });
+      }
+
+      // Marca il partner come "onboarding completato" senza compilare i form
+      await storage.updateIqCodeNote(userId, JSON.stringify({ 
+        completed: true, 
+        bypassed: true, 
+        bypassedAt: new Date().toISOString(),
+        bypassedBy: session.iqCode 
+      }));
+
+      res.json({ 
+        success: true, 
+        message: "Onboarding bypassato con successo - partner abilitato per test" 
+      });
+
+    } catch (error) {
+      console.error("Errore bypass onboarding:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // Admin User Management - Approve/Block/Delete
   app.patch("/api/admin/users/:id", async (req, res) => {
     try {

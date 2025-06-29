@@ -356,6 +356,26 @@ function UsersManagement() {
     }
   };
 
+  const bypassOnboarding = async (userId: number) => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/bypass-onboarding`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        alert('Onboarding bypassato con successo! Partner abilitato per i test.');
+        fetchUsers();
+      } else {
+        const error = await response.json();
+        alert(`Errore: ${error.message}`);
+      }
+    } catch (error) {
+      alert('Errore nel bypass dell\'onboarding');
+    }
+  };
+
   const moveToTrash = async (userId: number) => {
     if (!confirm('Spostare questo utente nel cestino? Potrà essere ripristinato entro 24 ore.')) {
       return;
@@ -541,6 +561,17 @@ function UsersManagement() {
                           onClick={() => updateUserStatus(user.id, 'approve')}
                         >
                           ✅
+                        </Button>
+                      )}
+                      {user.role === 'partner' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-blue-600 hover:bg-blue-50 text-xs px-2 py-1"
+                          onClick={() => bypassOnboarding(user.id)}
+                          title="Bypass Onboarding per Test"
+                        >
+                          🚀
                         </Button>
                       )}
                       <Button
