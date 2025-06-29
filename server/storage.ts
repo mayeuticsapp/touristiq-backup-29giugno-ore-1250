@@ -1,4 +1,4 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeValidations, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeValidation, type InsertIqcodeValidation } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeValidations, iqcodeRecharges, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeValidation, type InsertIqcodeValidation, type IqcodeRecharge, type InsertIqcodeRecharge } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt, desc, like, sql } from "drizzle-orm";
@@ -1403,6 +1403,60 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .where(eq(iqcodeValidations.id, id))
       .returning();
     return updated;
+  }
+
+  // Metodi per sistema ricarica IQCode
+  async createIqcodeRecharge(recharge: any): Promise<any> {
+    const [created] = await this.db
+      .insert(iqcodeRecharges)
+      .values(recharge)
+      .returning();
+    return created;
+  }
+
+  async getPendingRecharges(): Promise<any[]> {
+    return await this.db
+      .select()
+      .from(iqcodeRecharges)
+      .where(eq(iqcodeRecharges.status, 'payment_pending'))
+      .orderBy(desc(iqcodeRecharges.requestedAt));
+  }
+
+  async activateRecharge(rechargeId: number, adminNote?: string): Promise<any> {
+    // Ottieni dati ricarica
+    const [recharge] = await this.db
+      .select()
+      .from(iqcodeRecharges)
+      .where(eq(iqcodeRecharges.id, rechargeId));
+
+    if (!recharge) {
+      throw new Error('Ricarica non trovata');
+    }
+
+    // Aggiorna stato ricarica
+    await this.db
+      .update(iqcodeRecharges)
+      .set({
+        status: 'activated',
+        confirmedAt: new Date(),
+        activatedAt: new Date(),
+        adminNote: adminNote || 'Ricarica approvata dall\'admin',
+        updatedAt: new Date()
+      })
+      .where(eq(iqcodeRecharges.id, rechargeId));
+
+    // Ripristina utilizzi validazione a 10
+    const [updatedValidation] = await this.db
+      .update(iqcodeValidations)
+      .set({
+        usesRemaining: 10,
+        usesTotal: 10,
+        updatedAt: new Date()
+      })
+      .where(eq(iqcodeValidations.id, recharge.validationId))
+      .returning();
+
+    return { recharge, validation: updatedValidation };
   }
 
   async getPartnerOnboardingStatus(partnerCode: string): Promise<any> {

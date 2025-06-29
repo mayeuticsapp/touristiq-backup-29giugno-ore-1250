@@ -172,6 +172,30 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
     }
   };
 
+  const handleRechargeRequest = async (validationId: number) => {
+    // Apri il link SumUp per il pagamento
+    window.open('https://pay.sumup.com/b2c/QKDFS8FD', '_blank');
+    
+    toast({
+      title: "Ricarica Richiesta",
+      description: "Dopo il pagamento, l'admin attiverà i tuoi nuovi utilizzi. Controlla periodicamente lo stato."
+    });
+
+    // Crea richiesta di ricarica nel database
+    try {
+      await fetch('/api/iqcode/request-recharge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ validationId })
+      });
+    } catch (error) {
+      console.error('Errore creazione richiesta ricarica:', error);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
@@ -251,13 +275,21 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
                         <div className="text-sm">
                           Utilizzi rimanenti: <span className="font-medium">{validation.usesRemaining}/{validation.usesTotal}</span>
                         </div>
-                        {validation.usesRemaining > 0 && (
+                        {validation.usesRemaining > 0 ? (
                           <Button 
                             size="sm" 
                             onClick={() => handleUseValidatedCode(validation.id)}
                             className="bg-green-600 hover:bg-green-700"
                           >
                             Utilizza IQCode
+                          </Button>
+                        ) : (
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleRechargeRequest(validation.id)}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            Ricarica 10 Utilizzi
                           </Button>
                         )}
                       </div>

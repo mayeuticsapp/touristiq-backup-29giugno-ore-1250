@@ -2272,8 +2272,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         partnerCode: session.iqCode,
         partnerName,
         status: 'pending',
-        usesRemaining: 5,
-        usesTotal: 5
+        usesRemaining: 10,
+        usesTotal: 10
       });
 
       res.json({ 
@@ -2428,6 +2428,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Errore utilizzo IQCode:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Turista richiede ricarica utilizzi (link SumUp)
+  app.post("/api/iqcode/request-recharge", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const touristIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!touristIqCode || touristIqCode.role !== 'tourist') {
+        return res.status(403).json({ message: "Accesso negato - solo turisti" });
+      }
+
+      const { validationId } = req.body;
+      if (!validationId) {
+        return res.status(400).json({ message: "ID validazione richiesto" });
+      }
+
+      // Crea richiesta di ricarica
+      const recharge = await storage.createIqcodeRecharge({
+        validationId,
+        touristIqCode: session.iqCode,
+        status: 'payment_pending'
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Richiesta di ricarica creata",
+        rechargeId: recharge.id 
+      });
+
+    } catch (error) {
+      console.error("Errore richiesta ricarica:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Admin vede richieste di ricarica in sospeso
+  app.get("/api/admin/recharge-requests", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const adminIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!adminIqCode || adminIqCode.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const recharges = await storage.getPendingRecharges();
+      res.json(recharges);
+
+    } catch (error) {
+      console.error("Errore caricamento richieste ricarica:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Admin approva e attiva ricarica
+  app.post("/api/admin/activate-recharge", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const adminIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!adminIqCode || adminIqCode.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const { rechargeId, adminNote } = req.body;
+      if (!rechargeId) {
+        return res.status(400).json({ message: "ID ricarica richiesto" });
+      }
+
+      // Attiva ricarica - ripristina utilizzi a 10
+      const result = await storage.activateRecharge(rechargeId, adminNote);
+
+      res.json({ 
+        success: true, 
+        message: "Ricarica attivata - utilizzi ripristinati a 10",
+        result 
+      });
+
+    } catch (error) {
+      console.error("Errore attivazione ricarica:", error);
       res.status(500).json({ message: "Errore del server" });
     }
   });

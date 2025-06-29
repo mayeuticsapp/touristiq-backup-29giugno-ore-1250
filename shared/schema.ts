@@ -151,8 +151,23 @@ export const iqcodeValidations = pgTable("iqcode_validations", {
   status: text("status").notNull().default("pending"), // pending, accepted, rejected
   requestedAt: timestamp("requested_at").notNull().defaultNow(),
   respondedAt: timestamp("responded_at"),
-  usesRemaining: integer("uses_remaining").notNull().default(5), // Utilizzi rimanenti
-  usesTotal: integer("uses_total").notNull().default(5), // Utilizzi totali iniziali
+  usesRemaining: integer("uses_remaining").notNull().default(10), // Utilizzi rimanenti
+  usesTotal: integer("uses_total").notNull().default(10), // Utilizzi totali iniziali
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
+
+// Sistema ricarica utilizzi per turisti
+export const iqcodeRecharges = pgTable("iqcode_recharges", {
+  id: serial("id").primaryKey(),
+  validationId: integer("validation_id").notNull(), // ID della validazione da ricaricare
+  touristIqCode: text("tourist_iq_code").notNull(), // Codice turista
+  status: text("status").notNull().default("payment_pending"), // payment_pending, paid_confirmed, activated
+  sumupPaymentId: text("sumup_payment_id"), // ID pagamento SumUp se disponibile
+  requestedAt: timestamp("requested_at").notNull().defaultNow(),
+  confirmedAt: timestamp("confirmed_at"), // Quando admin conferma pagamento
+  activatedAt: timestamp("activated_at"), // Quando utilizzi vengono attivati
+  adminNote: text("admin_note"), // Note admin su pagamento
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
@@ -367,6 +382,12 @@ export const insertIqcodeValidationSchema = createInsertSchema(iqcodeValidations
   updatedAt: true,
 });
 
+export const insertIqcodeRechargeSchema = createInsertSchema(iqcodeRecharges).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const loginSchema = z.object({
   iqCode: z.string().min(1, "Codice IQ richiesto").max(20),
 });
@@ -376,6 +397,8 @@ export type InsertIqCode = z.infer<typeof insertIqCodeSchema>;
 export type Session = typeof sessions.$inferSelect;
 export type IqcodeValidation = typeof iqcodeValidations.$inferSelect;
 export type InsertIqcodeValidation = z.infer<typeof insertIqcodeValidationSchema>;
+export type IqcodeRecharge = typeof iqcodeRecharges.$inferSelect;
+export type InsertIqcodeRecharge = z.infer<typeof insertIqcodeRechargeSchema>;
 export type InsertSession = z.infer<typeof insertSessionSchema>;
 export type AssignedPackage = typeof assignedPackages.$inferSelect;
 export type InsertAssignedPackage = z.infer<typeof insertAssignedPackageSchema>;
