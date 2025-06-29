@@ -2474,7 +2474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin vede richieste di ricarica in sospeso
+  // Admin vede richieste di ricarica con filtri avanzati per migliaia di requests
   app.get("/api/admin/recharge-requests", async (req: any, res: any) => {
     try {
       const sessionToken = req.cookies.session_token;
@@ -2492,8 +2492,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo admin" });
       }
 
-      const recharges = await storage.getPendingRecharges();
-      res.json(recharges);
+      // Parametri per gestione migliaia di richieste
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = (req.query.search as string) || '';
+      const status = (req.query.status as string) || '';
+      const sort = (req.query.sort as string) || 'newest';
+
+      const result = await storage.getRechargesWithFilters({
+        page,
+        limit,
+        search,
+        status,
+        sort
+      });
+
+      res.json(result);
 
     } catch (error) {
       console.error("Errore caricamento richieste ricarica:", error);

@@ -94,10 +94,19 @@ export interface IStorage {
   savePartnerOnboardingStep(partnerCode: string, step: string, data: any): Promise<void>;
   completePartnerOnboarding(partnerCode: string): Promise<void>;
   
-  // Partner onboarding methods
-  getPartnerOnboardingStatus(partnerCode: string): Promise<any>;
-  savePartnerOnboardingStep(partnerCode: string, step: string, data: any): Promise<void>;
-  completePartnerOnboarding(partnerCode: string): Promise<void>;
+  // IQCode validation methods
+  createIqcodeValidation(data: {partnerCode: string, touristIqCode: string}): Promise<any>;
+  getValidationsByTourist(touristCode: string): Promise<any[]>;
+  getValidationsByPartner(partnerCode: string): Promise<any[]>;
+  getValidationById(id: number): Promise<any>;
+  updateValidationStatus(id: number, status: string): Promise<any>;
+  decrementValidationUses(id: number): Promise<any>;
+  
+  // IQCode recharge methods
+  createIqcodeRecharge(validationId: number, touristCode: string): Promise<any>;
+  getPendingRecharges(): Promise<any[]>;
+  activateRecharge(rechargeId: number, adminNote?: string): Promise<any>;
+  getRechargesWithFilters(filters: {page: number, limit: number, search: string, status: string, sort: string}): Promise<{recharges: any[], total: number, stats: any}>;
 }
 
 export class MemStorage implements IStorage {
@@ -1457,6 +1466,95 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .returning();
 
     return { recharge, validation: updatedValidation };
+  }
+
+  // Sistema avanzato per gestire migliaia di richieste di ricarica
+  async getRechargesWithFilters(filters: {page: number, limit: number, search: string, status: string, sort: string}): Promise<{recharges: any[], total: number, stats: any}> {
+    const { page, limit, search, status, sort } = filters;
+    const offset = (page - 1) * limit;
+
+    // Costruisci query base
+    let query = this.db
+      .select({
+        id: iqcodeRecharges.id,
+        validationId: iqcodeRecharges.validationId,
+        touristIqCode: iqcodeRecharges.touristIqCode,
+        status: iqcodeRecharges.status,
+        requestedAt: iqcodeRecharges.requestedAt,
+        confirmedAt: iqcodeRecharges.confirmedAt,
+        activatedAt: iqcodeRecharges.activatedAt,
+        adminNote: iqcodeRecharges.adminNote
+      })
+      .from(iqcodeRecharges);
+
+    // Applica filtri
+    const conditions = [];
+
+    if (search) {
+      conditions.push(
+        ilike(iqcodeRecharges.touristIqCode, `%${search}%`)
+      );
+    }
+
+    if (status) {
+      conditions.push(eq(iqcodeRecharges.status, status));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    // Applica ordinamento
+    if (sort === 'oldest') {
+      query = query.orderBy(asc(iqcodeRecharges.requestedAt));
+    } else {
+      query = query.orderBy(desc(iqcodeRecharges.requestedAt));
+    }
+
+    // Esegui query con paginazione
+    const recharges = await query
+      .limit(limit)
+      .offset(offset);
+
+    // Conta totale
+    let countQuery = this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(iqcodeRecharges);
+
+    if (conditions.length > 0) {
+      countQuery = countQuery.where(and(...conditions));
+    }
+
+    const [{ count: total }] = await countQuery;
+
+    // Calcola statistiche
+    const statsQuery = await this.db
+      .select({
+        status: iqcodeRecharges.status,
+        count: sql<number>`count(*)`
+      })
+      .from(iqcodeRecharges)
+      .groupBy(iqcodeRecharges.status);
+
+    const stats = {
+      pending: 0,
+      confirmed: 0,
+      activated: 0,
+      total: 0
+    };
+
+    statsQuery.forEach(stat => {
+      if (stat.status === 'payment_pending') stats.pending = stat.count;
+      if (stat.status === 'paid_confirmed') stats.confirmed = stat.count;
+      if (stat.status === 'activated') stats.activated = stat.count;
+      stats.total += stat.count;
+    });
+
+    return {
+      recharges,
+      total,
+      stats
+    };
   }
 
   async getPartnerOnboardingStatus(partnerCode: string): Promise<any> {
