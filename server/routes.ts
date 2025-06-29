@@ -1504,14 +1504,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo partner" });
       }
 
-      // Per ora, tutti i partner esistenti sono considerati NON completati
-      // Solo i nuovi partner devono completare l'onboarding
+      // Controllo onboarding con riconoscimento bypass admin
       const onboardingStatus = await storage.getPartnerOnboardingStatus(userIqCode.code);
       
-      res.json({ 
-        completed: onboardingStatus?.completed || false,
-        currentStep: onboardingStatus?.currentStep || 'business',
-        completedSteps: onboardingStatus?.completedSteps || []
+      res.json(onboardingStatus || { 
+        completed: false,
+        currentStep: 'business',
+        completedSteps: []
       });
     } catch (error) {
       console.error("Errore controllo onboarding:", error);

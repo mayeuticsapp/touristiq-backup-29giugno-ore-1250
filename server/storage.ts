@@ -1343,11 +1343,11 @@ class ExtendedPostgreStorage extends PostgreStorage {
     try {
       // Verifica nel database se il partner ha completato l'onboarding
       const iqCodeRecord = await this.getIqCodeByCode(partnerCode);
-      
       if (iqCodeRecord && iqCodeRecord.internalNote) {
         // Controlla se c'è il bypass admin o onboarding completato
         try {
           const noteData = JSON.parse(iqCodeRecord.internalNote);
+          
           if (noteData.completed === true || noteData.bypassed === true) {
             return {
               completed: true,
@@ -1365,6 +1365,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
             };
           }
         } catch (jsonError) {
+          console.log(`DEBUG: Errore parsing JSON:`, jsonError);
           // Se non è JSON valido, prova il controllo stringa legacy
           if (iqCodeRecord.internalNote.includes('ONBOARDING_COMPLETED')) {
             return {
