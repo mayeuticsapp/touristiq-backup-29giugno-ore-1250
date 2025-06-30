@@ -731,11 +731,22 @@ export default function StructureDashboard() {
                 value={newGuest.checkinDate}
                 onChange={(e) => {
                   setNewGuest({...newGuest, checkinDate: e.target.value});
-                  // Focus automatico sul campo check-out dopo selezione check-in
+                  // Apertura automatica date picker check-out
                   if (e.target.value && checkoutDateRef.current) {
                     setTimeout(() => {
                       checkoutDateRef.current?.focus();
-                    }, 100);
+                      // Tenta di aprire il date picker solo su desktop (non mobile)
+                      try {
+                        if (checkoutDateRef.current && 
+                            typeof checkoutDateRef.current.showPicker === 'function' &&
+                            !('ontouchstart' in window)) {
+                          checkoutDateRef.current.showPicker();
+                        }
+                      } catch (error) {
+                        // Ignora errori su dispositivi che non supportano showPicker senza gesto utente
+                        console.log('showPicker non supportato:', error);
+                      }
+                    }, 150);
                   }
                 }}
               />
