@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -242,6 +242,7 @@ export default function TermsAndConditionsModal({
   const [hasReadCompletely, setHasReadCompletely] = useState(false);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const target = event.target as HTMLDivElement;
@@ -307,14 +308,14 @@ export default function TermsAndConditionsModal({
         </div>
 
         {/* Terms Content */}
-        <ScrollArea 
-          className="flex-1 h-[400px] w-full border rounded-md p-4"
-          onScrollCapture={handleScroll}
+        <div 
+          onScroll={handleScroll}
+          className="flex-1 h-[400px] w-full border rounded-md p-4 overflow-y-auto bg-white"
         >
           <div className="whitespace-pre-wrap text-sm leading-relaxed">
             {userType === 'structure' ? STRUCTURE_TERMS_CONTENT : PARTNER_TERMS_CONTENT}
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Reading Alert */}
         {!hasReadCompletely && (
