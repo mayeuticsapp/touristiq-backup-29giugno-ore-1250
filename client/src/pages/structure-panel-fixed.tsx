@@ -18,12 +18,14 @@ import {
 import { Layout } from '@/components/layout';
 import { useToast } from '@/hooks/use-toast';
 import { AdvancedAccounting } from '@/components/advanced-accounting';
+import TermsAndConditionsModal from '@/components/TermsAndConditionsModal';
 
 // Prezzi dei pacchetti IQCode
 const PACKAGE_PRICES = {
   10: '€49',
   25: '€99', 
   50: '€179',
+  75: '€230',
   100: '€299'
 };
 
@@ -49,6 +51,7 @@ export default function StructurePanelFixed() {
     hasAccess: true,
     hoursRemaining: 42
   });
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const navigation = [
     { icon: null, label: 'Dashboard Admin', href: '/admin' },
@@ -57,7 +60,12 @@ export default function StructurePanelFixed() {
     { icon: null, label: 'Pannello Completo', href: `/structure/${structureId}/panel` }
   ];
 
-  const handlePurchasePackage = async () => {
+  const handlePurchasePackage = () => {
+    // Apri il modal delle condizioni generali prima di procedere
+    setShowTermsModal(true);
+  };
+
+  const handleTermsAccepted = async () => {
     setPaymentStatus('processing');
 
     try {
@@ -163,22 +171,21 @@ export default function StructurePanelFixed() {
 
                   <div className="mt-6">
                     <Button 
-                      onClick={() => {
-                        const packages = [
-                          { size: '25', sumupLink: 'https://pay.sumup.com/b2c/QSJE461B' },
-                          { size: '50', sumupLink: 'https://pay.sumup.com/b2c/QK6MLJC7' },
-                          { size: '75', sumupLink: 'https://pay.sumup.com/b2c/Q9517L3P' },
-                          { size: '100', sumupLink: 'https://pay.sumup.com/b2c/Q3BWI26N' }
-                        ];
-                        const selectedPackage = packages.find(p => p.size === selectedPackageSize);
-                        if (selectedPackage) {
-                          window.open(selectedPackage.sumupLink, '_blank');
-                        }
-                      }}
+                      onClick={handlePurchasePackage}
+                      disabled={paymentStatus === 'processing'}
                       className="w-full bg-purple-600 hover:bg-purple-700"
                     >
-                      <Euro className="w-4 h-4 mr-2" />
-                      Acquista su SumUp - {selectedPackageSize} IQCode
+                      {paymentStatus === 'processing' ? (
+                        <>
+                          <Package className="w-4 h-4 mr-2 animate-spin" />
+                          Elaborazione in corso...
+                        </>
+                      ) : (
+                        <>
+                          <Euro className="w-4 h-4 mr-2" />
+                          Procedi all'Acquisto - {selectedPackageSize} IQCode
+                        </>
+                      )}
                     </Button>
 
                     {paymentStatus === 'completed' && (
@@ -204,6 +211,16 @@ export default function StructurePanelFixed() {
           </Tabs>
         </div>
       </div>
+
+      {/* Terms and Conditions Modal */}
+      <TermsAndConditionsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={handleTermsAccepted}
+        userType="structure"
+        packageSize={parseInt(selectedPackageSize)}
+        packagePrice={PACKAGE_PRICES[selectedPackageSize]}
+      />
     </Layout>
   );
 }

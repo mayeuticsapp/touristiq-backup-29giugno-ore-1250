@@ -476,8 +476,9 @@ export default function StructureDashboard() {
   const navigation = [
     { icon: <TrendingUp size={16} />, label: "Dashboard Struttura", href: "#", onClick: () => setActiveSection("dashboard") },
     { icon: <Users size={16} />, label: "Ospiti con IQ Code", href: "#", onClick: () => setActiveSection("ospiti-iqcode") },
-    { icon: <Package size={16} />, label: "Acquista Pacchetti", href: `/structure/${structureId}/panel`, onClick: null },
+    { icon: <Package size={16} />, label: "Acquista Pacchetti", href: `/structure/${structureId}/panel` },
     { icon: <DollarSign size={16} />, label: "Mini-gestionale", href: "#", onClick: () => setActiveSection("contabilita") },
+    { icon: <Settings size={16} />, label: "Condizioni Generali", href: "#", onClick: () => setActiveSection("terms") },
     { icon: <Trash2 size={16} className="text-red-500" />, label: "Elimina Account", href: "#", onClick: () => setActiveSection("elimina-account") },
   ];
 
@@ -979,6 +980,37 @@ export default function StructureDashboard() {
             structureCode={structureData?.iqCode || `TIQ-VV-STT-${structureId}`}
             hasAccess={true}
           />
+        </div>
+      )}
+
+      {activeSection === "terms" && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-purple-600" />
+                Condizioni Generali di Utilizzo
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="prose max-w-none">
+                <div className="bg-gray-50 p-6 rounded-lg border">
+                  <h3 className="text-lg font-semibold mb-4">Termini e Condizioni - Strutture Ricettive</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Questi sono i termini che regolano l'utilizzo dei pacchetti IQCode per le strutture ricettive.
+                    Per visualizzare il documento completo, procedi con un acquisto pacchetti.
+                  </p>
+                  <Button 
+                    onClick={() => window.location.href = `/structure/${structureId}/panel`}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    <Package className="w-4 h-4 mr-2" />
+                    Vai al Pannello Acquisti
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
