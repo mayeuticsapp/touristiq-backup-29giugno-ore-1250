@@ -1,0 +1,100 @@
+🛡️ Condizioni Generali di Utilizzo dei Pacchetti IQCode – Strutture Ricettive
+Ultimo aggiornamento: 30 giugno 2025TouristIQ è la prima piattaforma turistica privacy-first al mondo, progettata per offrire esperienze autentiche e sostenibili nel rispetto assoluto della privacy degli utenti. L'acquisto e l'utilizzo dei pacchetti IQCode da parte di una Struttura Ricettiva implica l'accettazione delle seguenti condizioni.
+
+1. Definizioni
+
+TouristIQ: Piattaforma etica per la distribuzione e validazione di IQCode anonimi.  
+Struttura Ricettiva: Soggetto autorizzato all’acquisto e utilizzo dei pacchetti IQCode (es. hotel, B&B, residence, agriturismi).  
+IQCode: Codice alfanumerico anonimo che consente al turista di accedere ai vantaggi della rete TouristIQ.  
+Turista: Utente finale che riceve un IQCode da una struttura o un partner.
+
+
+2. Oggetto del Contratto
+Il presente documento regola i termini di acquisto, utilizzo e gestione dei pacchetti IQCode da parte della Struttura. Acquistando un pacchetto, la Struttura:  
+
+Accetta integralmente le regole di funzionamento della piattaforma.  
+Si impegna al rispetto del Manifesto Etico di TouristIQ.  
+Usufruisce dei servizi riservati nella dashboard struttura, progettata per semplificare la gestione degli ospiti e promuovere esperienze autentiche.
+
+
+3. Acquisto, Attivazione e Onboarding
+3.1 Acquisto e Attivazione
+
+I pacchetti IQCode sono acquistabili online tramite link ufficiali forniti da TouristIQ (es. circuito SumUp).  
+Il costo di ogni IQCode varia tra 1,60€ e 2,00€, in base al volume del pacchetto acquistato.  
+L’attivazione è manuale da parte dell’Admin entro 24 ore dalla conferma di pagamento.  
+I pacchetti non hanno scadenza.
+
+3.2 Requisiti di Onboarding
+
+La Struttura deve completare un processo di onboarding, fornendo informazioni su servizi offerti, accessibilità, specialità e conformità al Manifesto Etico.  
+TouristIQ si riserva di approvare o rifiutare la candidatura in base alla qualità e all’allineamento con i valori della piattaforma.
+
+
+4. Obblighi della Struttura
+La Struttura si impegna a:  
+
+Non raccogliere dati sensibili del turista (es. email, documento), salvo il numero WhatsApp per l’invio automatico del codice, che sarà cancellato immediatamente dopo l’invio.  
+Non archiviare, vendere o riutilizzare i codici IQ una volta assegnati.  
+Utilizzare gli IQCode solo per finalità di assegnazione a ospiti reali, evitando assegnazioni fittizie o automatizzate.  
+Non forzare o influenzare il turista nella validazione post-esperienza, rispettando la libertà di feedback.
+
+
+5. Diritti della Struttura
+La Struttura, in regola con l’acquisto dei pacchetti, ha diritto a:  
+
+Dashboard gestionale completa: Gestione ospiti, invio WhatsApp automatizzato, storico IQCode.  
+Mini-gestionale contabile gratuito: Tracciamento di entrate, spese e utilizzi IQCode, con export in PDF/CSV (attivo solo con pacchetti validi).  
+Materiale promozionale: Accesso a strumenti ufficiali (es. logo “Siamo partner TouristIQ”) per valorizzare l’appartenenza al network.  
+Supporto clienti: Assistenza via email (supporto@touristiq.it) e chat nei giorni lavorativi.  
+Fidelizzazione tramite IQCode: Gli IQCode rappresentano un regalo esclusivo per gli ospiti, progettato per migliorare l’esperienza turistica, incentivare il ritorno e promuovere il passaparola.
+
+
+6. Validità e Gestione dei Codici IQ
+6.1 Validità
+
+Ogni IQCode ha 10 utilizzi, ricaricabili su richiesta tramite SumUp.  
+Le ricariche vengono approvate manualmente da TouristIQ entro 24 ore.
+
+6.2 Responsabilità della Struttura
+
+È responsabilità della Struttura fornire al turista istruzioni chiare sull’utilizzo del codice, utilizzando i materiali forniti da TouristIQ.
+
+6.3 Gestione delle Dispute
+
+In caso di rifiuto di validazione da parte del turista, la Struttura può contattare il supporto di TouristIQ per una mediazione, fornendo dettagli sull’esperienza.  
+TouristIQ si riserva di valutare il caso e proporre una soluzione entro 48 ore.
+
+
+7. Sospensione o Revoca dell’Accesso
+TouristIQ si riserva il diritto di sospendere o disattivare l’accesso alla dashboard in caso di:  
+
+Utilizzo improprio dei codici (es. spam, frodi, assegnazioni false).  
+Violazione del Manifesto Etico.  
+Comportamento scorretto o lesivo dell’immagine del progetto.
+
+La Struttura sarà notificata via email e avrà 7 giorni per presentare chiarimenti.
+
+8. Limitazioni di Responsabilità
+TouristIQ non è responsabile per:  
+
+L’effettiva esperienza vissuta dal turista nella struttura.  
+Ritardi o malfunzionamenti causati da terze parti (es. servizi WhatsApp, hosting).  
+Uso improprio dei codici da parte del turista.
+
+
+9. Privacy e Protezione Dati
+
+TouristIQ non raccoglie alcun dato personale del turista, garantendo conformità alla filosofia zero-data.  
+La Struttura si impegna a non utilizzare strumenti di profilazione, raccolta email o remarketing collegati agli IQCode, rispettando il principio di privacy by design.
+
+
+10. Legge Applicabile e Foro Competente
+
+Il presente accordo è regolato dalla legge italiana.  
+Per ogni controversia sarà competente in via esclusiva il Foro di Roma.
+
+
+✅ Accettazione delle Condizioni
+Cliccando su “Accetta e continua”, la Struttura conferma di aver letto, compreso e accettato i presenti termini, l’Informativa Privacy, la Politica dei Cookie e il Manifesto Etico.  
+Per assistenza: supporto@touristiq.it

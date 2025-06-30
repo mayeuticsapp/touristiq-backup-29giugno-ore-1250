@@ -16,6 +16,7 @@ import {
 import { Layout } from '@/components/layout';
 import { useToast } from '@/hooks/use-toast';
 import { AdvancedAccounting } from '@/components/advanced-accounting';
+import TermsAndConditionsModal from '@/components/TermsAndConditionsModal';
 
 const PACKAGE_PRICES = {
   10: "49.90",
@@ -41,6 +42,7 @@ export default function StructurePanel() {
   const [selectedPackageSize, setSelectedPackageSize] = useState(25);
   const [paymentStatus, setPaymentStatus] = useState('pending');
   const [gestionaleAccess, setGestionaleAccess] = useState({ hasAccess: true, hoursRemaining: 48 });
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const navigation = [
     { icon: <ShoppingCart size={20} />, label: "Dashboard Struttura", href: `/structure/${structureId}` },
@@ -60,6 +62,11 @@ export default function StructurePanel() {
   };
 
   const handlePurchasePackage = () => {
+    // Apri il modal delle condizioni generali prima di procedere
+    setShowTermsModal(true);
+  };
+
+  const handleTermsAccepted = () => {
     setPaymentStatus('processing');
     
     setTimeout(() => {
@@ -218,6 +225,16 @@ export default function StructurePanel() {
           </Tabs>
         </div>
       </div>
+
+      {/* Terms and Conditions Modal */}
+      <TermsAndConditionsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={handleTermsAccepted}
+        userType="structure"
+        packageSize={selectedPackageSize}
+        packagePrice={`€${PACKAGE_PRICES[selectedPackageSize as keyof typeof PACKAGE_PRICES]}`}
+      />
     </Layout>
   );
 }
