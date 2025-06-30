@@ -731,22 +731,31 @@ export default function StructureDashboard() {
                 value={newGuest.checkinDate}
                 onChange={(e) => {
                   setNewGuest({...newGuest, checkinDate: e.target.value});
-                  // Apertura automatica date picker check-out
+                  // Apertura automatica date picker check-out dopo selezione check-in
                   if (e.target.value && checkoutDateRef.current) {
                     setTimeout(() => {
-                      checkoutDateRef.current?.focus();
-                      // Tenta di aprire il date picker solo su desktop (non mobile)
-                      try {
-                        if (checkoutDateRef.current && 
-                            typeof checkoutDateRef.current.showPicker === 'function' &&
-                            !('ontouchstart' in window)) {
-                          checkoutDateRef.current.showPicker();
+                      const checkoutInput = checkoutDateRef.current;
+                      if (checkoutInput) {
+                        checkoutInput.focus();
+                        // Prova diversi metodi per aprire il date picker
+                        try {
+                          // Metodo 1: showPicker standard
+                          if (typeof checkoutInput.showPicker === 'function') {
+                            checkoutInput.showPicker();
+                            console.log('Date picker aperto con showPicker()');
+                          }
+                        } catch (error) {
+                          console.log('showPicker fallito, provo click:', error);
+                          // Metodo 2: Simula click se showPicker fallisce
+                          try {
+                            checkoutInput.click();
+                            console.log('Date picker aperto con click()');
+                          } catch (clickError) {
+                            console.log('Anche click fallito:', clickError);
+                          }
                         }
-                      } catch (error) {
-                        // Ignora errori su dispositivi che non supportano showPicker senza gesto utente
-                        console.log('showPicker non supportato:', error);
                       }
-                    }, 150);
+                    }, 200);
                   }
                 }}
               />
