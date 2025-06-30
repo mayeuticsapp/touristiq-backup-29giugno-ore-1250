@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manifesto Etico TouristIQ - Privacy-First Tourism Revolution</title>
+    <title>Manifesto Etico TouristIQ - Un Gesto Culturale</title>
     <style>
         * {
             margin: 0;
@@ -12,505 +12,464 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.7;
             color: #2c3e50;
-            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 50%, #00b894 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 900px;
             margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* HERO SECTION */
-        .hero {
-            text-align: center;
-            color: white;
-            padding: 60px 20px;
+            background: #ffffff;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 40px;
             margin-bottom: 40px;
         }
 
-        .hero h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            background: linear-gradient(45deg, #fff, #a8e6cf);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero-subtitle {
-            font-size: 1.4rem;
-            margin-bottom: 30px;
-            opacity: 0.95;
-            font-weight: 300;
-        }
-
-        .hero-tagline {
-            font-size: 1.1rem;
-            background: rgba(255,255,255,0.15);
-            padding: 15px 30px;
-            border-radius: 50px;
-            display: inline-block;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        /* CONTENT CARDS */
-        .content-section {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            border: 1px solid rgba(116, 185, 255, 0.2);
-        }
-
-        .section-title {
-            font-size: 2.2rem;
-            color: #0984e3;
-            margin-bottom: 25px;
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
             text-align: center;
             position: relative;
         }
 
-        .section-title::after {
-            content: '';
-            display: block;
-            width: 80px;
-            height: 4px;
-            background: linear-gradient(90deg, #74b9ff, #00b894);
-            margin: 15px auto;
-            border-radius: 2px;
+        .header::before {
+            content: '📜';
+            font-size: 4rem;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0.3;
         }
 
-        /* MANIFESTO PILLARS */
-        .pillars-grid {
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .date {
+            font-size: 1rem;
+            opacity: 0.8;
+            border-top: 1px solid rgba(255,255,255,0.3);
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+
+        .content {
+            padding: 60px 50px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section-title {
+            font-size: 2.2rem;
+            color: #667eea;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .principle-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .principle-card {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .principle-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .principle-title {
+            font-size: 1.5rem;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .principle-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .principle-list li {
+            margin-bottom: 12px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .principle-list li::before {
+            content: '•';
+            color: #667eea;
+            font-size: 1.5rem;
+            position: absolute;
+            left: 0;
+            top: -2px;
+        }
+
+        .quote {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            font-style: italic;
+            font-size: 1.3rem;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .quote::before {
+            content: '"';
+            font-size: 4rem;
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            opacity: 0.3;
+        }
+
+        .actors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 25px;
             margin-top: 30px;
         }
 
-        .pillar-card {
-            background: linear-gradient(135deg, #74b9ff, #0984e3);
-            color: white;
-            padding: 30px;
+        .actor-card {
+            background: white;
+            border: 2px solid #667eea;
             border-radius: 15px;
+            padding: 25px;
             text-align: center;
-            transform: translateY(0);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: all 0.3s ease;
         }
 
-        .pillar-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(116, 185, 255, 0.4);
+        .actor-card:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
         }
 
-        .pillar-icon {
+        .actor-icon {
             font-size: 3rem;
             margin-bottom: 15px;
             display: block;
         }
 
-        .pillar-title {
-            font-size: 1.3rem;
-            font-weight: 600;
+        .actor-title {
+            font-size: 1.4rem;
+            font-weight: bold;
             margin-bottom: 15px;
         }
 
-        .pillar-description {
+        .actor-list {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+        }
+
+        .actor-list li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
             font-size: 0.95rem;
-            opacity: 0.9;
-            line-height: 1.5;
         }
 
-        /* COMPARISON TABLE */
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 25px;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        .actor-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #667eea;
         }
 
-        .comparison-table th {
-            background: linear-gradient(135deg, #0984e3, #74b9ff);
+        .actor-card:hover .actor-list li::before {
             color: white;
-            padding: 20px;
-            font-size: 1.1rem;
-            font-weight: 600;
         }
 
-        .comparison-table td {
-            padding: 18px;
-            border-bottom: 1px solid #e0e6ed;
-            vertical-align: top;
-        }
-
-        .comparison-table tr:nth-child(even) {
-            background: #f8fffe;
-        }
-
-        .tourist-column { color: #00b894; font-weight: 600; }
-        .others-column { color: #e17055; font-weight: 600; }
-
-        /* BENEFITS SECTION */
-        .benefits-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            margin-top: 30px;
-        }
-
-        .benefit-card {
-            background: linear-gradient(135deg, #a8e6cf, #00b894);
+        .highlight-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
             padding: 30px;
             border-radius: 15px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .benefit-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 100%;
-            height: 100%;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
-            transform: rotate(45deg);
-        }
-
-        .benefit-actor {
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin-bottom: 15px;
-            z-index: 2;
-            position: relative;
-        }
-
-        .benefit-list {
-            list-style: none;
-            z-index: 2;
-            position: relative;
-        }
-
-        .benefit-list li {
-            margin-bottom: 10px;
-            padding-left: 25px;
-            position: relative;
-        }
-
-        .benefit-list li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: #fff;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        /* FUTURE VISION */
-        .vision-card {
-            background: linear-gradient(135deg, #fd79a8, #e84393);
-            color: white;
-            padding: 40px;
-            border-radius: 20px;
+            margin: 30px 0;
             text-align: center;
-            margin-top: 30px;
-        }
-
-        .vision-title {
-            font-size: 2rem;
-            margin-bottom: 20px;
-            font-weight: 700;
+            font-size: 1.2rem;
+            box-shadow: 0 10px 30px rgba(240, 147, 251, 0.3);
         }
 
         .vision-text {
-            font-size: 1.1rem;
-            line-height: 1.7;
-            opacity: 0.95;
+            font-size: 1.3rem;
+            text-align: center;
+            font-style: italic;
+            color: #667eea;
+            line-height: 1.8;
         }
 
-        /* CALL TO ACTION */
-        .cta-section {
-            background: linear-gradient(135deg, #2d3436, #636e72);
-            color: white;
-            padding: 50px;
-            border-radius: 20px;
+        .signature-section {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 15px;
+            border: 2px solid #667eea;
             text-align: center;
             margin-top: 40px;
         }
 
-        .cta-title {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-
-        .cta-text {
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-            opacity: 0.9;
-        }
-
-        .cta-button {
-            background: linear-gradient(135deg, #00b894, #a8e6cf);
-            color: white;
-            padding: 15px 40px;
-            border: none;
-            border-radius: 50px;
+        .signature-text {
             font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
+            margin-bottom: 20px;
         }
 
-        .cta-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0, 184, 148, 0.4);
+        .signature-emphasis {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 20px;
         }
 
-        /* RESPONSIVE */
         @media (max-width: 768px) {
-            .hero h1 { font-size: 2.5rem; }
-            .hero-subtitle { font-size: 1.2rem; }
-            .section-title { font-size: 1.8rem; }
-            .content-section { padding: 25px; }
-            .pillars-grid { grid-template-columns: 1fr; }
-            .benefits-grid { grid-template-columns: 1fr; }
+            .container {
+                margin: 20px;
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 40px 30px;
+            }
+
+            .header h1 {
+                font-size: 2.2rem;
+            }
+
+            .content {
+                padding: 40px 30px;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            .principle-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actors-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        /* FLOATING ELEMENTS */
-        .floating-icon {
-            position: absolute;
-            opacity: 0.1;
-            font-size: 6rem;
-            color: white;
-            z-index: 0;
-            animation: float 6s ease-in-out infinite;
+        .scroll-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(102, 126, 234, 0.2);
+            z-index: 1000;
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-
-        .icon-1 { top: 10%; left: 10%; animation-delay: 0s; }
-        .icon-2 { top: 60%; right: 15%; animation-delay: 2s; }
-        .icon-3 { bottom: 20%; left: 20%; animation-delay: 4s; }
-
-        /* FOOTER */
-        .footer {
-            text-align: center;
-            padding: 30px;
-            color: white;
-            font-size: 0.9rem;
-            opacity: 0.8;
+        .scroll-progress {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
         }
     </style>
 </head>
 <body>
-    <!-- Floating Icons -->
-    <div class="floating-icon icon-1">🏖️</div>
-    <div class="floating-icon icon-2">🌴</div>
-    <div class="floating-icon icon-3">🏄‍♀️</div>
+    <div class="scroll-indicator">
+        <div class="scroll-progress" id="scrollProgress"></div>
+    </div>
 
     <div class="container">
-        <!-- HERO SECTION -->
-        <div class="hero">
-            <h1>🛡️ MANIFESTO ETICO TOURISTIQ</h1>
-            <div class="hero-subtitle">
-                La Prima Rivoluzione Privacy-First nel Turismo Mondiale
-            </div>
-            <div class="hero-tagline">
-                🌍 Zero Dati Sensibili • 🤝 Massima Privacy • 🌱 100% Etico
-            </div>
+        <div class="header">
+            <h1>📜 Manifesto Etico di TouristIQ</h1>
+            <div class="subtitle">Documento fondativo dei principi morali, culturali e operativi dell'ecosistema TouristIQ</div>
+            <div class="date">Ultimo aggiornamento: 30 giugno 2025</div>
         </div>
 
-        <!-- MANIFESTO SECTION -->
-        <div class="content-section">
-            <h2 class="section-title">🎯 Il Nostro Manifesto</h2>
-            <p style="text-align: center; font-size: 1.1rem; margin-bottom: 30px; color: #636e72;">
-                <strong>TouristIQ</strong> è il primo eco-sistema turistico mondiale progettato per <strong>rispettare completamente la privacy</strong> di ogni utente. 
-                Crediamo che il turismo debba essere <strong>autentico, sostenibile e libero dalla sorveglianza digitale</strong>.
-            </p>
-
-            <div class="pillars-grid">
-                <div class="pillar-card">
-                    <span class="pillar-icon">🔐</span>
-                    <div class="pillar-title">Privacy Assoluta</div>
-                    <div class="pillar-description">
-                        Zero raccolta dati personali. Nessun consenso GDPR da firmare. 
-                        Accesso tramite codici IQ anonimi. La tua privacy è sacra.
-                    </div>
+        <div class="content">
+            <!-- Sezione 1: Premessa -->
+            <div class="section">
+                <h2 class="section-title">1. Premessa – Più di un'App, un Gesto Culturale</h2>
+                <p><strong>TouristIQ non è una piattaforma turistica come le altre.</strong><br>
+                È un'azione consapevole, una scelta politica e culturale in un mondo che tratta ogni persona come un dato da monetizzare.<br>
+                Noi diciamo basta alla profilazione. Diciamo sì alla relazione.</p>
+                
+                <div class="quote">
+                    In TouristIQ, l'accesso non avviene con una registrazione, ma con un dono: un codice IQ che ti viene offerto da chi ti accoglie.<br>
+                    Non ti registri: vieni invitato.
                 </div>
+            </div>
 
-                <div class="pillar-card">
-                    <span class="pillar-icon">🤝</span>
-                    <div class="pillar-title">Relazioni Autentiche</div>
-                    <div class="pillar-description">
-                        Niente recensioni pubbliche competitive. Feedback privato costruttivo. 
-                        Focus su miglioramento qualità, non ranking.
+            <!-- Sezione 2: Principi Fondamentali -->
+            <div class="section">
+                <h2 class="section-title">2. Principi Fondamentali</h2>
+                
+                <div class="principle-grid">
+                    <div class="principle-card">
+                        <h3 class="principle-title">🛡️ Privacy Totale</h3>
+                        <ul class="principle-list">
+                            <li>Nessun dato personale viene raccolto: nessun nome, email, numero, posizione</li>
+                            <li>Non esistono account, solo codici IQ anonimi che permettono l'accesso</li>
+                            <li>Nessun consenso da firmare: la privacy è integrata, non delegata</li>
+                        </ul>
                     </div>
-                </div>
 
-                <div class="pillar-card">
-                    <span class="pillar-icon">🌱</span>
-                    <div class="pillar-title">Sostenibilità Etica</div>
-                    <div class="pillar-description">
-                        Non vendiamo mai i tuoi dati. Modello business trasparente. 
-                        Primo vero eco-sistema privacy-native del turismo.
+                    <div class="principle-card">
+                        <h3 class="principle-title">🎯 Esperienza Autentica</h3>
+                        <ul class="principle-list">
+                            <li>Ogni viaggio è un atto umano, non un'interazione digitale</li>
+                            <li>Nessun algoritmo ti dice dove andare: lo decide il territorio</li>
+                            <li>La scoperta è libera, la relazione è reale</li>
+                        </ul>
                     </div>
-                </div>
 
-                <div class="pillar-card">
-                    <span class="pillar-icon">🎯</span>
-                    <div class="pillar-title">Esperienza Pura</div>
-                    <div class="pillar-description">
-                        Tutto si basa sull'esperienza vera degli utenti. 
-                        Niente algoritmi invasivi. Solo autenticità e qualità.
+                    <div class="principle-card">
+                        <h3 class="principle-title">🤝 Feedback Privato e Costruttivo</h3>
+                        <ul class="principle-list">
+                            <li>Nessuna recensione pubblica, nessuna stella da conquistare</li>
+                            <li>I feedback sono personali, riservati, e servono a migliorare, non a competere</li>
+                            <li>Si comunica, non si giudica</li>
+                        </ul>
                     </div>
-                </div>
 
-                <div class="pillar-card">
-                    <span class="pillar-icon">🔄</span>
-                    <div class="pillar-title">Miglioramento Continuo</div>
-                    <div class="pillar-description">
-                        Feedback privato tra turisti e partner per crescere insieme. 
-                        Collaborazione invece di competizione distruttiva.
+                    <div class="principle-card">
+                        <h3 class="principle-title">🔄 Responsabilità Diffusa</h3>
+                        <ul class="principle-list">
+                            <li>TouristIQ si assume la responsabilità dei partner che accoglie</li>
+                            <li>Le strutture sono selezionate, non autoiscritte</li>
+                            <li>Ogni attore dell'ecosistema risponde con trasparenza e rispetto al patto etico comune</li>
+                        </ul>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- COMPARISON SECTION -->
-        <div class="content-section">
-            <h2 class="section-title">⚖️ TouristIQ vs Altre Piattaforme</h2>
-            
-            <table class="comparison-table">
-                <thead>
-                    <tr>
-                        <th>Aspetto</th>
-                        <th>🛡️ TouristIQ</th>
-                        <th>🔍 Altri Servizi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Dati Personali</strong></td>
-                        <td class="tourist-column">❌ Zero raccolta<br>Solo codici IQ anonimi</td>
-                        <td class="others-column">✅ Nome, email, telefono<br>Profilazione completa</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Consensi Privacy</strong></td>
-                        <td class="tourist-column">❌ Nessun consenso GDPR<br>Privacy by design</td>
-                        <td class="others-column">✅ Consensi obbligatori<br>Termini lunghi e complessi</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Recensioni</strong></td>
-                        <td class="tourist-column">🤝 Feedback privato costruttivo<br>Aiuto diretto al partner</td>
-                        <td class="others-column">👁️ Recensioni pubbliche<br>Competizione e ranking</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Modello Business</strong></td>
-                        <td class="tourist-column">💎 Vendita IQCode<br>Non vendiamo dati utenti</td>
-                        <td class="others-column">📊 Vendita dati utenti<br>Pubblicità mirata</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Esperienza</strong></td>
-                        <td class="tourist-column">🎯 Autentica e libera<br>Zero tracking invasivo</td>
-                        <td class="others-column">🕸️ Personalizzata ma invasiva<br>Tracking continuo</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+            <!-- Sezione 3: Impegni degli Attori -->
+            <div class="section">
+                <h2 class="section-title">3. Impegni degli Attori Coinvolti</h2>
+                
+                <div class="actors-grid">
+                    <div class="actor-card">
+                        <span class="actor-icon">🏨</span>
+                        <h3 class="actor-title">Strutture Ricettive</h3>
+                        <ul class="actor-list">
+                            <li>Accolgono, non schedano</li>
+                            <li>Donano codici IQ senza raccogliere dati</li>
+                            <li>Offrono accesso a un'esperienza, non a una mailing list</li>
+                        </ul>
+                    </div>
 
-        <!-- BENEFITS SECTION -->
-        <div class="content-section">
-            <h2 class="section-title">🌟 Benefici per Tutti gli Attori</h2>
-            
-            <div class="benefits-grid">
-                <div class="benefit-card">
-                    <div class="benefit-actor">🏖️ TURISTI</div>
-                    <ul class="benefit-list">
-                        <li>Privacy totale garantita</li>
-                        <li>Nessuna registrazione complessa</li>
-                        <li>Accesso immediato con codice IQ</li>
-                        <li>Sconti autentici senza tracking</li>
-                        <li>Feedback privato per migliorare servizi</li>
-                        <li>Zero spam o profilazione</li>
-                    </ul>
-                </div>
+                    <div class="actor-card">
+                        <span class="actor-icon">🛍️</span>
+                        <h3 class="actor-title">Partner Commerciali</h3>
+                        <ul class="actor-list">
+                            <li>Validano solo esperienze realmente avvenute</li>
+                            <li>Accettano di non vedere "chi è" il cliente, ma che tipo di esperienza ha vissuto</li>
+                            <li>Entrano nella rete perché ci credono, non perché conviene</li>
+                        </ul>
+                    </div>
 
-                <div class="benefit-card">
-                    <div class="benefit-actor">🏨 STRUTTURE</div>
-                    <ul class="benefit-list">
-                        <li>Gestione ospiti senza dati sensibili</li>
-                        <li>Mini-gestionale integrato</li>
-                        <li>Feedback costruttivo dai turisti</li>
-                        <li>Nessun rischio privacy/GDPR</li>
-                        <li>Relazioni autentiche con ospiti</li>
-                        <li>Focus su qualità vs ranking</li>
-                    </ul>
-                </div>
-
-                <div class="benefit-card">
-                    <div class="benefit-actor">🛍️ PARTNER</div>
-                    <ul class="benefit-list">
-                        <li>Clienti senza raccolta dati</li>
-                        <li>Consigli privati per migliorare</li>
-                        <li>Rete turistica etica</li>
-                        <li>Nessuna competizione sleale</li>
-                        <li>Crescita sostenibile</li>
-                        <li>Partnership collaborative</li>
-                    </ul>
+                    <div class="actor-card">
+                        <span class="actor-icon">🧳</span>
+                        <h3 class="actor-title">Turisti</h3>
+                        <ul class="actor-list">
+                            <li>Entrano con un invito, non con un login</li>
+                            <li>Sperimentano, e se lo desiderano, validano</li>
+                            <li>Offrono feedback riservato per aiutare a migliorare</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- FUTURE VISION -->
-        <div class="content-section">
-            <div class="vision-card">
-                <div class="vision-title">🚀 La Nostra Visione</div>
+            <!-- Sezione 4: Modello Economico -->
+            <div class="section">
+                <h2 class="section-title">4. Modello Economico Etico</h2>
+                <div class="highlight-box">
+                    <p><strong>TouristIQ non vende dati, non ospita pubblicità, non inserisce cookie traccianti.</strong></p>
+                    <p>Il suo unico modello di sostenibilità è la vendita dei pacchetti IQCode.</p>
+                    <p><strong>Chi compra i codici, investe in un ecosistema libero e pulito.</strong></p>
+                </div>
+            </div>
+
+            <!-- Sezione 5: Visione -->
+            <div class="section">
+                <h2 class="section-title">5. Visione a Lungo Termine</h2>
+                
+                <div class="quote">
+                    Crescere silenziosamente, non per volume ma per valore.<br>
+                    Entrare nei cuori prima che nei mercati.<br>
+                    Essere ovunque, senza diventare invasivi.
+                </div>
+
                 <div class="vision-text">
-                    Immaginiamo un futuro turistico dove <strong>privacy e autenticità</strong> sono al centro di ogni esperienza. 
-                    Dove i turisti esplorano liberamente senza essere spiati, dove le strutture crescono attraverso 
-                    la qualità genuina e dove i partner collaborano per offrire valore reale. 
-                    <br><br>
-                    <strong>TouristIQ</strong> non è solo una piattaforma, è un <strong>movimento etico</strong> che dimostra 
-                    che il successo nel turismo non richiede la violazione della privacy. 
-                    Insieme costruiamo l'eco-sistema turistico che rispetta davvero le persone.
+                    <p>TouristIQ non punta alla viralità, ma alla penetrazione relazionale.</p>
+                    <p>È un gesto radicale di fiducia nell'intelligenza umana, nella lentezza buona, nella bellezza autentica.</p>
+                </div>
+            </div>
+
+            <!-- Sezione 6: Accettazione -->
+            <div class="section">
+                <div class="signature-section">
+                    <h2 class="section-title">6. Accettazione del Manifesto</h2>
+                    <p class="signature-text">
+                        Firmando o utilizzando i servizi TouristIQ, ogni attore (struttura, partner o turista) 
+                        accetta e si riconosce in questi principi.
+                    </p>
+                    <p class="signature-emphasis">
+                        TouristIQ è un ecosistema per esseri umani, non per utenti.
+                    </p>
                 </div>
             </div>
         </div>
-
-        <!-- CALL TO ACTION -->
-        <div class="cta-section">
-            <div class="cta-title">🌍 Unisciti alla Rivoluzione</div>
-            <div class="cta-text">
-                Sei pronto a far parte del primo eco-sistema turistico completamente etico?<br>
-                Dove la tua privacy vale più dei profitti e l'autenticità supera gli algoritmi?
-            </div>
-            <a href="#" class="cta-button">
-                🚀 Scopri TouristIQ
-            </a>
-        </div>
     </div>
 
-    <div class="footer">
-        🛡️ TouristIQ - Privacy-First Tourism Revolution | Made with ❤️ for Authentic Travel | Giugno 2025
-    </div>
+    <script>
+        // Scroll progress indicator
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.pageYOffset;
+            const docHeight = document.body.offsetHeight;
+            const winHeight = window.innerHeight;
+            const scrollPercent = scrollTop / (docHeight - winHeight);
+            const scrollPercentRounded = Math.round(scrollPercent * 100);
+            
+            document.getElementById('scrollProgress').style.width = scrollPercentRounded + '%';
+        });
+
+        // Smooth scrolling for better UX
+        document.documentElement.style.scrollBehavior = 'smooth';
+    </script>
 </body>
 </html>
