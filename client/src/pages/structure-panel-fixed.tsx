@@ -46,7 +46,7 @@ export default function StructurePanelFixed() {
   // Stati per il pannello
   const [iqCodesBalance, setIqCodesBalance] = useState(47);
   const [selectedPackageSize, setSelectedPackageSize] = useState<'25' | '50' | '75' | '100'>('25');
-  const [paymentStatus, setPaymentStatus] = useState('idle');
+
   const [gestionaleAccess, setGestionaleAccess] = useState({
     hasAccess: true,
     hoursRemaining: 42
@@ -65,25 +65,24 @@ export default function StructurePanelFixed() {
     setShowTermsModal(true);
   };
 
-  const handleTermsAccepted = async () => {
-    setPaymentStatus('processing');
-
-    try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      const packageSize = parseInt(selectedPackageSize);
-      const newBalance = iqCodesBalance + packageSize;
-      setIqCodesBalance(newBalance);
-      setPaymentStatus('completed');
+  const handleTermsAccepted = () => {
+    // Dopo aver accettato i termini, apri il link SumUp corrispondente
+    const packages = [
+      { size: '25', sumupLink: 'https://pay.sumup.com/b2c/QSJE461B' },
+      { size: '50', sumupLink: 'https://pay.sumup.com/b2c/QK6MLJC7' },
+      { size: '75', sumupLink: 'https://pay.sumup.com/b2c/Q9517L3P' },
+      { size: '100', sumupLink: 'https://pay.sumup.com/b2c/Q3BWI26N' }
+    ];
+    
+    const selectedPackage = packages.find(p => p.size === selectedPackageSize);
+    if (selectedPackage) {
+      // Chiudi il modal e apri SumUp
+      setShowTermsModal(false);
+      window.open(selectedPackage.sumupLink, '_blank');
+      
       toast({
-        title: "Acquisto completato!",
-        description: `Pacchetto ${selectedPackageSize} IQCode acquistato con successo. Nuovo saldo: ${newBalance}`,
-      });
-    } catch (error) {
-      setPaymentStatus('failed');
-      toast({
-        title: "Errore pagamento",
-        description: "Si è verificato un errore durante l'acquisto.",
-        variant: "destructive"
+        title: "Reindirizzamento al pagamento",
+        description: `Ti stiamo portando al pagamento sicuro per il pacchetto ${selectedPackageSize} IQCode`,
       });
     }
   };
@@ -172,30 +171,11 @@ export default function StructurePanelFixed() {
                   <div className="mt-6">
                     <Button 
                       onClick={handlePurchasePackage}
-                      disabled={paymentStatus === 'processing'}
                       className="w-full bg-purple-600 hover:bg-purple-700"
                     >
-                      {paymentStatus === 'processing' ? (
-                        <>
-                          <Package className="w-4 h-4 mr-2 animate-spin" />
-                          Elaborazione in corso...
-                        </>
-                      ) : (
-                        <>
-                          <Euro className="w-4 h-4 mr-2" />
-                          Procedi all'Acquisto - {selectedPackageSize} IQCode
-                        </>
-                      )}
+                      <Euro className="w-4 h-4 mr-2" />
+                      Acquista Pacchetto - {selectedPackageSize} IQCode
                     </Button>
-
-                    {paymentStatus === 'completed' && (
-                      <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <div className="flex items-center gap-2 text-green-700">
-                          <CheckCircle className="w-5 h-5" />
-                          <span className="font-medium">Pagamento completato con successo!</span>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
