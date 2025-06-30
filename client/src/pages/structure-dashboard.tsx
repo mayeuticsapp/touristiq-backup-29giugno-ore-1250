@@ -476,6 +476,7 @@ export default function StructureDashboard() {
   const navigation = [
     { icon: <TrendingUp size={16} />, label: "Dashboard Struttura", href: "#", onClick: () => setActiveSection("dashboard") },
     { icon: <Users size={16} />, label: "Ospiti con IQ Code", href: "#", onClick: () => setActiveSection("ospiti-iqcode") },
+    { icon: <Package size={16} />, label: "Acquista Pacchetti", href: `/structure/${structureId}/panel`, onClick: null },
     { icon: <DollarSign size={16} />, label: "Mini-gestionale", href: "#", onClick: () => setActiveSection("contabilita") },
     { icon: <Trash2 size={16} className="text-red-500" />, label: "Elimina Account", href: "#", onClick: () => setActiveSection("elimina-account") },
   ];
