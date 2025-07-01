@@ -93,6 +93,12 @@ export default function StructureDashboard() {
     enabled: !!structureId
   });
 
+  // Recupera informazioni entità (nome + codice)
+  const { data: entityInfo } = useQuery({
+    queryKey: ['/api/entity-info'],
+    queryFn: () => fetch('/api/entity-info', { credentials: 'include' }).then(res => res.json())
+  });
+
   // Query per pacchetti assegnati alla struttura
   const { data: packagesData, refetch: refetchPackages } = useQuery<PackagesResponse>({
     queryKey: ["/api/my-packages"],
@@ -967,9 +973,9 @@ export default function StructureDashboard() {
 
   return (
     <Layout
-      title={structureData ? `Dashboard ${structureData.name}` : "Dashboard Struttura"}
+      title={entityInfo?.displayName || "Dashboard Struttura"}
       role="Gestione Struttura"
-      iqCode={structureData?.iqCode}
+      iqCode={entityInfo?.code}
       navigation={navigation}
       sidebarColor="bg-purple-600"
     >

@@ -157,6 +157,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Entity info endpoint - Per recuperare nome e dettagli entità
+  app.get("/api/entity-info", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const entityData = await storage.getIqCodeByCode(session.iqCode);
+      if (!entityData) {
+        return res.status(404).json({ message: "Entità non trovata" });
+      }
+
+      // Estrae ID dal codice (es: TIQ-VV-STT-5909 -> 5909)
+      const idMatch = session.iqCode.match(/(\d+)$/);
+      const entityId = idMatch ? idMatch[1] : null;
+
+      res.json({
+        code: session.iqCode,
+        role: session.role,
+        name: entityData.assignedTo || `${session.role.charAt(0).toUpperCase() + session.role.slice(1)} ${entityId}`,
+        location: entityData.location,
+        displayName: entityData.assignedTo ? 
+          `${entityData.assignedTo} (${session.iqCode})` : 
+          `${session.role.charAt(0).toUpperCase() + session.role.slice(1)} ${entityId} (${session.iqCode})`
+      });
+    } catch (error) {
+      console.error("Errore recupero info entità:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // TIQai chat endpoint
   const chatSchema = z.object({
     message: z.string().min(1, "Messaggio richiesto").max(500, "Messaggio troppo lungo"),
