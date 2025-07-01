@@ -6,8 +6,6 @@ cmds = ["npm ci", "npm run build", "cp -r dist/public ."]
 
 [deploy]
 startCommand = "npm start"
-healthcheckPath = "/"
-healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
 
