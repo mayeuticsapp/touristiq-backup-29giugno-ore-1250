@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { universalStorage as storage } from "./storage-universal";
+import { storage } from "./storage";
 import { loginSchema } from "@shared/schema";
 import { nanoid } from "nanoid";
 import { chatWithTIQai } from "./openai";
@@ -48,13 +48,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Create session - sistema semplice che funziona sempre
+      // Create session
       const sessionToken = nanoid();
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24); // 24 hour session
 
-      // Salva sessione nel sistema universale
-      storage.createSimpleSession(iqCodeRecord.code, iqCodeRecord.role, sessionToken, expiresAt);
+      const session = await storage.createSession({
+        iqCode: iqCodeRecord.code,
+        role: iqCodeRecord.role,
+        sessionToken,
+        expiresAt,
+      });
 
       // Set session cookie
       res.cookie('session_token', sessionToken, {
@@ -83,8 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Non autenticato" });
       }
 
-      // Controllo sessione nel sistema universale
-      const session = storage.getSession(sessionToken);
+      const session = await storage.getSessionByToken(sessionToken);
       
       if (!session) {
         return res.status(401).json({ message: "Sessione non valida" });
@@ -1457,15 +1460,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Clean expired sessions periodically - Sicuro per qualsiasi storage
+  // Clean expired sessions periodically
   setInterval(async () => {
-    try {
-      if (storage.cleanExpiredSessions) {
-        await storage.cleanExpiredSessions();
-      }
-    } catch (error) {
-      console.log('Pulizia sessioni saltata - sistema continua a funzionare');
-    }
+    await storage.cleanExpiredSessions();
   }, 60000); // Clean every minute
 
   // Generate tourist code from package pool (for structures/partners)
@@ -2439,345 +2436,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Errore del server" });
     }
   });
-
-  // ==================== ENDPOINTS MESSAGGERIA INTERNA ====================
-  
-  // Invio messaggio diretto UNIVERSALE - funziona per qualsiasi IQCode
-  app.post("/api/messages/send-direct", async (req: any, res: any) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session || session.role !== 'tourist') {
-        return res.status(403).json({ message: "Solo i turisti possono inviare messaggi" });
-      }
-
-      const { partnerCode, message } = req.body;
-      
-      if (!partnerCode || !message) {
-        return res.status(400).json({ message: "Codice partner e messaggio richiesti" });
-      }
-
-      // Usa sistema universale completamente autonomo
-      const { universalSystem } = await import('./universal-system');
-      const result = await universalSystem.sendDirectMessage(
-        session.iqCode, 
-        partnerCode, 
-        message.trim()
-      );
-
-      res.json({ 
-        success: result.success, 
-        conversationId: result.conversationId,
-        message: "Messaggio inviato con successo!"
-      });
-
-    } catch (error) {
-      console.error("Errore invio messaggio:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  // Risposta partner UNIVERSALE - completamente autonoma
-  app.post("/api/messages/partner-reply", async (req: any, res: any) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session || session.role !== 'partner') {
-        return res.status(403).json({ message: "Solo i partner possono rispondere" });
-      }
-
-      const { conversationId, message } = req.body;
-      
-      if (!conversationId || !message) {
-        return res.status(400).json({ message: "ID conversazione e messaggio richiesti" });
-      }
-
-      // Usa sistema universale per risposta partner
-      const { universalSystem } = await import('./universal-system');
-      const result = await universalSystem.sendPartnerReply(
-        conversationId, 
-        session.iqCode, 
-        message.trim()
-      );
-
-      res.json({ 
-        success: result.success,
-        message: result.success ? "Risposta inviata con successo!" : "Errore invio risposta"
-      });
-
-    } catch (error) {
-      console.error("Errore risposta partner:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  // TEST ENDPOINT - Dimostra scalabilità universale
-  app.post("/api/test/universal-messaging", async (req: any, res: any) => {
-    try {
-      const { universalSystem } = await import('./universal-system');
-      
-      // Test con diversi formati IQCode per dimostrare universalità
-      const testCases = [
-        { tourist: "TIQ-IT-9948-BOTTICELLI", partner: "TIQ-RC-PRT-5842" },
-        { tourist: "TIQ-IT-7531-MICHELANGELO", partner: "TIQ-VV-STT-2567" },
-        { tourist: "CUSTOM-CODE-LEONARDO", partner: "BUSINESS-PARTNER-123" },
-        { tourist: "ANY-FORMAT-WORKS-RAFFAELLO", partner: "UNIVERSAL-HOTEL-456" }
-      ];
-
-      const results = [];
-      
-      for (const testCase of testCases) {
-        // Invia messaggio turistico
-        const sendResult = await universalSystem.sendDirectMessage(
-          testCase.tourist, 
-          testCase.partner, 
-          `Messaggio di test da ${testCase.tourist}`
-        );
-        
-        // Ottieni conversazioni partner
-        const conversations = await universalSystem.getPartnerConversations(testCase.partner);
-        
-        results.push({
-          testCase,
-          sendResult,
-          partnerSeesWord: conversations[0]?.touristWord || 'NESSUNA',
-          conversationsCount: conversations.length
-        });
-      }
-
-      res.json({ 
-        success: true,
-        message: "Sistema universale funziona per qualsiasi IQCode!",
-        testResults: results,
-        totalTests: testCases.length
-      });
-
-    } catch (error) {
-      console.error("Errore test universale:", error);
-      res.status(500).json({ message: "Errore test" });
-    }
-  });
-
-  // Partner accetta richiesta di chat
-  app.post("/api/messages/accept-request/:conversationId", async (req: any, res: any) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session || session.role !== 'partner') {
-        return res.status(403).json({ message: "Solo i partner possono accettare richieste" });
-      }
-
-      const conversationId = parseInt(req.params.conversationId);
-      const success = await storage.updateConversationStatus(conversationId, 'accepted');
-      
-      if (success) {
-        res.json({ success: true, message: "Richiesta accettata! Puoi ora chattare." });
-      } else {
-        res.status(404).json({ message: "Conversazione non trovata" });
-      }
-    } catch (error) {
-      console.error("Errore accettazione richiesta:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  // Partner rifiuta richiesta di chat
-  app.post("/api/messages/reject-request/:conversationId", async (req: any, res: any) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session || session.role !== 'partner') {
-        return res.status(403).json({ message: "Solo i partner possono rifiutare richieste" });
-      }
-
-      const conversationId = parseInt(req.params.conversationId);
-      const success = await storage.updateConversationStatus(conversationId, 'rejected');
-      
-      if (success) {
-        res.json({ success: true, message: "Richiesta rifiutata." });
-      } else {
-        res.status(404).json({ message: "Conversazione non trovata" });
-      }
-    } catch (error) {
-      console.error("Errore rifiuto richiesta:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  // Ottieni conversazioni dell'utente
-  app.get("/api/messages/conversations", async (req: any, res: any) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      let conversations: any[] = [];
-
-      if (session.role === 'partner') {
-        // Sistema universale completamente autonomo
-        const { universalSystem } = await import('./universal-system');
-        const partnerConversations = await universalSystem.getPartnerConversations(session.iqCode);
-        
-        conversations = partnerConversations.map((conv: any) => ({
-          conversation: {
-            id: conv.id,
-            touristCode: conv.touristWord, // Solo parola emozionale
-            lastMessageAt: new Date(),
-            status: 'active'
-          },
-          unreadCount: conv.unreadCount
-        }));
-      } else if (session.role === 'tourist') {
-        // Per ora turistico usa sistema esistente
-        conversations = [];
-      } else {
-        return res.status(403).json({ message: "Accesso negato" });
-      }
-
-      res.json({ conversations });
-
-    } catch (error) {
-      console.error("Errore recupero conversazioni:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  // Ottieni messaggi di una conversazione
-  app.get("/api/messages/conversation/:id", async (req: any, res: any) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      const conversationId = parseInt(req.params.id);
-      
-      // Verifica che l'utente faccia parte della conversazione
-      const conversation = await storage.getConversationById(conversationId);
-      if (!conversation) {
-        return res.status(404).json({ message: "Conversazione non trovata" });
-      }
-
-      if (conversation.touristCode !== session.iqCode && conversation.partnerCode !== session.iqCode) {
-        return res.status(403).json({ message: "Accesso negato a questa conversazione" });
-      }
-
-      const messages = await storage.getMessagesByConversation(conversationId);
-      
-      // Marca messaggi come letti
-      await storage.markMessagesAsRead(conversationId, session.iqCode);
-
-      res.json({ 
-        conversation,
-        messages 
-      });
-
-    } catch (error) {
-      console.error("Errore recupero messaggi:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  // Invia nuovo messaggio
-  app.post("/api/messages/send", async (req: any, res: any) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      const { conversationId, content } = req.body;
-      
-      if (!conversationId || !content || !content.trim()) {
-        return res.status(400).json({ message: "Dati messaggio richiesti" });
-      }
-
-      // Verifica che l'utente faccia parte della conversazione
-      const conversation = await storage.getConversationById(conversationId);
-      if (!conversation) {
-        return res.status(404).json({ message: "Conversazione non trovata" });
-      }
-
-      if (conversation.touristCode !== session.iqCode && conversation.partnerCode !== session.iqCode) {
-        return res.status(403).json({ message: "Accesso negato a questa conversazione" });
-      }
-
-      const message = await storage.createMessage({
-        conversationId,
-        senderCode: session.iqCode,
-        senderType: session.role,
-        senderName: session.iqCode,
-        content: content.trim()
-      });
-
-      res.json({ 
-        success: true, 
-        message: "Messaggio inviato",
-        messageData: message
-      });
-
-    } catch (error) {
-      console.error("Errore invio messaggio:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  // Ottieni conteggio messaggi non letti
-  app.get("/api/messages/unread-count", async (req: any, res: any) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      const unreadCount = await storage.getUnreadMessagesCount(session.iqCode);
-
-      res.json({ unreadCount });
-
-    } catch (error) {
-      console.error("Errore conteggio messaggi:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
-
-  // ==================== FINE ENDPOINTS MESSAGGERIA ====================
 
   // Turista vede richieste di validazione in sospeso
   app.get("/api/iqcode/validation-requests", async (req: any, res: any) => {

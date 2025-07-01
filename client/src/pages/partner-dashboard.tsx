@@ -11,14 +11,13 @@ import { Layout } from "@/components/layout";
 import { 
   Users, BarChart3, Plus, TrendingUp, Package, Heart, Star, 
   Download, QrCode, Camera, Tags, Trophy, Calendar, Settings,
-  Trash2, Calculator, MessageCircle
+  Trash2, Calculator
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { AdvancedAccounting } from "@/components/advanced-accounting";
 import { PartnerOnboarding } from "@/components/partner-onboarding";
 import { IQCodeValidation } from "@/components/iqcode-validation";
-import { PartnerMessaging } from "@/components/partner-messaging";
 
 interface TouristLinkRequest {
   id: string;
@@ -65,7 +64,6 @@ export default function PartnerDashboard() {
   const [showAccountDeleteDialog, setShowAccountDeleteDialog] = useState(false);
   const [showMiniGestionale, setShowMiniGestionale] = useState(false);
   const [showValidationSection, setShowValidationSection] = useState(false);
-  const [showMessagingSection, setShowMessagingSection] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   
   // Ref per focus automatico check-in → check-out
@@ -370,12 +368,6 @@ export default function PartnerDashboard() {
           icon: <QrCode className="h-4 w-4" />,
           href: "#",
           onClick: () => setShowValidationSection(true)
-        },
-        {
-          label: "Messaggi",
-          icon: <MessageCircle className="h-4 w-4" />,
-          href: "#",
-          onClick: () => setShowMessagingSection(true)
         }
       ]}
       sidebarColor="bg-orange-600"
@@ -956,18 +948,6 @@ export default function PartnerDashboard() {
               </DialogTitle>
             </DialogHeader>
             <IQCodeValidation userRole="partner" />
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={showMessagingSection} onOpenChange={setShowMessagingSection}>
-          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <MessageCircle className="w-5 h-5" />
-                Messaggi con i Turisti
-              </DialogTitle>
-            </DialogHeader>
-            <PartnerMessaging />
           </DialogContent>
         </Dialog>
       </div>
