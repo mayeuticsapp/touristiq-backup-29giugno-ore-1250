@@ -84,8 +84,137 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Sfondo Naturale Mediterraneo */}
+      {/* Sfondo Naturale con Persone Felici */}
       <div className="absolute inset-0 bg-gradient-to-b from-sky-400 via-blue-500 to-cyan-600">
+      
+        {/* Mare e spiaggia */}
+        <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-cyan-700 via-cyan-500 to-cyan-400"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-20 bg-yellow-200 rounded-t-full opacity-80"></div>
+        
+        {/* Montagne */}
+        <div className="absolute bottom-32 left-0 w-80 h-40 bg-green-600 opacity-60 transform -skew-x-12"></div>
+        <div className="absolute bottom-20 right-0 w-96 h-52 bg-green-500 opacity-50 transform skew-x-12"></div>
+        
+        {/* Onde del mare */}
+        <div className="absolute bottom-20 left-0 right-0 h-2 bg-white opacity-60 rounded-full animate-pulse"></div>
+        <div className="absolute bottom-16 left-10 right-20 h-1 bg-white opacity-40 rounded-full animate-pulse delay-300"></div>
+        <div className="absolute bottom-24 left-20 right-10 h-1 bg-white opacity-50 rounded-full animate-pulse delay-150"></div>
+        
+        {/* PERSONE FELICI SULLA SPIAGGIA */}
+        
+        {/* Famiglia che gioca - Gruppo sinistra */}
+        <div className="absolute bottom-16 left-32">
+          {/* Adulto in piedi */}
+          <div className="absolute w-3 h-8 bg-orange-400 rounded-t-full"></div>
+          <div className="absolute top-8 w-3 h-6 bg-blue-600 rounded-b-sm"></div>
+          <div className="absolute -top-1 left-0.5 w-2 h-2 bg-yellow-600 rounded-full"></div>
+          {/* Braccia alzate felice */}
+          <div className="absolute top-2 -left-1 w-4 h-1 bg-orange-400 transform rotate-45 rounded-full"></div>
+          <div className="absolute top-2 -right-1 w-4 h-1 bg-orange-400 transform -rotate-45 rounded-full"></div>
+        </div>
+        
+        {/* Bambino che corre */}
+        <div className="absolute bottom-18 left-40">
+          <div className="absolute w-2 h-6 bg-pink-300 rounded-t-full"></div>
+          <div className="absolute top-6 w-2 h-4 bg-green-500 rounded-b-sm"></div>
+          <div className="absolute -top-1 left-0.5 w-1 h-1 bg-yellow-500 rounded-full"></div>
+          {/* Braccia in movimento */}
+          <div className="absolute top-1 -left-1 w-3 h-0.5 bg-pink-300 transform rotate-12 rounded-full animate-bounce"></div>
+          <div className="absolute top-1 -right-1 w-3 h-0.5 bg-pink-300 transform -rotate-12 rounded-full animate-bounce"></div>
+        </div>
+        
+        {/* Coppia che cammina romanticamente */}
+        <div className="absolute bottom-14 left-60">
+          {/* Donna */}
+          <div className="absolute w-2.5 h-7 bg-red-400 rounded-t-full"></div>
+          <div className="absolute top-7 w-2.5 h-5 bg-yellow-500 rounded-b-sm"></div>
+          <div className="absolute -top-1 left-0.5 w-1.5 h-1.5 bg-pink-200 rounded-full"></div>
+          
+          {/* Uomo accanto */}
+          <div className="absolute left-4 w-3 h-8 bg-blue-500 rounded-t-full"></div>
+          <div className="absolute left-4 top-8 w-3 h-6 bg-gray-600 rounded-b-sm"></div>
+          <div className="absolute left-4.5 -top-1 w-2 h-2 bg-orange-300 rounded-full"></div>
+        </div>
+        
+        {/* Gruppo che gioca a beach volley */}
+        <div className="absolute bottom-12 left-80">
+          {/* Persona che salta */}
+          <div className="absolute w-3 h-9 bg-cyan-400 rounded-t-full transform -translate-y-2"></div>
+          <div className="absolute top-7 w-3 h-6 bg-orange-600 rounded-b-sm"></div>
+          <div className="absolute -top-3 left-0.5 w-2 h-2 bg-brown-400 rounded-full"></div>
+          {/* Braccia alzate che spingono */}
+          <div className="absolute top-0 -left-2 w-5 h-1 bg-cyan-400 transform rotate-45 rounded-full"></div>
+          <div className="absolute top-0 -right-2 w-5 h-1 bg-cyan-400 transform -rotate-45 rounded-full"></div>
+          
+          {/* Pallone da beach volley */}
+          <div className="absolute -top-8 left-1 w-4 h-4 bg-white border-2 border-red-500 rounded-full animate-bounce"></div>
+        </div>
+        
+        {/* Persone sdraiate che prendono il sole */}
+        <div className="absolute bottom-10 right-40">
+          {/* Telo da mare colorato */}
+          <div className="absolute w-16 h-8 bg-gradient-to-r from-pink-400 to-yellow-400 rounded-lg opacity-80"></div>
+          {/* Persona 1 sdraiata */}
+          <div className="absolute top-2 left-2 w-6 h-2 bg-orange-300 rounded-full"></div>
+          <div className="absolute top-1 left-1 w-1.5 h-1.5 bg-yellow-600 rounded-full"></div>
+          
+          {/* Persona 2 sdraiata */}
+          <div className="absolute top-4 left-8 w-6 h-2 bg-blue-400 rounded-full"></div>
+          <div className="absolute top-3 left-7 w-1.5 h-1.5 bg-brown-500 rounded-full"></div>
+        </div>
+        
+        {/* Bambini che fanno castelli di sabbia */}
+        <div className="absolute bottom-8 left-96">
+          {/* Castello di sabbia */}
+          <div className="absolute w-6 h-4 bg-yellow-300 rounded-t-sm"></div>
+          <div className="absolute top-1 left-1 w-4 h-2 bg-yellow-400 rounded-t-sm"></div>
+          <div className="absolute top-0.5 left-2 w-2 h-1 bg-yellow-500 rounded-t-sm"></div>
+          
+          {/* Bambino seduto */}
+          <div className="absolute top-2 left-8 w-2.5 h-5 bg-green-400 rounded-t-full"></div>
+          <div className="absolute top-7 left-8 w-2.5 h-3 bg-blue-300 rounded-b-sm"></div>
+          <div className="absolute top-1 left-8.5 w-1.5 h-1.5 bg-pink-200 rounded-full"></div>
+          
+          {/* Secchiello e paletta */}
+          <div className="absolute top-4 left-12 w-2 h-3 bg-red-500 rounded-b-full"></div>
+        </div>
+        
+        {/* Palme tropicali */}
+        <div className="absolute bottom-0 left-16">
+          {/* Tronco */}
+          <div className="absolute w-2 h-24 bg-amber-800 rounded-t-sm"></div>
+          {/* Fronde */}
+          <div className="absolute -top-4 -left-6 w-14 h-3 bg-green-600 rounded-full transform rotate-12 opacity-80"></div>
+          <div className="absolute -top-4 -left-6 w-14 h-3 bg-green-500 rounded-full transform -rotate-12 opacity-80"></div>
+          <div className="absolute -top-6 -left-4 w-10 h-4 bg-green-600 rounded-full opacity-90"></div>
+        </div>
+        
+        <div className="absolute bottom-0 right-20">
+          <div className="absolute w-1.5 h-20 bg-amber-800 rounded-t-sm"></div>
+          <div className="absolute -top-3 -left-4 w-10 h-2 bg-green-600 rounded-full transform rotate-20 opacity-80"></div>
+          <div className="absolute -top-3 -left-4 w-10 h-2 bg-green-500 rounded-full transform -rotate-20 opacity-80"></div>
+        </div>
+        
+        {/* Gabbiani che volano */}
+        <div className="absolute top-32 left-64">
+          <div className="w-6 h-1 bg-white rounded-full transform rotate-12 opacity-90 animate-pulse"></div>
+          <div className="w-6 h-1 bg-white rounded-full transform -rotate-12 opacity-90 animate-pulse delay-300"></div>
+        </div>
+        
+        <div className="absolute top-48 right-80">
+          <div className="w-4 h-0.5 bg-white rounded-full transform rotate-20 opacity-80 animate-pulse delay-150"></div>
+          <div className="w-4 h-0.5 bg-white rounded-full transform -rotate-20 opacity-80 animate-pulse delay-450"></div>
+        </div>
+        
+        {/* Nuvole */}
+        <div className="absolute top-16 left-40 w-20 h-8 bg-white rounded-full opacity-70 animate-pulse"></div>
+        <div className="absolute top-24 right-60 w-16 h-6 bg-white rounded-full opacity-60 animate-pulse delay-200"></div>
+        <div className="absolute top-12 left-80 w-12 h-5 bg-white rounded-full opacity-50 animate-pulse delay-100"></div>
+        
+        {/* Riflessi dorati del sole sul mare */}
+        <div className="absolute bottom-32 right-24 w-1 h-12 bg-gradient-to-b from-yellow-300 to-transparent opacity-80 animate-pulse"></div>
+        <div className="absolute bottom-28 right-20 w-0.5 h-8 bg-gradient-to-b from-orange-300 to-transparent opacity-60 animate-pulse delay-200"></div>
+        <div className="absolute bottom-36 right-28 w-1.5 h-16 bg-gradient-to-b from-yellow-400 to-transparent opacity-70 animate-pulse delay-100"></div>
         {/* Sole splendente */}
         <div className="absolute top-16 right-20 w-24 h-24 bg-gradient-to-br from-yellow-300 to-orange-400 rounded-full opacity-90 animate-pulse shadow-2xl">
           <div className="absolute inset-2 bg-gradient-to-br from-yellow-200 to-orange-300 rounded-full animate-glow" />
