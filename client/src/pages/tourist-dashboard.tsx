@@ -4,13 +4,19 @@ import { Badge } from "@/components/ui/badge";
 import { TIQaiChat } from "@/components/tiqai-chat";
 import { IQCodeValidation } from "@/components/iqcode-validation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Compass, Tags, History, Heart, User, Utensils, Check, MessageCircle, QrCode } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Compass, Tags, History, Heart, User, Utensils, Check, MessageCircle, QrCode, MapPin } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/auth";
 import { useState } from "react";
 
 export default function TouristDashboard() {
   const [showValidationDialog, setShowValidationDialog] = useState(false);
+  const [showLocationSearch, setShowLocationSearch] = useState(false);
+  const [searchCity, setSearchCity] = useState("");
+  const [locationOffers, setLocationOffers] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchMode, setSearchMode] = useState<"default" | "city" | "geolocation">("default");
   
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
@@ -22,6 +28,69 @@ export default function TouristDashboard() {
     queryKey: ["/api/tourist/real-offers"],
     enabled: !!user,
   });
+
+  // Funzione per cercare offerte per città
+  const handleCitySearch = async () => {
+    if (!searchCity.trim()) return;
+    
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/tourist/offers-by-city?city=${encodeURIComponent(searchCity.trim())}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setLocationOffers(data.offers || []);
+        setSearchMode("city");
+      } else {
+        setLocationOffers([]);
+      }
+    } catch (error) {
+      console.error("Errore ricerca città:", error);
+      setLocationOffers([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Funzione per geolocalizzazione
+  const handleGeolocationSearch = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocalizzazione non supportata dal browser");
+      return;
+    }
+
+    setIsSearching(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        try {
+          const response = await fetch(`/api/tourist/offers-nearby?lat=${latitude}&lng=${longitude}&radius=2`);
+          const data = await response.json();
+          
+          if (response.ok) {
+            setLocationOffers(data.offers || []);
+            setSearchMode("geolocation");
+          } else {
+            setLocationOffers([]);
+          }
+        } catch (error) {
+          console.error("Errore ricerca geolocalizzazione:", error);
+          setLocationOffers([]);
+        } finally {
+          setIsSearching(false);
+        }
+      },
+      (error) => {
+        console.error("Errore geolocalizzazione:", error);
+        alert("Impossibile ottenere la posizione. Verifica le autorizzazioni del browser.");
+        setIsSearching(false);
+      }
+    );
+  };
+
+  // Determina quali offerte mostrare
+  const offersToShow = searchMode === "default" ? realOffers?.discounts || [] : locationOffers;
   
   const navigation = [
     { icon: <Compass size={16} />, label: "Esplora", href: "#" },
@@ -72,14 +141,86 @@ export default function TouristDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <Card>
           <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Sconti Disponibili</h3>
-            {isLoadingOffers ? (
-              <div className="text-center py-4">
-                <p className="text-gray-500">Caricamento offerte...</p>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Sconti Disponibili</h3>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowLocationSearch(!showLocationSearch)}
+              >
+                <MapPin className="w-4 h-4 mr-2" />
+                Cerca per località
+              </Button>
+            </div>
+            
+            {showLocationSearch && (
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cerca partner in un comune
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="es. Pizzo, Tropea, Briatico..."
+                        value={searchCity}
+                        onChange={(e) => setSearchCity(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <Button onClick={handleCitySearch} disabled={!searchCity.trim()}>
+                        Cerca
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Offerte vicino a te
+                    </label>
+                    <Button 
+                      onClick={handleGeolocationSearch}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <MapPin className="w-4 h-4 mr-2" />
+                      Usa la mia posizione (2km)
+                    </Button>
+                  </div>
+                </div>
               </div>
-            ) : realOffers?.discounts?.length > 0 ? (
+            )}
+            {/* Indicatore modalità di ricerca */}
+            {searchMode !== "default" && (
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-blue-700">
+                    {searchMode === "city" && `Risultati per: ${searchCity}`}
+                    {searchMode === "geolocation" && "Offerte nel raggio di 2km dalla tua posizione"}
+                  </p>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      setSearchMode("default");
+                      setLocationOffers([]);
+                      setSearchCity("");
+                    }}
+                  >
+                    Torna alle offerte personali
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {(isLoadingOffers || isSearching) ? (
+              <div className="text-center py-4">
+                <p className="text-gray-500">
+                  {isSearching ? "Ricerca in corso..." : "Caricamento offerte..."}
+                </p>
+              </div>
+            ) : offersToShow?.length > 0 ? (
               <div className="space-y-4">
-                {realOffers.discounts.map((offer: any, index: number) => (
+                {offersToShow.map((offer: any, index: number) => (
                   <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                     <div className="flex items-center">
                       <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
@@ -88,6 +229,12 @@ export default function TouristDashboard() {
                       <div>
                         <p className="font-medium text-gray-900">{offer.partnerName}</p>
                         <p className="text-sm text-gray-500">{offer.title}</p>
+                        {offer.city && (
+                          <p className="text-xs text-gray-400 flex items-center mt-1">
+                            <MapPin className="w-3 h-3 mr-1" />
+                            {offer.city}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <Badge className="bg-green-100 text-green-800">-{offer.discountPercentage}%</Badge>

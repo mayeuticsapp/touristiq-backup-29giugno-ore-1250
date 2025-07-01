@@ -125,6 +125,8 @@ export interface IStorage {
   // Metodi per offerte reali
   getAcceptedPartnersByTourist(touristCode: string): Promise<any[]>;
   getRealOffersByPartners(partnerCodes: string[]): Promise<any[]>;
+  getRealOffersByCity(cityName: string): Promise<any[]>;
+  getRealOffersNearby(latitude: number, longitude: number, radius: number): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -816,6 +818,14 @@ export class MemStorage implements IStorage {
   }
 
   async getRealOffersByPartners(partnerCodes: string[]): Promise<any[]> {
+    return [];
+  }
+
+  async getRealOffersByCity(cityName: string): Promise<any[]> {
+    return [];
+  }
+
+  async getRealOffersNearby(latitude: number, longitude: number, radius: number): Promise<any[]> {
     return [];
   }
 }
@@ -1765,6 +1775,42 @@ class ExtendedPostgreStorage extends PostgreStorage {
     
     return result;
   }
+
+  async getRealOffersByCity(cityName: string): Promise<any[]> {
+    const { realOffers } = await import('@shared/schema');
+    const { ilike, and } = await import('drizzle-orm');
+    
+    console.log(`Ricerca per città: ${cityName}`);
+    
+    const result = await this.db
+      .select()
+      .from(realOffers)
+      .where(and(
+        ilike(realOffers.city, cityName),
+        eq(realOffers.isActive, true)
+      ));
+    
+    console.log(`Trovate ${result.length} offerte per ${cityName}`);
+    
+    return result;
+  }
+
+  async getRealOffersNearby(latitude: number, longitude: number, radius: number): Promise<any[]> {
+    const { realOffers } = await import('@shared/schema');
+    const { sql } = await import('drizzle-orm');
+    
+    // Calcolo distanza usando formula di Haversine per PostgreSQL
+    const result = await this.db
+      .select()
+      .from(realOffers)
+      .where(
+        sql`6371 * acos(cos(radians(${latitude})) * cos(radians(CAST(${realOffers.latitude} AS FLOAT))) * cos(radians(CAST(${realOffers.longitude} AS FLOAT)) - radians(${longitude})) + sin(radians(${latitude})) * sin(radians(CAST(${realOffers.latitude} AS FLOAT)))) <= ${radius}`
+      )
+      .where(eq(realOffers.isActive, true))
+      .where(sql`${realOffers.latitude} IS NOT NULL AND ${realOffers.longitude} IS NOT NULL`);
+    
+    return result;
+  }
 }
 
 // Extend MemStorage con metodi impostazioni
@@ -1945,6 +1991,16 @@ class ExtendedMemStorage extends MemStorage {
       .where(eq(realOffers.isActive, true));
     
     return result;
+  }
+
+  async getRealOffersByCity(cityName: string): Promise<any[]> {
+    // Fallback per MemStorage - restituisce array vuoto
+    return [];
+  }
+
+  async getRealOffersNearby(latitude: number, longitude: number, radius: number): Promise<any[]> {
+    // Fallback per MemStorage - restituisce array vuoto  
+    return [];
   }
 }
 

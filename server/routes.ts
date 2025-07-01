@@ -2384,6 +2384,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint per ricerca offerte per città
+  app.get("/api/tourist/offers-by-city", async (req: any, res: any) => {
+    try {
+      const { city } = req.query;
+      if (!city) {
+        return res.status(400).json({ message: "Parametro city richiesto" });
+      }
+
+      const cityName = city.trim();
+      console.log(`Endpoint: ricerca per "${cityName}"`);
+      
+      const realOffers = await storage.getRealOffersByCity(cityName);
+      console.log(`Endpoint: ricevute ${realOffers.length} offerte`);
+      
+      res.json({
+        offers: realOffers,
+        searchCity: city,
+        count: realOffers.length
+      });
+
+    } catch (error) {
+      console.error("Errore ricerca per città:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Endpoint per ricerca offerte nelle vicinanze (geolocalizzazione)
+  app.get("/api/tourist/offers-nearby", async (req: any, res: any) => {
+    try {
+      const { lat, lng, radius } = req.query;
+      if (!lat || !lng) {
+        return res.status(400).json({ message: "Parametri lat e lng richiesti" });
+      }
+
+      const latitude = parseFloat(lat);
+      const longitude = parseFloat(lng);
+      const searchRadius = parseFloat(radius) || 2; // default 2km
+
+      const nearbyOffers = await storage.getRealOffersNearby(latitude, longitude, searchRadius);
+      
+      res.json({
+        offers: nearbyOffers,
+        userLocation: { latitude, longitude },
+        radius: searchRadius,
+        count: nearbyOffers.length
+      });
+
+    } catch (error) {
+      console.error("Errore ricerca geolocalizzazione:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // Turista vede richieste di validazione in sospeso
   app.get("/api/iqcode/validation-requests", async (req: any, res: any) => {
     try {

@@ -438,6 +438,10 @@ export const realOffers = pgTable('real_offers', {
   discountType: text('discount_type').default('percentage'), // percentage, fixed_amount
   category: text('category').notNull(), // ristorante, boutique, attrazione, etc
   location: text('location'), // per targeting geografico
+  city: text('city'), // Comune italiano specifico
+  province: text('province'), // Sigla provincia (VV, RC, CS, etc)
+  latitude: text('latitude'), // Coordinate GPS per geolocalizzazione  
+  longitude: text('longitude'), // Coordinate GPS per geolocalizzazione
   isActive: boolean('is_active').default(true),
   validFrom: timestamp('valid_from'),
   validUntil: timestamp('valid_until'),
