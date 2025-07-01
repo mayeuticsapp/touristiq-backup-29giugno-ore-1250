@@ -1,7 +1,7 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeValidations, iqcodeRecharges, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeValidation, type InsertIqcodeValidation, type IqcodeRecharge, type InsertIqcodeRecharge } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeValidations, iqcodeRecharges, conversations, messages, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeValidation, type InsertIqcodeValidation, type IqcodeRecharge, type InsertIqcodeRecharge, type Conversation, type InsertConversation, type Message, type InsertMessage } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { eq, and, lt, desc, like, sql, inArray } from "drizzle-orm";
+import { eq, and, lt, desc, like, sql, inArray, ilike, asc, gte, lte, count, sum } from "drizzle-orm";
 import { pool } from "./db";
 
 // Memoria globale condivisa per onboarding partner
@@ -842,7 +842,7 @@ export class MemStorage implements IStorage {
 
 // PostgreSQL Storage Class
 export class PostgreStorage implements IStorage {
-  private db: any;
+  protected db: any;
 
   constructor() {
     const sql = neon(process.env.DATABASE_URL!);
