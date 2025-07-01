@@ -1,26 +1,19 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Checkbox } from "@/components/ui/checkbox";
-import { MapPin, LogIn, AlertTriangle, Loader2 } from "lucide-react";
-import { login } from "@/lib/auth";
-import { queryClient } from "@/lib/queryClient";
-
-const STORAGE_KEY = "touristiq_last_code";
+import { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function Login() {
-  const [iqCode, setIqCode] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [iqCode, setIqCode] = useState('');
   const [rememberCode, setRememberCode] = useState(false);
-  const [, setLocation] = useLocation();
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  // Carica ultimo codice salvato al mount
   useEffect(() => {
-    const savedCode = localStorage.getItem(STORAGE_KEY);
+    const savedCode = localStorage.getItem('rememberedIqCode');
     if (savedCode) {
       setIqCode(savedCode);
       setRememberCode(true);
@@ -29,54 +22,60 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!iqCode.trim()) return;
+    if (!iqCode.trim()) {
+      toast({
+        title: "Errore",
+        description: "Inserisci il tuo IQCode",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsLoading(true);
-    setError("");
 
     try {
-      const response = await login(iqCode.trim().toUpperCase());
-      console.log("Login risposta:", response);
+      const data = await apiRequest('POST', '/api/login', { iqCode: iqCode.trim() });
+      
+      if (data.success) {
+        if (rememberCode) {
+          localStorage.setItem('rememberedIqCode', iqCode.trim());
+        } else {
+          localStorage.removeItem('rememberedIqCode');
+        }
+        
+        toast({
+          title: "Accesso completato!",
+          description: `Benvenuto nel sistema TouristIQ`,
+        });
 
-      // Salva codice IQ se richiesto
-      if (rememberCode) {
-        localStorage.setItem(STORAGE_KEY, iqCode.trim().toUpperCase());
-      } else {
-        localStorage.removeItem(STORAGE_KEY);
-      }
-
-      // Invalidate auth cache to force refresh
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-
-      // Extended delay to ensure cookie is properly set and session persists
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Redirect based on role
-      switch (response.role) {
-        case "admin":
-          console.log("Reindirizzamento ad admin");
-          setLocation("/admin");
-          break;
-        case "tourist":
-          console.log("Reindirizzamento a tourist");
-          setLocation("/tourist");
-          break;
-        case "structure":
-          console.log("Reindirizzamento a structure");
-          // Extract ID from structure code (e.g., TIQ-VV-STT-8311 -> 8311)
-          const structureId = response.iqCode.split('-').pop();
-          setLocation(`/structure/${structureId}`);
-          break;
-        case "partner":
-          console.log("Reindirizzamento a partner");
-          setLocation("/partner");
-          break;
-        default:
-          setError("Ruolo non riconosciuto");
+        // Redirigo in base al ruolo
+        const role = data.user.role;
+        const userId = data.user.id || data.user.iqCode;
+        
+        switch(role) {
+          case 'admin':
+            window.location.href = '/admin';
+            break;
+          case 'tourist':
+            window.location.href = '/tourist';
+            break;
+          case 'structure':
+            window.location.href = `/structure/${userId}`;
+            break;
+          case 'partner':
+            window.location.href = `/partner/${userId}`;
+            break;
+          default:
+            window.location.href = '/';
+        }
       }
     } catch (error: any) {
-      console.error("Errore login:", error);
-      setError(error.message || "Codice IQ non valido. Riprova.");
+      console.error('Errore login:', error);
+      toast({
+        title: "Errore di accesso",
+        description: error.message || "IQCode non valido. Riprova.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -84,261 +83,27 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Sfondo Naturale con Persone Felici */}
-      <div className="absolute inset-0 bg-gradient-to-b from-sky-400 via-blue-500 to-cyan-600">
-      
-        {/* Mare e spiaggia */}
-        <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-cyan-700 via-cyan-500 to-cyan-400"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-yellow-200 rounded-t-full opacity-80"></div>
-        
-        {/* Montagne */}
-        <div className="absolute bottom-32 left-0 w-80 h-40 bg-green-600 opacity-60 transform -skew-x-12"></div>
-        <div className="absolute bottom-20 right-0 w-96 h-52 bg-green-500 opacity-50 transform skew-x-12"></div>
-        
-        {/* Onde del mare */}
-        <div className="absolute bottom-20 left-0 right-0 h-2 bg-white opacity-60 rounded-full animate-pulse"></div>
-        <div className="absolute bottom-16 left-10 right-20 h-1 bg-white opacity-40 rounded-full animate-pulse delay-300"></div>
-        <div className="absolute bottom-24 left-20 right-10 h-1 bg-white opacity-50 rounded-full animate-pulse delay-150"></div>
-        
-        {/* PERSONE FELICI SULLA SPIAGGIA */}
-        
-        {/* Famiglia che gioca - Gruppo sinistra */}
-        <div className="absolute bottom-16 left-32">
-          {/* Adulto in piedi */}
-          <div className="absolute w-3 h-8 bg-orange-400 rounded-t-full"></div>
-          <div className="absolute top-8 w-3 h-6 bg-blue-600 rounded-b-sm"></div>
-          <div className="absolute -top-1 left-0.5 w-2 h-2 bg-yellow-600 rounded-full"></div>
-          {/* Braccia alzate felice */}
-          <div className="absolute top-2 -left-1 w-4 h-1 bg-orange-400 transform rotate-45 rounded-full"></div>
-          <div className="absolute top-2 -right-1 w-4 h-1 bg-orange-400 transform -rotate-45 rounded-full"></div>
-        </div>
-        
-        {/* Bambino che corre */}
-        <div className="absolute bottom-18 left-40">
-          <div className="absolute w-2 h-6 bg-pink-300 rounded-t-full"></div>
-          <div className="absolute top-6 w-2 h-4 bg-green-500 rounded-b-sm"></div>
-          <div className="absolute -top-1 left-0.5 w-1 h-1 bg-yellow-500 rounded-full"></div>
-          {/* Braccia in movimento */}
-          <div className="absolute top-1 -left-1 w-3 h-0.5 bg-pink-300 transform rotate-12 rounded-full animate-bounce"></div>
-          <div className="absolute top-1 -right-1 w-3 h-0.5 bg-pink-300 transform -rotate-12 rounded-full animate-bounce"></div>
-        </div>
-        
-        {/* Coppia che cammina romanticamente */}
-        <div className="absolute bottom-14 left-60">
-          {/* Donna */}
-          <div className="absolute w-2.5 h-7 bg-red-400 rounded-t-full"></div>
-          <div className="absolute top-7 w-2.5 h-5 bg-yellow-500 rounded-b-sm"></div>
-          <div className="absolute -top-1 left-0.5 w-1.5 h-1.5 bg-pink-200 rounded-full"></div>
-          
-          {/* Uomo accanto */}
-          <div className="absolute left-4 w-3 h-8 bg-blue-500 rounded-t-full"></div>
-          <div className="absolute left-4 top-8 w-3 h-6 bg-gray-600 rounded-b-sm"></div>
-          <div className="absolute left-4.5 -top-1 w-2 h-2 bg-orange-300 rounded-full"></div>
-        </div>
-        
-        {/* Gruppo che gioca a beach volley */}
-        <div className="absolute bottom-12 left-80">
-          {/* Persona che salta */}
-          <div className="absolute w-3 h-9 bg-cyan-400 rounded-t-full transform -translate-y-2"></div>
-          <div className="absolute top-7 w-3 h-6 bg-orange-600 rounded-b-sm"></div>
-          <div className="absolute -top-3 left-0.5 w-2 h-2 bg-brown-400 rounded-full"></div>
-          {/* Braccia alzate che spingono */}
-          <div className="absolute top-0 -left-2 w-5 h-1 bg-cyan-400 transform rotate-45 rounded-full"></div>
-          <div className="absolute top-0 -right-2 w-5 h-1 bg-cyan-400 transform -rotate-45 rounded-full"></div>
-          
-          {/* Pallone da beach volley */}
-          <div className="absolute -top-8 left-1 w-4 h-4 bg-white border-2 border-red-500 rounded-full animate-bounce"></div>
-        </div>
-        
-        {/* Persone sdraiate che prendono il sole */}
-        <div className="absolute bottom-10 right-40">
-          {/* Telo da mare colorato */}
-          <div className="absolute w-16 h-8 bg-gradient-to-r from-pink-400 to-yellow-400 rounded-lg opacity-80"></div>
-          {/* Persona 1 sdraiata */}
-          <div className="absolute top-2 left-2 w-6 h-2 bg-orange-300 rounded-full"></div>
-          <div className="absolute top-1 left-1 w-1.5 h-1.5 bg-yellow-600 rounded-full"></div>
-          
-          {/* Persona 2 sdraiata */}
-          <div className="absolute top-4 left-8 w-6 h-2 bg-blue-400 rounded-full"></div>
-          <div className="absolute top-3 left-7 w-1.5 h-1.5 bg-brown-500 rounded-full"></div>
-        </div>
-        
-        {/* Bambini che fanno castelli di sabbia */}
-        <div className="absolute bottom-8 left-96">
-          {/* Castello di sabbia */}
-          <div className="absolute w-6 h-4 bg-yellow-300 rounded-t-sm"></div>
-          <div className="absolute top-1 left-1 w-4 h-2 bg-yellow-400 rounded-t-sm"></div>
-          <div className="absolute top-0.5 left-2 w-2 h-1 bg-yellow-500 rounded-t-sm"></div>
-          
-          {/* Bambino seduto */}
-          <div className="absolute top-2 left-8 w-2.5 h-5 bg-green-400 rounded-t-full"></div>
-          <div className="absolute top-7 left-8 w-2.5 h-3 bg-blue-300 rounded-b-sm"></div>
-          <div className="absolute top-1 left-8.5 w-1.5 h-1.5 bg-pink-200 rounded-full"></div>
-          
-          {/* Secchiello e paletta */}
-          <div className="absolute top-4 left-12 w-2 h-3 bg-red-500 rounded-b-full"></div>
-        </div>
-        
-        {/* Palme tropicali */}
-        <div className="absolute bottom-0 left-16">
-          {/* Tronco */}
-          <div className="absolute w-2 h-24 bg-amber-800 rounded-t-sm"></div>
-          {/* Fronde */}
-          <div className="absolute -top-4 -left-6 w-14 h-3 bg-green-600 rounded-full transform rotate-12 opacity-80"></div>
-          <div className="absolute -top-4 -left-6 w-14 h-3 bg-green-500 rounded-full transform -rotate-12 opacity-80"></div>
-          <div className="absolute -top-6 -left-4 w-10 h-4 bg-green-600 rounded-full opacity-90"></div>
-        </div>
-        
-        <div className="absolute bottom-0 right-20">
-          <div className="absolute w-1.5 h-20 bg-amber-800 rounded-t-sm"></div>
-          <div className="absolute -top-3 -left-4 w-10 h-2 bg-green-600 rounded-full transform rotate-20 opacity-80"></div>
-          <div className="absolute -top-3 -left-4 w-10 h-2 bg-green-500 rounded-full transform -rotate-20 opacity-80"></div>
-        </div>
-        
-        {/* Gabbiani che volano */}
-        <div className="absolute top-32 left-64">
-          <div className="w-6 h-1 bg-white rounded-full transform rotate-12 opacity-90 animate-pulse"></div>
-          <div className="w-6 h-1 bg-white rounded-full transform -rotate-12 opacity-90 animate-pulse delay-300"></div>
-        </div>
-        
-        <div className="absolute top-48 right-80">
-          <div className="w-4 h-0.5 bg-white rounded-full transform rotate-20 opacity-80 animate-pulse delay-150"></div>
-          <div className="w-4 h-0.5 bg-white rounded-full transform -rotate-20 opacity-80 animate-pulse delay-450"></div>
-        </div>
-        
-        {/* Nuvole */}
-        <div className="absolute top-16 left-40 w-20 h-8 bg-white rounded-full opacity-70 animate-pulse"></div>
-        <div className="absolute top-24 right-60 w-16 h-6 bg-white rounded-full opacity-60 animate-pulse delay-200"></div>
-        <div className="absolute top-12 left-80 w-12 h-5 bg-white rounded-full opacity-50 animate-pulse delay-100"></div>
-        
-        {/* Riflessi dorati del sole sul mare */}
-        <div className="absolute bottom-32 right-24 w-1 h-12 bg-gradient-to-b from-yellow-300 to-transparent opacity-80 animate-pulse"></div>
-        <div className="absolute bottom-28 right-20 w-0.5 h-8 bg-gradient-to-b from-orange-300 to-transparent opacity-60 animate-pulse delay-200"></div>
-        <div className="absolute bottom-36 right-28 w-1.5 h-16 bg-gradient-to-b from-yellow-400 to-transparent opacity-70 animate-pulse delay-100"></div>
-        {/* Sole splendente */}
-        <div className="absolute top-16 right-20 w-24 h-24 bg-gradient-to-br from-yellow-300 to-orange-400 rounded-full opacity-90 animate-pulse shadow-2xl">
-          <div className="absolute inset-2 bg-gradient-to-br from-yellow-200 to-orange-300 rounded-full animate-glow" />
-          {/* Raggi del sole */}
-          <div className="absolute -top-8 left-1/2 w-1 h-16 bg-yellow-300/60 transform -translate-x-1/2 animate-pulse" />
-          <div className="absolute -bottom-8 left-1/2 w-1 h-16 bg-yellow-300/60 transform -translate-x-1/2 animate-pulse" />
-          <div className="absolute -left-8 top-1/2 h-1 w-16 bg-yellow-300/60 transform -translate-y-1/2 animate-pulse" />
-          <div className="absolute -right-8 top-1/2 h-1 w-16 bg-yellow-300/60 transform -translate-y-1/2 animate-pulse" />
-          <div className="absolute -top-6 -left-6 w-1 h-12 bg-yellow-300/40 transform rotate-45 animate-pulse" style={{animationDelay: '0.5s'}} />
-          <div className="absolute -top-6 -right-6 w-1 h-12 bg-yellow-300/40 transform -rotate-45 animate-pulse" style={{animationDelay: '0.5s'}} />
-          <div className="absolute -bottom-6 -left-6 w-1 h-12 bg-yellow-300/40 transform -rotate-45 animate-pulse" style={{animationDelay: '0.5s'}} />
-          <div className="absolute -bottom-6 -right-6 w-1 h-12 bg-yellow-300/40 transform rotate-45 animate-pulse" style={{animationDelay: '0.5s'}} />
-        </div>
-        
-        {/* Nuvole soffici */}
-        <div className="absolute top-20 left-16 w-40 h-16 bg-white/80 rounded-full opacity-90 animate-float">
-          <div className="absolute -left-4 top-2 w-24 h-12 bg-white/70 rounded-full" />
-          <div className="absolute right-2 -top-2 w-20 h-14 bg-white/75 rounded-full" />
-        </div>
-        <div className="absolute top-32 right-40 w-32 h-12 bg-white/70 rounded-full opacity-80 animate-float" style={{animationDelay: '2s'}} />
-        <div className="absolute top-10 left-1/2 w-28 h-10 bg-white/60 rounded-full opacity-75 animate-float" style={{animationDelay: '4s'}} />
-        
-        {/* Montagne calabresi in lontananza */}
-        <div className="absolute bottom-1/3 left-0 w-full h-48">
-          <div className="absolute bottom-0 left-0 w-1/3 h-32 bg-gradient-to-t from-green-700 to-green-500 opacity-60" 
-               style={{clipPath: 'polygon(0% 100%, 50% 20%, 100% 100%)'}} />
-          <div className="absolute bottom-0 left-1/4 w-1/3 h-40 bg-gradient-to-t from-green-800 to-green-600 opacity-70" 
-               style={{clipPath: 'polygon(0% 100%, 60% 10%, 100% 100%)'}} />
-          <div className="absolute bottom-0 right-0 w-1/3 h-36 bg-gradient-to-t from-green-600 to-green-400 opacity-50" 
-               style={{clipPath: 'polygon(0% 100%, 40% 25%, 100% 100%)'}} />
-        </div>
-        
-        {/* Mare cristallino con onde */}
-        <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-blue-600 via-cyan-500 to-transparent">
-          {/* Onde animate */}
-          <div className="absolute bottom-0 w-full h-8 bg-gradient-to-r from-white/30 via-cyan-300/40 to-white/30 animate-pulse" />
-          <div className="absolute bottom-2 w-full h-6 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" style={{animationDelay: '0.5s'}} />
-          <div className="absolute bottom-4 w-full h-4 bg-gradient-to-r from-white/15 via-cyan-200/30 to-white/15 animate-pulse" style={{animationDelay: '1s'}} />
-          
-          {/* Riflessi del sole sul mare */}
-          <div className="absolute bottom-8 right-16 w-2 h-12 bg-yellow-200/60 animate-twinkle" />
-          <div className="absolute bottom-12 right-20 w-1 h-8 bg-yellow-300/50 animate-twinkle" style={{animationDelay: '0.7s'}} />
-          <div className="absolute bottom-6 right-24 w-3 h-6 bg-orange-200/40 animate-twinkle" style={{animationDelay: '1.4s'}} />
-        </div>
-        
-        {/* Persone che si divertono sulla spiaggia */}
-        <div className="absolute bottom-8 left-16 opacity-70">
-          {/* Famiglia che gioca */}
-          <svg width="120" height="80" viewBox="0 0 120 80" className="drop-shadow-lg">
-            {/* Adulto in piedi */}
-            <ellipse cx="20" cy="15" rx="6" ry="8" fill="#8B4513" opacity="0.8" />
-            <rect x="16" y="20" width="8" height="25" fill="#FF6B6B" opacity="0.8" />
-            <rect x="14" y="45" width="12" height="20" fill="#4169E1" opacity="0.8" />
-            <circle cx="20" cy="68" r="3" fill="#8B4513" opacity="0.8" />
-            <circle cx="20" cy="72" r="3" fill="#8B4513" opacity="0.8" />
-            
-            {/* Bambino che corre */}
-            <ellipse cx="45" cy="18" rx="4" ry="6" fill="#DEB887" opacity="0.8" />
-            <rect x="42" y="22" width="6" height="18" fill="#FF69B4" opacity="0.8" />
-            <rect x="41" y="40" width="8" height="15" fill="#32CD32" opacity="0.8" />
-            <circle cx="45" cy="58" r="2" fill="#8B4513" opacity="0.8" />
-            <circle cx="45" cy="61" r="2" fill="#8B4513" opacity="0.8" />
-            
-            {/* Persona sdraiata che prende il sole */}
-            <ellipse cx="80" cy="25" rx="15" ry="6" fill="#FF7F50" opacity="0.7" />
-            <circle cx="75" cy="22" r="3" fill="#DEB887" opacity="0.8" />
-            
-            {/* Coppia che cammina */}
-            <ellipse cx="100" cy="12" rx="5" ry="7" fill="#8B4513" opacity="0.8" />
-            <rect x="97" y="17" width="6" height="20" fill="#9370DB" opacity="0.8" />
-            <rect x="96" y="37" width="8" height="18" fill="#1E90FF" opacity="0.8" />
-            
-            <ellipse cx="115" cy="14" rx="5" ry="7" fill="#DEB887" opacity="0.8" />
-            <rect x="112" y="19" width="6" height="18" fill="#FF1493" opacity="0.8" />
-            <rect x="111" y="37" width="8" height="18" fill="#FFD700" opacity="0.8" />
-          </svg>
-        </div>
-        
-        {/* Gruppo di amici sulla spiaggia */}
-        <div className="absolute bottom-6 right-20 opacity-60">
-          <svg width="100" height="70" viewBox="0 0 100 70" className="drop-shadow-lg">
-            {/* Persona seduta */}
-            <ellipse cx="20" cy="30" rx="8" ry="12" fill="#FF6347" opacity="0.8" />
-            <circle cx="20" cy="22" r="4" fill="#DEB887" opacity="0.8" />
-            
-            {/* Persona in piedi con braccia alzate */}
-            <ellipse cx="50" cy="15" rx="5" ry="8" fill="#8B4513" opacity="0.8" />
-            <rect x="47" y="20" width="6" height="22" fill="#00CED1" opacity="0.8" />
-            <rect x="46" y="42" width="8" height="20" fill="#FF4500" opacity="0.8" />
-            {/* Braccia alzate */}
-            <rect x="42" y="18" width="4" height="12" fill="#8B4513" opacity="0.8" transform="rotate(-30 44 24)" />
-            <rect x="54" y="18" width="4" height="12" fill="#8B4513" opacity="0.8" transform="rotate(30 56 24)" />
-            
-            {/* Bambino che salta */}
-            <ellipse cx="75" cy="20" rx="4" ry="6" fill="#DEB887" opacity="0.8" />
-            <rect x="72" y="24" width="6" height="15" fill="#FF69B4" opacity="0.8" />
-            <rect x="71" y="39" width="8" height="12" fill="#32CD32" opacity="0.8" />
-          </svg>
-        </div>
-        
-        {/* Palme più piccole */}
-        <div className="absolute bottom-1/4 left-8 w-3 h-24 bg-gradient-to-t from-amber-700 to-amber-600 opacity-70">
-          <div className="absolute -top-2 -left-6 w-14 h-4 bg-green-500 rounded-full opacity-70 transform -rotate-12" />
-          <div className="absolute -top-2 -right-2 w-12 h-4 bg-green-600 rounded-full opacity-70 transform rotate-12" />
-        </div>
-        
-        <div className="absolute bottom-1/4 right-12 w-2 h-20 bg-gradient-to-t from-amber-800 to-amber-700 opacity-60">
-          <div className="absolute -top-2 -left-4 w-12 h-3 bg-green-600 rounded-full opacity-80 transform -rotate-20" />
-          <div className="absolute -top-2 -right-1 w-10 h-3 bg-green-500 rounded-full opacity-80 transform rotate-20" />
-        </div>
-        
-        {/* Gabbiani in volo */}
-        <div className="absolute top-1/3 left-1/3 text-white/60 animate-float text-2xl">🕊️</div>
-        <div className="absolute top-1/4 right-1/3 text-white/50 animate-float text-lg" style={{animationDelay: '2s'}}>🕊️</div>
-        <div className="absolute top-2/5 left-2/3 text-white/40 animate-float text-xl" style={{animationDelay: '4s'}}>🕊️</div>
-      </div>
-      
-      {/* Overlay morbido per leggibilità */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/20" />
-      <div className="max-w-md w-full space-y-8">
-        {/* Logo and Header */}
-        <div className="text-center relative z-10">
-          <div className="mx-auto h-28 w-28 bg-gradient-to-br from-orange-400 via-yellow-400 to-orange-500 rounded-full flex items-center justify-center mb-6 shadow-2xl border-4 border-white/60 backdrop-blur-sm">
-            <MapPin className="text-white text-5xl drop-shadow-xl" size={48} />
+      {/* Sfondo Costa Italiana */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.1)),
+            url('/attached_assets/image_1751405521039.png')`
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 max-w-md w-full space-y-8">
+        {/* Logo e Titolo */}
+        <div className="text-center">
+          <div className="flex justify-center items-center mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center shadow-2xl">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
           </div>
           <h1 className="text-6xl font-bold text-white mb-4 drop-shadow-2xl">
             TouristIQ
@@ -351,7 +116,7 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Login Form */}
+        {/* Form di Login */}
         <Card className="shadow-2xl bg-white/90 backdrop-blur-xl border-2 border-orange-200/50 relative z-10">
           <CardContent className="pt-8 pb-8">
             <form onSubmit={handleSubmit} className="space-y-8">
@@ -365,12 +130,11 @@ export default function Login() {
                 <Input
                   id="iqCode"
                   type="text"
-                  required
                   value={iqCode}
-                  onChange={(e) => setIqCode(e.target.value.toUpperCase())}
-                  placeholder="es. TIQ-IT-LEONARDO"
-                  maxLength={25}
-                  className="text-center text-xl font-bold tracking-wider uppercase w-full h-14 bg-orange-50 border-2 border-orange-200 text-gray-800 placeholder:text-gray-500 focus:bg-orange-100 focus:border-orange-400 transition-all duration-300"
+                  onChange={(e) => setIqCode(e.target.value)}
+                  className="w-full px-4 py-3 text-lg border-2 border-orange-200 rounded-xl focus:border-orange-500 focus:ring-orange-500 bg-white/80 backdrop-blur-sm transition-all duration-200"
+                  placeholder="TIQ-IT-ADMIN"
+                  autoComplete="username"
                   disabled={isLoading}
                 />
               </div>
@@ -392,57 +156,34 @@ export default function Login() {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white text-xl font-bold py-4 h-16 shadow-xl border-2 border-orange-300 transition-all duration-300 transform hover:scale-105 hover:shadow-orange-500/30"
                 disabled={isLoading}
+                className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl shadow-xl transform transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 {isLoading ? (
-                  <>
-                    <Loader2 className="mr-3 h-6 w-6 animate-spin" />
-                    Verifica in corso...
-                  </>
+                  <span className="flex items-center justify-center space-x-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Accesso in corso...</span>
+                  </span>
                 ) : (
-                  <>
-                    <LogIn className="mr-3" size={24} />
-                    🌊 Accedi alla Vacanza 🏖️
-                  </>
+                  <span className="flex items-center justify-center space-x-2">
+                    <span>🏖️ Accedi alla Vacanza 🏖️</span>
+                  </span>
                 )}
               </Button>
             </form>
 
-            {/* Error Message */}
-            {error && (
-              <Alert variant="destructive" className="mt-4">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600 flex items-center justify-center space-x-2">
+                <span>❓ Non funziona? Niente panico!</span>
+                <a
+                  href="mailto:info@touristiq.it"
+                  className="text-orange-600 hover:text-orange-700 font-medium underline"
+                >
+                  Scrivici a info@touristiq.it
+                </a>
+              </p>
+            </div>
           </CardContent>
-          {/* Support Message */}
-          <div className="mt-6 flex items-center justify-center rounded-md bg-blue-50 px-4 py-3 text-sm text-blue-800">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2 text-blue-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 12H8m8 0a4 4 0 00-8 0m8 0a4 4 0 01-8 0M4 6h16M4 6v12h16V6"
-              />
-            </svg>
-            <span>
-              Non funziona? Niente panico!{" "}
-              <a
-                href="mailto:info@touristiq.it"
-                className="font-semibold underline text-blue-700"
-              >
-                Scrivici a info@touristiq.it
-              </a>
-            </span>
-          </div>
         </Card>
       </div>
     </div>
