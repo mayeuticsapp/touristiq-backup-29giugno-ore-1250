@@ -10,6 +10,11 @@ import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Health check endpoint for Railway
+  app.get("/", (req, res) => {
+    res.status(200).send("TouristIQ Server OK");
+  });
+  
   // Authentication endpoint
   app.post("/api/auth/login", async (req, res) => {
     try {
