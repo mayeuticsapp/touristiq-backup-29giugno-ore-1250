@@ -46,7 +46,7 @@ export function PartnerMessaging() {
   // Mutation per inviare un messaggio
   const sendMessageMutation = useMutation({
     mutationFn: (data: { conversationId: string; content: string }) =>
-      apiRequest("/api/messages/send", "POST", data),
+      apiRequest("POST", "/api/messages/send", data),
     onSuccess: () => {
       setNewMessage("");
       queryClient.invalidateQueries({ queryKey: ["/api/messages/conversation", selectedConversation] });
@@ -57,7 +57,7 @@ export function PartnerMessaging() {
   // Mutation per segnare messaggi come letti
   const markAsReadMutation = useMutation({
     mutationFn: (conversationId: string) =>
-      apiRequest(`/api/messages/mark-read/${conversationId}`, "POST"),
+      apiRequest("POST", `/api/messages/mark-read/${conversationId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages/conversation", selectedConversation] });
       queryClient.invalidateQueries({ queryKey: ["/api/messages/conversations"] });

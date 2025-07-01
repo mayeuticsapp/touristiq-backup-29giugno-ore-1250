@@ -31,7 +31,7 @@ export default function TouristDashboard() {
   // Mutation per avviare conversazione
   const startConversationMutation = useMutation({
     mutationFn: (data: {partnerCode: string, partnerName: string, initialMessage?: string}) =>
-      apiRequest("/api/messages/start-conversation", "POST", data),
+      apiRequest("POST", "/api/messages/start-conversation", data),
     onSuccess: () => {
       alert("Conversazione avviata! Il partner riceverà il tuo messaggio.");
       setShowMessageDialog(false);
