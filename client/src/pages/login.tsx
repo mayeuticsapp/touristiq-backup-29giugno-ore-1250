@@ -131,20 +131,70 @@ export default function Login() {
           <div className="absolute bottom-6 right-24 w-3 h-6 bg-orange-200/40 animate-twinkle" style={{animationDelay: '1.4s'}} />
         </div>
         
-        {/* Palme tropicali */}
-        <div className="absolute bottom-1/4 left-8 w-4 h-32 bg-gradient-to-t from-amber-700 to-amber-600 opacity-80">
-          {/* Fronde */}
-          <div className="absolute -top-2 -left-8 w-20 h-6 bg-green-500 rounded-full opacity-70 transform -rotate-12" />
-          <div className="absolute -top-2 -right-4 w-16 h-6 bg-green-600 rounded-full opacity-70 transform rotate-12" />
-          <div className="absolute -top-4 -left-6 w-18 h-5 bg-green-400 rounded-full opacity-60 transform -rotate-45" />
-          <div className="absolute -top-4 -right-2 w-14 h-5 bg-green-500 rounded-full opacity-60 transform rotate-45" />
+        {/* Persone che si divertono sulla spiaggia */}
+        <div className="absolute bottom-8 left-16 opacity-70">
+          {/* Famiglia che gioca */}
+          <svg width="120" height="80" viewBox="0 0 120 80" className="drop-shadow-lg">
+            {/* Adulto in piedi */}
+            <ellipse cx="20" cy="15" rx="6" ry="8" fill="#8B4513" opacity="0.8" />
+            <rect x="16" y="20" width="8" height="25" fill="#FF6B6B" opacity="0.8" />
+            <rect x="14" y="45" width="12" height="20" fill="#4169E1" opacity="0.8" />
+            <circle cx="20" cy="68" r="3" fill="#8B4513" opacity="0.8" />
+            <circle cx="20" cy="72" r="3" fill="#8B4513" opacity="0.8" />
+            
+            {/* Bambino che corre */}
+            <ellipse cx="45" cy="18" rx="4" ry="6" fill="#DEB887" opacity="0.8" />
+            <rect x="42" y="22" width="6" height="18" fill="#FF69B4" opacity="0.8" />
+            <rect x="41" y="40" width="8" height="15" fill="#32CD32" opacity="0.8" />
+            <circle cx="45" cy="58" r="2" fill="#8B4513" opacity="0.8" />
+            <circle cx="45" cy="61" r="2" fill="#8B4513" opacity="0.8" />
+            
+            {/* Persona sdraiata che prende il sole */}
+            <ellipse cx="80" cy="25" rx="15" ry="6" fill="#FF7F50" opacity="0.7" />
+            <circle cx="75" cy="22" r="3" fill="#DEB887" opacity="0.8" />
+            
+            {/* Coppia che cammina */}
+            <ellipse cx="100" cy="12" rx="5" ry="7" fill="#8B4513" opacity="0.8" />
+            <rect x="97" y="17" width="6" height="20" fill="#9370DB" opacity="0.8" />
+            <rect x="96" y="37" width="8" height="18" fill="#1E90FF" opacity="0.8" />
+            
+            <ellipse cx="115" cy="14" rx="5" ry="7" fill="#DEB887" opacity="0.8" />
+            <rect x="112" y="19" width="6" height="18" fill="#FF1493" opacity="0.8" />
+            <rect x="111" y="37" width="8" height="18" fill="#FFD700" opacity="0.8" />
+          </svg>
         </div>
         
-        <div className="absolute bottom-1/4 right-12 w-3 h-28 bg-gradient-to-t from-amber-800 to-amber-700 opacity-70">
-          {/* Fronde */}
-          <div className="absolute -top-2 -left-6 w-16 h-5 bg-green-600 rounded-full opacity-80 transform -rotate-20" />
-          <div className="absolute -top-2 -right-2 w-14 h-5 bg-green-500 rounded-full opacity-80 transform rotate-20" />
-          <div className="absolute -top-3 -left-4 w-12 h-4 bg-green-400 rounded-full opacity-60 transform -rotate-50" />
+        {/* Gruppo di amici sulla spiaggia */}
+        <div className="absolute bottom-6 right-20 opacity-60">
+          <svg width="100" height="70" viewBox="0 0 100 70" className="drop-shadow-lg">
+            {/* Persona seduta */}
+            <ellipse cx="20" cy="30" rx="8" ry="12" fill="#FF6347" opacity="0.8" />
+            <circle cx="20" cy="22" r="4" fill="#DEB887" opacity="0.8" />
+            
+            {/* Persona in piedi con braccia alzate */}
+            <ellipse cx="50" cy="15" rx="5" ry="8" fill="#8B4513" opacity="0.8" />
+            <rect x="47" y="20" width="6" height="22" fill="#00CED1" opacity="0.8" />
+            <rect x="46" y="42" width="8" height="20" fill="#FF4500" opacity="0.8" />
+            {/* Braccia alzate */}
+            <rect x="42" y="18" width="4" height="12" fill="#8B4513" opacity="0.8" transform="rotate(-30 44 24)" />
+            <rect x="54" y="18" width="4" height="12" fill="#8B4513" opacity="0.8" transform="rotate(30 56 24)" />
+            
+            {/* Bambino che salta */}
+            <ellipse cx="75" cy="20" rx="4" ry="6" fill="#DEB887" opacity="0.8" />
+            <rect x="72" y="24" width="6" height="15" fill="#FF69B4" opacity="0.8" />
+            <rect x="71" y="39" width="8" height="12" fill="#32CD32" opacity="0.8" />
+          </svg>
+        </div>
+        
+        {/* Palme più piccole */}
+        <div className="absolute bottom-1/4 left-8 w-3 h-24 bg-gradient-to-t from-amber-700 to-amber-600 opacity-70">
+          <div className="absolute -top-2 -left-6 w-14 h-4 bg-green-500 rounded-full opacity-70 transform -rotate-12" />
+          <div className="absolute -top-2 -right-2 w-12 h-4 bg-green-600 rounded-full opacity-70 transform rotate-12" />
+        </div>
+        
+        <div className="absolute bottom-1/4 right-12 w-2 h-20 bg-gradient-to-t from-amber-800 to-amber-700 opacity-60">
+          <div className="absolute -top-2 -left-4 w-12 h-3 bg-green-600 rounded-full opacity-80 transform -rotate-20" />
+          <div className="absolute -top-2 -right-1 w-10 h-3 bg-green-500 rounded-full opacity-80 transform rotate-20" />
         </div>
         
         {/* Gabbiani in volo */}
@@ -165,7 +215,7 @@ export default function Login() {
             TouristIQ
           </h1>
           <p className="text-white text-2xl drop-shadow-lg font-medium bg-black/20 px-6 py-2 rounded-full backdrop-blur-sm">
-            🌴 Scopri la Calabria 🌊
+            🌴 La Tua Vacanza Inizia Qui 🌊
           </p>
           <p className="text-white/90 text-lg drop-shadow-lg font-medium mt-3">
             Inserisci il tuo codice IQ per accedere
