@@ -2336,6 +2336,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint per offerte reali basate su validazioni accettate
+  app.get("/api/tourist/real-offers", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'tourist') {
+        return res.status(403).json({ message: "Accesso negato - solo turisti" });
+      }
+
+      // Ottieni validazioni accettate
+      const validatedPartners = await storage.getAcceptedPartnersByTourist(session.iqCode);
+      
+      if (validatedPartners.length === 0) {
+        return res.json({
+          discounts: [],
+          message: "Nessuna offerta disponibile. Valida alcuni partner per vedere le offerte!"
+        });
+      }
+
+      // Ottieni offerte reali dal database
+      const partnerCodes = validatedPartners.map((v: any) => v.partnerCode);
+      const realOffers = await storage.getRealOffersByPartners(partnerCodes);
+      
+      // Formatta le offerte per il frontend
+      const formattedOffers = realOffers.map((offer: any) => ({
+        title: offer.title,
+        description: offer.description, 
+        discountPercentage: offer.discountPercentage,
+        category: offer.category,
+        partnerName: offer.partnerName,
+        validUntil: offer.validUntil
+      }));
+
+      res.json({
+        discounts: formattedOffers,
+        validatedPartnersCount: validatedPartners.length
+      });
+
+    } catch (error) {
+      console.error("Errore recupero offerte reali:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // Turista vede richieste di validazione in sospeso
   app.get("/api/iqcode/validation-requests", async (req: any, res: any) => {
     try {
@@ -2395,9 +2443,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Aggiorna stato validazione
       await storage.updateValidationStatus(validationId, status, new Date());
 
+      // Se accettato, decrementa immediatamente un utilizzo
+      let usesRemaining = validation.usesRemaining;
+      if (status === 'accepted') {
+        const updatedValidation = await storage.decrementValidationUses(validationId);
+        usesRemaining = updatedValidation.usesRemaining;
+      }
+
       res.json({ 
         success: true, 
-        message: status === 'accepted' ? "IQCode confermato" : "IQCode rifiutato"
+        message: status === 'accepted' ? `IQCode confermato - Utilizzi rimanenti: ${usesRemaining}` : "IQCode rifiutato",
+        usesRemaining: status === 'accepted' ? usesRemaining : undefined
       });
 
     } catch (error) {
@@ -2614,6 +2670,34 @@ function generateTouristRecommendations(location: string) {
     'CS': ['Centro Storico', 'Castello Svevo', 'Teatro Rendano']
   };
   return recommendations[location] || ['Attrazione Locale 1', 'Attrazione Locale 2', 'Attrazione Locale 3'];
+}
+
+// FUNZIONE PER OTTENERE OFFERTE REALI DAL DATABASE
+async function getRealOffersByTourist(storage: any, touristCode: string) {
+  try {
+    // Cerca partner validati dal turista
+    const validatedPartners = await storage.getAcceptedPartnersByTourist(touristCode);
+    
+    if (validatedPartners.length === 0) {
+      return [];
+    }
+    
+    // Ottieni offerte dei partner validati
+    const partnerCodes = validatedPartners.map((v: any) => v.partnerCode);
+    const realOffers = await storage.getRealOffersByPartners(partnerCodes);
+    
+    return realOffers.map((offer: any) => ({
+      title: offer.title,
+      description: offer.description, 
+      discountPercentage: offer.discountPercentage,
+      category: offer.category,
+      partnerName: offer.partnerName,
+      validUntil: offer.validUntil
+    }));
+  } catch (error) {
+    console.error("Errore recupero offerte reali:", error);
+    return [];
+  }
 }
 
 function generateActiveOffers(location: string) {

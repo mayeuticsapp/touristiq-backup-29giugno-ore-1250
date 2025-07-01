@@ -1,7 +1,7 @@
 import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeValidations, iqcodeRecharges, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeValidation, type InsertIqcodeValidation, type IqcodeRecharge, type InsertIqcodeRecharge } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { eq, and, lt, desc, like, sql } from "drizzle-orm";
+import { eq, and, lt, desc, like, sql, inArray } from "drizzle-orm";
 import { pool } from "./db";
 
 // Memoria globale condivisa per onboarding partner
@@ -121,6 +121,10 @@ export interface IStorage {
   getPendingRecharges(): Promise<any[]>;
   activateRecharge(rechargeId: number, adminNote?: string): Promise<any>;
   getRechargesWithFilters(filters: {page: number, limit: number, search: string, status: string, sort: string}): Promise<{recharges: any[], total: number, stats: any}>;
+  
+  // Metodi per offerte reali
+  getAcceptedPartnersByTourist(touristCode: string): Promise<any[]>;
+  getRealOffersByPartners(partnerCodes: string[]): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -804,6 +808,15 @@ export class MemStorage implements IStorage {
   async completePartnerOnboarding(partnerCode: string): Promise<void> {
     // Implementazione base - in memoria
     return;
+  }
+
+  // Implementazioni stub per offerte reali
+  async getAcceptedPartnersByTourist(touristCode: string): Promise<any[]> {
+    return [];
+  }
+
+  async getRealOffersByPartners(partnerCodes: string[]): Promise<any[]> {
+    return [];
   }
 }
 
@@ -1728,6 +1741,30 @@ class ExtendedPostgreStorage extends PostgreStorage {
       console.log('Errore salvataggio completamento onboarding:', error);
     }
   }
+
+  // Implementazione metodi per offerte reali in ExtendedPostgreStorage
+  async getAcceptedPartnersByTourist(touristCode: string): Promise<any[]> {
+    const result = await this.db
+      .select()
+      .from(iqcodeValidations)
+      .where(eq(iqcodeValidations.touristIqCode, touristCode))
+      .where(eq(iqcodeValidations.status, 'accepted'));
+    return result;
+  }
+
+  async getRealOffersByPartners(partnerCodes: string[]): Promise<any[]> {
+    const { realOffers } = await import('@shared/schema');
+    if (partnerCodes.length === 0) return [];
+    
+    const { inArray: inArrayOp } = await import('drizzle-orm');
+    const result = await this.db
+      .select()
+      .from(realOffers)
+      .where(inArrayOp(realOffers.partnerCode, partnerCodes))
+      .where(eq(realOffers.isActive, true));
+    
+    return result;
+  }
 }
 
 // Extend MemStorage con metodi impostazioni
@@ -1884,6 +1921,30 @@ class ExtendedMemStorage extends MemStorage {
     // Marca come completato nella memoria globale
     globalPartnerOnboardingData.set(`completed_${partnerCode}`, true);
     console.log(`Onboarding completato per partner ${partnerCode}`);
+  }
+
+  // Implementazione metodi per offerte reali
+  async getAcceptedPartnersByTourist(touristCode: string): Promise<any[]> {
+    const result = await this.db
+      .select()
+      .from(iqcodeValidations)
+      .where(eq(iqcodeValidations.touristIqCode, touristCode))
+      .where(eq(iqcodeValidations.status, 'accepted'));
+    return result;
+  }
+
+  async getRealOffersByPartners(partnerCodes: string[]): Promise<any[]> {
+    const { realOffers } = await import('@shared/schema');
+    if (partnerCodes.length === 0) return [];
+    
+    const { inArray: inArrayOp } = await import('drizzle-orm');
+    const result = await this.db
+      .select()
+      .from(realOffers)
+      .where(inArrayOp(realOffers.partnerCode, partnerCodes))
+      .where(eq(realOffers.isActive, true));
+    
+    return result;
   }
 }
 

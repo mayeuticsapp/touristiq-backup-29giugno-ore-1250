@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, date, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
@@ -426,3 +426,34 @@ export type InsertSettingsConfig = z.infer<typeof insertSettingsConfigSchema>;
 export type LoginRequest = z.infer<typeof loginSchema>;
 
 export type UserRole = 'admin' | 'tourist' | 'structure' | 'partner';
+
+// Tabella offerte reali dei partner
+export const realOffers = pgTable('real_offers', {
+  id: serial('id').primaryKey(),
+  partnerCode: text('partner_code').notNull(),
+  partnerName: text('partner_name').notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  discountPercentage: integer('discount_percentage').notNull(),
+  discountType: text('discount_type').default('percentage'), // percentage, fixed_amount
+  category: text('category').notNull(), // ristorante, boutique, attrazione, etc
+  location: text('location'), // per targeting geografico
+  isActive: boolean('is_active').default(true),
+  validFrom: timestamp('valid_from'),
+  validUntil: timestamp('valid_until'),
+  maxUses: integer('max_uses'),
+  currentUses: integer('current_uses').default(0),
+  targetAudience: text('target_audience'), // tutti, famiglie, coppie, etc
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+export const insertRealOfferSchema = createInsertSchema(realOffers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  currentUses: true
+});
+
+export type RealOffer = typeof realOffers.$inferSelect;
+export type InsertRealOffer = z.infer<typeof insertRealOfferSchema>;

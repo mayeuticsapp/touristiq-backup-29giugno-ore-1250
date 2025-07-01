@@ -16,6 +16,12 @@ export default function TouristDashboard() {
     queryKey: ["/api/auth/me"],
     queryFn: getCurrentUser,
   });
+
+  // Query per offerte reali basate su validazioni
+  const { data: realOffers, isLoading: isLoadingOffers } = useQuery({
+    queryKey: ["/api/tourist/real-offers"],
+    enabled: !!user,
+  });
   
   const navigation = [
     { icon: <Compass size={16} />, label: "Esplora", href: "#" },
@@ -67,33 +73,34 @@ export default function TouristDashboard() {
         <Card>
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Sconti Disponibili</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                <div className="flex items-center">
-                  <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
-                    <Utensils className="text-red-600" size={20} />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Ristorante Il Borgo</p>
-                    <p className="text-sm text-gray-500">20% di sconto sul menù</p>
-                  </div>
-                </div>
-                <Badge className="bg-green-100 text-green-800">-20%</Badge>
+            {isLoadingOffers ? (
+              <div className="text-center py-4">
+                <p className="text-gray-500">Caricamento offerte...</p>
               </div>
-              
-              <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                <div className="flex items-center">
-                  <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                    <Utensils className="text-blue-600" size={20} />
+            ) : realOffers?.discounts?.length > 0 ? (
+              <div className="space-y-4">
+                {realOffers.discounts.map((offer: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                    <div className="flex items-center">
+                      <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                        <Utensils className="text-red-600" size={20} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{offer.partnerName}</p>
+                        <p className="text-sm text-gray-500">{offer.title}</p>
+                      </div>
+                    </div>
+                    <Badge className="bg-green-100 text-green-800">-{offer.discountPercentage}%</Badge>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Pizzeria Da Mario</p>
-                    <p className="text-sm text-gray-500">15% di sconto su pizza</p>
-                  </div>
-                </div>
-                <Badge className="bg-green-100 text-green-800">-15%</Badge>
+                ))}
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-8">
+                <Tags className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <p className="text-gray-500 mb-2">Nessuna offerta disponibile</p>
+                <p className="text-sm text-gray-400">Valida alcuni partner per vedere le offerte!</p>
+              </div>
+            )}
           </CardContent>
         </Card>
         
