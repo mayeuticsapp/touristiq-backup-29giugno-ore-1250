@@ -157,6 +157,34 @@ export class UniversalStorage {
     return updated;
   }
 
+  // Metodo pubblico per accedere alle sessioni
+  getSession(token: string): { iqCode: string; role: UserRole; sessionToken: string; expiresAt: Date } | undefined {
+    const session = this.sessions.get(token);
+    if (!session || session.expiresAt < new Date()) {
+      this.sessions.delete(token);
+      return undefined;
+    }
+    return {
+      iqCode: session.iqCode,
+      role: session.role,
+      sessionToken: session.sessionToken,
+      expiresAt: session.expiresAt
+    };
+  }
+
+  // Metodo pubblico per creare sessioni
+  createSimpleSession(iqCode: string, role: UserRole, sessionToken: string, expiresAt: Date): void {
+    const session: UniversalSession = {
+      id: this.nextSessionId++,
+      iqCode,
+      role,
+      sessionToken,
+      expiresAt,
+      createdAt: new Date()
+    };
+    this.sessions.set(sessionToken, session);
+  }
+
   async deleteIqCode(code: string): Promise<void> {
     const existing = this.iqCodes.get(code);
     if (existing) {

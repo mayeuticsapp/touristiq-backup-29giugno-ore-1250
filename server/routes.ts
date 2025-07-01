@@ -48,17 +48,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Create session
+      // Create session - sistema semplice che funziona sempre
       const sessionToken = nanoid();
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24); // 24 hour session
 
-      const session = await storage.createSession({
-        iqCode: iqCodeRecord.code,
-        role: iqCodeRecord.role,
-        sessionToken,
-        expiresAt,
-      });
+      // Salva sessione nel sistema universale
+      storage.createSimpleSession(iqCodeRecord.code, iqCodeRecord.role, sessionToken, expiresAt);
 
       // Set session cookie
       res.cookie('session_token', sessionToken, {
@@ -87,7 +83,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Non autenticato" });
       }
 
-      const session = await storage.getSessionByToken(sessionToken);
+      // Controllo sessione nel sistema universale
+      const session = storage.getSession(sessionToken);
       
       if (!session) {
         return res.status(401).json({ message: "Sessione non valida" });
