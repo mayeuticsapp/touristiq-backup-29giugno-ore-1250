@@ -215,8 +215,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate request
       const { message } = chatSchema.parse(req.body);
       
-      // Get AI response
-      const response = await chatWithTIQai(message);
+      // Get AI response with database access
+      const response = await chatWithTIQai(message, storage);
       
       res.json({ response });
     } catch (error) {
@@ -316,7 +316,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { chatWithTIQai } = await import("./openai");
-      const response = await chatWithTIQai(message);
+      const response = await chatWithTIQai(message, storage);
       
       res.json({ response });
     } catch (error) {
