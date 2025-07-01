@@ -82,16 +82,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Sfondo Costa Italiana */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.1)),
-            url('/attached_assets/image_1751405521039.png')`
-        }}
-      />
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600">
 
       {/* Content */}
       <div className="relative z-10 max-w-md w-full space-y-8">
