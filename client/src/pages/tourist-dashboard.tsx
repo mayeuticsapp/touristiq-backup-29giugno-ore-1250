@@ -6,8 +6,9 @@ import { IQCodeValidation } from "@/components/iqcode-validation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Compass, Tags, History, Heart, User, Utensils, Check, MessageCircle, QrCode, MapPin } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/auth";
+import { apiRequest } from "@/lib/queryClient";
 import { useState } from "react";
 
 export default function TouristDashboard() {
@@ -17,11 +18,35 @@ export default function TouristDashboard() {
   const [locationOffers, setLocationOffers] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchMode, setSearchMode] = useState<"default" | "city" | "geolocation">("default");
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState<{code: string, name: string} | null>(null);
+  
+  const queryClient = useQueryClient();
   
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
     queryFn: getCurrentUser,
   });
+  
+  // Mutation per avviare conversazione
+  const startConversationMutation = useMutation({
+    mutationFn: (data: {partnerCode: string, partnerName: string, initialMessage?: string}) =>
+      apiRequest("/api/messages/start-conversation", "POST", data),
+    onSuccess: () => {
+      alert("Conversazione avviata! Il partner riceverà il tuo messaggio.");
+      setShowMessageDialog(false);
+      setSelectedPartner(null);
+    },
+    onError: (error: any) => {
+      alert(error.message || "Errore durante l'avvio della conversazione");
+    },
+  });
+  
+  // Funzione per avviare conversazione con partner
+  const handleStartConversation = (partnerCode: string, partnerName: string) => {
+    setSelectedPartner({ code: partnerCode, name: partnerName });
+    setShowMessageDialog(true);
+  };
 
   // Query per offerte reali basate su validazioni
   const { data: realOffers, isLoading: isLoadingOffers } = useQuery({
@@ -221,23 +246,36 @@ export default function TouristDashboard() {
             ) : offersToShow?.length > 0 ? (
               <div className="space-y-4">
                 {offersToShow.map((offer: any, index: number) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                    <div className="flex items-center">
-                      <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
-                        <Utensils className="text-red-600" size={20} />
+                  <div key={index} className="p-4 border rounded-lg hover:bg-gray-50">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center">
+                        <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                          <Utensils className="text-red-600" size={20} />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{offer.partnerName}</p>
+                          <p className="text-sm text-gray-500">{offer.title}</p>
+                          {offer.city && (
+                            <p className="text-xs text-gray-400 flex items-center mt-1">
+                              <MapPin className="w-3 h-3 mr-1" />
+                              {offer.city}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{offer.partnerName}</p>
-                        <p className="text-sm text-gray-500">{offer.title}</p>
-                        {offer.city && (
-                          <p className="text-xs text-gray-400 flex items-center mt-1">
-                            <MapPin className="w-3 h-3 mr-1" />
-                            {offer.city}
-                          </p>
-                        )}
-                      </div>
+                      <Badge className="bg-green-100 text-green-800">-{offer.discountPercentage}%</Badge>
                     </div>
-                    <Badge className="bg-green-100 text-green-800">-{offer.discountPercentage}%</Badge>
+                    <div className="flex justify-end">
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleStartConversation(offer.partnerCode, offer.partnerName)}
+                        className="text-xs"
+                      >
+                        <MessageCircle className="w-3 h-3 mr-1" />
+                        Invia messaggio
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -296,6 +334,77 @@ export default function TouristDashboard() {
           <IQCodeValidation userRole="tourist" />
         </DialogContent>
       </Dialog>
+
+      {/* Dialog Invio Messaggio */}
+      <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="w-5 h-5" />
+              Invia messaggio a {selectedPartner?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <MessageForm 
+            partnerCode={selectedPartner?.code || ""}
+            partnerName={selectedPartner?.name || ""}
+            onSend={(message) => {
+              startConversationMutation.mutate({
+                partnerCode: selectedPartner?.code || "",
+                partnerName: selectedPartner?.name || "",
+                initialMessage: message
+              });
+            }}
+            isLoading={startConversationMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
     </Layout>
+  );
+}
+
+// Componente per form invio messaggio
+function MessageForm({ 
+  partnerCode, 
+  partnerName, 
+  onSend, 
+  isLoading 
+}: { 
+  partnerCode: string;
+  partnerName: string;
+  onSend: (message: string) => void;
+  isLoading: boolean;
+}) {
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (message.trim()) {
+      onSend(message.trim());
+      setMessage("");
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+          Il tuo messaggio
+        </label>
+        <textarea
+          id="message"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          rows={4}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Scrivi qui il tuo messaggio al partner..."
+          required
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button type="submit" disabled={isLoading || !message.trim()}>
+          {isLoading ? "Invio..." : "Invia messaggio"}
+        </Button>
+      </div>
+    </form>
   );
 }

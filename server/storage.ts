@@ -127,6 +127,16 @@ export interface IStorage {
   getRealOffersByPartners(partnerCodes: string[]): Promise<any[]>;
   getRealOffersByCity(cityName: string): Promise<any[]>;
   getRealOffersNearby(latitude: number, longitude: number, radius: number): Promise<any[]>;
+  
+  // Metodi per messaggeria interna
+  createConversation(data: {touristCode: string, partnerCode: string, touristName?: string, partnerName: string}): Promise<any>;
+  getConversationsByTourist(touristCode: string): Promise<any[]>;
+  getConversationsByPartner(partnerCode: string): Promise<any[]>;
+  getConversationById(conversationId: number): Promise<any | null>;
+  createMessage(data: {conversationId: number, senderCode: string, senderType: string, senderName?: string, content: string}): Promise<any>;
+  getMessagesByConversation(conversationId: number): Promise<any[]>;
+  markMessagesAsRead(conversationId: number, readerCode: string): Promise<void>;
+  getUnreadMessagesCount(userCode: string): Promise<number>;
 }
 
 export class MemStorage implements IStorage {
@@ -1810,6 +1820,170 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .where(sql`${realOffers.latitude} IS NOT NULL AND ${realOffers.longitude} IS NOT NULL`);
     
     return result;
+  }
+
+  // Metodi per messaggeria interna
+  async createConversation(data: {touristCode: string, partnerCode: string, touristName?: string, partnerName: string}): Promise<any> {
+    const { conversations } = await import('@shared/schema');
+    const { and, eq } = await import('drizzle-orm');
+    
+    // Verifica se esiste già una conversazione tra questi due utenti
+    const existing = await this.db
+      .select()
+      .from(conversations)
+      .where(and(
+        eq(conversations.touristCode, data.touristCode),
+        eq(conversations.partnerCode, data.partnerCode)
+      ));
+
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
+    const [conversation] = await this.db
+      .insert(conversations)
+      .values({
+        touristCode: data.touristCode,
+        partnerCode: data.partnerCode,
+        touristName: data.touristName,
+        partnerName: data.partnerName
+      })
+      .returning();
+
+    return conversation;
+  }
+
+  async getConversationsByTourist(touristCode: string): Promise<any[]> {
+    const { conversations, messages } = await import('@shared/schema');
+    const { desc, count } = await import('drizzle-orm');
+    
+    const result = await this.db
+      .select({
+        conversation: conversations,
+        unreadCount: count(messages.id)
+      })
+      .from(conversations)
+      .leftJoin(messages, and(
+        eq(messages.conversationId, conversations.id),
+        eq(messages.isRead, false),
+        eq(messages.senderType, 'partner') // Messaggi non letti dal partner
+      ))
+      .where(and(
+        eq(conversations.touristCode, touristCode),
+        eq(conversations.isActiveForTourist, true)
+      ))
+      .groupBy(conversations.id)
+      .orderBy(desc(conversations.lastMessageAt));
+
+    return result;
+  }
+
+  async getConversationsByPartner(partnerCode: string): Promise<any[]> {
+    const { conversations, messages } = await import('@shared/schema');
+    const { desc, count } = await import('drizzle-orm');
+    
+    const result = await this.db
+      .select({
+        conversation: conversations,
+        unreadCount: count(messages.id)
+      })
+      .from(conversations)
+      .leftJoin(messages, and(
+        eq(messages.conversationId, conversations.id),
+        eq(messages.isRead, false),
+        eq(messages.senderType, 'tourist') // Messaggi non letti dal turista
+      ))
+      .where(and(
+        eq(conversations.partnerCode, partnerCode),
+        eq(conversations.isActiveForPartner, true)
+      ))
+      .groupBy(conversations.id)
+      .orderBy(desc(conversations.lastMessageAt));
+
+    return result;
+  }
+
+  async getConversationById(conversationId: number): Promise<any | null> {
+    const { conversations } = await import('@shared/schema');
+    
+    const [conversation] = await this.db
+      .select()
+      .from(conversations)
+      .where(eq(conversations.id, conversationId));
+
+    return conversation || null;
+  }
+
+  async createMessage(data: {conversationId: number, senderCode: string, senderType: string, senderName?: string, content: string}): Promise<any> {
+    const { messages, conversations } = await import('@shared/schema');
+    const { sql } = await import('drizzle-orm');
+    
+    const [message] = await this.db
+      .insert(messages)
+      .values({
+        conversationId: data.conversationId,
+        senderCode: data.senderCode,
+        senderType: data.senderType,
+        senderName: data.senderName,
+        content: data.content
+      })
+      .returning();
+
+    // Aggiorna il timestamp dell'ultima attività nella conversazione
+    await this.db
+      .update(conversations)
+      .set({ lastMessageAt: sql`NOW()` })
+      .where(eq(conversations.id, data.conversationId));
+
+    return message;
+  }
+
+  async getMessagesByConversation(conversationId: number): Promise<any[]> {
+    const { messages } = await import('@shared/schema');
+    const { asc } = await import('drizzle-orm');
+    
+    const result = await this.db
+      .select()
+      .from(messages)
+      .where(eq(messages.conversationId, conversationId))
+      .orderBy(asc(messages.sentAt));
+
+    return result;
+  }
+
+  async markMessagesAsRead(conversationId: number, readerCode: string): Promise<void> {
+    const { messages } = await import('@shared/schema');
+    const { and, eq, ne } = await import('drizzle-orm');
+    
+    await this.db
+      .update(messages)
+      .set({ isRead: true })
+      .where(and(
+        eq(messages.conversationId, conversationId),
+        ne(messages.senderCode, readerCode), // Non marcare i propri messaggi
+        eq(messages.isRead, false)
+      ));
+  }
+
+  async getUnreadMessagesCount(userCode: string): Promise<number> {
+    const { conversations, messages } = await import('@shared/schema');
+    const { count, and, or, eq, ne } = await import('drizzle-orm');
+    
+    // Conta i messaggi non letti nelle conversazioni dove l'utente è coinvolto
+    const [result] = await this.db
+      .select({ count: count(messages.id) })
+      .from(messages)
+      .innerJoin(conversations, eq(messages.conversationId, conversations.id))
+      .where(and(
+        or(
+          eq(conversations.touristCode, userCode),
+          eq(conversations.partnerCode, userCode)
+        ),
+        ne(messages.senderCode, userCode), // Non contare i propri messaggi
+        eq(messages.isRead, false)
+      ));
+
+    return result?.count || 0;
   }
 }
 

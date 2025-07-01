@@ -2437,6 +2437,203 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== ENDPOINTS MESSAGGERIA INTERNA ====================
+  
+  // Crea conversazione tra turista e partner
+  app.post("/api/messages/start-conversation", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const { partnerCode, partnerName, initialMessage } = req.body;
+      
+      if (!partnerCode || !partnerName) {
+        return res.status(400).json({ message: "Dati partner richiesti" });
+      }
+
+      // Crea o recupera conversazione esistente
+      const conversation = await storage.createConversation({
+        touristCode: session.iqCode,
+        partnerCode,
+        partnerName,
+        touristName: session.iqCode
+      });
+
+      // Se c'è un messaggio iniziale, lo invia
+      if (initialMessage && initialMessage.trim()) {
+        await storage.createMessage({
+          conversationId: conversation.id,
+          senderCode: session.iqCode,
+          senderType: 'tourist',
+          senderName: session.iqCode,
+          content: initialMessage.trim()
+        });
+      }
+
+      res.json({ 
+        success: true, 
+        conversationId: conversation.id,
+        message: "Conversazione avviata"
+      });
+
+    } catch (error) {
+      console.error("Errore avvio conversazione:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Ottieni conversazioni dell'utente
+  app.get("/api/messages/conversations", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      let conversations;
+      if (session.role === 'tourist') {
+        conversations = await storage.getConversationsByTourist(session.iqCode);
+      } else if (session.role === 'partner') {
+        conversations = await storage.getConversationsByPartner(session.iqCode);
+      } else {
+        return res.status(403).json({ message: "Accesso negato" });
+      }
+
+      res.json({ conversations });
+
+    } catch (error) {
+      console.error("Errore recupero conversazioni:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Ottieni messaggi di una conversazione
+  app.get("/api/messages/conversation/:id", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const conversationId = parseInt(req.params.id);
+      
+      // Verifica che l'utente faccia parte della conversazione
+      const conversation = await storage.getConversationById(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversazione non trovata" });
+      }
+
+      if (conversation.touristCode !== session.iqCode && conversation.partnerCode !== session.iqCode) {
+        return res.status(403).json({ message: "Accesso negato a questa conversazione" });
+      }
+
+      const messages = await storage.getMessagesByConversation(conversationId);
+      
+      // Marca messaggi come letti
+      await storage.markMessagesAsRead(conversationId, session.iqCode);
+
+      res.json({ 
+        conversation,
+        messages 
+      });
+
+    } catch (error) {
+      console.error("Errore recupero messaggi:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Invia nuovo messaggio
+  app.post("/api/messages/send", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const { conversationId, content } = req.body;
+      
+      if (!conversationId || !content || !content.trim()) {
+        return res.status(400).json({ message: "Dati messaggio richiesti" });
+      }
+
+      // Verifica che l'utente faccia parte della conversazione
+      const conversation = await storage.getConversationById(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversazione non trovata" });
+      }
+
+      if (conversation.touristCode !== session.iqCode && conversation.partnerCode !== session.iqCode) {
+        return res.status(403).json({ message: "Accesso negato a questa conversazione" });
+      }
+
+      const message = await storage.createMessage({
+        conversationId,
+        senderCode: session.iqCode,
+        senderType: session.role,
+        senderName: session.iqCode,
+        content: content.trim()
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Messaggio inviato",
+        messageData: message
+      });
+
+    } catch (error) {
+      console.error("Errore invio messaggio:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Ottieni conteggio messaggi non letti
+  app.get("/api/messages/unread-count", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const unreadCount = await storage.getUnreadMessagesCount(session.iqCode);
+
+      res.json({ unreadCount });
+
+    } catch (error) {
+      console.error("Errore conteggio messaggi:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // ==================== FINE ENDPOINTS MESSAGGERIA ====================
+
   // Turista vede richieste di validazione in sospeso
   app.get("/api/iqcode/validation-requests", async (req: any, res: any) => {
     try {
