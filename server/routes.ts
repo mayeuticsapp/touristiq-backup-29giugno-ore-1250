@@ -2542,6 +2542,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+
   // Partner utilizza IQCode validato (decrementa utilizzi)
   app.post("/api/iqcode/use-validated", async (req: any, res: any) => {
     try {
