@@ -2439,8 +2439,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==================== ENDPOINTS MESSAGGERIA INTERNA ====================
   
-  // Richiesta di chat tra turista e partner (stile WhatsApp)
-  app.post("/api/messages/request-chat", async (req: any, res: any) => {
+  // Invio messaggio diretto (sostituisce richiesta chat)
+  app.post("/api/messages/send-direct", async (req: any, res: any) => {
     try {
       const sessionToken = req.cookies.session_token;
       if (!sessionToken) {
@@ -2448,49 +2448,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
+      if (!session || session.role !== 'tourist') {
+        return res.status(403).json({ message: "Solo i turisti possono inviare messaggi" });
       }
 
-      const { partnerCode, partnerName, requestMessage } = req.body;
+      const { partnerCode, partnerName, message } = req.body;
       
-      if (!partnerCode || !partnerName) {
-        return res.status(400).json({ message: "Dati partner richiesti" });
+      if (!partnerCode || !message) {
+        return res.status(400).json({ message: "Codice partner e messaggio richiesti" });
       }
 
-      // Controlla se esiste già una richiesta pendente o accettata
-      const existingConversation = await storage.getConversationBetween(session.iqCode, partnerCode);
-      if (existingConversation) {
-        if (existingConversation.status === 'pending') {
-          return res.status(400).json({ message: "Hai già una richiesta pendente con questo partner" });
-        }
-        if (existingConversation.status === 'accepted') {
-          return res.json({ 
-            success: true, 
-            conversationId: existingConversation.id,
-            message: "Chat già attiva con questo partner"
-          });
-        }
+      // Cerca conversazione esistente o creane una nuova
+      let conversation = await storage.getConversationBetween(session.iqCode, partnerCode);
+      
+      if (!conversation) {
+        // Crea nuova conversazione attiva (non pending)
+        conversation = await storage.createConversation({
+          touristCode: session.iqCode,
+          partnerCode,
+          partnerName: partnerName || partnerCode,
+          touristName: session.iqCode,
+          status: 'active' // Direttamente attiva
+        });
       }
 
-      // Crea richiesta di chat
-      const conversation = await storage.createConversation({
-        touristCode: session.iqCode,
-        partnerCode,
-        partnerName,
-        touristName: session.iqCode,
-        status: 'pending',
-        requestMessage: requestMessage || `Il turista ${session.iqCode} vorrebbe chattare con te.`
+      // Invia il messaggio
+      await storage.createMessage({
+        conversationId: conversation.id,
+        senderCode: session.iqCode,
+        senderType: 'tourist',
+        senderName: session.iqCode,
+        content: message.trim()
       });
 
       res.json({ 
         success: true, 
         conversationId: conversation.id,
-        message: "Richiesta di chat inviata! Attendi che il partner la accetti."
+        message: "Messaggio inviato con successo!"
       });
 
     } catch (error) {
-      console.error("Errore richiesta chat:", error);
+      console.error("Errore invio messaggio:", error);
       res.status(500).json({ message: "Errore del server" });
     }
   });

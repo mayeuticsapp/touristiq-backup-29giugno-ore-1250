@@ -66,24 +66,7 @@ export function PartnerMessaging() {
     },
   });
 
-  // Mutation per accettare richiesta di chat
-  const acceptRequestMutation = useMutation({
-    mutationFn: (conversationId: string) =>
-      apiRequest("POST", `/api/messages/accept-request/${conversationId}`, {}),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/messages/conversations"] });
-    },
-  });
 
-  // Mutation per rifiutare richiesta di chat
-  const rejectRequestMutation = useMutation({
-    mutationFn: (conversationId: string) =>
-      apiRequest("POST", `/api/messages/reject-request/${conversationId}`, {}),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/messages/conversations"] });
-      setSelectedConversation(null);
-    },
-  });
 
   const handleConversationSelect = (conversationId: string) => {
     setSelectedConversation(conversationId);
@@ -128,84 +111,50 @@ export function PartnerMessaging() {
             </div>
           ) : (
             <div className="space-y-1 max-h-[500px] overflow-y-auto">
-              {conversationsList.map((conversation: any) => (
-                <div
-                  key={conversation.conversation.id}
-                  className={`p-3 border-b ${
-                    conversation.conversation.status === 'pending' ? "bg-yellow-50" : "hover:bg-gray-50"
-                  } ${
-                    selectedConversation === conversation.conversation.id ? "bg-blue-50" : ""
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <User className="w-4 h-4 text-gray-400" />
-                        <span className="font-medium text-sm truncate">
-                          {conversation.conversation.touristName || conversation.conversation.touristCode}
-                        </span>
-                        {conversation.unreadCount > 0 && (
-                          <Badge className="bg-red-500 text-white text-xs px-1 py-0">
-                            {conversation.unreadCount}
-                          </Badge>
-                        )}
-                        {conversation.conversation.status === 'pending' && (
-                          <Badge className="bg-yellow-500 text-white text-xs px-1 py-0">
-                            Richiesta
-                          </Badge>
-                        )}
+              {conversationsList.map((conversation: any) => {
+                // Estrae solo la parola emozionale dal codice IQ
+                const getEmotionalWord = (touristCode: string) => {
+                  if (touristCode && touristCode.includes('-')) {
+                    const parts = touristCode.split('-');
+                    return parts[parts.length - 1]; // Ultima parte dopo l'ultimo trattino
+                  }
+                  return touristCode;
+                };
+
+                return (
+                  <div
+                    key={conversation.conversation.id}
+                    onClick={() => handleConversationSelect(conversation.conversation.id)}
+                    className={`p-3 cursor-pointer border-b hover:bg-gray-50 ${
+                      selectedConversation === conversation.conversation.id ? "bg-blue-50" : ""
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <User className="w-4 h-4 text-gray-400" />
+                          <span className="font-medium text-sm truncate">
+                            {getEmotionalWord(conversation.conversation.touristCode)}
+                          </span>
+                          {conversation.unreadCount > 0 && (
+                            <Badge className="bg-red-500 text-white text-xs px-1 py-0">
+                              {conversation.unreadCount}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-600 truncate">
+                          Ultima attività: {new Date(conversation.conversation.lastMessageAt || Date.now()).toLocaleDateString("it-IT", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
                       </div>
-                      
-                      {conversation.conversation.status === 'pending' ? (
-                        <div className="space-y-2">
-                          <p className="text-xs text-gray-600">
-                            {conversation.conversation.requestMessage || "Vuole chattare con te"}
-                          </p>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                acceptRequestMutation.mutate(conversation.conversation.id);
-                              }}
-                              disabled={acceptRequestMutation.isPending}
-                              className="text-xs px-2 py-1 h-6"
-                            >
-                              ✓ Accetta
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                rejectRequestMutation.mutate(conversation.conversation.id);
-                              }}
-                              disabled={rejectRequestMutation.isPending}
-                              className="text-xs px-2 py-1 h-6"
-                            >
-                              ✗ Rifiuta
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          onClick={() => handleConversationSelect(conversation.conversation.id)}
-                          className="cursor-pointer"
-                        >
-                          <p className="text-xs text-gray-600 truncate">
-                            Ultima attività: {new Date(conversation.conversation.lastMessageAt).toLocaleDateString("it-IT", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </p>
-                        </div>
-                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

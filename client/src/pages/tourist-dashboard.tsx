@@ -28,17 +28,17 @@ export default function TouristDashboard() {
     queryFn: getCurrentUser,
   });
   
-  // Mutation per richiedere chat
-  const startConversationMutation = useMutation({
-    mutationFn: (data: {partnerCode: string, partnerName: string, requestMessage?: string}) =>
-      apiRequest("POST", "/api/messages/request-chat", data),
+  // Mutation per inviare messaggio diretto
+  const sendMessageMutation = useMutation({
+    mutationFn: (data: {partnerCode: string, partnerName: string, message: string}) =>
+      apiRequest("POST", "/api/messages/send-direct", data),
     onSuccess: () => {
-      alert("Richiesta di chat inviata! Attendi che il partner la accetti.");
+      alert("Messaggio inviato con successo!");
       setShowMessageDialog(false);
       setSelectedPartner(null);
     },
     onError: (error: any) => {
-      alert(error.message || "Errore durante l'invio della richiesta");
+      alert(error.message || "Errore durante l'invio del messaggio");
     },
   });
   
@@ -341,20 +341,20 @@ export default function TouristDashboard() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <MessageCircle className="w-5 h-5" />
-              Richiedi chat con {selectedPartner?.name}
+              Invia messaggio a {selectedPartner?.name}
             </DialogTitle>
           </DialogHeader>
           <MessageForm 
             partnerCode={selectedPartner?.code || ""}
             partnerName={selectedPartner?.name || ""}
             onSend={(message) => {
-              startConversationMutation.mutate({
+              sendMessageMutation.mutate({
                 partnerCode: selectedPartner?.code || "",
                 partnerName: selectedPartner?.name || "",
-                requestMessage: message
+                message: message
               });
             }}
-            isLoading={startConversationMutation.isPending}
+            isLoading={sendMessageMutation.isPending}
           />
         </DialogContent>
       </Dialog>
