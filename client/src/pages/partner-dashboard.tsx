@@ -153,14 +153,18 @@ export default function PartnerDashboard() {
     mutationFn: async (code: string) => {
       return apiRequest(`/api/partner/link-tourist`, "POST", { touristCode: code });
     },
-    onSuccess: () => {
-      toast({ title: "Richiesta collegamento inviata!" });
+    onSuccess: (data) => {
+      toast({ 
+        title: "Successo!", 
+        description: data.message || "Richiesta collegamento inviata!"
+      });
       setTouristCode("");
     },
-    onError: () => {
+    onError: (error: any) => {
+      const errorMessage = error?.response?.data?.message || error?.message || "Impossibile inviare la richiesta";
       toast({ 
         title: "Errore", 
-        description: "Impossibile inviare la richiesta",
+        description: errorMessage,
         variant: "destructive"
       });
     }

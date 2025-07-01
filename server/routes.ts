@@ -1011,6 +1011,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Errore richiesta collegamento:", error);
+      
+      // Gestisce errori specifici dal storage
+      if (error instanceof Error) {
+        if (error.message.includes("già inviata")) {
+          return res.status(400).json({ message: error.message });
+        }
+        if (error.message.includes("non valido")) {
+          return res.status(404).json({ message: error.message });
+        }
+      }
+      
       res.status(500).json({ message: "Errore del server" });
     }
   });
