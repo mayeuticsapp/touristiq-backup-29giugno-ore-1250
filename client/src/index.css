@@ -28,6 +28,12 @@
   --tourist-blue: hsl(214, 88%, 61%);
   --tourist-dark: hsl(224, 76%, 48%);
   --tourist-green: hsl(160, 84%, 39%);
+  
+  /* Warm Panel Colors - Pesca-Avorio */
+  --warm-peach: hsl(25, 60%, 92%);
+  --warm-ivory: hsl(45, 45%, 96%);
+  --warm-amber-shadow: hsl(35, 80%, 85%);
+  --warm-border: hsl(30, 40%, 88%);
 }
 
 .dark {
@@ -71,6 +77,19 @@
   
   .bg-tourist-blue {
     background-color: var(--tourist-blue);
+  }
+  
+  /* Warm Panel Styles - Pesca-Avorio */
+  .warm-panel {
+    background: linear-gradient(135deg, var(--warm-peach) 0%, var(--warm-ivory) 100%);
+    border: 1px solid var(--warm-border);
+    box-shadow: 0 4px 12px hsla(35, 60%, 75%, 0.15), 0 2px 4px hsla(35, 50%, 80%, 0.1);
+  }
+  
+  .warm-panel:hover {
+    box-shadow: 0 6px 16px hsla(35, 60%, 70%, 0.2), 0 3px 6px hsla(35, 50%, 75%, 0.15);
+    transform: translateY(-1px);
+    transition: all 0.3s ease;
   }
   
   .tourist-dark {

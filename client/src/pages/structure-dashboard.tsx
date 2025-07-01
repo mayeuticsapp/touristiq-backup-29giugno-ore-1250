@@ -491,7 +491,7 @@ export default function StructureDashboard() {
     <div className="space-y-6">
       {/* Riepilogo Pacchetti */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+        <Card className="warm-panel">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -503,7 +503,7 @@ export default function StructureDashboard() {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="warm-panel">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -517,7 +517,7 @@ export default function StructureDashboard() {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="warm-panel">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -533,7 +533,7 @@ export default function StructureDashboard() {
       </div>
 
       {/* Assegnazione Rapida IQCode */}
-      <Card>
+      <Card className="warm-panel">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserPlus size={20} />
@@ -634,7 +634,7 @@ export default function StructureDashboard() {
 
       {/* Dettaglio Pacchetti */}
       {packagesData?.packages && packagesData.packages.length > 0 && (
-        <Card>
+        <Card className="warm-panel">
           <CardHeader>
             <CardTitle>Dettaglio Pacchetti Acquistati</CardTitle>
           </CardHeader>
@@ -677,7 +677,7 @@ export default function StructureDashboard() {
   const renderGuestManagement = () => (
     <div className="space-y-6">
       {/* Form aggiunta nuovo ospite */}
-      <Card>
+      <Card className="warm-panel">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserPlus size={20} />
@@ -850,7 +850,7 @@ export default function StructureDashboard() {
       </Card>
 
       {/* Lista ospiti registrati */}
-      <Card>
+      <Card className="warm-panel">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users size={20} />
