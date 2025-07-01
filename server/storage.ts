@@ -1346,33 +1346,36 @@ class ExtendedPostgreStorage extends PostgreStorage {
   // Partner methods implementation
   async createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void> {
     try {
-      // Uso il pool importato direttamente
-      
-      // Verifica duplicati
-      const existingResult = await pool.query(
-        'SELECT id FROM iqcode_validations WHERE partner_code = $1 AND tourist_iq_code = $2 AND status = $3',
-        [partnerCode, touristCode, 'pending']
-      );
+      // Verifica duplicati usando drizzle
+      const existing = await this.db.select()
+        .from(iqcodeValidations)
+        .where(and(
+          eq(iqcodeValidations.partnerCode, partnerCode),
+          eq(iqcodeValidations.touristIqCode, touristCode),
+          eq(iqcodeValidations.status, 'pending')
+        ));
 
-      if (existingResult.rows.length > 0) {
+      if (existing.length > 0) {
         throw new Error('Richiesta già inviata e in attesa di conferma');
       }
 
       // Recupera nome partner
-      const partnerResult = await pool.query(
-        'SELECT assigned_to FROM iq_codes WHERE code = $1',
-        [partnerCode]
-      );
+      const partnerData = await this.db.select()
+        .from(iqCodes)
+        .where(eq(iqCodes.code, partnerCode));
 
-      const partnerName = partnerResult.rows[0]?.assigned_to || 'Partner';
+      const partnerName = partnerData[0]?.assignedTo || 'Partner';
 
       // Inserisce la validazione
-      await pool.query(
-        `INSERT INTO iqcode_validations 
-         (tourist_iq_code, partner_code, partner_name, status, requested_at, uses_remaining, uses_total)
-         VALUES ($1, $2, $3, $4, NOW(), $5, $6)`,
-        [touristCode, partnerCode, partnerName, 'pending', 10, 10]
-      );
+      await this.db.insert(iqcodeValidations).values({
+        touristIqCode: touristCode,
+        partnerCode: partnerCode,
+        partnerName: partnerName,
+        status: 'pending',
+        requestedAt: new Date(),
+        usesRemaining: 10,
+        usesTotal: 10
+      });
       
       console.log(`Richiesta validazione creata: ${partnerCode} → ${touristCode}`);
     } catch (error) {
