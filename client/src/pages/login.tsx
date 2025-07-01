@@ -84,80 +84,102 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Sfondo Spettacolare */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900">
-        {/* Overlay con pattern geometrico */}
-        <div 
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: `
-              radial-gradient(circle at 25% 25%, #00D4FF 0%, transparent 25%),
-              radial-gradient(circle at 75% 75%, #FF6B6B 0%, transparent 25%),
-              radial-gradient(circle at 50% 50%, #4ECDC4 0%, transparent 30%),
-              linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%)
-            `,
-            backgroundSize: '400px 400px, 300px 300px, 500px 500px, 100px 100px'
-          }}
-        />
-        
-        {/* Forme fluttuanti animate */}
-        <div className="absolute top-20 left-20 w-32 h-32 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full opacity-30 animate-float" />
-        <div className="absolute top-40 right-32 w-24 h-24 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full opacity-25 animate-bounce" style={{animationDelay: '1s'}} />
-        <div className="absolute bottom-32 left-32 w-20 h-20 bg-gradient-to-r from-green-400 to-cyan-500 rounded-full opacity-30 animate-float" style={{animationDelay: '2s'}} />
-        <div className="absolute bottom-20 right-20 w-28 h-28 bg-gradient-to-r from-orange-400 to-red-500 rounded-full opacity-20 animate-pulse" style={{animationDelay: '0.5s'}} />
-        
-        {/* Forme aggiuntive per dinamismo */}
-        <div className="absolute top-1/2 left-10 w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full opacity-25 animate-float" style={{animationDelay: '3s'}} />
-        <div className="absolute top-10 right-10 w-12 h-12 bg-gradient-to-r from-pink-400 to-red-500 rounded-full opacity-30 animate-bounce" style={{animationDelay: '4s'}} />
-        
-        {/* Particelle luminose */}
-        <div className="absolute top-1/4 left-1/3 w-2 h-2 bg-white rounded-full opacity-60 animate-twinkle" />
-        <div className="absolute top-3/4 left-1/4 w-1 h-1 bg-yellow-300 rounded-full opacity-80 animate-twinkle" style={{animationDelay: '0.7s'}} />
-        <div className="absolute top-1/2 right-1/4 w-3 h-3 bg-cyan-300 rounded-full opacity-50 animate-twinkle" style={{animationDelay: '1.4s'}} />
-        <div className="absolute bottom-1/3 right-1/3 w-2 h-2 bg-purple-300 rounded-full opacity-70 animate-twinkle" style={{animationDelay: '2.1s'}} />
-        
-        {/* Onde marine stilizzate */}
-        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-cyan-600/40 to-transparent">
-          <div className="absolute bottom-0 w-full h-8 bg-gradient-to-r from-blue-400/30 via-cyan-400/30 to-blue-400/30 animate-pulse" />
+      {/* Sfondo Naturale Mediterraneo */}
+      <div className="absolute inset-0 bg-gradient-to-b from-sky-400 via-blue-500 to-cyan-600">
+        {/* Sole splendente */}
+        <div className="absolute top-16 right-20 w-24 h-24 bg-gradient-to-br from-yellow-300 to-orange-400 rounded-full opacity-90 animate-pulse shadow-2xl">
+          <div className="absolute inset-2 bg-gradient-to-br from-yellow-200 to-orange-300 rounded-full animate-glow" />
+          {/* Raggi del sole */}
+          <div className="absolute -top-8 left-1/2 w-1 h-16 bg-yellow-300/60 transform -translate-x-1/2 animate-pulse" />
+          <div className="absolute -bottom-8 left-1/2 w-1 h-16 bg-yellow-300/60 transform -translate-x-1/2 animate-pulse" />
+          <div className="absolute -left-8 top-1/2 h-1 w-16 bg-yellow-300/60 transform -translate-y-1/2 animate-pulse" />
+          <div className="absolute -right-8 top-1/2 h-1 w-16 bg-yellow-300/60 transform -translate-y-1/2 animate-pulse" />
+          <div className="absolute -top-6 -left-6 w-1 h-12 bg-yellow-300/40 transform rotate-45 animate-pulse" style={{animationDelay: '0.5s'}} />
+          <div className="absolute -top-6 -right-6 w-1 h-12 bg-yellow-300/40 transform -rotate-45 animate-pulse" style={{animationDelay: '0.5s'}} />
+          <div className="absolute -bottom-6 -left-6 w-1 h-12 bg-yellow-300/40 transform -rotate-45 animate-pulse" style={{animationDelay: '0.5s'}} />
+          <div className="absolute -bottom-6 -right-6 w-1 h-12 bg-yellow-300/40 transform rotate-45 animate-pulse" style={{animationDelay: '0.5s'}} />
         </div>
         
-        {/* Pattern a rete tecnologico */}
-        <div 
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: `
-              linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-            `,
-            backgroundSize: '50px 50px'
-          }}
-        />
+        {/* Nuvole soffici */}
+        <div className="absolute top-20 left-16 w-40 h-16 bg-white/80 rounded-full opacity-90 animate-float">
+          <div className="absolute -left-4 top-2 w-24 h-12 bg-white/70 rounded-full" />
+          <div className="absolute right-2 -top-2 w-20 h-14 bg-white/75 rounded-full" />
+        </div>
+        <div className="absolute top-32 right-40 w-32 h-12 bg-white/70 rounded-full opacity-80 animate-float" style={{animationDelay: '2s'}} />
+        <div className="absolute top-10 left-1/2 w-28 h-10 bg-white/60 rounded-full opacity-75 animate-float" style={{animationDelay: '4s'}} />
+        
+        {/* Montagne calabresi in lontananza */}
+        <div className="absolute bottom-1/3 left-0 w-full h-48">
+          <div className="absolute bottom-0 left-0 w-1/3 h-32 bg-gradient-to-t from-green-700 to-green-500 opacity-60" 
+               style={{clipPath: 'polygon(0% 100%, 50% 20%, 100% 100%)'}} />
+          <div className="absolute bottom-0 left-1/4 w-1/3 h-40 bg-gradient-to-t from-green-800 to-green-600 opacity-70" 
+               style={{clipPath: 'polygon(0% 100%, 60% 10%, 100% 100%)'}} />
+          <div className="absolute bottom-0 right-0 w-1/3 h-36 bg-gradient-to-t from-green-600 to-green-400 opacity-50" 
+               style={{clipPath: 'polygon(0% 100%, 40% 25%, 100% 100%)'}} />
+        </div>
+        
+        {/* Mare cristallino con onde */}
+        <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-blue-600 via-cyan-500 to-transparent">
+          {/* Onde animate */}
+          <div className="absolute bottom-0 w-full h-8 bg-gradient-to-r from-white/30 via-cyan-300/40 to-white/30 animate-pulse" />
+          <div className="absolute bottom-2 w-full h-6 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" style={{animationDelay: '0.5s'}} />
+          <div className="absolute bottom-4 w-full h-4 bg-gradient-to-r from-white/15 via-cyan-200/30 to-white/15 animate-pulse" style={{animationDelay: '1s'}} />
+          
+          {/* Riflessi del sole sul mare */}
+          <div className="absolute bottom-8 right-16 w-2 h-12 bg-yellow-200/60 animate-twinkle" />
+          <div className="absolute bottom-12 right-20 w-1 h-8 bg-yellow-300/50 animate-twinkle" style={{animationDelay: '0.7s'}} />
+          <div className="absolute bottom-6 right-24 w-3 h-6 bg-orange-200/40 animate-twinkle" style={{animationDelay: '1.4s'}} />
+        </div>
+        
+        {/* Palme tropicali */}
+        <div className="absolute bottom-1/4 left-8 w-4 h-32 bg-gradient-to-t from-amber-700 to-amber-600 opacity-80">
+          {/* Fronde */}
+          <div className="absolute -top-2 -left-8 w-20 h-6 bg-green-500 rounded-full opacity-70 transform -rotate-12" />
+          <div className="absolute -top-2 -right-4 w-16 h-6 bg-green-600 rounded-full opacity-70 transform rotate-12" />
+          <div className="absolute -top-4 -left-6 w-18 h-5 bg-green-400 rounded-full opacity-60 transform -rotate-45" />
+          <div className="absolute -top-4 -right-2 w-14 h-5 bg-green-500 rounded-full opacity-60 transform rotate-45" />
+        </div>
+        
+        <div className="absolute bottom-1/4 right-12 w-3 h-28 bg-gradient-to-t from-amber-800 to-amber-700 opacity-70">
+          {/* Fronde */}
+          <div className="absolute -top-2 -left-6 w-16 h-5 bg-green-600 rounded-full opacity-80 transform -rotate-20" />
+          <div className="absolute -top-2 -right-2 w-14 h-5 bg-green-500 rounded-full opacity-80 transform rotate-20" />
+          <div className="absolute -top-3 -left-4 w-12 h-4 bg-green-400 rounded-full opacity-60 transform -rotate-50" />
+        </div>
+        
+        {/* Gabbiani in volo */}
+        <div className="absolute top-1/3 left-1/3 text-white/60 animate-float text-2xl">🕊️</div>
+        <div className="absolute top-1/4 right-1/3 text-white/50 animate-float text-lg" style={{animationDelay: '2s'}}>🕊️</div>
+        <div className="absolute top-2/5 left-2/3 text-white/40 animate-float text-xl" style={{animationDelay: '4s'}}>🕊️</div>
       </div>
       
-      {/* Glassmorphism overlay */}
-      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
+      {/* Overlay morbido per leggibilità */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/20" />
       <div className="max-w-md w-full space-y-8">
         {/* Logo and Header */}
         <div className="text-center relative z-10">
-          <div className="mx-auto h-24 w-24 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-6 shadow-2xl border-4 border-white/30 backdrop-blur-sm animate-pulse">
-            <MapPin className="text-white text-4xl drop-shadow-lg" size={40} />
+          <div className="mx-auto h-28 w-28 bg-gradient-to-br from-orange-400 via-yellow-400 to-orange-500 rounded-full flex items-center justify-center mb-6 shadow-2xl border-4 border-white/60 backdrop-blur-sm">
+            <MapPin className="text-white text-5xl drop-shadow-xl" size={48} />
           </div>
-          <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-2xl bg-gradient-to-r from-cyan-200 via-white to-purple-200 bg-clip-text text-transparent">
+          <h1 className="text-6xl font-bold text-white mb-4 drop-shadow-2xl">
             TouristIQ
           </h1>
-          <p className="text-white/90 text-xl drop-shadow-lg font-medium">
+          <p className="text-white text-2xl drop-shadow-lg font-medium bg-black/20 px-6 py-2 rounded-full backdrop-blur-sm">
+            🌴 Scopri la Calabria 🌊
+          </p>
+          <p className="text-white/90 text-lg drop-shadow-lg font-medium mt-3">
             Inserisci il tuo codice IQ per accedere
           </p>
         </div>
 
         {/* Login Form */}
-        <Card className="shadow-2xl bg-white/15 backdrop-blur-xl border border-white/30 relative z-10 animate-glow">
+        <Card className="shadow-2xl bg-white/90 backdrop-blur-xl border-2 border-orange-200/50 relative z-10">
           <CardContent className="pt-8 pb-8">
             <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <label
                   htmlFor="iqCode"
-                  className="block text-lg font-semibold text-white mb-3 drop-shadow-lg"
+                  className="block text-lg font-semibold text-gray-800 mb-3"
                 >
                   Codice IQ
                 </label>
@@ -169,7 +191,7 @@ export default function Login() {
                   onChange={(e) => setIqCode(e.target.value.toUpperCase())}
                   placeholder="es. TIQ-IT-LEONARDO"
                   maxLength={25}
-                  className="text-center text-xl font-bold tracking-wider uppercase w-full h-14 bg-white/20 border-white/30 text-white placeholder:text-white/60 backdrop-blur-sm focus:bg-white/30 focus:border-white/50 transition-all duration-300"
+                  className="text-center text-xl font-bold tracking-wider uppercase w-full h-14 bg-orange-50 border-2 border-orange-200 text-gray-800 placeholder:text-gray-500 focus:bg-orange-100 focus:border-orange-400 transition-all duration-300"
                   disabled={isLoading}
                 />
               </div>
@@ -179,11 +201,11 @@ export default function Login() {
                   id="remember"
                   checked={rememberCode}
                   onCheckedChange={(checked) => setRememberCode(checked === true)}
-                  className="border-white/50 data-[state=checked]:bg-white/30 data-[state=checked]:border-white"
+                  className="border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
                 />
                 <label
                   htmlFor="remember"
-                  className="text-white/90 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 drop-shadow-sm"
+                  className="text-gray-700 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   Ricorda questo codice IQ
                 </label>
@@ -191,7 +213,7 @@ export default function Login() {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-xl font-bold py-4 h-16 shadow-2xl border border-white/20 backdrop-blur-sm transition-all duration-300 transform hover:scale-105 hover:shadow-cyan-500/25"
+                className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white text-xl font-bold py-4 h-16 shadow-xl border-2 border-orange-300 transition-all duration-300 transform hover:scale-105 hover:shadow-orange-500/30"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -202,7 +224,7 @@ export default function Login() {
                 ) : (
                   <>
                     <LogIn className="mr-3" size={24} />
-                    Accedi
+                    🌊 Accedi alla Vacanza 🏖️
                   </>
                 )}
               </Button>
