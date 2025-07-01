@@ -1400,7 +1400,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
     }
   }
 
-  
+  async createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any> {
     const newOffer = {
       id: Date.now(),
       ...offer,
