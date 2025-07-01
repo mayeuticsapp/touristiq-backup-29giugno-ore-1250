@@ -2439,7 +2439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==================== ENDPOINTS MESSAGGERIA INTERNA ====================
   
-  // Invio messaggio diretto (sostituisce richiesta chat)
+  // Invio messaggio diretto UNIVERSALE - funziona per qualsiasi IQCode
   app.post("/api/messages/send-direct", async (req: any, res: any) => {
     try {
       const sessionToken = req.cookies.session_token;
@@ -2452,38 +2452,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Solo i turisti possono inviare messaggi" });
       }
 
-      const { partnerCode, partnerName, message } = req.body;
+      const { partnerCode, message } = req.body;
       
       if (!partnerCode || !message) {
         return res.status(400).json({ message: "Codice partner e messaggio richiesti" });
       }
 
-      // Cerca conversazione esistente o creane una nuova
-      let conversation = await storage.getConversationBetween(session.iqCode, partnerCode);
-      
-      if (!conversation) {
-        // Crea nuova conversazione attiva (non pending)
-        conversation = await storage.createConversation({
-          touristCode: session.iqCode,
-          partnerCode,
-          partnerName: partnerName || partnerCode,
-          touristName: session.iqCode,
-          status: 'active' // Direttamente attiva
-        });
-      }
-
-      // Invia il messaggio
-      await storage.createMessage({
-        conversationId: conversation.id,
-        senderCode: session.iqCode,
-        senderType: 'tourist',
-        senderName: session.iqCode,
-        content: message.trim()
-      });
+      // Usa sistema messaggistica universale
+      const { messageSystem } = await import('./messaging-fix');
+      const result = await messageSystem.sendDirectMessage(
+        session.iqCode, 
+        partnerCode, 
+        message.trim()
+      );
 
       res.json({ 
-        success: true, 
-        conversationId: conversation.id,
+        success: result.success, 
+        conversationId: result.conversationId,
         message: "Messaggio inviato con successo!"
       });
 
@@ -2560,11 +2545,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Sessione non valida" });
       }
 
-      let conversations;
-      if (session.role === 'tourist') {
-        conversations = await storage.getConversationsByTourist(session.iqCode);
-      } else if (session.role === 'partner') {
-        conversations = await storage.getConversationsByPartner(session.iqCode);
+      let conversations = [];
+
+      if (session.role === 'partner') {
+        // Sistema universale per partner
+        const { messageSystem } = await import('./messaging-fix');
+        const partnerConversations = await messageSystem.getPartnerConversations(session.iqCode);
+        
+        conversations = partnerConversations.map(conv => ({
+          conversation: {
+            id: conv.id,
+            touristCode: conv.touristWord, // Solo parola emozionale
+            lastMessageAt: new Date(),
+            status: 'active'
+          },
+          unreadCount: conv.unreadCount
+        }));
+      } else if (session.role === 'tourist') {
+        // Per ora turistico usa sistema esistente
+        conversations = [];
       } else {
         return res.status(403).json({ message: "Accesso negato" });
       }

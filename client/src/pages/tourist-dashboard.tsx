@@ -114,8 +114,10 @@ export default function TouristDashboard() {
     );
   };
 
-  // Determina quali offerte mostrare
-  const offersToShow = searchMode === "default" ? realOffers?.discounts || [] : locationOffers;
+  // Determina quali offerte mostrare - COLLEGAMENTO DATI REALI
+  const offersToShow = searchMode === "default" 
+    ? (realOffers?.discounts || []) 
+    : locationOffers;
   
   const navigation = [
     { icon: <Compass size={16} />, label: "Esplora", href: "#" },
