@@ -2439,8 +2439,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==================== ENDPOINTS MESSAGGERIA INTERNA ====================
   
-  // Crea conversazione tra turista e partner
-  app.post("/api/messages/start-conversation", async (req: any, res: any) => {
+  // Richiesta di chat tra turista e partner (stile WhatsApp)
+  app.post("/api/messages/request-chat", async (req: any, res: any) => {
     try {
       const sessionToken = req.cookies.session_token;
       if (!sessionToken) {
@@ -2452,39 +2452,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Sessione non valida" });
       }
 
-      const { partnerCode, partnerName, initialMessage } = req.body;
+      const { partnerCode, partnerName, requestMessage } = req.body;
       
       if (!partnerCode || !partnerName) {
         return res.status(400).json({ message: "Dati partner richiesti" });
       }
 
-      // Crea o recupera conversazione esistente
+      // Controlla se esiste già una richiesta pendente o accettata
+      const existingConversation = await storage.getConversationBetween(session.iqCode, partnerCode);
+      if (existingConversation) {
+        if (existingConversation.status === 'pending') {
+          return res.status(400).json({ message: "Hai già una richiesta pendente con questo partner" });
+        }
+        if (existingConversation.status === 'accepted') {
+          return res.json({ 
+            success: true, 
+            conversationId: existingConversation.id,
+            message: "Chat già attiva con questo partner"
+          });
+        }
+      }
+
+      // Crea richiesta di chat
       const conversation = await storage.createConversation({
         touristCode: session.iqCode,
         partnerCode,
         partnerName,
-        touristName: session.iqCode
+        touristName: session.iqCode,
+        status: 'pending',
+        requestMessage: requestMessage || `Il turista ${session.iqCode} vorrebbe chattare con te.`
       });
-
-      // Se c'è un messaggio iniziale, lo invia
-      if (initialMessage && initialMessage.trim()) {
-        await storage.createMessage({
-          conversationId: conversation.id,
-          senderCode: session.iqCode,
-          senderType: 'tourist',
-          senderName: session.iqCode,
-          content: initialMessage.trim()
-        });
-      }
 
       res.json({ 
         success: true, 
         conversationId: conversation.id,
-        message: "Conversazione avviata"
+        message: "Richiesta di chat inviata! Attendi che il partner la accetti."
       });
 
     } catch (error) {
-      console.error("Errore avvio conversazione:", error);
+      console.error("Errore richiesta chat:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Partner accetta richiesta di chat
+  app.post("/api/messages/accept-request/:conversationId", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'partner') {
+        return res.status(403).json({ message: "Solo i partner possono accettare richieste" });
+      }
+
+      const conversationId = parseInt(req.params.conversationId);
+      const success = await storage.updateConversationStatus(conversationId, 'accepted');
+      
+      if (success) {
+        res.json({ success: true, message: "Richiesta accettata! Puoi ora chattare." });
+      } else {
+        res.status(404).json({ message: "Conversazione non trovata" });
+      }
+    } catch (error) {
+      console.error("Errore accettazione richiesta:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Partner rifiuta richiesta di chat
+  app.post("/api/messages/reject-request/:conversationId", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'partner') {
+        return res.status(403).json({ message: "Solo i partner possono rifiutare richieste" });
+      }
+
+      const conversationId = parseInt(req.params.conversationId);
+      const success = await storage.updateConversationStatus(conversationId, 'rejected');
+      
+      if (success) {
+        res.json({ success: true, message: "Richiesta rifiutata." });
+      } else {
+        res.status(404).json({ message: "Conversazione non trovata" });
+      }
+    } catch (error) {
+      console.error("Errore rifiuto richiesta:", error);
       res.status(500).json({ message: "Errore del server" });
     }
   });

@@ -129,7 +129,9 @@ export interface IStorage {
   getRealOffersNearby(latitude: number, longitude: number, radius: number): Promise<any[]>;
   
   // Metodi per messaggeria interna
-  createConversation(data: {touristCode: string, partnerCode: string, touristName?: string, partnerName: string}): Promise<any>;
+  createConversation(data: {touristCode: string, partnerCode: string, touristName?: string, partnerName: string, status?: string, requestMessage?: string}): Promise<any>;
+  getConversationBetween(touristCode: string, partnerCode: string): Promise<any | null>;
+  updateConversationStatus(conversationId: number, status: string): Promise<boolean>;
   getConversationsByTourist(touristCode: string): Promise<any[]>;
   getConversationsByPartner(partnerCode: string): Promise<any[]>;
   getConversationById(conversationId: number): Promise<any | null>;
@@ -1823,34 +1825,49 @@ class ExtendedPostgreStorage extends PostgreStorage {
   }
 
   // Metodi per messaggeria interna
-  async createConversation(data: {touristCode: string, partnerCode: string, touristName?: string, partnerName: string}): Promise<any> {
+  async createConversation(data: {touristCode: string, partnerCode: string, touristName?: string, partnerName: string, status?: string, requestMessage?: string}): Promise<any> {
     const { conversations } = await import('@shared/schema');
-    const { and, eq } = await import('drizzle-orm');
     
-    // Verifica se esiste già una conversazione tra questi due utenti
-    const existing = await this.db
-      .select()
-      .from(conversations)
-      .where(and(
-        eq(conversations.touristCode, data.touristCode),
-        eq(conversations.partnerCode, data.partnerCode)
-      ));
-
-    if (existing.length > 0) {
-      return existing[0];
-    }
-
     const [conversation] = await this.db
       .insert(conversations)
       .values({
         touristCode: data.touristCode,
         partnerCode: data.partnerCode,
         touristName: data.touristName,
-        partnerName: data.partnerName
+        partnerName: data.partnerName,
+        status: data.status || 'pending',
+        requestMessage: data.requestMessage
       })
       .returning();
 
     return conversation;
+  }
+
+  async getConversationBetween(touristCode: string, partnerCode: string): Promise<any | null> {
+    const { conversations } = await import('@shared/schema');
+    const { and, eq } = await import('drizzle-orm');
+    
+    const result = await this.db
+      .select()
+      .from(conversations)
+      .where(and(
+        eq(conversations.touristCode, touristCode),
+        eq(conversations.partnerCode, partnerCode)
+      ));
+
+    return result.length > 0 ? result[0] : null;
+  }
+
+  async updateConversationStatus(conversationId: number, status: string): Promise<boolean> {
+    const { conversations } = await import('@shared/schema');
+    const { eq } = await import('drizzle-orm');
+    
+    const result = await this.db
+      .update(conversations)
+      .set({ status: status })
+      .where(eq(conversations.id, conversationId));
+
+    return true;
   }
 
   async getConversationsByTourist(touristCode: string): Promise<any[]> {

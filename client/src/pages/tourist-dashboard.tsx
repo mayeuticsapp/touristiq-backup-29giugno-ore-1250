@@ -28,17 +28,17 @@ export default function TouristDashboard() {
     queryFn: getCurrentUser,
   });
   
-  // Mutation per avviare conversazione
+  // Mutation per richiedere chat
   const startConversationMutation = useMutation({
-    mutationFn: (data: {partnerCode: string, partnerName: string, initialMessage?: string}) =>
-      apiRequest("POST", "/api/messages/start-conversation", data),
+    mutationFn: (data: {partnerCode: string, partnerName: string, requestMessage?: string}) =>
+      apiRequest("POST", "/api/messages/request-chat", data),
     onSuccess: () => {
-      alert("Conversazione avviata! Il partner riceverà il tuo messaggio.");
+      alert("Richiesta di chat inviata! Attendi che il partner la accetti.");
       setShowMessageDialog(false);
       setSelectedPartner(null);
     },
     onError: (error: any) => {
-      alert(error.message || "Errore durante l'avvio della conversazione");
+      alert(error.message || "Errore durante l'invio della richiesta");
     },
   });
   
@@ -273,7 +273,7 @@ export default function TouristDashboard() {
                         className="text-xs"
                       >
                         <MessageCircle className="w-3 h-3 mr-1" />
-                        Invia messaggio
+                        Richiedi chat
                       </Button>
                     </div>
                   </div>
@@ -341,7 +341,7 @@ export default function TouristDashboard() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <MessageCircle className="w-5 h-5" />
-              Invia messaggio a {selectedPartner?.name}
+              Richiedi chat con {selectedPartner?.name}
             </DialogTitle>
           </DialogHeader>
           <MessageForm 
@@ -351,7 +351,7 @@ export default function TouristDashboard() {
               startConversationMutation.mutate({
                 partnerCode: selectedPartner?.code || "",
                 partnerName: selectedPartner?.name || "",
-                initialMessage: message
+                requestMessage: message
               });
             }}
             isLoading={startConversationMutation.isPending}
@@ -388,7 +388,7 @@ function MessageForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-          Il tuo messaggio
+          Messaggio di richiesta
         </label>
         <textarea
           id="message"
@@ -396,7 +396,7 @@ function MessageForm({
           onChange={(e) => setMessage(e.target.value)}
           rows={4}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Scrivi qui il tuo messaggio al partner..."
+          placeholder="Es: Ciao, vorrei informazioni sui vostri servizi..."
           required
         />
       </div>

@@ -469,6 +469,8 @@ export const conversations = pgTable('conversations', {
   partnerCode: text('partner_code').notNull(),
   touristName: text('tourist_name'),
   partnerName: text('partner_name').notNull(),
+  status: text('status').default('pending'), // pending, accepted, rejected
+  requestMessage: text('request_message'), // messaggio di richiesta del turista
   lastMessageAt: timestamp('last_message_at').defaultNow(),
   isActiveForTourist: boolean('is_active_for_tourist').default(true),
   isActiveForPartner: boolean('is_active_for_partner').default(true),
