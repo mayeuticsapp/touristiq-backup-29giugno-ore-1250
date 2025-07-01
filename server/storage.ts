@@ -787,7 +787,14 @@ export class MemStorage implements IStorage {
   async updateStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
   async checkGestionaleAccess(): Promise<{hasAccess: boolean, hoursRemaining?: number}> { return { hasAccess: false }; }
 
+  // Settings config methods
+  async getSettingsConfig(structureCode: string): Promise<any> { return {}; }
+  async updateSettingsConfig(structureCode: string, settings: any): Promise<any> { return settings; }
 
+  // Partner methods
+  async createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void> { return; }
+  async createPartnerOffer(offer: any): Promise<any> { return offer; }
+  async createSpecialClient(client: any): Promise<any> { return client; }
 
   // Partner onboarding methods - IMPLEMENTAZIONE BASE
   async getPartnerOnboardingStatus(partnerCode: string): Promise<{completed: boolean, currentStep?: string, completedSteps?: string[]} | undefined> {
