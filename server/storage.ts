@@ -2,6 +2,7 @@ import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPac
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt, desc, like, sql } from "drizzle-orm";
+import { pool } from "./db";
 
 // Memoria globale condivisa per onboarding partner
 const globalPartnerOnboardingData = new Map<string, any>();
@@ -86,6 +87,19 @@ export interface IStorage {
 
   // Partner methods
   createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void>;
+  
+  // Validazione IQCode methods
+  createIqcodeValidation(data: {partnerCode: string, touristCode: string, requestedAt: Date, status: string, usesRemaining: number, usesTotal: number}): Promise<any>;
+  getValidationsByTourist(touristCode: string): Promise<any[]>;
+  getValidationsByPartner(partnerCode: string): Promise<any[]>;
+  getValidationById(id: number): Promise<any | null>;
+  updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<any>;
+  decrementValidationUses(validationId: number): Promise<any>;
+  
+  // Ricariche IQCode methods
+  createIqcodeRecharge(data: {touristCode: string, amount: number, status: string, requestedAt: Date}): Promise<any>;
+  getRechargesWithFilters(filters: any): Promise<{recharges: any[], total: number}>;
+  activateRecharge(rechargeId: number, adminCode: string): Promise<any>;
   createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any>;
   createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any>;
 
@@ -1331,8 +1345,40 @@ class ExtendedPostgreStorage extends PostgreStorage {
 
   // Partner methods implementation
   async createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void> {
-    // In real implementation would create notification record
-    console.log(`Partner ${partnerCode} requested link with tourist ${touristCode}`);
+    try {
+      // Uso il pool importato direttamente
+      
+      // Verifica duplicati
+      const existingResult = await pool.query(
+        'SELECT id FROM iqcode_validations WHERE partner_code = $1 AND tourist_iq_code = $2 AND status = $3',
+        [partnerCode, touristCode, 'pending']
+      );
+
+      if (existingResult.rows.length > 0) {
+        throw new Error('Richiesta già inviata e in attesa di conferma');
+      }
+
+      // Recupera nome partner
+      const partnerResult = await pool.query(
+        'SELECT assigned_to FROM iq_codes WHERE code = $1',
+        [partnerCode]
+      );
+
+      const partnerName = partnerResult.rows[0]?.assigned_to || 'Partner';
+
+      // Inserisce la validazione
+      await pool.query(
+        `INSERT INTO iqcode_validations 
+         (tourist_iq_code, partner_code, partner_name, status, requested_at, uses_remaining, uses_total)
+         VALUES ($1, $2, $3, $4, NOW(), $5, $6)`,
+        [touristCode, partnerCode, partnerName, 'pending', 10, 10]
+      );
+      
+      console.log(`Richiesta validazione creata: ${partnerCode} → ${touristCode}`);
+    } catch (error) {
+      console.error('Errore creazione richiesta validazione:', error);
+      throw error;
+    }
   }
 
   async createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any> {
