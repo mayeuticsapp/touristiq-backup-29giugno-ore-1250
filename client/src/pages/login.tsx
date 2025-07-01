@@ -218,7 +218,7 @@ export default function Login() {
             🌴 La Tua Vacanza Inizia Qui 🌊
           </p>
           <p className="text-white/90 text-lg drop-shadow-lg font-medium mt-3">
-            Inserisci il tuo codice IQ per accedere
+            Inserisci il tuo IQCode per accedere
           </p>
         </div>
 
@@ -231,7 +231,7 @@ export default function Login() {
                   htmlFor="iqCode"
                   className="block text-lg font-semibold text-gray-800 mb-3"
                 >
-                  Codice IQ
+                  IQCode
                 </label>
                 <Input
                   id="iqCode"
@@ -257,7 +257,7 @@ export default function Login() {
                   htmlFor="remember"
                   className="text-gray-700 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                  Ricorda questo codice IQ
+                  Ricorda questo IQCode
                 </label>
               </div>
 
