@@ -151,7 +151,8 @@ export default function PartnerDashboard() {
   // Mutations
   const linkTouristMutation = useMutation({
     mutationFn: async (code: string) => {
-      return apiRequest(`/api/partner/link-tourist`, "POST", { touristCode: code });
+      const response = await apiRequest("POST", `/api/partner/link-tourist`, { touristCode: code });
+      return response.json();
     },
     onSuccess: (data) => {
       toast({ 
