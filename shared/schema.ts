@@ -389,7 +389,7 @@ export const insertIqcodeRechargeSchema = createInsertSchema(iqcodeRecharges).om
 });
 
 export const loginSchema = z.object({
-  iqCode: z.string().min(1, "Codice IQ richiesto").max(20),
+  iqCode: z.string().min(1, "Codice IQ richiesto").max(100),
 });
 
 export type IqCode = typeof iqCodes.$inferSelect;
