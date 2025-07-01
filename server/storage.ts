@@ -2,7 +2,7 @@ import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPac
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt, desc, like, sql, inArray, ilike, asc, gte, lte, count, sum } from "drizzle-orm";
-import { pool } from "./db";
+import { db } from "./db";
 
 export interface IStorage {
   // IQ Code methods
@@ -310,29 +310,13 @@ export class MemStorage implements IStorage {
 
 // PostgreStorage con implementazione completa PostgreSQL
 export class PostgreStorage implements IStorage {
-  private db = drizzle(pool, { 
-    schema: {
-      iqCodes,
-      sessions,
-      assignedPackages,
-      guests,
-      adminCredits,
-      purchasedPackages,
-      accountingMovements,
-      structureSettings,
-      settingsConfig,
-      iqcodeValidations,
-      iqcodeRecharges,
-      conversations,
-      messages
-    }
-  });
+  private database = db;
 
   // Implementazione completa dei metodi PostgreSQL qui...
   // Per brevità, implemento solo i metodi principali
 
   async getIqCodeByCode(code: string): Promise<IqCode | undefined> {
-    const [iqCode] = await this.db.select().from(iqCodes).where(eq(iqCodes.code, code));
+    const [iqCode] = await this.database.select().from(iqCodes).where(eq(iqCodes.code, code));
     return iqCode || undefined;
   }
 
@@ -415,7 +399,7 @@ export class PostgreStorage implements IStorage {
   }
 
   async cleanExpiredSessions(): Promise<void> {
-    await this.db.delete(sessions).where(lt(sessions.expiresAt, new Date()));
+    await this.database.delete(sessions).where(lt(sessions.expiresAt, new Date()));
   }
 
   // Per tutti gli altri metodi, mantengo implementazioni complete dal PostgreStorage esistente

@@ -66,7 +66,10 @@ export class UniversalMessageSystem implements MessageSystem {
   async getPartnerConversations(partnerCode: string): Promise<Array<{ id: number; touristWord: string; lastMessage: string; unreadCount: number }>> {
     const partnerConversations: any[] = [];
 
-    for (const [key, conversation] of this.conversations) {
+    // Usa Array.from per compatibilità
+    const conversationEntries = Array.from(this.conversations.entries());
+    
+    for (const [key, conversation] of conversationEntries) {
       if (conversation.partnerCode === partnerCode) {
         const messages = this.messages.get(conversation.id) || [];
         const unreadCount = messages.filter(m => m.sender === 'tourist' && !m.isRead).length;
@@ -99,7 +102,9 @@ export class UniversalMessageSystem implements MessageSystem {
     
     // Trova la conversazione per determinare il ruolo
     let userRole = 'tourist';
-    for (const conversation of this.conversations.values()) {
+    const conversationValues = Array.from(this.conversations.values());
+    
+    for (const conversation of conversationValues) {
       if (conversation.id === conversationId) {
         if (conversation.partnerCode === userCode) {
           userRole = 'partner';

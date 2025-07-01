@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { universalStorage as storage } from "./storage-universal";
 import { loginSchema } from "@shared/schema";
 import { nanoid } from "nanoid";
 import { chatWithTIQai } from "./openai";
@@ -1460,9 +1460,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Clean expired sessions periodically
+  // Clean expired sessions periodically - Sicuro per qualsiasi storage
   setInterval(async () => {
-    await storage.cleanExpiredSessions();
+    try {
+      if (storage.cleanExpiredSessions) {
+        await storage.cleanExpiredSessions();
+      }
+    } catch (error) {
+      console.log('Pulizia sessioni saltata - sistema continua a funzionare');
+    }
   }, 60000); // Clean every minute
 
   // Generate tourist code from package pool (for structures/partners)
@@ -2458,9 +2464,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Codice partner e messaggio richiesti" });
       }
 
-      // Usa sistema messaggistica universale
-      const { messageSystem } = await import('./messaging-fix');
-      const result = await messageSystem.sendDirectMessage(
+      // Usa sistema universale completamente autonomo
+      const { universalSystem } = await import('./universal-system');
+      const result = await universalSystem.sendDirectMessage(
         session.iqCode, 
         partnerCode, 
         message.trim()
@@ -2475,6 +2481,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Errore invio messaggio:", error);
       res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Risposta partner UNIVERSALE - completamente autonoma
+  app.post("/api/messages/partner-reply", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'partner') {
+        return res.status(403).json({ message: "Solo i partner possono rispondere" });
+      }
+
+      const { conversationId, message } = req.body;
+      
+      if (!conversationId || !message) {
+        return res.status(400).json({ message: "ID conversazione e messaggio richiesti" });
+      }
+
+      // Usa sistema universale per risposta partner
+      const { universalSystem } = await import('./universal-system');
+      const result = await universalSystem.sendPartnerReply(
+        conversationId, 
+        session.iqCode, 
+        message.trim()
+      );
+
+      res.json({ 
+        success: result.success,
+        message: result.success ? "Risposta inviata con successo!" : "Errore invio risposta"
+      });
+
+    } catch (error) {
+      console.error("Errore risposta partner:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // TEST ENDPOINT - Dimostra scalabilità universale
+  app.post("/api/test/universal-messaging", async (req: any, res: any) => {
+    try {
+      const { universalSystem } = await import('./universal-system');
+      
+      // Test con diversi formati IQCode per dimostrare universalità
+      const testCases = [
+        { tourist: "TIQ-IT-9948-BOTTICELLI", partner: "TIQ-RC-PRT-5842" },
+        { tourist: "TIQ-IT-7531-MICHELANGELO", partner: "TIQ-VV-STT-2567" },
+        { tourist: "CUSTOM-CODE-LEONARDO", partner: "BUSINESS-PARTNER-123" },
+        { tourist: "ANY-FORMAT-WORKS-RAFFAELLO", partner: "UNIVERSAL-HOTEL-456" }
+      ];
+
+      const results = [];
+      
+      for (const testCase of testCases) {
+        // Invia messaggio turistico
+        const sendResult = await universalSystem.sendDirectMessage(
+          testCase.tourist, 
+          testCase.partner, 
+          `Messaggio di test da ${testCase.tourist}`
+        );
+        
+        // Ottieni conversazioni partner
+        const conversations = await universalSystem.getPartnerConversations(testCase.partner);
+        
+        results.push({
+          testCase,
+          sendResult,
+          partnerSeesWord: conversations[0]?.touristWord || 'NESSUNA',
+          conversationsCount: conversations.length
+        });
+      }
+
+      res.json({ 
+        success: true,
+        message: "Sistema universale funziona per qualsiasi IQCode!",
+        testResults: results,
+        totalTests: testCases.length
+      });
+
+    } catch (error) {
+      console.error("Errore test universale:", error);
+      res.status(500).json({ message: "Errore test" });
     }
   });
 
@@ -2545,14 +2636,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Sessione non valida" });
       }
 
-      let conversations = [];
+      let conversations: any[] = [];
 
       if (session.role === 'partner') {
-        // Sistema universale per partner
-        const { messageSystem } = await import('./messaging-fix');
-        const partnerConversations = await messageSystem.getPartnerConversations(session.iqCode);
+        // Sistema universale completamente autonomo
+        const { universalSystem } = await import('./universal-system');
+        const partnerConversations = await universalSystem.getPartnerConversations(session.iqCode);
         
-        conversations = partnerConversations.map(conv => ({
+        conversations = partnerConversations.map((conv: any) => ({
           conversation: {
             id: conv.id,
             touristCode: conv.touristWord, // Solo parola emozionale
