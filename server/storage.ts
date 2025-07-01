@@ -793,7 +793,6 @@ export class MemStorage implements IStorage {
 
   // Partner methods
   async createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void> { return; }
-  async createPartnerOffer(offer: any): Promise<any> { return offer; }
   async createSpecialClient(client: any): Promise<any> { return client; }
 
   // Partner onboarding methods - IMPLEMENTAZIONE BASE
@@ -1407,7 +1406,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
     }
   }
 
-  async createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any> {
+  {
     const newOffer = {
       id: Date.now(),
       ...offer,
@@ -1874,7 +1873,7 @@ class ExtendedMemStorage extends MemStorage {
     // Mock implementation for MemStorage
   }
 
-  async createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any> {
+  {
     return {
       id: Math.random().toString(36).substr(2, 9),
       ...offer,
