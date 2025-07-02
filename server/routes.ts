@@ -1082,6 +1082,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Modifica offerta partner
+  app.put("/api/partner/offers/:id", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'partner') {
+        return res.status(403).json({ message: "Accesso negato - solo partner" });
+      }
+
+      const { id } = req.params;
+      const { title, description, discount, validUntil } = req.body;
+
+      if (!title || !discount) {
+        return res.status(400).json({ message: "Titolo e sconto richiesti" });
+      }
+
+      const updatedOffer = await (storage as any).updatePartnerOffer(id, {
+        title,
+        description,
+        discount: parseInt(discount),
+        validUntil
+      });
+
+      res.json({ success: true, offer: updatedOffer });
+    } catch (error) {
+      console.error("Errore modifica offerta:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Elimina offerta partner
+  app.delete("/api/partner/offers/:id", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'partner') {
+        return res.status(403).json({ message: "Accesso negato - solo partner" });
+      }
+
+      const { id } = req.params;
+
+      await (storage as any).deletePartnerOffer(id);
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Errore eliminazione offerta:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // Aggiungi cliente speciale
   app.post("/api/partner/special-clients", async (req, res) => {
     try {
@@ -2359,7 +2417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint per offerte reali basate su validazioni accettate
+  // Endpoint per offerte reali - TUTTE le offerte dei partner attivi
   app.get("/api/tourist/real-offers", async (req: any, res: any) => {
     try {
       const sessionToken = req.cookies.session_token;
@@ -2372,33 +2430,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo turisti" });
       }
 
-      // Ottieni validazioni accettate
-      const validatedPartners = await storage.getAcceptedPartnersByTourist(session.iqCode);
+      // Ottieni TUTTE le offerte attive di TUTTI i partner
+      const allOffers = await (storage as any).getAllPartnerOffers();
       
-      if (validatedPartners.length === 0) {
-        return res.json({
-          discounts: [],
-          message: "Nessuna offerta disponibile. Valida alcuni partner per vedere le offerte!"
-        });
-      }
-
-      // Ottieni offerte reali dal database
-      const partnerCodes = validatedPartners.map((v: any) => v.partnerCode);
-      const realOffers = await storage.getRealOffersByPartners(partnerCodes);
-      
-      // Formatta le offerte per il frontend
-      const formattedOffers = realOffers.map((offer: any) => ({
+      // Formatta le offerte per il frontend turistico
+      const formattedOffers = allOffers.map((offer: any) => ({
         title: offer.title,
         description: offer.description, 
-        discountPercentage: offer.discountPercentage,
-        category: offer.category,
-        partnerName: offer.partnerName,
+        discountPercentage: offer.discount,
+        category: "Gastronomia", // Default per ora
+        partnerName: offer.partnerCode, // Mostreremo il codice partner per ora
         validUntil: offer.validUntil
       }));
 
       res.json({
         discounts: formattedOffers,
-        validatedPartnersCount: validatedPartners.length
+        totalOffers: allOffers.length
       });
 
     } catch (error) {

@@ -1429,6 +1429,41 @@ class ExtendedPostgreStorage extends PostgreStorage {
     return result;
   }
 
+  async updatePartnerOffer(offerId: string, updates: {title?: string, description?: string, discount?: number, validUntil?: string}): Promise<any> {
+    const { partnerOffers } = await import('@shared/schema');
+    const { eq } = await import('drizzle-orm');
+    const [updatedOffer] = await this.db
+      .update(partnerOffers)
+      .set({
+        title: updates.title,
+        description: updates.description,
+        discount: updates.discount?.toString(),
+        validUntil: updates.validUntil
+      })
+      .where(eq(partnerOffers.id, parseInt(offerId)))
+      .returning();
+    return updatedOffer;
+  }
+
+  async deletePartnerOffer(offerId: string): Promise<void> {
+    const { partnerOffers } = await import('@shared/schema');
+    const { eq } = await import('drizzle-orm');
+    await this.db
+      .update(partnerOffers)
+      .set({ isActive: false })
+      .where(eq(partnerOffers.id, parseInt(offerId)));
+  }
+
+  async getAllPartnerOffers(): Promise<any[]> {
+    const { partnerOffers } = await import('@shared/schema');
+    const { eq } = await import('drizzle-orm');
+    const result = await this.db
+      .select()
+      .from(partnerOffers)
+      .where(eq(partnerOffers.isActive, true));
+    return result;
+  }
+
   // IQCode validation methods implementation
   async createIqcodeValidation(validation: any): Promise<any> {
     const [created] = await this.db

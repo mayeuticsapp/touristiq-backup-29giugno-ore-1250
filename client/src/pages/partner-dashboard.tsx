@@ -11,7 +11,7 @@ import { Layout } from "@/components/layout";
 import { 
   Users, BarChart3, Plus, TrendingUp, Package, Heart, Star, 
   Download, QrCode, Camera, Tags, Trophy, Calendar, Settings,
-  Trash2, Calculator
+  Trash2, Calculator, Edit
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { apiRequest } from "@/lib/queryClient";
@@ -60,6 +60,8 @@ export default function PartnerDashboard() {
   
   // Stati per i dialogs
   const [showNewOfferDialog, setShowNewOfferDialog] = useState(false);
+  const [showEditOfferDialog, setShowEditOfferDialog] = useState(false);
+  const [editingOffer, setEditingOffer] = useState<any>(null);
   const [showSpecialClientDialog, setShowSpecialClientDialog] = useState(false);
   const [showAccountDeleteDialog, setShowAccountDeleteDialog] = useState(false);
   const [showMiniGestionale, setShowMiniGestionale] = useState(false);
@@ -191,6 +193,52 @@ export default function PartnerDashboard() {
     }
   });
 
+  const updateOfferMutation = useMutation({
+    mutationFn: async (offer: any) => {
+      const response = await fetch(`/api/partner/offers/${offer.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(offer)
+      });
+      if (!response.ok) throw new Error('Errore modifica offerta');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Offerta modificata con successo!" });
+      setEditingOffer(null);
+      setShowEditOfferDialog(false);
+      refetchOffers(); // Ricarica le offerte
+    },
+    onError: () => {
+      toast({ 
+        title: "Errore", 
+        description: "Impossibile modificare l'offerta",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const deleteOfferMutation = useMutation({
+    mutationFn: async (offerId: string) => {
+      const response = await fetch(`/api/partner/offers/${offerId}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error('Errore eliminazione offerta');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Offerta eliminata con successo!" });
+      refetchOffers(); // Ricarica le offerte
+    },
+    onError: () => {
+      toast({ 
+        title: "Errore", 
+        description: "Impossibile eliminare l'offerta",
+        variant: "destructive"
+      });
+    }
+  });
+
   const addSpecialClientMutation = useMutation({
     mutationFn: async (client: typeof newClient) => {
       const response = await fetch('/api/partner/special-clients', {
@@ -268,6 +316,23 @@ export default function PartnerDashboard() {
         description: "Scrivi esattamente: ELIMINA DEFINITIVAMENTE",
         variant: "destructive"
       });
+    }
+  };
+
+  const handleEditOffer = (offer: any) => {
+    setEditingOffer(offer);
+    setShowEditOfferDialog(true);
+  };
+
+  const handleUpdateOffer = () => {
+    if (editingOffer && editingOffer.title && editingOffer.description && editingOffer.discount) {
+      updateOfferMutation.mutate(editingOffer);
+    }
+  };
+
+  const handleDeleteOffer = (offerId: string) => {
+    if (confirm("Sei sicuro di voler eliminare questa offerta?")) {
+      deleteOfferMutation.mutate(offerId);
     }
   };
 
@@ -575,9 +640,29 @@ export default function PartnerDashboard() {
                             </span>
                           </div>
                         </div>
-                        <Badge className="bg-green-100 text-green-700 ml-2">
-                          Attiva
-                        </Badge>
+                        <div className="flex items-center gap-2 ml-2">
+                          <Badge className="bg-green-100 text-green-700">
+                            Attiva
+                          </Badge>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleEditOffer(offer)}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            <Edit className="w-3 h-3 mr-1" />
+                            Modifica
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDeleteOffer(offer.id)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Elimina
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -837,6 +922,60 @@ export default function PartnerDashboard() {
                 className="w-full"
               >
                 {createOfferMutation.isPending ? "Creazione..." : "Crea Offerta"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Modifica Offerta */}
+        <Dialog open={showEditOfferDialog} onOpenChange={setShowEditOfferDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Modifica Offerta</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editTitle">Titolo Offerta</Label>
+                <Input
+                  id="editTitle"
+                  value={editingOffer?.title || ""}
+                  onChange={(e) => setEditingOffer({...editingOffer, title: e.target.value})}
+                  placeholder="es: Sconto Aperitivo"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editDescription">Descrizione</Label>
+                <Textarea
+                  id="editDescription"
+                  value={editingOffer?.description || ""}
+                  onChange={(e) => setEditingOffer({...editingOffer, description: e.target.value})}
+                  placeholder="Descrivi l'offerta in dettaglio..."
+                />
+              </div>
+              <div>
+                <Label htmlFor="editDiscount">Sconto</Label>
+                <Input
+                  id="editDiscount"
+                  value={editingOffer?.discount || ""}
+                  onChange={(e) => setEditingOffer({...editingOffer, discount: e.target.value})}
+                  placeholder="es: 20%"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editValidUntil">Valido Fino Al</Label>
+                <Input
+                  id="editValidUntil"
+                  type="date"
+                  value={editingOffer?.validUntil || ""}
+                  onChange={(e) => setEditingOffer({...editingOffer, validUntil: e.target.value})}
+                />
+              </div>
+              <Button 
+                onClick={handleUpdateOffer}
+                disabled={updateOfferMutation.isPending}
+                className="w-full"
+              >
+                {updateOfferMutation.isPending ? "Salvataggio..." : "Salva Modifiche"}
               </Button>
             </div>
           </DialogContent>
