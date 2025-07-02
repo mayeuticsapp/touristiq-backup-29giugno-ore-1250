@@ -2496,17 +2496,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Aggiorna stato validazione
       await storage.updateValidationStatus(validationId, status, new Date());
 
-      // Se accettato, decrementa immediatamente un utilizzo
-      let usesRemaining = validation.usesRemaining;
-      if (status === 'accepted') {
-        const updatedValidation = await storage.decrementValidationUses(validationId);
-        usesRemaining = updatedValidation.usesRemaining;
-      }
-
       res.json({ 
         success: true, 
-        message: status === 'accepted' ? `IQCode confermato - Utilizzi rimanenti: ${usesRemaining}` : "IQCode rifiutato",
-        usesRemaining: status === 'accepted' ? usesRemaining : undefined
+        message: status === 'accepted' ? `IQCode confermato per utilizzo` : "IQCode rifiutato",
+        usesRemaining: status === 'accepted' ? validation.usesRemaining : undefined
       });
 
     } catch (error) {
