@@ -452,6 +452,18 @@ export const realOffers = pgTable('real_offers', {
   updatedAt: timestamp('updated_at').defaultNow()
 });
 
+// Tabella per offerte create dai partner
+export const partnerOffers = pgTable("partner_offers", {
+  id: serial("id").primaryKey(),
+  partnerCode: text("partner_code").notNull(),
+  title: text("title").notNull(),
+  description: text("description").default(""),
+  discount: text("discount").notNull(), // Percentuale o valore sconto
+  validUntil: text("valid_until").default(""),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertRealOfferSchema = createInsertSchema(realOffers).omit({
   id: true,
   createdAt: true,
@@ -459,5 +471,12 @@ export const insertRealOfferSchema = createInsertSchema(realOffers).omit({
   currentUses: true
 });
 
+export const insertPartnerOfferSchema = createInsertSchema(partnerOffers).omit({
+  id: true,
+  createdAt: true
+});
+
 export type RealOffer = typeof realOffers.$inferSelect;
 export type InsertRealOffer = z.infer<typeof insertRealOfferSchema>;
+export type PartnerOffer = typeof partnerOffers.$inferSelect;
+export type InsertPartnerOffer = z.infer<typeof insertPartnerOfferSchema>;

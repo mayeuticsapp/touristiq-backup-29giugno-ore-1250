@@ -88,7 +88,13 @@ export default function PartnerDashboard() {
     notes: ""
   });
 
-  // Dati fittizi per il prototipo
+  // Carica offerte reali del partner
+  const { data: partnerOffers = [], refetch: refetchOffers } = useQuery({
+    queryKey: ['/api/partner/my-offers'],
+    enabled: !!onboardingStatus?.completed
+  });
+
+  // Dati fittizi per il prototipo (da sostituire gradualmente)
   const pendingRequests: TouristLinkRequest[] = [
     {
       id: "1",
@@ -113,17 +119,6 @@ export default function PartnerDashboard() {
       linkedDate: "1 settimana fa",
       country: "Francia",
       totalSpent: 230
-    }
-  ];
-
-  const partnerOffers: PartnerOffer[] = [
-    {
-      id: "1",
-      title: "Sconto Aperitivo",
-      description: "20% su tutti gli aperitivi dalle 18:00 alle 20:00",
-      discount: "20%",
-      validUntil: "2025-02-28",
-      isActive: true
     }
   ];
 
@@ -185,6 +180,7 @@ export default function PartnerDashboard() {
       toast({ title: "Offerta creata con successo!" });
       setNewOffer({ title: "", description: "", discount: "", validUntil: "" });
       setShowNewOfferDialog(false);
+      refetchOffers(); // Ricarica le offerte
     },
     onError: () => {
       toast({ 

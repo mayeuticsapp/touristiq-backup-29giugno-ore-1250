@@ -1059,6 +1059,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Recupera offerte del partner
+  app.get("/api/partner/my-offers", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'partner') {
+        return res.status(403).json({ message: "Accesso negato - solo partner" });
+      }
+
+      // Recupero offerte dal database
+      const offers = await (storage as any).getPartnerOffers(session.iqCode);
+
+      res.json(offers);
+    } catch (error) {
+      console.error("Errore recupero offerte partner:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // Aggiungi cliente speciale
   app.post("/api/partner/special-clients", async (req, res) => {
     try {

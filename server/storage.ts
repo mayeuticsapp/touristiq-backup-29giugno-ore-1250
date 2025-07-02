@@ -101,6 +101,7 @@ export interface IStorage {
   getRechargesWithFilters(filters: any): Promise<{recharges: any[], total: number}>;
   activateRecharge(rechargeId: number, adminCode: string): Promise<any>;
   createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any>;
+  getPartnerOffers(partnerCode: string): Promise<any[]>;
   createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any>;
 
   // Partner onboarding methods
@@ -679,16 +680,6 @@ export class MemStorage implements IStorage {
   async createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void> {
     // Mock implementation - in real app would create notification
     console.log(`Partner ${partnerCode} requested link with tourist ${touristCode}`);
-  }
-
-  async createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any> {
-    const newOffer = {
-      id: Date.now(),
-      ...offer,
-      createdAt: new Date(),
-      isActive: true
-    };
-    return newOffer;
   }
 
   async createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any> {
@@ -1400,16 +1391,6 @@ class ExtendedPostgreStorage extends PostgreStorage {
     }
   }
 
-  async createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any> {
-    const newOffer = {
-      id: Date.now(),
-      ...offer,
-      createdAt: new Date(),
-      isActive: true
-    };
-    return newOffer;
-  }
-
   async createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any> {
     const newClient = {
       id: Date.now(),
@@ -1419,6 +1400,33 @@ class ExtendedPostgreStorage extends PostgreStorage {
       rewards: 0
     };
     return newClient;
+  }
+
+  async createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any> {
+    const { partnerOffers } = await import('@shared/schema');
+    const [newOffer] = await this.db
+      .insert(partnerOffers)
+      .values({
+        partnerCode: offer.partnerCode,
+        title: offer.title,
+        description: offer.description || "",
+        discount: offer.discount.toString(),
+        validUntil: offer.validUntil || "",
+        isActive: true
+      })
+      .returning();
+    return newOffer;
+  }
+
+  async getPartnerOffers(partnerCode: string): Promise<any[]> {
+    const { partnerOffers } = await import('@shared/schema');
+    const { eq } = await import('drizzle-orm');
+    const result = await this.db
+      .select()
+      .from(partnerOffers)
+      .where(eq(partnerOffers.partnerCode, partnerCode))
+      .where(eq(partnerOffers.isActive, true));
+    return result;
   }
 
   // IQCode validation methods implementation
@@ -1811,6 +1819,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
 // Extend MemStorage con metodi impostazioni
 class ExtendedMemStorage extends MemStorage {
   private settingsConfigMap: Map<string, SettingsConfig> = new Map();
+  private partnerOffers: any[] = [];
 
   async getSettingsConfig(structureCode: string): Promise<SettingsConfig | null> {
     if (!this.settingsConfigMap.has(structureCode)) {
@@ -1870,12 +1879,18 @@ class ExtendedMemStorage extends MemStorage {
   }
 
   async createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any> {
-    return {
-      id: Math.random().toString(36).substr(2, 9),
+    const newOffer = {
+      id: Date.now(),
       ...offer,
       createdAt: new Date(),
       isActive: true
     };
+    this.partnerOffers.push(newOffer);
+    return newOffer;
+  }
+
+  async getPartnerOffers(partnerCode: string): Promise<any[]> {
+    return this.partnerOffers.filter(offer => offer.partnerCode === partnerCode);
   }
 
   async createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any> {
