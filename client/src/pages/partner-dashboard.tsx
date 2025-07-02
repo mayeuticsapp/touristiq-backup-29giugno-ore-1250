@@ -97,53 +97,11 @@ export default function PartnerDashboard() {
   });
 
   // Dati fittizi per il prototipo (da sostituire gradualmente)
-  const pendingRequests: TouristLinkRequest[] = [
-    {
-      id: "1",
-      touristCode: "TIQ-IT-ROMA",
-      requestDate: "2025-01-15",
-      status: "pending",
-      country: "Italia"
-    }
-  ];
+  const pendingRequests: TouristLinkRequest[] = [];
 
-  const activeTourists: ActiveTourist[] = [
-    {
-      id: "1",
-      code: "TIQ-DE-BERLINO",
-      linkedDate: "3 giorni fa",
-      country: "Germania",
-      totalSpent: 150
-    },
-    {
-      id: "2", 
-      code: "TIQ-FR-PARIS",
-      linkedDate: "1 settimana fa",
-      country: "Francia",
-      totalSpent: 230
-    }
-  ];
+  const activeTourists: ActiveTourist[] = [];
 
-  const specialClients: SpecialClient[] = [
-    {
-      id: "1",
-      name: "Marco R.",
-      notes: "Cliente abituale, preferisce tavoli all'esterno",
-      status: "attivo",
-      visits: 8,
-      rewardsGiven: 2,
-      joinDate: "2024-12-01"
-    },
-    {
-      id: "2",
-      name: "Giulia S.",
-      notes: "Vegetariana, allergica ai crostacei",
-      status: "attivo", 
-      visits: 5,
-      rewardsGiven: 1,
-      joinDate: "2024-12-15"
-    }
-  ];
+  const specialClients: SpecialClient[] = [];
 
   // Mutations
   const linkTouristMutation = useMutation({

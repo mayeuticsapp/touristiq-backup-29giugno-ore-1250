@@ -1464,6 +1464,13 @@ class ExtendedPostgreStorage extends PostgreStorage {
     return result;
   }
 
+  async getAllValidations(): Promise<any[]> {
+    const result = await this.db
+      .select()
+      .from(iqcodeValidations);
+    return result;
+  }
+
   // IQCode validation methods implementation
   async createIqcodeValidation(validation: any): Promise<any> {
     const [created] = await this.db

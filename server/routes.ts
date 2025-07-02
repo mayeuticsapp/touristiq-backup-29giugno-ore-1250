@@ -373,8 +373,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Struttura non trovata' });
       }
       
-      // Generate unique data based on structure ID
-      const structureData = generateStructureData(structureId, structureCode.code);
+      // Return basic structure data (real data will come from database)
+      const structureData = {
+        id: structureId,
+        iqCode: structureCode.code,
+        name: structureCode.assignedTo || `Struttura ${structureId}`,
+        province: structureCode.code.split('-')[1] || 'IT',
+        totalBookings: 0,
+        monthlyRevenue: 0,
+        averageRating: 0,
+        roomsAvailable: 0,
+        recentBookings: [],
+        roomTypes: [],
+        stats: {
+          occupancyRate: 0,
+          avgNightlyRate: 0,
+          totalGuests: 0,
+          pendingCheckouts: 0
+        }
+      };
       res.json(structureData);
     } catch (error) {
       console.error('Errore recupero dati struttura:', error);
@@ -1510,26 +1527,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           touristData: {
             visitedPlaces: 0,
             discountsUsed: 0,
-            recommendedSpots: generateTouristRecommendations(userIqCode.location || 'IT'),
-            activeOffers: generateActiveOffers(userIqCode.location || 'IT')
+            recommendedSpots: [],
+            activeOffers: []
           }
         }),
         ...(userIqCode.role === 'structure' && {
           structureData: {
-            totalBookings: Math.floor(Math.random() * 100) + 50,
-            monthlyRevenue: Math.floor(Math.random() * 10000) + 5000,
-            averageRating: (Math.random() * 2 + 3).toFixed(1),
-            roomsAvailable: Math.floor(Math.random() * 20) + 5,
-            recentBookings: generateRecentBookings(userIqCode.assignedTo || 'Struttura')
+            totalBookings: 0,
+            monthlyRevenue: 0,
+            averageRating: 0,
+            roomsAvailable: 0,
+            recentBookings: []
           }
         }),
         ...(userIqCode.role === 'partner' && {
           partnerData: {
-            offersActive: Math.floor(Math.random() * 10) + 3,
-            customersReached: Math.floor(Math.random() * 500) + 100,
-            conversionRate: (Math.random() * 10 + 5).toFixed(1) + '%',
-            monthlyEarnings: Math.floor(Math.random() * 5000) + 1000,
-            topProducts: generateTopProducts(userIqCode.assignedTo || 'Partner')
+            offersActive: 0,
+            customersReached: 0,
+            conversionRate: '0%',
+            monthlyEarnings: 0,
+            topProducts: []
           }
         })
       };
@@ -2775,20 +2792,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== REPORT REALI PER PARTNER E STRUTTURE =====
+
+  // Partner: Report utilizzi IQCode generati
+  app.get("/api/partner/usage-reports", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const partnerIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!partnerIqCode || partnerIqCode.role !== 'partner') {
+        return res.status(403).json({ message: "Accesso negato - solo partner" });
+      }
+
+      // Ottieni validazioni utilizzate dal partner
+      const validationsUsed = await storage.getValidationsByPartner(session.iqCode);
+      const usedValidations = validationsUsed.filter(v => v.usesRemaining < v.usesTotal);
+      
+      // Statistiche di utilizzo
+      const totalValidations = validationsUsed.length;
+      const activeValidations = validationsUsed.filter(v => v.status === 'accepted' && v.usesRemaining > 0).length;
+      const totalUsages = validationsUsed.reduce((sum, v) => sum + (v.usesTotal - v.usesRemaining), 0);
+      
+      res.json({
+        stats: {
+          totalValidations,
+          activeValidations,
+          totalUsages,
+          completedValidations: totalValidations - activeValidations
+        },
+        recentUsages: usedValidations.slice(0, 10)
+      });
+
+    } catch (error) {
+      console.error("Errore report utilizzi partner:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Strutture: Report IQCode distribuiti e utilizzati
+  app.get("/api/structure/iqcode-reports", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const structureIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!structureIqCode || structureIqCode.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      // Ottieni pacchetti assegnati alla struttura
+      const assignedPackages = await storage.getPackagesByRecipient(session.iqCode);
+      
+      // Calcola statistiche distribuzione e utilizzo
+      let totalCodesDistributed = 0;
+      let totalCodesUsed = 0;
+      let totalCreditsUsed = 0;
+      
+      assignedPackages.forEach(pkg => {
+        const used = pkg.creditsTotal - pkg.creditsRemaining;
+        totalCreditsUsed += used;
+        totalCodesDistributed += pkg.creditsTotal;
+      });
+
+      // Ottieni validazioni create con codici della struttura (stima utilizzo)
+      const allValidations = await storage.getAllValidations();
+      const structureRelatedValidations = allValidations.filter(v => 
+        v.touristIqCode && v.touristIqCode.includes(session.iqCode.split('-')[1]) // stesso provincia
+      );
+      
+      totalCodesUsed = structureRelatedValidations.filter(v => v.usesRemaining < v.usesTotal).length;
+
+      res.json({
+        stats: {
+          totalCodesDistributed,
+          totalCodesUsed,
+          totalCreditsUsed,
+          utilizationRate: totalCodesDistributed > 0 ? Math.round((totalCodesUsed / totalCodesDistributed) * 100) : 0
+        },
+        packages: assignedPackages,
+        recentValidations: structureRelatedValidations.slice(0, 10)
+      });
+
+    } catch (error) {
+      console.error("Errore report IQCode struttura:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
 
-// Helper functions for generating role-specific data
-function generateTouristRecommendations(location: string) {
-  const recommendations: Record<string, string[]> = {
-    'IT': ['Colosseo', 'Fontana di Trevi', 'Pantheon'],
-    'VV': ['Tropea', 'Pizzo Calabro', 'Scilla'],
-    'RC': ['Castello Aragonese', 'Museo Nazionale', 'Lungomare'],
-    'CS': ['Centro Storico', 'Castello Svevo', 'Teatro Rendano']
-  };
-  return recommendations[location] || ['Attrazione Locale 1', 'Attrazione Locale 2', 'Attrazione Locale 3'];
-}
+
 
 // FUNZIONE PER OTTENERE OFFERTE REALI DAL DATABASE
 async function getRealOffersByTourist(storage: any, touristCode: string) {
@@ -2818,110 +2928,6 @@ async function getRealOffersByTourist(storage: any, touristCode: string) {
   }
 }
 
-function generateActiveOffers(location: string) {
-  return [
-    { title: 'Sconto 20% Ristoranti', validUntil: '2025-07-01' },
-    { title: 'Ingresso Gratuito Musei', validUntil: '2025-06-30' },
-    { title: 'Tour Guidato -30%', validUntil: '2025-07-15' }
-  ];
-}
 
-function generateRecentBookings(structureName: string) {
-  return [
-    { guest: 'Mario Rossi', checkIn: '2025-06-28', nights: 3 },
-    { guest: 'Anna Bianchi', checkIn: '2025-06-29', nights: 2 },
-    { guest: 'Luigi Verdi', checkIn: '2025-07-01', nights: 5 }
-  ];
-}
 
-function generateTopProducts(partnerName: string) {
-  return [
-    { name: 'Pizza Margherita', sales: 45 },
-    { name: 'Gelato Artigianale', sales: 38 },
-    { name: 'Caffè Espresso', sales: 67 }
-  ];
-}
 
-function generateStructureData(structureId: string, iqCode: string) {
-  // Extract province from code
-  const province = iqCode.split('-')[1];
-  
-  // Generate unique data based on structure ID
-  const seed = parseInt(structureId) || 1000;
-  
-  // Mapping specifico per strutture reali esistenti nel database
-  const specificStructures: { [key: string]: string } = {
-    '0700': 'Hotel Pazzo Calabria',
-    '9576': 'Resort Capo Vaticano', 
-    '4334': 'Grand Hotel Reggio',
-    '7541': 'Hotel Calabria Palace'
-  };
-  
-  // Fallback names per province se non c'è mapping specifico
-  const structureNames: { [key: string]: string[] } = {
-    'VV': ['Hotel Lo Stretto', 'Resort Capo Vaticano', 'B&B Vista Mare Tropea'],
-    'RC': ['Hotel Bergamotto', 'Villa Aspromonte', 'Grand Hotel Reggio'],
-    'CS': ['Hotel Cosenza Palace', 'Resort Sila Verde', 'B&B Centro Storico']
-  };
-  
-  const managerNames = [
-    'Giuseppe Calabrese', 'Maria Rossini', 'Antonio Greco', 'Francesca Romano',
-    'Salvatore Marino', 'Elena Bianchi', 'Marco Ricci', 'Lucia Ferretti'
-  ];
-  
-  const totalRooms = 15 + (seed % 25); // 15-40 rooms
-  const occupiedRooms = Math.floor(totalRooms * (0.6 + (seed % 30) / 100)); // 60-90% occupancy
-  const checkinToday = 3 + (seed % 8); // 3-10 checkins
-  const rating = 4.0 + ((seed % 10) / 10); // 4.0-4.9 rating
-  
-  // Usa nome specifico se disponibile, altrimenti fallback
-  const structureName = specificStructures[structureId] || 
-    (structureNames[province] && structureNames[province][seed % 3]) || 
-    `Hotel ${province} ${structureId}`;
-  
-  return {
-    id: structureId,
-    iqCode: iqCode,
-    name: structureName,
-    manager: managerNames[seed % managerNames.length],
-    province: province,
-    totalRooms: totalRooms,
-    occupiedRooms: occupiedRooms,
-    checkinToday: checkinToday,
-    rating: Math.round(rating * 10) / 10,
-    revenue: Math.floor(5000 + (seed * 47) % 15000),
-    recentBookings: generateUniqueBookings(structureId),
-    roomTypes: generateRoomTypes(seed),
-    stats: {
-      occupancyRate: Math.round((occupiedRooms / totalRooms) * 100),
-      avgNightlyRate: 80 + (seed % 120),
-      totalGuests: occupiedRooms * 2,
-      pendingCheckouts: 2 + (seed % 5)
-    }
-  };
-}
-
-function generateUniqueBookings(structureId: string) {
-  const seed = parseInt(structureId) || 1000;
-  const guests = [
-    'Marco Bianchi', 'Laura Ferretti', 'Giuseppe Marino', 'Elena Romano',
-    'Antonio Greco', 'Francesca Ricci', 'Salvatore Rossi', 'Maria Calabrese'
-  ];
-  
-  return Array.from({ length: 5 }, (_, i) => ({
-    id: seed + i,
-    guest: guests[(seed + i) % guests.length],
-    room: 100 + ((seed + i * 7) % 50),
-    checkin: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)).toLocaleDateString('it-IT'),
-    checkout: new Date(Date.now() + ((3 - i) * 24 * 60 * 60 * 1000)).toLocaleDateString('it-IT'),
-    status: i < 2 ? 'Attivo' : 'Check-out'
-  }));
-}
-
-function generateRoomTypes(seed: number) {
-  return [
-    { type: 'Standard', count: 8 + (seed % 5), price: 80 + (seed % 30) },
-    { type: 'Superior', count: 4 + (seed % 3), price: 120 + (seed % 40) },
-    { type: 'Suite', count: 2 + (seed % 2), price: 200 + (seed % 80) }
-  ];
-}
