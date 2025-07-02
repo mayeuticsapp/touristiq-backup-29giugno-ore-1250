@@ -2737,13 +2737,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Richiesta non trovata" });
       }
 
-      // Aggiorna stato validazione
+      // Aggiorna solo lo stato senza scalare utilizzi
       await storage.updateValidationStatus(validationId, status, new Date());
 
       res.json({ 
         success: true, 
         message: status === 'accepted' ? `IQCode confermato per utilizzo` : "IQCode rifiutato",
-        usesRemaining: status === 'accepted' ? validation.usesRemaining : undefined
+        usesRemaining: validation.usesRemaining // Non decrementa all'accettazione
       });
 
     } catch (error) {
@@ -3051,88 +3051,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ===== FLUSSO VALIDAZIONE REALE CORRETTO =====
-  
-  // FLUSSO REALE: Partner valida direttamente IQCode del turista fisicamente presente
-  app.post("/api/partner/validate-tourist-direct", async (req: any, res: any) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
 
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session || session.role !== 'partner') {
-        return res.status(403).json({ message: "Accesso negato - solo partner" });
-      }
-
-      const { touristIqCode } = req.body;
-      if (!touristIqCode) {
-        return res.status(400).json({ message: "Codice IQ turista richiesto" });
-      }
-
-      // Verifica che il codice turista esista e sia valido
-      const touristCode = await storage.getIqCodeByCode(touristIqCode);
-      if (!touristCode || touristCode.role !== 'tourist') {
-        return res.status(404).json({ message: "Codice IQ turista non valido" });
-      }
-
-      // Verifica se il codice ha utilizzi rimanenti
-      let usesRemaining = 10;
-      let validationId;
-      
-      try {
-        const existingValidation = await storage.getValidationByTouristAndPartner(touristIqCode, session.iqCode);
-        
-        if (existingValidation) {
-          if (existingValidation.usesRemaining <= 0) {
-            return res.status(400).json({ 
-              message: "IQCode esaurito - nessun utilizzo rimanente",
-              usesRemaining: 0,
-              usesTotal: existingValidation.usesTotal || 10
-            });
-          }
-          // Decrementa gli utilizzi esistenti
-          await storage.decrementValidationUses(existingValidation.id);
-          usesRemaining = existingValidation.usesRemaining - 1;
-          validationId = existingValidation.id;
-        } else {
-          // Crea nuova validazione e usa immediatamente
-          const partnerStatus = await storage.getPartnerOnboardingStatus(session.iqCode);
-          const partnerName = partnerStatus?.businessInfo?.businessName || `Partner ${session.iqCode}`;
-          
-          const validation = await storage.createIqcodeValidation({
-            touristIqCode,
-            partnerCode: session.iqCode,
-            partnerName,
-            status: 'accepted',
-            usesRemaining: 9, // Inizia da 9 perché ne ha appena usato 1
-            usesTotal: 10
-          });
-          usesRemaining = 9;
-          validationId = validation.id;
-        }
-      } catch (validationError) {
-        // Se i metodi di validazione non esistono, crea una validazione semplice
-        console.log("Metodi validazione non disponibili, uso sistema semplificato");
-        usesRemaining = 9;
-        validationId = Date.now(); // ID temporaneo
-      }
-
-      res.json({ 
-        success: true, 
-        message: "Sconto applicato con successo!",
-        usesRemaining,
-        usesTotal: 10,
-        validationId,
-        touristCode: touristIqCode.slice(0, -4) + "****" // Privacy: mostra solo parte del codice
-      });
-
-    } catch (error) {
-      console.error("Errore validazione diretta:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
 
   const httpServer = createServer(app);
   return httpServer;
