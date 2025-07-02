@@ -116,7 +116,6 @@ export default function TouristDashboard() {
 
   return (
     <Layout
-      currentUser={{ role: "tourist", iqCode: user.iqCode }}
       title="Benvenuto, Turista!"
       role="Area Turista"
       iqCode={user.iqCode}

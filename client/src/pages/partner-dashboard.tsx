@@ -48,66 +48,47 @@ interface SpecialClient {
   id: string;
   name: string;
   notes: string;
-  iqCode: string;
-  lastVisit: string;
-}
-
-interface NewOfferData {
-  title: string;
-  description: string;
-  discount: string;
-  validUntil: string;
+  status: "attivo" | "inattivo";
+  visits: number;
+  rewardsGiven: number;
+  joinDate: string;
 }
 
 export default function PartnerDashboard() {
-  const [touristCode, setTouristCode] = useState("");
-  const [newClient, setNewClient] = useState({ name: "", notes: "" });
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Stati per i dialogs
   const [showNewOfferDialog, setShowNewOfferDialog] = useState(false);
-  const [showNewClientDialog, setShowNewClientDialog] = useState(false);
+  const [showSpecialClientDialog, setShowSpecialClientDialog] = useState(false);
   const [showAccountDeleteDialog, setShowAccountDeleteDialog] = useState(false);
-  const [showAccountingDialog, setShowAccountingDialog] = useState(false);
+  const [showMiniGestionale, setShowMiniGestionale] = useState(false);
   const [showValidationSection, setShowValidationSection] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [offerData, setOfferData] = useState<NewOfferData>({
+  
+  // Ref per focus automatico check-in → check-out
+  const validUntilDateRef = useRef<HTMLInputElement>(null);
+  
+  // Verifica stato onboarding OBBLIGATORIO
+  const { data: onboardingStatus, isLoading: isLoadingOnboarding } = useQuery({
+    queryKey: ['/api/partner/onboarding-status'],
+    enabled: true
+  });
+
+  // Stati per i form
+  const [touristCode, setTouristCode] = useState("");
+  const [newOffer, setNewOffer] = useState({
     title: "",
     description: "",
     discount: "",
     validUntil: ""
   });
-
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  // Check onboarding status
-  const { data: onboardingStatus, isLoading: isLoadingOnboarding } = useQuery({
-    queryKey: ["/api/partner/onboarding-status"],
-    staleTime: 5 * 60 * 1000,
+  const [newClient, setNewClient] = useState({
+    name: "",
+    notes: ""
   });
 
-  // If onboarding not completed, show onboarding flow
-  if (isLoadingOnboarding) {
-    return (
-      <Layout currentUser={{ role: "partner", iqCode: "Loading..." }}>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p>Caricamento...</p>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
-  if (!onboardingStatus?.completed) {
-    return (
-      <Layout currentUser={{ role: "partner", iqCode: onboardingStatus?.partnerCode || "Partner" }}>
-        <PartnerOnboarding />
-      </Layout>
-    );
-  }
-
-  // Mock data for demo
+  // Dati fittizi per il prototipo
   const pendingRequests: TouristLinkRequest[] = [
     {
       id: "1",
@@ -121,27 +102,27 @@ export default function PartnerDashboard() {
   const activeTourists: ActiveTourist[] = [
     {
       id: "1",
-      code: "TIQ-IT-VENEZIA",
-      linkedDate: "2024-12-20",
-      country: "Italia",
+      code: "TIQ-DE-BERLINO",
+      linkedDate: "3 giorni fa",
+      country: "Germania",
       totalSpent: 150
     },
     {
       id: "2", 
       code: "TIQ-FR-PARIS",
-      linkedDate: "2024-12-18",
+      linkedDate: "1 settimana fa",
       country: "Francia",
-      totalSpent: 89
+      totalSpent: 230
     }
   ];
 
   const partnerOffers: PartnerOffer[] = [
     {
       id: "1",
-      title: "Menù Degustazione Calabrese",
-      description: "Scopri i sapori autentici della Calabria con il nostro menù tradizionale",
-      discount: "15%",
-      validUntil: "2025-03-31",
+      title: "Sconto Aperitivo",
+      description: "20% su tutti gli aperitivi dalle 18:00 alle 20:00",
+      discount: "20%",
+      validUntil: "2025-02-28",
       isActive: true
     }
   ];
@@ -149,277 +130,273 @@ export default function PartnerDashboard() {
   const specialClients: SpecialClient[] = [
     {
       id: "1",
-      name: "Marco Rossi",
-      notes: "Cliente VIP, preferisce tavoli vicino alla finestra",
-      iqCode: "TIQ-IT-SPECIALE-001",
-      lastVisit: "2024-12-28"
+      name: "Marco R.",
+      notes: "Cliente abituale, preferisce tavoli all'esterno",
+      status: "attivo",
+      visits: 8,
+      rewardsGiven: 2,
+      joinDate: "2024-12-01"
     },
     {
       id: "2",
-      name: "Anna Bianchi", 
-      notes: "Allergica ai crostacei, ama i dolci calabresi",
-      iqCode: "TIQ-IT-SPECIALE-002",
-      lastVisit: "2024-12-25"
+      name: "Giulia S.",
+      notes: "Vegetariana, allergica ai crostacei",
+      status: "attivo", 
+      visits: 5,
+      rewardsGiven: 1,
+      joinDate: "2024-12-15"
     }
   ];
 
   // Mutations
   const linkTouristMutation = useMutation({
-    mutationFn: (touristCode: string) => apiRequest(`/api/partner/link-tourist`, "POST", { touristCode }),
-    onSuccess: () => {
-      toast({
-        title: "Richiesta inviata",
-        description: "Il turista riceverà una notifica per accettare il collegamento",
+    mutationFn: async (code: string) => {
+      const response = await apiRequest("POST", `/api/partner/link-tourist`, { touristCode: code });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({ 
+        title: "Successo!", 
+        description: data.message || "Richiesta collegamento inviata!"
       });
       setTouristCode("");
-      queryClient.invalidateQueries({ queryKey: ["/api/partner/pending-requests"] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Errore",
-        description: error.message || "Errore durante l'invio della richiesta",
-        variant: "destructive",
+      const errorMessage = error?.response?.data?.message || error?.message || "Impossibile inviare la richiesta";
+      toast({ 
+        title: "Errore", 
+        description: errorMessage,
+        variant: "destructive"
       });
-    },
+    }
   });
 
   const createOfferMutation = useMutation({
-    mutationFn: (data: NewOfferData) => apiRequest(`/api/partner/offers`, "POST", data),
+    mutationFn: async (offer: typeof newOffer) => {
+      const response = await fetch('/api/partner/offers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(offer)
+      });
+      if (!response.ok) throw new Error('Errore creazione offerta');
+      return response.json();
+    },
     onSuccess: () => {
-      toast({
-        title: "Offerta creata",
-        description: "La tua nuova offerta è ora attiva",
-      });
+      toast({ title: "Offerta creata con successo!" });
+      setNewOffer({ title: "", description: "", discount: "", validUntil: "" });
       setShowNewOfferDialog(false);
-      setOfferData({ title: "", description: "", discount: "", validUntil: "" });
-      queryClient.invalidateQueries({ queryKey: ["/api/partner/offers"] });
     },
-    onError: (error: any) => {
-      toast({
-        title: "Errore",
-        description: error.message || "Errore durante la creazione dell'offerta",
-        variant: "destructive",
+    onError: () => {
+      toast({ 
+        title: "Errore", 
+        description: "Impossibile creare l'offerta",
+        variant: "destructive"
       });
-    },
+    }
   });
 
-  const createSpecialClientMutation = useMutation({
-    mutationFn: (data: { name: string; notes: string }) => apiRequest(`/api/partner/special-clients`, "POST", data),
+  const addSpecialClientMutation = useMutation({
+    mutationFn: async (client: typeof newClient) => {
+      const response = await fetch('/api/partner/special-clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(client)
+      });
+      if (!response.ok) throw new Error('Errore aggiunta cliente');
+      return response.json();
+    },
     onSuccess: () => {
-      toast({
-        title: "Cliente speciale aggiunto",
-        description: "Il cliente è stato aggiunto alla lista VIP",
-      });
-      setShowNewClientDialog(false);
+      toast({ title: "Cliente aggiunto con successo!" });
       setNewClient({ name: "", notes: "" });
-      queryClient.invalidateQueries({ queryKey: ["/api/partner/special-clients"] });
+      setShowSpecialClientDialog(false);
     },
-    onError: (error: any) => {
-      toast({
-        title: "Errore",
-        description: error.message || "Errore durante l'aggiunta del cliente",
-        variant: "destructive",
+    onError: () => {
+      toast({ 
+        title: "Errore", 
+        description: "Impossibile aggiungere il cliente",
+        variant: "destructive"
       });
-    },
+    }
   });
 
   const deleteAccountMutation = useMutation({
-    mutationFn: () => apiRequest(`/api/partner/delete-account`, "DELETE"),
+    mutationFn: async () => {
+      const response = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Errore eliminazione account');
+      return response.json();
+    },
     onSuccess: () => {
-      toast({
-        title: "Account eliminato",
-        description: "Il tuo account è stato eliminato con successo",
-      });
-      window.location.href = "/";
+      toast({ title: "Account eliminato. Sarai disconnesso tra 5 secondi." });
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 5000);
     },
-    onError: (error: any) => {
-      toast({
-        title: "Errore",
-        description: error.message || "Errore durante l'eliminazione dell'account",
-        variant: "destructive",
+    onError: () => {
+      toast({ 
+        title: "Errore", 
+        description: "Impossibile eliminare l'account",
+        variant: "destructive"
       });
-    },
+    }
   });
 
+  // Handlers
   const handleLinkTourist = () => {
-    if (!touristCode.trim()) {
-      toast({
-        title: "Errore",
-        description: "Inserisci un codice IQ valido",
-        variant: "destructive",
-      });
-      return;
+    if (touristCode.trim()) {
+      linkTouristMutation.mutate(touristCode.trim());
     }
-    linkTouristMutation.mutate(touristCode);
   };
 
   const handleCreateOffer = () => {
-    if (!offerData.title || !offerData.description || !offerData.discount) {
-      toast({
-        title: "Errore",
-        description: "Compila tutti i campi obbligatori",
-        variant: "destructive",
-      });
-      return;
+    if (newOffer.title && newOffer.description && newOffer.discount) {
+      createOfferMutation.mutate(newOffer);
     }
-    createOfferMutation.mutate(offerData);
   };
 
-  const handleCreateSpecialClient = () => {
-    if (!newClient.name.trim()) {
-      toast({
-        title: "Errore", 
-        description: "Inserisci il nome del cliente",
-        variant: "destructive",
-      });
-      return;
+  const handleAddSpecialClient = () => {
+    if (newClient.name.trim()) {
+      addSpecialClientMutation.mutate(newClient);
     }
-    createSpecialClientMutation.mutate(newClient);
   };
 
   const handleDeleteAccount = () => {
-    if (deleteConfirmText !== "ELIMINA DEFINITIVAMENTE") {
+    if (deleteConfirmText === "ELIMINA DEFINITIVAMENTE") {
+      deleteAccountMutation.mutate();
+    } else {
       toast({
-        title: "Errore",
-        description: "Conferma l'eliminazione scrivendo il testo richiesto",
-        variant: "destructive",
+        title: "Testo di conferma errato",
+        description: "Scrivi esattamente: ELIMINA DEFINITIVAMENTE",
+        variant: "destructive"
       });
-      return;
     }
-    deleteAccountMutation.mutate();
-  };
-
-  const generateQRCode = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Set canvas size
-    canvas.width = 200;
-    canvas.height = 200;
-
-    // Fill background
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, 200, 200);
-
-    // Create QR-like pattern
-    ctx.fillStyle = '#000000';
-    const blockSize = 8;
-    const pattern = [
-      [1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1],
-      [1,0,0,0,0,0,1,0,0,1,1,0,0,0,0,0,1],
-      [1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,0,1],
-      [1,0,1,1,1,0,1,0,1,1,0,0,1,1,1,0,1],
-      [1,0,1,1,1,0,1,0,0,1,1,0,1,1,1,0,1],
-      [1,0,0,0,0,0,1,0,1,0,1,0,0,0,0,0,1],
-      [1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1],
-      [0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
-      [1,1,0,1,1,0,1,1,0,1,1,1,0,1,0,1,1],
-      [0,1,1,0,0,1,0,0,1,0,0,1,1,0,1,0,0],
-      [1,0,1,1,0,0,1,1,0,1,1,0,0,1,1,1,1],
-      [0,0,0,1,1,1,0,0,1,1,0,1,0,0,0,1,0],
-      [1,1,1,0,0,0,1,1,0,0,1,1,1,1,0,0,1],
-      [0,0,0,0,0,0,0,0,1,0,1,0,0,1,1,1,0],
-      [1,1,1,1,1,1,1,0,0,1,0,1,1,0,1,0,1],
-      [1,0,0,0,0,0,1,0,1,1,1,0,0,1,0,1,1],
-      [1,0,1,1,1,0,1,0,0,0,1,1,1,0,1,1,0]
-    ];
-
-    pattern.forEach((row, y) => {
-      row.forEach((cell, x) => {
-        if (cell) {
-          ctx.fillRect(x * blockSize + 16, y * blockSize + 16, blockSize, blockSize);
-        }
-      });
-    });
-  };
-
-  const downloadQR = () => {
-    generateQRCode();
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const link = document.createElement('a');
-    link.download = 'qr-code-touristiq.png';
-    link.href = canvas.toDataURL();
-    link.click();
   };
 
   const downloadPDF = () => {
-    // Create a simple promotional text file for now
-    const content = `TouristIQ - Rete Partner Ufficiale
-
-Benvenuto nella Rete TouristIQ!
-
-Questo locale è un Partner Ufficiale della piattaforma TouristIQ.
-I turisti con codici IQ attivi possono ricevere sconti esclusivi.
-
-Mostra il tuo codice IQ al personale per ottenere vantaggi speciali!
-
-Per informazioni: www.touristiq.it
-`;
-
-    const blob = new Blob([content], { type: 'text/plain' });
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Partner TouristIQ - Locandina Promozionale</title>
+        <style>
+          body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+          .header { color: #4CAF50; font-size: 24px; font-weight: bold; }
+          .qr-placeholder { width: 150px; height: 150px; border: 2px solid #ccc; margin: 20px auto; }
+        </style>
+      </head>
+      <body>
+        <div class="header">🎯 TouristIQ Partner</div>
+        <h2>Scopri Sconti Esclusivi!</h2>
+        <p>Presenta il tuo IQCode e ottieni vantaggi speciali</p>
+        <div class="qr-placeholder">QR CODE</div>
+        <p>Scansiona per accedere agli sconti</p>
+      </body>
+      </html>
+    `;
+    
+    const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'touristiq-partner-info.txt';
-    link.click();
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'touristiq-partner-locandina.html';
+    a.click();
     URL.revokeObjectURL(url);
   };
 
-  const sidebarItems = [
-    {
-      icon: BarChart3,
-      label: "Dashboard",
-      href: "#dashboard",
-      onClick: () => {
-        const element = document.getElementById('dashboard');
-        element?.scrollIntoView({ behavior: 'smooth' });
-      }
-    },
-    {
-      icon: Users,
-      label: "Validazione IQCode",
-      href: "#validation",
-      onClick: () => setShowValidationSection(true)
-    },
-    {
-      icon: Calculator,
-      label: "Mini-gestionale",
-      href: "#accounting",
-      onClick: () => setShowAccountingDialog(true)
-    },
-    {
-      icon: Settings,
-      label: "Elimina Account",
-      href: "#delete",
-      onClick: () => setShowAccountDeleteDialog(true),
-      className: "text-red-600 hover:text-red-700 hover:bg-red-50"
-    }
-  ];
+  const downloadQR = () => {
+    const svgContent = `
+      <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+        <rect width="200" height="200" fill="white"/>
+        <rect x="10" y="10" width="20" height="20" fill="black"/>
+        <rect x="30" y="10" width="20" height="20" fill="black"/>
+        <rect x="70" y="10" width="20" height="20" fill="black"/>
+        <rect x="10" y="30" width="20" height="20" fill="black"/>
+        <rect x="50" y="30" width="20" height="20" fill="black"/>
+        <rect x="90" y="30" width="20" height="20" fill="black"/>
+        <text x="100" y="190" text-anchor="middle" font-size="12">TouristIQ Partner</text>
+      </svg>
+    `;
+    
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'touristiq-qr-code.svg';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // CONTROLLO ONBOARDING OBBLIGATORIO
+  if (isLoadingOnboarding) {
+    return <div className="flex items-center justify-center min-h-screen">Caricamento...</div>;
+  }
+
+  // Se onboarding non completato, mostra flusso obbligatorio
+  if (!onboardingStatus?.completed) {
+    return <PartnerOnboarding 
+      partnerCode={onboardingStatus?.partnerCode || "partner"} 
+      onComplete={() => window.location.reload()} 
+    />;
+  }
+
+  if (showMiniGestionale) {
+    return <AdvancedAccounting structureCode="partner" hasAccess={true} />;
+  }
 
   return (
-    <Layout currentUser={{ role: "partner", iqCode: "TIQ-VV-PRT-7805" }} sidebarItems={sidebarItems}>
-      <div id="dashboard" className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <Layout
+      title="Dashboard Partner"
+      role="partner"
+      navigation={[
+        {
+          label: "Elimina Account",
+          icon: <Trash2 className="h-4 w-4" />,
+          href: "#",
+          onClick: () => setShowAccountDeleteDialog(true)
+        },
+        {
+          label: "Mini-gestionale",
+          icon: <Calculator className="h-4 w-4" />,
+          href: "#",
+          onClick: () => setShowMiniGestionale(true)
+        },
+        {
+          label: "Validazione IQCode",
+          icon: <QrCode className="h-4 w-4" />,
+          href: "#",
+          onClick: () => setShowValidationSection(true)
+        }
+      ]}
+      sidebarColor="bg-orange-600"
+    >
+      <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between py-6">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard Partner</h1>
-                <p className="text-gray-600">Gestisci il tuo business turistico</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <Badge className="bg-green-100 text-green-700 px-3 py-1">
-                  TIQ-VV-PRT-7805
-                </Badge>
-                <Badge className="bg-blue-100 text-blue-700 px-3 py-1">
-                  Partner Attivo
-                </Badge>
-              </div>
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Dashboard Partner</h1>
+              <p className="text-gray-600">Gestisci i tuoi turisti e le tue offerte speciali</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowMiniGestionale(true)}
+                variant="outline"
+                className="border-blue-200 hover:bg-blue-50"
+              >
+                <Calculator className="w-4 h-4 mr-2" />
+                Mini-gestionale
+              </Button>
+              <Button
+                onClick={() => setShowAccountDeleteDialog(true)}
+                variant="destructive"
+                size="sm"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Elimina Account
+              </Button>
             </div>
           </div>
         </div>
@@ -485,6 +462,85 @@ Per informazioni: www.touristiq.it
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Tourist Link Request */}
+            <Card className="bg-green-50 border-green-200">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Users className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Collega Nuovo Turista</h3>
+                    <p className="text-gray-600 text-sm">Inserisci il codice IQ del turista per iniziare la collaborazione</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Inserisci IQCode (es: TIQ-IT-ROMA)"
+                      value={touristCode}
+                      onChange={(e) => setTouristCode(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button 
+                      onClick={handleLinkTourist}
+                      disabled={linkTouristMutation.isPending}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      {linkTouristMutation.isPending ? "Invio..." : "Collega"}
+                    </Button>
+                  </div>
+
+                  {pendingRequests.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="font-medium mb-2">Richieste in Attesa</h4>
+                      {pendingRequests.map((request) => (
+                        <div key={request.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-200">
+                          <div>
+                            <div className="font-medium">{request.touristCode}</div>
+                            <div className="text-sm text-gray-600">{request.requestDate} • {request.country}</div>
+                          </div>
+                          <Badge className="bg-yellow-100 text-yellow-700">
+                            In Attesa
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Active Tourists */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Users className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Turisti Attivi</h3>
+                    <p className="text-gray-600 text-sm">Turisti collegati al tuo circuito</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {activeTourists.map((tourist) => (
+                    <div key={tourist.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <div>
+                        <div className="font-medium">{tourist.code}</div>
+                        <div className="text-sm text-gray-600">Collegato {tourist.linkedDate} • {tourist.country}</div>
+                      </div>
+                      <Badge className="bg-green-100 text-green-700">
+                        Attivo
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Offers and Promotions */}
             <Card>
               <CardContent className="p-6">
@@ -523,56 +579,8 @@ Per informazioni: www.touristiq.it
                             </span>
                           </div>
                         </div>
-                        <Badge className={offer.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
-                          {offer.isActive ? "Attiva" : "Inattiva"}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Special Clients */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <Star className="w-4 h-4 text-purple-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">Clienti Speciali</h3>
-                      <p className="text-gray-600 text-sm">I tuoi clienti VIP con codici esclusivi</p>
-                    </div>
-                  </div>
-                  <Button 
-                    onClick={() => setShowNewClientDialog(true)}
-                    className="bg-purple-500 hover:bg-purple-600"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Aggiungi Cliente
-                  </Button>
-                </div>
-
-                <div className="space-y-3">
-                  {specialClients.map((client) => (
-                    <div key={client.id} className="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="font-medium">{client.name}</div>
-                          <div className="text-sm text-gray-600 mt-1">{client.notes}</div>
-                          <div className="flex items-center gap-4 mt-2">
-                            <Badge className="bg-purple-100 text-purple-700">
-                              {client.iqCode}
-                            </Badge>
-                            <span className="text-xs text-gray-500">
-                              Ultima visita: {client.lastVisit}
-                            </span>
-                          </div>
-                        </div>
-                        <Badge className="bg-gold-100 text-gold-700">
-                          VIP
+                        <Badge className="bg-green-100 text-green-700 ml-2">
+                          Attiva
                         </Badge>
                       </div>
                     </div>
@@ -693,8 +701,8 @@ Per informazioni: www.touristiq.it
                 >
                   <div className="text-2xl font-bold">75</div>
                   <div className="text-sm text-purple-100 mb-2">codici IQcode</div>
-                  <div className="text-xl font-bold">€120</div>
-                  <div className="text-xs text-purple-200">€1.60 per codice</div>
+                  <div className="text-xl font-bold">€130</div>
+                  <div className="text-xs text-purple-200">€1.73 per codice</div>
                   <Button className="w-full mt-3 bg-white text-purple-600 hover:bg-gray-100" size="sm">
                     <Package className="w-4 h-4 mr-2" />
                     Acquista 75 codici
@@ -702,42 +710,89 @@ Per informazioni: www.touristiq.it
                 </a>
 
                 <a 
-                  href="https://pay.sumup.com/b2c/QRCR1JCY"
+                  href="https://pay.sumup.com/b2c/Q3BWI26N"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block p-4 border-2 border-purple-300 rounded-lg text-center hover:border-white transition-colors cursor-pointer"
                 >
                   <div className="text-2xl font-bold">100</div>
                   <div className="text-sm text-purple-100 mb-2">codici IQcode</div>
-                  <div className="text-xl font-bold">€140</div>
-                  <div className="text-xs text-purple-200">€1.40 per codice</div>
+                  <div className="text-xl font-bold">€160</div>
+                  <div className="text-xs text-purple-200">€1.60 per codice</div>
                   <Button className="w-full mt-3 bg-white text-purple-600 hover:bg-gray-100" size="sm">
                     <Package className="w-4 h-4 mr-2" />
                     Acquista 100 codici
                   </Button>
                 </a>
               </div>
-
-              <div className="mt-6 p-4 bg-purple-700 rounded-lg">
-                <h3 className="font-semibold mb-2 flex items-center gap-2">
-                  <Trophy className="w-5 h-5" />
-                  Come funziona il Sistema Fidelizzazione
-                </h3>
-                <ul className="text-sm text-purple-100 space-y-1">
-                  <li>• Acquista pacchetti di codici IQ esclusivi per i tuoi migliori clienti</li>
-                  <li>• Ogni codice ha 10 utilizzi e può essere personalizzato con note speciali</li>
-                  <li>• I clienti con codici speciali diventano automaticamente parte della Rete TouristIQ</li>
-                  <li>• Traccia l'utilizzo e premia la fedeltà con sconti progressivi</li>
-                  <li>• Perfetto per eventi speciali, anniversari e promozioni esclusive</li>
-                </ul>
-              </div>
             </div>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                      <Star className="w-4 h-4 text-yellow-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">I tuoi Clienti Fidelizzati</h3>
+                      <p className="text-gray-600 text-sm">Monitora l'attività dei tuoi clienti fedeli e i premi assegnati</p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => setShowSpecialClientDialog(true)}
+                    variant="outline" 
+                    size="sm"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Aggiungi Cliente
+                  </Button>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="text-left border-b">
+                        <th className="pb-3 text-sm font-medium text-gray-600">Cliente</th>
+                        <th className="pb-3 text-sm font-medium text-gray-600">Stato</th>
+                        <th className="pb-3 text-sm font-medium text-gray-600">Visite</th>
+                        <th className="pb-3 text-sm font-medium text-gray-600">Premi Assegnati</th>
+                        <th className="pb-3 text-sm font-medium text-gray-600">Iscrizione</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {specialClients.map((client) => (
+                        <tr key={client.id}>
+                          <td className="py-3">
+                            <div>
+                              <div className="font-medium">{client.name}</div>
+                              <div className="text-sm text-gray-600">{client.notes}</div>
+                            </div>
+                          </td>
+                          <td className="py-3">
+                            <Badge className={client.status === "attivo" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
+                              {client.status}
+                            </Badge>
+                          </td>
+                          <td className="py-3 font-medium">{client.visits}</td>
+                          <td className="py-3">
+                            <div className="flex items-center gap-1">
+                              <Trophy className="w-4 h-4 text-yellow-500" />
+                              <span className="font-medium">{client.rewardsGiven}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 text-sm text-gray-600">{client.joinDate}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
-        <canvas ref={canvasRef} style={{ display: 'none' }} />
-
-        {/* Dialog Nuova Offerta */}
+        {/* Dialogs */}
         <Dialog open={showNewOfferDialog} onOpenChange={setShowNewOfferDialog}>
           <DialogContent>
             <DialogHeader>
@@ -748,63 +803,53 @@ Per informazioni: www.touristiq.it
                 <Label htmlFor="title">Titolo Offerta</Label>
                 <Input
                   id="title"
-                  value={offerData.title}
-                  onChange={(e) => setOfferData({...offerData, title: e.target.value})}
-                  placeholder="es. Menù Degustazione Calabrese"
+                  value={newOffer.title}
+                  onChange={(e) => setNewOffer({...newOffer, title: e.target.value})}
+                  placeholder="es: Sconto Aperitivo"
                 />
               </div>
               <div>
                 <Label htmlFor="description">Descrizione</Label>
                 <Textarea
                   id="description"
-                  value={offerData.description}
-                  onChange={(e) => setOfferData({...offerData, description: e.target.value})}
-                  placeholder="Descrivi la tua offerta..."
+                  value={newOffer.description}
+                  onChange={(e) => setNewOffer({...newOffer, description: e.target.value})}
+                  placeholder="Descrivi l'offerta in dettaglio..."
                 />
               </div>
               <div>
                 <Label htmlFor="discount">Sconto</Label>
                 <Input
                   id="discount"
-                  value={offerData.discount}
-                  onChange={(e) => setOfferData({...offerData, discount: e.target.value})}
-                  placeholder="es. 15%"
+                  value={newOffer.discount}
+                  onChange={(e) => setNewOffer({...newOffer, discount: e.target.value})}
+                  placeholder="es: 20%"
                 />
               </div>
               <div>
-                <Label htmlFor="validUntil">Valido fino al</Label>
+                <Label htmlFor="validUntil">Valido Fino Al</Label>
                 <Input
                   id="validUntil"
                   type="date"
-                  value={offerData.validUntil}
-                  onChange={(e) => setOfferData({...offerData, validUntil: e.target.value})}
+                  value={newOffer.validUntil}
+                  onChange={(e) => setNewOffer({...newOffer, validUntil: e.target.value})}
                 />
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowNewOfferDialog(false)}
-                  className="flex-1"
-                >
-                  Annulla
-                </Button>
-                <Button
-                  onClick={handleCreateOffer}
-                  disabled={createOfferMutation.isPending}
-                  className="flex-1"
-                >
-                  {createOfferMutation.isPending ? "Creazione..." : "Crea Offerta"}
-                </Button>
-              </div>
+              <Button 
+                onClick={handleCreateOffer}
+                disabled={createOfferMutation.isPending}
+                className="w-full"
+              >
+                {createOfferMutation.isPending ? "Creazione..." : "Crea Offerta"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
 
-        {/* Dialog Nuovo Cliente Speciale */}
-        <Dialog open={showNewClientDialog} onOpenChange={setShowNewClientDialog}>
+        <Dialog open={showSpecialClientDialog} onOpenChange={setShowSpecialClientDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Aggiungi Cliente Speciale</DialogTitle>
+              <DialogTitle>Aggiungi Cliente Fidelizzato</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -813,11 +858,11 @@ Per informazioni: www.touristiq.it
                   id="clientName"
                   value={newClient.name}
                   onChange={(e) => setNewClient({...newClient, name: e.target.value})}
-                  placeholder="es. Marco Rossi"
+                  placeholder="es: Marco R."
                 />
               </div>
               <div>
-                <Label htmlFor="clientNotes">Note Speciali</Label>
+                <Label htmlFor="clientNotes">Note (Facoltative)</Label>
                 <Textarea
                   id="clientNotes"
                   value={newClient.notes}
@@ -825,56 +870,33 @@ Per informazioni: www.touristiq.it
                   placeholder="Preferenze, allergie, note particolari..."
                 />
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowNewClientDialog(false)}
-                  className="flex-1"
-                >
-                  Annulla
-                </Button>
-                <Button
-                  onClick={handleCreateSpecialClient}
-                  disabled={createSpecialClientMutation.isPending}
-                  className="flex-1"
-                >
-                  {createSpecialClientMutation.isPending ? "Aggiunta..." : "Aggiungi Cliente"}
-                </Button>
-              </div>
+              <Button 
+                onClick={handleAddSpecialClient}
+                disabled={addSpecialClientMutation.isPending}
+                className="w-full"
+              >
+                {addSpecialClientMutation.isPending ? "Aggiunta..." : "Aggiungi Cliente"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
 
-        {/* Dialog Mini-gestionale */}
-        <Dialog open={showAccountingDialog} onOpenChange={setShowAccountingDialog}>
-          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Calculator className="w-5 h-5" />
-                Mini-gestionale Contabile
-              </DialogTitle>
-            </DialogHeader>
-            <AdvancedAccounting userRole="partner" />
-          </DialogContent>
-        </Dialog>
-
-        {/* Dialog Elimina Account */}
         <Dialog open={showAccountDeleteDialog} onOpenChange={setShowAccountDeleteDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-red-600">
-                <Trash2 className="w-5 h-5" />
-                Elimina Account Definitivamente
-              </DialogTitle>
+              <DialogTitle className="text-red-600">Elimina Account</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-800 font-medium mb-2">⚠️ Attenzione: Questa azione non può essere annullata!</p>
-                <ul className="text-sm text-red-700 space-y-1">
-                  <li>• Il tuo account verrà eliminato definitivamente</li>
-                  <li>• Tutti i dati associati verranno cancellati</li>
-                  <li>• Le offerte attive verranno disattivate</li>
-                  <li>• Non potrai più accedere al sistema</li>
+              <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                <h4 className="font-semibold text-red-800 mb-2">⚠️ Attenzione: Azione Irreversibile</h4>
+                <p className="text-sm text-red-700">
+                  L'eliminazione dell'account comporterà:
+                </p>
+                <ul className="text-sm text-red-700 mt-2 space-y-1">
+                  <li>• Cancellazione definitiva di tutti i tuoi dati</li>
+                  <li>• Perdita di tutti i collegamenti con i turisti</li>
+                  <li>• Rimozione di tutte le offerte create</li>
+                  <li>• Impossibilità di recuperare l'account</li>
                 </ul>
               </div>
               
