@@ -165,7 +165,7 @@ export default function Login() {
             TouristIQ
           </h1>
           <p className="text-white text-2xl drop-shadow-lg font-medium bg-black/20 px-6 py-2 rounded-full backdrop-blur-sm">
-            🌴 Scopri la Calabria 🌊
+            Ogni esperienza inizia con un IQ
           </p>
           <p className="text-white/90 text-lg drop-shadow-lg font-medium mt-3">
             Inserisci il tuo codice IQ per accedere
