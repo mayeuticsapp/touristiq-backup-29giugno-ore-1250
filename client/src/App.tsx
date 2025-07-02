@@ -108,6 +108,12 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
+      <Route path="/partner/:id">
+        <ProtectedRoute requiredRole="partner">
+          <PartnerDashboard />
+        </ProtectedRoute>
+      </Route>
+      
       <Route path="/partner">
         <ProtectedRoute requiredRole="partner">
           <PartnerDashboard />
