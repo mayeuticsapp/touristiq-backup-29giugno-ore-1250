@@ -1650,7 +1650,9 @@ class ExtendedPostgreStorage extends PostgreStorage {
         } catch (jsonError) {
           console.log(`DEBUG: Errore parsing JSON:`, jsonError);
           // Se non è JSON valido, prova il controllo stringa legacy
-          if (iqCodeRecord.internalNote.includes('ONBOARDING_COMPLETED')) {
+          if (iqCodeRecord.internalNote.includes('ONBOARDING_COMPLETED') || 
+              iqCodeRecord.internalNote.includes('ONBOARDING COMPLETED') ||
+              iqCodeRecord.internalNote.startsWith('ONBOARDING')) {
             return {
               completed: true,
               currentStep: 'completed',
