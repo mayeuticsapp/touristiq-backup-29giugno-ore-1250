@@ -3,6 +3,7 @@ import { logout } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { MapPin, LogOut, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
+import { queryClient } from "@/lib/queryClient";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -25,6 +26,14 @@ export function Layout({ children, title, role, iqCode, navigation, sidebarColor
   const handleLogout = async () => {
     try {
       await logout();
+      
+      // Clear all cached data on logout
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/iqcode/validation-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/iqcode/validation-status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tourist/real-offers"] });
+      queryClient.clear(); // Clear all cache
+      
       setLocation("/");
     } catch (error) {
       console.error("Errore durante il logout:", error);

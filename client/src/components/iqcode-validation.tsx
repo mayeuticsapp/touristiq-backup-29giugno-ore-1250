@@ -273,7 +273,7 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
                     {validation.status === 'accepted' && (
                       <div className="flex items-center justify-between">
                         <div className="text-sm">
-                          Utilizzi rimanenti: <span className="font-medium">{validation.usesRemaining}/{validation.usesTotal}</span>
+                          <span className="font-medium">{validation.usesRemaining} utilizzi rimanenti</span> (su {validation.usesTotal} totali)
                         </div>
                         {validation.usesRemaining > 0 ? (
                           <Button 
@@ -359,7 +359,7 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
                   )}
                   {validation.status === 'accepted' && (
                     <div className="text-sm text-green-700 bg-green-50 p-2 rounded">
-                      ✓ IQCode accettato presso {validation.partnerName} • Utilizzi rimanenti: {validation.usesRemaining}/{validation.usesTotal}
+                      ✓ IQCode accettato presso {validation.partnerName} • <span className="font-medium">{validation.usesRemaining} utilizzi rimanenti</span> (su {validation.usesTotal} totali)
                     </div>
                   )}
                   {validation.status === 'rejected' && (

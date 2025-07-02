@@ -14,6 +14,7 @@ const STORAGE_KEY = "touristiq_last_code";
 export default function Login() {
   const [iqCode, setIqCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [rememberCode, setRememberCode] = useState(false);
   const [, setLocation] = useLocation();
@@ -29,9 +30,13 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (isLoading || isSubmitting) return;
     if (!iqCode.trim()) return;
 
     setIsLoading(true);
+    setIsSubmitting(true);
     setError("");
 
     try {
@@ -45,11 +50,14 @@ export default function Login() {
         localStorage.removeItem(STORAGE_KEY);
       }
 
-      // Invalidate auth cache to force refresh
+      // Invalidate auth cache and validation-related caches to force refresh
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/iqcode/validation-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/iqcode/validation-status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tourist/real-offers"] });
 
-      // Extended delay to ensure cookie is properly set and session persists
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Shorter delay for better UX while ensuring cookie is set
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Redirect based on role
       switch (response.role) {
@@ -79,6 +87,7 @@ export default function Login() {
       setError(error.message || "Codice IQ non valido. Riprova.");
     } finally {
       setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -192,7 +201,7 @@ export default function Login() {
                   placeholder="es. TIQ-IT-LEONARDO"
                   maxLength={100}
                   className="text-center text-xl font-bold tracking-wider uppercase w-full h-14 bg-orange-50 border-2 border-orange-200 text-gray-800 placeholder:text-gray-500 focus:bg-orange-100 focus:border-orange-400 transition-all duration-300"
-                  disabled={isLoading}
+                  disabled={isLoading || isSubmitting}
                 />
               </div>
 
@@ -214,7 +223,7 @@ export default function Login() {
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white text-xl font-bold py-4 h-16 shadow-xl border-2 border-orange-300 transition-all duration-300 transform hover:scale-105 hover:shadow-orange-500/30"
-                disabled={isLoading}
+                disabled={isLoading || isSubmitting}
               >
                 {isLoading ? (
                   <>
