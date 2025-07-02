@@ -87,6 +87,7 @@ export interface IStorage {
 
   // Partner methods
   createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void>;
+  getAllPartnersWithOffers(): Promise<any[]>;
   
   // Validazione IQCode methods
   createIqcodeValidation(data: {partnerCode: string, touristCode: string, requestedAt: Date, status: string, usesRemaining: number, usesTotal: number}): Promise<any>;
@@ -810,6 +811,10 @@ export class MemStorage implements IStorage {
   }
 
   async getRealOffersNearby(latitude: number, longitude: number, radius: number): Promise<any[]> {
+    return [];
+  }
+
+  async getAllPartnersWithOffers(): Promise<any[]> {
     return [];
   }
 }
@@ -1838,6 +1843,67 @@ class ExtendedPostgreStorage extends PostgreStorage {
     console.log(`Trovate ${result.length} offerte per ${cityName}`);
     
     return result;
+  }
+
+  async getAllPartnersWithOffers(): Promise<any[]> {
+    const { sql } = await import('drizzle-orm');
+    
+    try {
+      // Query SQL diretta per evitare problemi dell'ORM Drizzle
+      const result = await this.db.execute(sql`
+        SELECT 
+          ro.id,
+          ro.title,
+          ro.description,
+          ro.discount_percentage as "discountPercentage",
+          ro.valid_until as "validUntil",
+          ro.category,
+          ro.partner_code as "partnerCode",
+          ic.business_name as "partnerName",
+          ic.assigned_to as "assignedTo",
+          pd.business_type as "businessType",
+          pd.address,
+          pd.city,
+          pd.province,
+          pd.phone,
+          pd.email,
+          pd.website,
+          pd.wheelchair_accessible as "wheelchairAccessible",
+          pd.child_friendly as "childFriendly",
+          pd.gluten_free as "glutenFree"
+        FROM real_offers ro
+        LEFT JOIN iq_codes ic ON ro.partner_code = ic.code
+        LEFT JOIN partner_details pd ON ro.partner_code = pd.partner_code
+        WHERE ro.is_active = true 
+          AND ic.role = 'partner' 
+          AND ic.is_active = true
+        ORDER BY ro.created_at DESC
+      `);
+      
+      return result.rows.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        discountPercentage: row.discountPercentage,
+        validUntil: row.validUntil,
+        category: row.category,
+        partnerCode: row.partnerCode,
+        partnerName: row.partnerName || row.assignedTo || 'Partner',
+        businessType: row.businessType || 'Non specificato',
+        address: row.address,
+        city: row.city,
+        province: row.province,
+        phone: row.phone,
+        email: row.email,
+        website: row.website,
+        wheelchairAccessible: row.wheelchairAccessible || false,
+        childFriendly: row.childFriendly || false,
+        glutenFree: row.glutenFree || false
+      }));
+    } catch (error) {
+      console.error('Errore getAllPartnersWithOffers:', error);
+      return [];
+    }
   }
 
   async getRealOffersNearby(latitude: number, longitude: number, radius: number): Promise<any[]> {

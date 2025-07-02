@@ -5,7 +5,7 @@ import { TIQaiChat } from "@/components/tiqai-chat";
 import { IQCodeValidation } from "@/components/iqcode-validation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Tags, Utensils, Check, MessageCircle, QrCode, MapPin, Heart } from "lucide-react";
+import { Tags, Utensils, Check, MessageCircle, QrCode, MapPin, Heart, Phone, Navigation, ExternalLink, Mail } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/auth";
 import { useState } from "react";
@@ -90,7 +90,7 @@ export default function TouristDashboard() {
   };
 
   // Determina quali offerte mostrare
-  const offersToShow = searchMode === "default" ? realOffers?.discounts || [] : locationOffers;
+  const offersToShow = searchMode === "default" ? (realOffers as any)?.discounts || [] : locationOffers;
   
   const navigation = [
     { icon: <Tags size={16} />, label: "I Miei Sconti", href: "#" },
@@ -217,23 +217,89 @@ export default function TouristDashboard() {
             ) : offersToShow?.length > 0 ? (
               <div className="space-y-4">
                 {offersToShow.map((offer: any, index: number) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                    <div className="flex items-center">
-                      <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
-                        <Utensils className="text-red-600" size={20} />
+                  <div key={index} className="p-4 border rounded-lg hover:bg-gray-50">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center">
+                        <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                          <Utensils className="text-red-600" size={20} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-900">{offer.partnerName}</p>
+                          <p className="text-sm text-gray-600">{offer.businessType}</p>
+                          <p className="text-sm font-medium text-blue-600 mt-1">{offer.title}</p>
+                          <p className="text-xs text-gray-500">{offer.description}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{offer.partnerName}</p>
-                        <p className="text-sm text-gray-500">{offer.title}</p>
-                        {offer.city && (
-                          <p className="text-xs text-gray-400 flex items-center mt-1">
-                            <MapPin className="w-3 h-3 mr-1" />
-                            {offer.city}
-                          </p>
-                        )}
-                      </div>
+                      <Badge className="bg-green-100 text-green-800 text-lg font-bold">
+                        -{offer.discountPercentage}%
+                      </Badge>
                     </div>
-                    <Badge className="bg-green-100 text-green-800">-{offer.discountPercentage}%</Badge>
+                    
+                    {/* Indirizzo e contatti */}
+                    {offer.address && (
+                      <div className="flex items-center text-sm text-gray-600 mb-2">
+                        <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                        <span>{offer.address}, {offer.city} ({offer.province})</span>
+                      </div>
+                    )}
+                    
+                    {/* Azioni rapide */}
+                    <div className="flex gap-2 flex-wrap">
+                      {offer.phone && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(`https://wa.me/${offer.phone.replace(/[^0-9]/g, '')}?text=Ciao! Ho visto la vostra offerta "${offer.title}" su TouristIQ. Vorrei avere maggiori informazioni.`, '_blank')}
+                          className="text-green-600 hover:bg-green-50"
+                        >
+                          <Phone className="w-4 h-4 mr-1" />
+                          WhatsApp
+                        </Button>
+                      )}
+                      
+                      {offer.address && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(offer.address + ', ' + offer.city)}`, '_blank')}
+                          className="text-blue-600 hover:bg-blue-50"
+                        >
+                          <Navigation className="w-4 h-4 mr-1" />
+                          Naviga
+                        </Button>
+                      )}
+                      
+                      {offer.website && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(offer.website, '_blank')}
+                          className="text-purple-600 hover:bg-purple-50"
+                        >
+                          <ExternalLink className="w-4 h-4 mr-1" />
+                          Sito Web
+                        </Button>
+                      )}
+                      
+                      {offer.email && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(`mailto:${offer.email}?subject=Informazioni offerta ${offer.title}`, '_blank')}
+                          className="text-gray-600 hover:bg-gray-50"
+                        >
+                          <Mail className="w-4 h-4 mr-1" />
+                          Email
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Validità offerta */}
+                    {offer.validUntil && (
+                      <div className="text-xs text-gray-500 mt-2">
+                        Valido fino al {new Date(offer.validUntil).toLocaleDateString('it-IT')}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

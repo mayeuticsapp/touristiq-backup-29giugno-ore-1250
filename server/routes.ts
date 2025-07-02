@@ -2447,22 +2447,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo turisti" });
       }
 
-      // Ottieni TUTTE le offerte attive di TUTTI i partner
-      const allOffers = await (storage as any).getAllPartnerOffers();
+      // Ottieni TUTTE le offerte con dati REALI dei partner (NO IQCode)
+      const offersWithPartnerData = await (storage as any).getAllPartnersWithOffers();
       
-      // Formatta le offerte per il frontend turistico
-      const formattedOffers = allOffers.map((offer: any) => ({
+      // Formatta le offerte per il frontend turistico con PRIVACY IQCode
+      const formattedOffers = offersWithPartnerData.map((offer: any) => ({
+        // Dati offerta
         title: offer.title,
         description: offer.description, 
-        discountPercentage: offer.discount,
-        category: "Gastronomia", // Default per ora
-        partnerName: offer.partnerCode, // Mostreremo il codice partner per ora
-        validUntil: offer.validUntil
+        discountPercentage: offer.discountPercentage,
+        validUntil: offer.validUntil,
+        
+        // Dati partner REALI (NO IQCode mostrato per privacy)
+        partnerName: offer.partnerName,
+        businessType: offer.businessType,
+        address: offer.address,
+        city: offer.city,
+        province: offer.province,
+        phone: offer.phone,
+        email: offer.email,
+        website: offer.website,
+        
+        // Servizi e accessibilità
+        wheelchairAccessible: offer.wheelchairAccessible,
+        childFriendly: offer.childFriendly,
+        glutenFree: offer.glutenFree
       }));
 
       res.json({
         discounts: formattedOffers,
-        totalOffers: allOffers.length
+        totalOffers: offersWithPartnerData.length
       });
 
     } catch (error) {
