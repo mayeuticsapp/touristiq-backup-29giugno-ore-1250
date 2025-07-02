@@ -20,8 +20,9 @@ export async function login(iqCode: string): Promise<LoginResponse> {
 export async function getCurrentUser(): Promise<User | null> {
   try {
     const response = await apiRequest("GET", "/api/auth/me");
-    return response.json();
+    return await response.json();
   } catch (error) {
+    console.error("Errore getCurrentUser:", error);
     return null;
   }
 }
