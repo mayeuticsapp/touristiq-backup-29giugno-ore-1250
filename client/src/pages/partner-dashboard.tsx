@@ -322,9 +322,9 @@ export default function PartnerDashboard() {
   }
 
   // Se onboarding non completato, mostra flusso obbligatorio
-  if (!onboardingStatus?.completed) {
+  if (onboardingStatus && !(onboardingStatus as any)?.completed) {
     return <PartnerOnboarding 
-      partnerCode={onboardingStatus?.partnerCode || "partner"} 
+      partnerCode={(onboardingStatus as any)?.partnerCode || "partner"} 
       onComplete={() => window.location.reload()} 
     />;
   }
@@ -785,7 +785,7 @@ export default function PartnerDashboard() {
         </div>
 
         {/* Dialogs */}
-        <Dialog open={showNewOfferDialog} onOpenChange={setShowNewOfferDialog}>
+      <Dialog open={showNewOfferDialog} onOpenChange={setShowNewOfferDialog}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Crea Nuova Offerta</DialogTitle>
@@ -945,7 +945,6 @@ export default function PartnerDashboard() {
             <IQCodeValidation userRole="partner" />
           </DialogContent>
         </Dialog>
-      </div>
     </Layout>
   );
 }
