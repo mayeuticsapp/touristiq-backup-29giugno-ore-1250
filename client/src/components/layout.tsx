@@ -5,23 +5,45 @@ import { MapPin, LogOut, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { queryClient } from "@/lib/queryClient";
 
-interface LayoutProps {
-  children: React.ReactNode;
-  title: string;
-  role: string;
-  iqCode?: string;
-  navigation: Array<{
-    icon: React.ReactNode;
-    label: string;
-    href: string;
-    onClick?: () => void;
-  }>;
-  sidebarColor: string;
+interface SidebarItem {
+  icon: any;
+  label: string;
+  href: string;
+  onClick?: () => void;
+  className?: string;
 }
 
-export function Layout({ children, title, role, iqCode, navigation, sidebarColor }: LayoutProps) {
+interface LayoutProps {
+  children: React.ReactNode;
+  currentUser?: { role: string; iqCode: string };
+  sidebarItems?: SidebarItem[];
+  // Legacy support
+  title?: string;
+  role?: string;
+  iqCode?: string;
+  navigation?: SidebarItem[];
+  sidebarColor?: string;
+}
+
+export function Layout({ 
+  children, 
+  currentUser, 
+  sidebarItems,
+  // Legacy props
+  title, 
+  role, 
+  iqCode, 
+  navigation, 
+  sidebarColor 
+}: LayoutProps) {
   const [, setLocation] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Support both new and legacy prop formats
+  const userRole = currentUser?.role || role || '';
+  const userIqCode = currentUser?.iqCode || iqCode || '';
+  const navItems = sidebarItems || navigation || [];
+  const bgColor = sidebarColor || 'bg-blue-600';
 
   const handleLogout = async () => {
     try {
@@ -94,19 +116,19 @@ export function Layout({ children, title, role, iqCode, navigation, sidebarColor
       `}>
         <div className="p-6 border-b">
           <div className="flex items-center">
-            <div className={`h-10 w-10 ${sidebarColor} rounded-full flex items-center justify-center mr-3`}>
+            <div className={`h-10 w-10 ${bgColor} rounded-full flex items-center justify-center mr-3`}>
               <MapPin className="text-white" size={20} />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">TouristIQ</h2>
-              <p className="text-sm text-gray-500">{role}</p>
+              <p className="text-sm text-gray-500">{userRole}</p>
             </div>
           </div>
         </div>
         
         <nav className="p-4">
           <ul className="space-y-2">
-            {navigation.map((item, index) => (
+            {navItems.map((item, index) => (
               <li key={index}>
                 <button 
                   onClick={() => {
@@ -138,7 +160,14 @@ export function Layout({ children, title, role, iqCode, navigation, sidebarColor
         {/* Desktop Header */}
         <header className="hidden md:block bg-white shadow-sm border-b p-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold text-gray-900">{title || 'Dashboard'}</h1>
+              {userIqCode && (
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                  {userIqCode}
+                </span>
+              )}
+            </div>
             <Button variant="ghost" onClick={handleLogout} className="flex items-center text-gray-600 hover:text-gray-900">
               <LogOut className="mr-2" size={16} />
               Esci
