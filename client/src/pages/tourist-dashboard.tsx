@@ -5,7 +5,7 @@ import { TIQaiChat } from "@/components/tiqai-chat";
 import { IQCodeValidation } from "@/components/iqcode-validation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Compass, Tags, History, Heart, User, Utensils, Check, MessageCircle, QrCode, MapPin } from "lucide-react";
+import { Tags, Utensils, Check, MessageCircle, QrCode, MapPin, Heart } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/auth";
 import { useState } from "react";
@@ -93,7 +93,6 @@ export default function TouristDashboard() {
   const offersToShow = searchMode === "default" ? realOffers?.discounts || [] : locationOffers;
   
   const navigation = [
-    { icon: <Compass size={16} />, label: "Esplora", href: "#" },
     { icon: <Tags size={16} />, label: "I Miei Sconti", href: "#" },
     { icon: <MessageCircle size={16} />, label: "TIQai Chat", href: "#" },
     { 
@@ -102,9 +101,6 @@ export default function TouristDashboard() {
       href: "#",
       onClick: () => setShowValidationDialog(true)
     },
-    { icon: <History size={16} />, label: "Cronologia", href: "#" },
-    { icon: <Heart size={16} />, label: "Preferiti", href: "#" },
-    { icon: <User size={16} />, label: "Profilo", href: "#" },
   ];
 
   if (!user) {
