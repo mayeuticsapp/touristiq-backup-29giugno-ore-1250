@@ -13,16 +13,15 @@ export interface LoginResponse {
 }
 
 export async function login(iqCode: string): Promise<LoginResponse> {
-  const response = await apiRequest("POST", "/api/login", { iqCode });
+  const response = await apiRequest("POST", "/api/auth/login", { iqCode });
   return response.json();
 }
 
 export async function getCurrentUser(): Promise<User | null> {
   try {
     const response = await apiRequest("GET", "/api/auth/me");
-    return await response.json();
+    return response.json();
   } catch (error) {
-    console.error("Errore getCurrentUser:", error);
     return null;
   }
 }

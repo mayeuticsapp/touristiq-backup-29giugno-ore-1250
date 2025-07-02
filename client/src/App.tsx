@@ -20,18 +20,11 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
     queryFn: getCurrentUser,
     retry: false,
     refetchOnMount: true,
-    refetchOnWindowFocus: false,
   });
 
-  console.log(`🔒 ProtectedRoute - Ruolo richiesto: ${requiredRole}`, { 
-    user, 
-    isLoading, 
-    error: error?.message || error,
-    timestamp: new Date().toISOString()
-  });
+  console.log(`ProtectedRoute - Ruolo richiesto: ${requiredRole}`, { user, isLoading, error });
 
   if (isLoading) {
-    console.log("⏳ Caricamento autenticazione...");
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -42,22 +35,17 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
     );
   }
 
-  if (error) {
-    console.log("❌ Errore autenticazione:", error);
-    return <Redirect to="/" />;
-  }
-
-  if (!user) {
-    console.log("🚫 Utente non trovato, redirect a login");
+  if (error || !user) {
+    console.log("Errore autenticazione o utente non trovato:", error);
     return <Redirect to="/" />;
   }
 
   if (user.role !== requiredRole) {
-    console.log(`🔄 Ruolo non corrispondente. Richiesto: ${requiredRole}, Utente: ${user.role}`);
+    console.log(`Ruolo non corrispondente. Richiesto: ${requiredRole}, Utente: ${user.role}`);
     return <Redirect to="/" />;
   }
 
-  console.log(`✅ Accesso autorizzato per ruolo: ${user.role}`);
+  console.log(`Accesso autorizzato per ruolo: ${user.role}`);
   return <>{children}</>;
 }
 
