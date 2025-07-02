@@ -229,7 +229,7 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
                 value={touristCode}
                 onChange={(e) => setTouristCode(e.target.value.toUpperCase())}
                 className="flex-1"
-                maxLength={20}
+                maxLength={100}
               />
               <Button 
                 onClick={handleValidationRequest}

@@ -190,7 +190,7 @@ export default function Login() {
                   value={iqCode}
                   onChange={(e) => setIqCode(e.target.value.toUpperCase())}
                   placeholder="es. TIQ-IT-LEONARDO"
-                  maxLength={25}
+                  maxLength={100}
                   className="text-center text-xl font-bold tracking-wider uppercase w-full h-14 bg-orange-50 border-2 border-orange-200 text-gray-800 placeholder:text-gray-500 focus:bg-orange-100 focus:border-orange-400 transition-all duration-300"
                   disabled={isLoading}
                 />
