@@ -44,8 +44,6 @@ interface PartnerOffer {
   isActive: boolean;
 }
 
-// Interface SpecialClient - SOSPESA PER RIATTIVAZIONE FUTURA
-/*
 interface SpecialClient {
   id: string;
   name: string;
@@ -55,7 +53,6 @@ interface SpecialClient {
   rewardsGiven: number;
   joinDate: string;
 }
-*/
 
 export default function PartnerDashboard() {
   const { toast } = useToast();
@@ -63,7 +60,7 @@ export default function PartnerDashboard() {
   
   // Stati per i dialogs
   const [showNewOfferDialog, setShowNewOfferDialog] = useState(false);
-  // const [showSpecialClientDialog, setShowSpecialClientDialog] = useState(false); // SOSPESO
+  const [showSpecialClientDialog, setShowSpecialClientDialog] = useState(false);
   const [showAccountDeleteDialog, setShowAccountDeleteDialog] = useState(false);
   const [showMiniGestionale, setShowMiniGestionale] = useState(false);
   const [showValidationSection, setShowValidationSection] = useState(false);
@@ -86,7 +83,10 @@ export default function PartnerDashboard() {
     discount: "",
     validUntil: ""
   });
-  // const [newClient, setNewClient] = useState({ name: "", notes: "" }); // SOSPESO
+  const [newClient, setNewClient] = useState({
+    name: "",
+    notes: ""
+  });
 
   // Dati fittizi per il prototipo
   const pendingRequests: TouristLinkRequest[] = [
@@ -127,7 +127,26 @@ export default function PartnerDashboard() {
     }
   ];
 
-  // const specialClients: SpecialClient[] = [...]; // SOSPESO
+  const specialClients: SpecialClient[] = [
+    {
+      id: "1",
+      name: "Marco R.",
+      notes: "Cliente abituale, preferisce tavoli all'esterno",
+      status: "attivo",
+      visits: 8,
+      rewardsGiven: 2,
+      joinDate: "2024-12-01"
+    },
+    {
+      id: "2",
+      name: "Giulia S.",
+      notes: "Vegetariana, allergica ai crostacei",
+      status: "attivo", 
+      visits: 5,
+      rewardsGiven: 1,
+      joinDate: "2024-12-15"
+    }
+  ];
 
   // Mutations
   const linkTouristMutation = useMutation({
@@ -176,8 +195,6 @@ export default function PartnerDashboard() {
     }
   });
 
-  // addSpecialClientMutation - SOSPESO PER RIATTIVAZIONE FUTURA
-  /*
   const addSpecialClientMutation = useMutation({
     mutationFn: async (client: typeof newClient) => {
       const response = await fetch('/api/partner/special-clients', {
@@ -201,7 +218,6 @@ export default function PartnerDashboard() {
       });
     }
   });
-  */
 
   const deleteAccountMutation = useMutation({
     mutationFn: async () => {
@@ -241,14 +257,11 @@ export default function PartnerDashboard() {
     }
   };
 
-  // handleAddSpecialClient - SOSPESO PER RIATTIVAZIONE FUTURA
-  /*
   const handleAddSpecialClient = () => {
     if (newClient.name.trim()) {
       addSpecialClientMutation.mutate(newClient);
     }
   };
-  */
 
   const handleDeleteAccount = () => {
     if (deleteConfirmText === "ELIMINA DEFINITIVAMENTE") {
@@ -322,9 +335,9 @@ export default function PartnerDashboard() {
   }
 
   // Se onboarding non completato, mostra flusso obbligatorio
-  if (onboardingStatus && !(onboardingStatus as any)?.completed) {
+  if (!onboardingStatus?.completed) {
     return <PartnerOnboarding 
-      partnerCode={(onboardingStatus as any)?.partnerCode || "partner"} 
+      partnerCode={onboardingStatus?.partnerCode || "partner"} 
       onComplete={() => window.location.reload()} 
     />;
   }
@@ -440,8 +453,8 @@ export default function PartnerDashboard() {
                     <Star className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-purple-700">4.8</div>
-                    <div className="text-sm text-purple-600">Rating Medio</div>
+                    <div className="text-2xl font-bold text-purple-700">2</div>
+                    <div className="text-sm text-purple-600">Clienti Speciali</div>
                   </div>
                 </div>
               </CardContent>
@@ -636,8 +649,7 @@ export default function PartnerDashboard() {
             </Card>
           </div>
 
-          {/* Special Clients Section - SOSPESA PER RIATTIVAZIONE FUTURA */}
-          {/*
+          {/* Special Clients Section */}
           <div className="mt-8">
             <div className="bg-gradient-to-r from-purple-600 to-purple-800 rounded-lg p-6 text-white mb-6">
               <div className="flex items-center gap-3 mb-4">
@@ -714,10 +726,7 @@ export default function PartnerDashboard() {
                 </a>
               </div>
             </div>
-          */}
 
-            {/* Tabella Clienti Fidelizzati - SOSPESA PER RIATTIVAZIONE FUTURA */}
-            {/*
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -780,12 +789,11 @@ export default function PartnerDashboard() {
                 </div>
               </CardContent>
             </Card>
-            */}
           </div>
         </div>
 
         {/* Dialogs */}
-      <Dialog open={showNewOfferDialog} onOpenChange={setShowNewOfferDialog}>
+        <Dialog open={showNewOfferDialog} onOpenChange={setShowNewOfferDialog}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Crea Nuova Offerta</DialogTitle>
@@ -838,8 +846,6 @@ export default function PartnerDashboard() {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog Clienti Speciali - SOSPESO PER RIATTIVAZIONE FUTURA */}
-        {/*
         <Dialog open={showSpecialClientDialog} onOpenChange={setShowSpecialClientDialog}>
           <DialogContent>
             <DialogHeader>
@@ -874,7 +880,6 @@ export default function PartnerDashboard() {
             </div>
           </DialogContent>
         </Dialog>
-        */}
 
         <Dialog open={showAccountDeleteDialog} onOpenChange={setShowAccountDeleteDialog}>
           <DialogContent>
@@ -945,6 +950,7 @@ export default function PartnerDashboard() {
             <IQCodeValidation userRole="partner" />
           </DialogContent>
         </Dialog>
+      </div>
     </Layout>
   );
 }
