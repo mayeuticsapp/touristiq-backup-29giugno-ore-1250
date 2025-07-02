@@ -2737,13 +2737,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Richiesta non trovata" });
       }
 
-      // Aggiorna solo lo stato senza scalare utilizzi
+      // Aggiorna stato e scala utilizzi se accettato
       await storage.updateValidationStatus(validationId, status, new Date());
+      
+      let finalUsesRemaining = validation.usesRemaining;
+      if (status === 'accepted') {
+        // Scala automaticamente gli utilizzi quando turista accetta
+        await storage.decrementValidationUses(validationId);
+        finalUsesRemaining = validation.usesRemaining - 1;
+      }
 
       res.json({ 
         success: true, 
         message: status === 'accepted' ? `IQCode confermato per utilizzo` : "IQCode rifiutato",
-        usesRemaining: validation.usesRemaining // Non decrementa all'accettazione
+        usesRemaining: finalUsesRemaining
       });
 
     } catch (error) {
@@ -2781,52 +2788,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-  // Partner utilizza IQCode validato (decrementa utilizzi)
-  app.post("/api/iqcode/use-validated", async (req: any, res: any) => {
-    try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
 
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      const partnerIqCode = await storage.getIqCodeByCode(session.iqCode);
-      if (!partnerIqCode || partnerIqCode.role !== 'partner') {
-        return res.status(403).json({ message: "Accesso negato - solo partner" });
-      }
-
-      const { validationId } = req.body;
-      if (!validationId) {
-        return res.status(400).json({ message: "ID validazione richiesto" });
-      }
-
-      const validation = await storage.getValidationById(validationId);
-      if (!validation || validation.partnerCode !== session.iqCode || validation.status !== 'accepted') {
-        return res.status(404).json({ message: "Validazione non trovata o non accettata" });
-      }
-
-      if (validation.usesRemaining <= 0) {
-        return res.status(400).json({ message: "Utilizzi esauriti per questo IQCode" });
-      }
-
-      // Decrementa utilizzi
-      const updated = await storage.decrementValidationUses(validationId);
-
-      res.json({ 
-        success: true, 
-        message: "IQCode utilizzato",
-        usesRemaining: updated.usesRemaining
-      });
-
-    } catch (error) {
-      console.error("Errore utilizzo IQCode:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
 
   // Turista richiede ricarica utilizzi (link SumUp)
   app.post("/api/iqcode/request-recharge", async (req: any, res: any) => {

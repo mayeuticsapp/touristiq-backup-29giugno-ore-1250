@@ -142,40 +142,7 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
     }
   };
 
-  const handleUseValidatedCode = async (validationId: number) => {
-    try {
-      const response = await fetch('/api/iqcode/use-validated', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({ validationId })
-      });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "IQCode Utilizzato",
-          description: `${data.message}. Utilizzi rimanenti: ${data.usesRemaining}`
-        });
-        loadValidations();
-      } else {
-        toast({
-          title: "Errore",
-          description: data.message,
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Errore",
-        description: "Errore di connessione",
-        variant: "destructive"
-      });
-    }
-  };
 
   const handleRechargeRequest = async (validationId: number) => {
     // Apri il link SumUp per il pagamento
@@ -276,26 +243,24 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
                       )}
                     </div>
                     {validation.status === 'accepted' && (
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm">
+                      <div className="bg-green-50 border border-green-200 rounded p-3">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <span className="text-green-800 font-medium">Validazione accettata, puoi applicare lo sconto</span>
+                        </div>
+                        <div className="text-sm text-green-700 mt-1">
                           <span className="font-medium">{validation.usesRemaining} utilizzi rimanenti</span> (su {validation.usesTotal} totali)
                         </div>
-                        {validation.usesRemaining > 0 ? (
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleUseValidatedCode(validation.id)}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            Utilizza IQCode
-                          </Button>
-                        ) : (
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleRechargeRequest(validation.id)}
-                            className="bg-blue-600 hover:bg-blue-700"
-                          >
-                            Ricarica 10 Utilizzi
-                          </Button>
+                        {validation.usesRemaining === 0 && (
+                          <div className="mt-2">
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleRechargeRequest(validation.id)}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              Ricarica 10 Utilizzi
+                            </Button>
+                          </div>
                         )}
                       </div>
                     )}
