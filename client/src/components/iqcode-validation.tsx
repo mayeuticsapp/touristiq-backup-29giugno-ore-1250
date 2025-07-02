@@ -42,6 +42,11 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
       if (response.ok) {
         const data = await response.json();
         setValidations(data);
+      } else {
+        // Log error for debugging but don't show toast for expected role restrictions
+        const errorData = await response.json();
+        console.error('Errore caricamento validazioni:', errorData.message);
+        setValidations([]);
       }
     } catch (error) {
       console.error('Errore caricamento validazioni:', error);
