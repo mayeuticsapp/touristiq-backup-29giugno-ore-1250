@@ -13,7 +13,7 @@ export interface LoginResponse {
 }
 
 export async function login(iqCode: string): Promise<LoginResponse> {
-  const response = await apiRequest("POST", "/api/auth/login", { iqCode });
+  const response = await apiRequest("POST", "/api/login", { iqCode });
   return response.json();
 }
 
