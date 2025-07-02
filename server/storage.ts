@@ -1859,8 +1859,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
           ro.valid_until as "validUntil",
           ro.category,
           ro.partner_code as "partnerCode",
-          ic.business_name as "partnerName",
-          ic.assigned_to as "assignedTo",
+          COALESCE(pd.business_name, ic.assigned_to, 'Partner') as "partnerName",
           pd.business_type as "businessType",
           pd.address,
           pd.city,
@@ -1868,9 +1867,9 @@ class ExtendedPostgreStorage extends PostgreStorage {
           pd.phone,
           pd.email,
           pd.website,
-          pd.wheelchair_accessible as "wheelchairAccessible",
-          pd.child_friendly as "childFriendly",
-          pd.gluten_free as "glutenFree"
+          COALESCE(pd.wheelchair_accessible, false) as "wheelchairAccessible",
+          COALESCE(pd.child_friendly, false) as "childFriendly",
+          COALESCE(pd.gluten_free, false) as "glutenFree"
         FROM real_offers ro
         LEFT JOIN iq_codes ic ON ro.partner_code = ic.code
         LEFT JOIN partner_details pd ON ro.partner_code = pd.partner_code
@@ -1888,7 +1887,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
         validUntil: row.validUntil,
         category: row.category,
         partnerCode: row.partnerCode,
-        partnerName: row.partnerName || row.assignedTo || 'Partner',
+        partnerName: row.partnerName || 'Partner',
         businessType: row.businessType || 'Non specificato',
         address: row.address,
         city: row.city,
@@ -1896,9 +1895,9 @@ class ExtendedPostgreStorage extends PostgreStorage {
         phone: row.phone,
         email: row.email,
         website: row.website,
-        wheelchairAccessible: row.wheelchairAccessible || false,
-        childFriendly: row.childFriendly || false,
-        glutenFree: row.glutenFree || false
+        wheelchairAccessible: row.wheelchairAccessible,
+        childFriendly: row.childFriendly,
+        glutenFree: row.glutenFree
       }));
     } catch (error) {
       console.error('Errore getAllPartnersWithOffers:', error);
