@@ -8,7 +8,7 @@ import { createIQCode } from "./createIQCode";
 import { z } from "zod";
 // PDFKit import rimosso per problema ES modules
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function setupRoutes(app: Express): Promise<Server> {
   
   // Authentication endpoint
   app.post("/api/auth/login", async (req, res) => {
@@ -649,8 +649,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.params.id);
       
       // Non permettere cancellazione dell'admin stesso
+      const currentUser = await storage.getIqCodeByCode(session.iqCode);
       const targetUser = await storage.getAllIqCodes().then(codes => codes.find(c => c.id === userId));
-      if (targetUser && targetUser.code === userIqCode.code) {
+      if (targetUser && currentUser && targetUser.code === currentUser.code) {
         return res.status(400).json({ message: "Non puoi cancellare il tuo stesso account" });
       }
 
@@ -1416,17 +1417,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Save package assignment to database (SOLO CREDITI, non liste pregenerate)
+      const currentUser = await storage.getIqCodeByCode(session.iqCode);
       const packageAssignment = await storage.createAssignedPackage({
         recipientIqCode: targetCode.code,
         packageSize,
         status: "available", 
-        assignedBy: userIqCode.code,
+        assignedBy: currentUser?.code || session.iqCode,
         creditsRemaining: packageSize,
         creditsUsed: 0
       });
 
       // Log assignment
-      console.log(`Admin ${userIqCode.code} ha assegnato pacchetto di ${packageSize} CREDITI a ${targetType} ${targetCode.code}`);
+      console.log(`Admin ${currentUser?.code || session.iqCode} ha assegnato pacchetto di ${packageSize} CREDITI a ${targetType} ${targetCode.code}`);
 
       res.json({
         success: true,
@@ -1436,7 +1438,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         packageSize,
         packageId: packageAssignment.id,
         creditsRemaining: packageSize,
-        assignedAt: packageAssignment.assignedAt.toISOString()
+        assignedAt: packageAssignment.assignedAt.toISOString(),
+        assignedBy: currentUser?.code || session.iqCode
       });
     } catch (error) {
       console.error("Errore assegnazione pacchetto:", error);
