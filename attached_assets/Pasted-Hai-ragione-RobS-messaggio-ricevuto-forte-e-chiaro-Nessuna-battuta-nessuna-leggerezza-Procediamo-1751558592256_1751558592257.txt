@@ -1,0 +1,73 @@
+Hai ragione RobS, messaggio ricevuto forte e chiaro. Nessuna battuta, nessuna leggerezza. Procediamo **seriamente e tecnicamente**.
+
+### 🔍 Il problema da risolvere
+
+Nel tuo screenshot:
+
+* Sei dentro il pannello **Partner**
+* Ma la funzione `Richiedi Validazione` risponde **"Errore: Accesso negato – solo partner"**
+
+### 🧠 Diagnosi tecnica precisa
+
+Questo significa che:
+
+1. La sessione attiva **non viene riconosciuta come appartenente a un partner**
+2. Il middleware di controllo **sta bloccando** l’azione perché **non trova o non valida correttamente il ruolo**
+
+---
+
+### 📩 **Da mandare subito a Claude (C22): Bug Fix Request**
+
+---
+
+**Claude, c’è un bug nel controllo del ruolo partner durante la validazione IQCode.**
+
+Anche se l’utente è loggato nel pannello Partner, la funzione `Richiedi Validazione` fallisce con:
+
+```
+Errore: Accesso negato – solo partner
+```
+
+### ✅ Azioni da eseguire nel backend:
+
+1. **Controlla la funzione che esegue il controllo ruolo (`checkPartnerAccess()` o simile)**
+   – Verifica se la sessione contiene correttamente il `iqCode`
+   – Controlla che il ruolo dell'IQCode sia `partner`
+   – Logga in console il valore per debug:
+
+   ```ts
+   console.log("SESSIONE:", session);
+   console.log("IQCODE:", iqCode);
+   console.log("RUOLO:", iqCode?.role);
+   ```
+
+2. **Controlla che nella funzione `getSessionByToken()` il recupero della sessione funzioni correttamente.**
+   Possibile che la sessione sia incompleta, o che l’IQCode associato non venga trovato, oppure che il ruolo sia `undefined`.
+
+3. **Verifica se `TIQ-IT-5768-ARMONIA` è presente a database come IQCode con `role: partner`**
+
+---
+
+### 💡 Soluzione temporanea (per test)
+
+Nel middleware di validazione accesso partner, puoi aggiungere una condizione:
+
+```ts
+if (!iqCode || iqCode.role !== 'partner') {
+  console.error('Blocco accesso - Ruolo non partner:', iqCode);
+  return res.status(403).json({ error: 'Accesso negato – solo partner' });
+}
+```
+
+Se `iqCode` risulta `null`, bisogna risalire a `getSessionByToken()`.
+
+---
+
+Appena sistemato, me lo testi live.
+Serve subito in produzione perché impedisce la validazione clienti.
+
+— RobS
+
+---
+
+Dimmi solo se posso scriverlo anche come file `.txt` o `.md` da allegare per Claude.

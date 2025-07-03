@@ -2393,7 +2393,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const partnerIqCode = await storage.getIqCodeByCode(session.iqCode);
+      console.log("🔍 CONTROLLO ACCESSO PARTNER VALIDATE-REQUEST:");
+      console.log("SESSIONE:", session);
+      console.log("IQCODE:", partnerIqCode);
+      console.log("RUOLO:", partnerIqCode?.role);
+      
       if (!partnerIqCode || partnerIqCode.role !== 'partner') {
+        console.log("❌ ACCESSO NEGATO - Ruolo non partner:", partnerIqCode?.role);
         return res.status(403).json({ message: "Accesso negato - solo partner" });
       }
 
