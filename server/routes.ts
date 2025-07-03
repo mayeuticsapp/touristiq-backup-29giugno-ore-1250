@@ -2440,7 +2440,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint per offerte reali - TUTTE le offerte dei partner attivi
+  // Endpoint per offerte reali - TUTTE le offerte dei partner attivi dal database
   app.get("/api/tourist/real-offers", async (req: any, res: any) => {
     try {
       const sessionToken = req.cookies.session_token;
@@ -2453,179 +2453,61 @@ export async function setupRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo turisti" });
       }
 
-      // Usa i dati reali dal database PostgreSQL - offerte partner
-      const realOffers = [
-        {
-          id: 1,
-          title: "20% di sconto su tutto",
-          description: "Sconto del 20% su abbigliamento e accessori",
-          discount_percentage: 20,
-          valid_until: null,
-          category: "boutique",
-          partner_code: "TIQ-RC-PRT-5842",
-          partner_name: "Boutique Calabria",
-          business_type: null,
-          address: null,
-          city: null,
-          province: null,
-          phone: null,
-          email: null,
-          website: null,
-          wheelchair_accessible: false,
-          child_friendly: false,
-          gluten_free: false
-        },
-        {
-          id: 2,
-          title: "15% su scarpe donna",
-          description: "Sconto speciale su scarpe firmate donna",
-          discount_percentage: 15,
-          valid_until: null,
-          category: "boutique",
-          partner_code: "TIQ-RC-PRT-5842",
-          partner_name: "Boutique Calabria",
-          business_type: null,
-          address: null,
-          city: null,
-          province: null,
-          phone: null,
-          email: null,
-          website: null,
-          wheelchair_accessible: false,
-          child_friendly: false,
-          gluten_free: false
-        },
-        {
-          id: 8,
-          title: "15% su menu degustazione",
-          description: "Cucina tradizionale calabrese con vista mare",
-          discount_percentage: 15,
-          valid_until: null,
-          category: "ristorante",
-          partner_code: "TIQ-VV-PRT-7801",
-          partner_name: "Partner",
-          business_type: null,
-          address: null,
-          city: null,
-          province: null,
-          phone: null,
-          email: null,
-          website: null,
-          wheelchair_accessible: false,
-          child_friendly: false,
-          gluten_free: false
-        },
-        {
-          id: 9,
-          title: "10% su specialità locali",
-          description: "Trattoria tipica con piatti della tradizione",
-          discount_percentage: 10,
-          valid_until: null,
-          category: "ristorante",
-          partner_code: "TIQ-VV-PRT-7802",
-          partner_name: "Partner",
-          business_type: null,
-          address: null,
-          city: null,
-          province: null,
-          phone: null,
-          email: null,
-          website: null,
-          wheelchair_accessible: false,
-          child_friendly: false,
-          gluten_free: false
-        },
-        {
-          id: 10,
-          title: "20% su menu pesce",
-          description: "Ristorante top 10 TripAdvisor specialità pesce",
-          discount_percentage: 20,
-          valid_until: null,
-          category: "ristorante",
-          partner_code: "TIQ-VV-PRT-7803",
-          partner_name: "Partner",
-          business_type: null,
-          address: null,
-          city: null,
-          province: null,
-          phone: null,
-          email: null,
-          website: null,
-          wheelchair_accessible: false,
-          child_friendly: false,
-          gluten_free: false
-        },
-        {
-          id: 11,
-          title: "12% su cena romantica",
-          description: "Ristorante con terrazza panoramica",
-          discount_percentage: 12,
-          valid_until: null,
-          category: "ristorante",
-          partner_code: "TIQ-VV-PRT-7804",
-          partner_name: "Partner",
-          business_type: null,
-          address: null,
-          city: null,
-          province: null,
-          phone: null,
-          email: null,
-          website: null,
-          wheelchair_accessible: false,
-          child_friendly: false,
-          gluten_free: false
-        },
-        {
-          id: 12,
-          title: "18% su menu hotel",
-          description: "Ristorante hotel vicino alla spiaggia",
-          discount_percentage: 18,
-          valid_until: null,
-          category: "ristorante",
-          partner_code: "TIQ-VV-PRT-7805",
-          partner_name: "Partner",
-          business_type: null,
-          address: null,
-          city: null,
-          province: null,
-          phone: null,
-          email: null,
-          website: null,
-          wheelchair_accessible: false,
-          child_friendly: false,
-          gluten_free: false
+      // Recupera TUTTE le offerte reali dal database PostgreSQL
+      const allPartners = await storage.getAllIqCodes();
+      const activePartners = allPartners.filter(code => 
+        code.role === 'partner' && 
+        code.status === 'approved' && 
+        code.isActive && 
+        !code.isDeleted
+      );
+
+      let allRealOffers: any[] = [];
+
+      // Per ogni partner attivo, recupera le sue offerte
+      for (const partner of activePartners) {
+        try {
+          const partnerOffers = await storage.getPartnerOffers(partner.code);
+          
+          // Ottieni nome partner dal onboarding
+          const partnerStatus = await storage.getPartnerOnboardingStatus(partner.code);
+          const partnerName = partnerStatus?.businessInfo?.businessName || partner.assignedTo || `Partner ${partner.code}`;
+          
+          // Aggiungi offerte del partner con i suoi dati
+          const formattedPartnerOffers = partnerOffers
+            .filter((offer: any) => offer.isActive !== false)
+            .map((offer: any) => ({
+              title: offer.title,
+              description: offer.description,
+              discountPercentage: parseInt(offer.discount),
+              validUntil: offer.validUntil,
+              partnerName: partnerName,
+              partnerCode: partner.code,
+              location: partner.location,
+              businessType: partnerStatus?.businessInfo?.businessType || 'partner',
+              address: partnerStatus?.businessInfo?.address,
+              city: partnerStatus?.businessInfo?.city,
+              province: partnerStatus?.businessInfo?.province,
+              phone: partnerStatus?.businessInfo?.phone,
+              email: partnerStatus?.businessInfo?.email,
+              website: partnerStatus?.businessInfo?.website,
+              wheelchairAccessible: partnerStatus?.accessibility?.wheelchairAccessible || false,
+              childFriendly: partnerStatus?.family?.childFriendly || false,
+              glutenFree: partnerStatus?.allergies?.glutenFree || false
+            }));
+
+          allRealOffers = allRealOffers.concat(formattedPartnerOffers);
+        } catch (partnerError) {
+          console.log(`Errore recupero offerte partner ${partner.code}:`, partnerError);
         }
-      ];
-      
-      const offersWithPartnerData = realOffers;
-      
-      // Formatta le offerte per il frontend turistico con PRIVACY IQCode
-      const formattedOffers = offersWithPartnerData.map((offer: any) => ({
-        // Dati offerta
-        title: offer.title,
-        description: offer.description, 
-        discountPercentage: offer.discount_percentage,
-        validUntil: offer.valid_until,
-        
-        // Dati partner REALI (NO IQCode mostrato per privacy)
-        partnerName: offer.partner_name,
-        businessType: offer.business_type,
-        address: offer.address,
-        city: offer.city,
-        province: offer.province,
-        phone: offer.phone,
-        email: offer.email,
-        website: offer.website,
-        
-        // Servizi e accessibilità
-        wheelchairAccessible: offer.wheelchair_accessible,
-        childFriendly: offer.child_friendly,
-        glutenFree: offer.gluten_free
-      }));
+      }
+
+      console.log(`✅ OFFERTE REALI: Recuperate ${allRealOffers.length} offerte da ${activePartners.length} partner attivi`);
 
       res.json({
-        discounts: formattedOffers,
-        totalOffers: offersWithPartnerData.length
+        discounts: allRealOffers,
+        totalOffers: allRealOffers.length,
+        activePartners: activePartners.length
       });
 
     } catch (error) {
