@@ -1981,6 +1981,103 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .returning();
     return result[0];
   }
+
+  // Metodi onboarding partner per PostgreSQL
+  async getPartnerOnboardingStatus(partnerCode: string): Promise<any> {
+    try {
+      // Verifica nel database se il partner ha completato l'onboarding
+      const iqCodeRecord = await this.getIqCodeByCode(partnerCode);
+      if (iqCodeRecord && iqCodeRecord.internalNote) {
+        // Controlla se c'è il bypass admin o onboarding completato
+        try {
+          const noteData = JSON.parse(iqCodeRecord.internalNote);
+          
+          if (noteData.completed === true || noteData.bypassed === true) {
+            return {
+              completed: true,
+              currentStep: 'completed',
+              completedSteps: ['business', 'accessibility', 'allergies', 'family', 'specialties', 'services'],
+              partnerCode: partnerCode,
+              businessInfo: true,
+              accessibilityInfo: true,
+              allergyInfo: true,
+              familyInfo: true,
+              specialtyInfo: true,
+              servicesInfo: true,
+              isCompleted: true,
+              bypassed: noteData.bypassed || false
+            };
+          }
+        } catch (jsonError) {
+          console.log(`DEBUG: Errore parsing JSON:`, jsonError);
+          // Se non è JSON valido, prova il controllo stringa legacy
+          if (iqCodeRecord.internalNote.includes('ONBOARDING_COMPLETED') || 
+              iqCodeRecord.internalNote.includes('ONBOARDING COMPLETED') ||
+              iqCodeRecord.internalNote.startsWith('ONBOARDING')) {
+            return {
+              completed: true,
+              currentStep: 'completed',
+              completedSteps: ['business', 'accessibility', 'allergies', 'family', 'specialties', 'services'],
+              partnerCode: partnerCode,
+              businessInfo: true,
+              accessibilityInfo: true,
+              allergyInfo: true,
+              familyInfo: true,
+              specialtyInfo: true,
+              servicesInfo: true,
+              isCompleted: true
+            };
+          }
+        }
+      }
+    } catch (error) {
+      console.log('Errore verifica onboarding database:', error);
+    }
+    
+    // Fallback alla memoria globale
+    const isCompleted = globalPartnerOnboardingData.get(`completed_${partnerCode}`) || false;
+    
+    if (isCompleted) {
+      return {
+        completed: true,
+        currentStep: 'completed',
+        completedSteps: ['business', 'accessibility', 'allergies', 'family', 'specialties', 'services'],
+        partnerCode: partnerCode,
+        businessInfo: true,
+        accessibilityInfo: true,
+        allergyInfo: true,
+        familyInfo: true,
+        specialtyInfo: true,
+        servicesInfo: true,
+        isCompleted: true
+      };
+    }
+    
+    return {
+      completed: false,
+      currentStep: 'business',
+      completedSteps: [],
+      partnerCode: partnerCode,
+      businessInfo: false,
+      accessibilityInfo: false,
+      allergyInfo: false,
+      familyInfo: false,
+      specialtyInfo: false,
+      servicesInfo: false,
+      isCompleted: false
+    };
+  }
+
+  async savePartnerOnboardingStep(partnerCode: string, step: string, data: any): Promise<void> {
+    // Salva step nella memoria globale
+    globalPartnerOnboardingData.set(`${partnerCode}_step_${step}`, data);
+  }
+
+  async completePartnerOnboarding(partnerCode: string): Promise<void> {
+    // Marca come completato nella memoria globale
+    globalPartnerOnboardingData.set(`completed_${partnerCode}`, true);
+    console.log(`Onboarding completato per partner ${partnerCode}`);
+  }
 }
 
 // Extend MemStorage con metodi impostazioni
