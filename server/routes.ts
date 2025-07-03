@@ -2409,7 +2409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const partnerName = partnerStatus?.businessInfo?.businessName || `Partner ${session.iqCode}`;
 
       // Crea richiesta di validazione
-      const validation = await storage.createIqcodeValidation({
+      const validation = await (storage as any).createIqcodeValidation({
         touristIqCode,
         partnerCode: session.iqCode,
         partnerName,
@@ -2773,7 +2773,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo partner" });
       }
 
-      const validations = await storage.getValidationsByPartner(session.iqCode);
+      const validations = await (storage as any).getValidationsByPartner(session.iqCode);
       res.json(validations);
 
     } catch (error) {
