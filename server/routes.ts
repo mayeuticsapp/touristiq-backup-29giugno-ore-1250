@@ -529,8 +529,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo admin" });
       }
 
-      const adminCredits = await storage.getAdminCredits(userIqCode.code);
-      const generationLog = await storage.getAdminGenerationLog(userIqCode.code);
+      const adminCredits = await storage.getAdminCredits(session.iqCode);
+      const generationLog = await storage.getAdminGenerationLog(session.iqCode);
 
       res.json({
         credits: adminCredits || { creditsRemaining: 1000, creditsUsed: 0 },
@@ -621,7 +621,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           break;
       }
 
-      const updatedUser = await storage.updateIqCodeStatus(userId, newStatus, userIqCode.code);
+      const updatedUser = await storage.updateIqCodeStatus(userId, newStatus, session.iqCode);
       res.json({ success: true, user: updatedUser });
 
     } catch (error) {

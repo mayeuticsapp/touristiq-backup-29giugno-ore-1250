@@ -1,0 +1,108 @@
+Eccole, **istruzioni operative per C22** (Claude) da inviare *così come sono*, chiare e senza fronzoli:
+
+---
+
+### 🛠️ ISTRUZIONI PER C22 – FIX ACCESSO ADMIN (TouristIQ)
+
+**Contesto:**
+Il pannello admin richiede due volte il login. Anche dopo aver fatto login, l’admin non viene riconosciuto correttamente. Il controllo `userIqCode.role !== 'admin'` fallisce nonostante l’utente sia admin.
+
+---
+
+### ✅ Obiettivo
+
+Garantire che un utente admin correttamente autenticato **entri una volta sola** e venga riconosciuto subito nel pannello `/admin`.
+
+---
+
+### 🔍 Diagnosi da verificare
+
+1. Il token sessione viene **salvato dopo il login**?
+2. Il token viene **inviato correttamente** nelle richieste al backend?
+3. Il backend riceve e **decodifica correttamente** il token?
+4. Viene chiamato `getIqCodeByCode(...)` **con il codice corretto** da `session.iqCode`?
+
+---
+
+### 🧠 Ipotesi più probabile
+
+Il token non viene letto/inviato nella prima renderizzazione di `/admin`, quindi la richiesta a `getIqCodeByCode(...)` fallisce → ritorna 403.
+
+---
+
+### 💡 Istruzioni tecniche per fixare
+
+#### 1. **Salvataggio token dopo il login**
+
+Verificare nel file di login:
+
+```ts
+localStorage.setItem("sessionToken", response.sessionToken);
+```
+
+#### 2. **Invio token nelle richieste fetch/axios**
+
+Controllare che tutte le API protette (come `/admin/check`) ricevano l’`Authorization` header:
+
+```ts
+fetch("/api/admin/check", {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("sessionToken")}`
+  }
+});
+```
+
+#### 3. **Middleware backend**
+
+Nel middleware Express (o funzione server handler), estrarre correttamente il token:
+
+```ts
+const token = req.headers.authorization?.split(" ")[1];
+```
+
+Poi usare:
+
+```ts
+const session = await storage.getSessionByToken(token);
+```
+
+E da lì:
+
+```ts
+const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+```
+
+#### 4. **Fallback nel frontend (React)**
+
+Evitare chiamate premature prima che il token sia disponibile:
+
+```ts
+useEffect(() => {
+  const token = localStorage.getItem("sessionToken");
+  if (!token) return;
+
+  // Effettua la chiamata solo se il token esiste
+  fetch("/api/admin/check", { headers: { Authorization: `Bearer ${token}` } })
+    .then(res => res.json())
+    .then(data => {
+      // mostra dashboard
+    });
+}, []);
+```
+
+---
+
+### 🎯 Conclusione
+
+C22 deve assicurarsi che:
+
+* il token venga salvato correttamente
+* venga inviato **in automatico** in ogni chiamata protetta
+* il backend gestisca bene l’autenticazione
+* il frontend attenda la sessione prima di fare richieste
+
+---
+
+Se ti serve, ti scrivo io il codice `admin/check.ts` completo e anche la funzione di verifica in React.
+
+Fammi sapere.

@@ -2229,6 +2229,92 @@ class ExtendedPostgreStorage extends PostgreStorage {
     globalPartnerOnboardingData.set(`completed_${partnerCode}`, true);
     console.log(`Onboarding completato per partner ${partnerCode}`);
   }
+
+  // METODI MANCANTI PER VALIDAZIONE IQCODE - POSTGRESQL
+  async getValidationsByPartner(partnerCode: string): Promise<IqcodeValidation[]> {
+    const result = await this.db.select()
+      .from(iqcodeValidations)
+      .where(eq(iqcodeValidations.partnerCode, partnerCode))
+      .orderBy(desc(iqcodeValidations.requestedAt));
+    return result;
+  }
+
+  async getValidationsByTourist(touristCode: string): Promise<IqcodeValidation[]> {
+    const result = await this.db.select()
+      .from(iqcodeValidations)  
+      .where(eq(iqcodeValidations.touristIqCode, touristCode))
+      .orderBy(desc(iqcodeValidations.requestedAt));
+    return result;
+  }
+
+  async getValidationById(id: number): Promise<IqcodeValidation | null> {
+    const result = await this.db.select()
+      .from(iqcodeValidations)
+      .where(eq(iqcodeValidations.id, id));
+    return result[0] || null;
+  }
+
+  async updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<IqcodeValidation> {
+    const result = await this.db.update(iqcodeValidations)
+      .set({ 
+        status, 
+        respondedAt: respondedAt || new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(iqcodeValidations.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async decrementValidationUses(validationId: number): Promise<IqcodeValidation> {
+    const validation = await this.getValidationById(validationId);
+    if (!validation) throw new Error('Validazione non trovata');
+    
+    const result = await this.db.update(iqcodeValidations)
+      .set({ 
+        usesRemaining: Math.max(0, validation.usesRemaining - 1),
+        updatedAt: new Date()
+      })
+      .where(eq(iqcodeValidations.id, validationId))
+      .returning();
+    return result[0];
+  }
+
+  async getAllValidations(): Promise<IqcodeValidation[]> {
+    const result = await this.db.select().from(iqcodeValidations);
+    return result;
+  }
+
+  // METODI MANCANTI PER OFFERTE PARTNER - POSTGRESQL
+  async createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<PartnerOffer> {
+    const result = await this.db.insert(partnerOffers).values({
+      partnerCode: offer.partnerCode,
+      title: offer.title,
+      description: offer.description,
+      discount: offer.discount,
+      validUntil: offer.validUntil ? new Date(offer.validUntil) : undefined,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return result[0];
+  }
+
+  async createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any> {
+    // Per ora implementazione base - si può estendere con tabella dedicata
+    return {
+      id: Date.now(),
+      partnerCode: client.partnerCode,
+      name: client.name,
+      notes: client.notes,
+      createdAt: new Date()
+    };
+  }
+
+  async createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void> {
+    // Implementazione base per richieste collegamento turistico
+    console.log(`Richiesta collegamento da ${partnerCode} a ${touristCode}`);
+  }
 }
 
 // Extend MemStorage con metodi impostazioni
