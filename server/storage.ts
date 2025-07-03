@@ -1275,6 +1275,207 @@ export class PostgreStorage implements IStorage {
   async updateStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
   async checkGestionaleAccess(): Promise<{hasAccess: boolean, hoursRemaining?: number}> { return { hasAccess: false }; }
 
+  // Sistema validazione IQCode methods per PostgreSQL
+  async createIqcodeValidation(data: any): Promise<any> {
+    try {
+      const [created] = await this.db
+        .insert(iqcodeValidations)
+        .values({
+          touristIqCode: data.touristIqCode,
+          partnerCode: data.partnerCode,
+          partnerName: data.partnerName,
+          status: data.status || 'pending',
+          usesRemaining: data.usesRemaining || 10,
+          usesTotal: data.usesTotal || 10,
+          requestedAt: new Date()
+        })
+        .returning();
+      return created;
+    } catch (error) {
+      console.error('Errore createIqcodeValidation PostgreSQL:', error);
+      throw error;
+    }
+  }
+
+  async getValidationsByPartner(partnerCode: string): Promise<any[]> {
+    try {
+      const validations = await this.db
+        .select()
+        .from(iqcodeValidations)
+        .where(eq(iqcodeValidations.partnerCode, partnerCode))
+        .orderBy(desc(iqcodeValidations.requestedAt));
+      return validations;
+    } catch (error) {
+      console.error('Errore getValidationsByPartner PostgreSQL:', error);
+      return [];
+    }
+  }
+
+  async getValidationsByTourist(touristCode: string): Promise<any[]> {
+    try {
+      const validations = await this.db
+        .select()
+        .from(iqcodeValidations)
+        .where(eq(iqcodeValidations.touristIqCode, touristCode))
+        .orderBy(desc(iqcodeValidations.requestedAt));
+      return validations;
+    } catch (error) {
+      console.error('Errore getValidationsByTourist PostgreSQL:', error);
+      return [];
+    }
+  }
+
+  async getValidationById(id: number): Promise<any | undefined> {
+    try {
+      const result = await this.db
+        .select()
+        .from(iqcodeValidations)
+        .where(eq(iqcodeValidations.id, id))
+        .limit(1);
+      return result[0];
+    } catch (error) {
+      console.error('Errore getValidationById PostgreSQL:', error);
+      return undefined;
+    }
+  }
+
+  async updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<any> {
+    try {
+      const updateData: any = { status };
+      if (respondedAt) {
+        updateData.respondedAt = respondedAt;
+      }
+
+      const [updated] = await this.db
+        .update(iqcodeValidations)
+        .set(updateData)
+        .where(eq(iqcodeValidations.id, id))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error('Errore updateValidationStatus PostgreSQL:', error);
+      throw error;
+    }
+  }
+
+  async decrementValidationUses(validationId: number): Promise<any> {
+    try {
+      const validation = await this.getValidationById(validationId);
+      if (!validation) {
+        throw new Error('Validazione non trovata');
+      }
+
+      const [updated] = await this.db
+        .update(iqcodeValidations)
+        .set({ 
+          usesRemaining: Math.max(0, validation.usesRemaining - 1),
+          updatedAt: new Date()
+        })
+        .where(eq(iqcodeValidations.id, validationId))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error('Errore decrementValidationUses PostgreSQL:', error);
+      throw error;
+    }
+  }
+
+  async getAllValidations(): Promise<any[]> {
+    try {
+      return await this.db.select().from(iqcodeValidations);
+    } catch (error) {
+      console.error('Errore getAllValidations PostgreSQL:', error);
+      return [];
+    }
+  }
+
+  // Partner offers methods per PostgreSQL
+  async createPartnerOffer(offer: any): Promise<any> {
+    try {
+      const [created] = await this.db
+        .insert(partnerOffers)
+        .values({
+          partnerCode: offer.partnerCode,
+          title: offer.title,
+          description: offer.description,
+          discount: offer.discount,
+          validUntil: offer.validUntil,
+          createdAt: new Date()
+        })
+        .returning();
+      return created;
+    } catch (error) {
+      console.error('Errore createPartnerOffer PostgreSQL:', error);
+      throw error;
+    }
+  }
+
+  async updatePartnerOffer(id: number, offer: any): Promise<any> {
+    try {
+      const [updated] = await this.db
+        .update(partnerOffers)
+        .set({
+          title: offer.title,
+          description: offer.description,
+          discount: offer.discount,
+          validUntil: offer.validUntil,
+          updatedAt: new Date()
+        })
+        .where(eq(partnerOffers.id, parseInt(id.toString())))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error('Errore updatePartnerOffer PostgreSQL:', error);
+      throw error;
+    }
+  }
+
+  async deletePartnerOffer(id: number): Promise<void> {
+    try {
+      await this.db
+        .delete(partnerOffers)
+        .where(eq(partnerOffers.id, parseInt(id.toString())));
+    } catch (error) {
+      console.error('Errore deletePartnerOffer PostgreSQL:', error);
+      throw error;
+    }
+  }
+
+  // Recharge methods placeholders per PostgreSQL
+  async createIqcodeRecharge(data: any): Promise<any> {
+    return { id: Date.now(), ...data, createdAt: new Date() };
+  }
+
+  async getRechargesWithFilters(filters: any): Promise<any> {
+    return { recharges: [], total: 0, stats: {} };
+  }
+
+  async activateRecharge(rechargeId: number, adminNote?: string): Promise<any> {
+    return { id: rechargeId, status: 'activated', adminNote };
+  }
+
+  // Metodi offerte reali per PostgreSQL
+  async getRealOffersByCity(cityName: string): Promise<any[]> {
+    // Implementazione base - restituisce offerte mock per ora
+    return [];
+  }
+
+  async getRealOffersNearby(latitude: number, longitude: number, radius: number): Promise<any[]> {
+    return [];
+  }
+
+  async getAcceptedPartnersByTourist(touristCode: string): Promise<any[]> {
+    return [];
+  }
+
+  async getRealOffersByPartners(partnerCodes: string[]): Promise<any[]> {
+    return [];
+  }
+
+  async getAllPartnersWithOffers(): Promise<any[]> {
+    return [];
+  }
+
   // Metodi onboarding partner per PostgreSQL
   async getPartnerOnboardingStatus(partnerCode: string): Promise<any> {
     try {
