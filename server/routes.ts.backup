@@ -269,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (codeType === "professional") {
         // CODICI PROFESSIONALI - SEMPRE DISPONIBILI (NON SCALANO CREDITI)
         const { createIQCode } = await import("./createIQCode");
-        const result = await createIQCode(codeType, role, location, assignedTo || `Generato da ${session.iqCode}`);
+        const result = await createIQCode(codeType, role, location, assignedTo || `Generato da ${userIqCode.code}`);
         // NON scala crediti per codici professionali
         res.json(result);
         return;
@@ -277,7 +277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (codeType === "emotional") {
         // CODICI EMOZIONALI - VERIFICO E SCALO PACCHETTO ROBS
-        const adminCredits = await storage.getAdminCredits(session.iqCode);
+        const adminCredits = await storage.getAdminCredits(userIqCode.code);
         if (adminCredits && adminCredits.creditsRemaining <= 0) {
           return res.status(400).json({ 
             message: "Hai finito i tuoi 1000 codici, oh Grande RobS 😅" 
@@ -285,10 +285,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const { createIQCode } = await import("./createIQCode");
-        const result = await createIQCode(codeType, role, location, assignedTo || `Generato da ${session.iqCode}`);
+        const result = await createIQCode(codeType, role, location, assignedTo || `Generato da ${userIqCode.code}`);
         
         // Scala crediti SOLO per codici emozionali
-        await storage.decrementAdminCredits(session.iqCode);
+        await storage.decrementAdminCredits(userIqCode.code);
         
         res.json(result);
         return;
@@ -411,7 +411,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Sessione non valida" });
       }
 
-      if (session.role !== 'admin') {
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
         return res.status(403).json({ message: "Accesso negato - solo admin" });
       }
 
@@ -454,7 +455,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Sessione non valida" });
       }
 
-      if (session.role !== 'admin') {
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
         return res.status(403).json({ message: "Accesso negato - solo admin" });
       }
 
@@ -479,7 +481,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Sessione non valida" });
       }
 
-      if (session.role !== 'admin') {
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
         return res.status(403).json({ message: "Accesso negato - solo admin" });
       }
 
@@ -525,7 +528,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Sessione non valida" });
       }
 
-      if (session.role !== 'admin') {
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
         return res.status(403).json({ message: "Accesso negato - solo admin" });
       }
 
@@ -594,7 +598,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Sessione non valida" });
       }
 
-      if (session.role !== 'admin') {
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
         return res.status(403).json({ message: "Accesso negato - solo admin" });
       }
 
@@ -642,7 +647,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Sessione non valida" });
       }
 
-      if (session.role !== 'admin') {
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
         return res.status(403).json({ message: "Accesso negato - solo admin" });
       }
 
@@ -676,7 +682,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Sessione non valida" });
       }
 
-      if (session.role !== 'admin') {
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
         return res.status(403).json({ message: "Accesso negato - solo admin" });
       }
 
@@ -735,7 +742,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Sessione non valida" });
       }
 
-      if (session.role !== 'admin') {
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
         return res.status(403).json({ message: "Accesso negato - solo admin" });
       }
 
@@ -1386,7 +1394,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Sessione non valida" });
       }
 
-      if (session.role !== 'admin') {
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'admin') {
         return res.status(403).json({ message: "Accesso negato - solo admin" });
       }
 
