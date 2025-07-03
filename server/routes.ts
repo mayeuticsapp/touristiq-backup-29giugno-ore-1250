@@ -1011,7 +1011,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Crea richiesta di collegamento
-      await storage.createTouristLinkRequest(session.iqCode, touristCode.toUpperCase());
+      await (storage as any).createTouristLinkRequest(session.iqCode, touristCode.toUpperCase());
 
       res.json({ 
         success: true, 
