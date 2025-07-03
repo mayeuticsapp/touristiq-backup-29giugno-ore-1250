@@ -1272,6 +1272,141 @@ export class PostgreStorage implements IStorage {
   async createStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
   async updateStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
   async checkGestionaleAccess(): Promise<{hasAccess: boolean, hoursRemaining?: number}> { return { hasAccess: false }; }
+
+  // Metodi onboarding partner per PostgreSQL
+  async getPartnerOnboardingStatus(partnerCode: string): Promise<any> {
+    try {
+      // Verifica nel database se il partner ha completato l'onboarding
+      const iqCodeRecord = await this.getIqCodeByCode(partnerCode);
+      if (iqCodeRecord && iqCodeRecord.internalNote) {
+        // Controlla se c'è il bypass admin o onboarding completato
+        try {
+          const noteData = JSON.parse(iqCodeRecord.internalNote);
+          
+          if (noteData.completed === true || noteData.bypassed === true) {
+            return {
+              completed: true,
+              currentStep: 'completed',
+              completedSteps: ['business', 'accessibility', 'allergies', 'family', 'specialties', 'services'],
+              partnerCode: partnerCode,
+              bypassed: noteData.bypassed || false
+            };
+          }
+          
+          if (noteData.onboarding) {
+            return {
+              completed: false,
+              currentStep: noteData.onboarding.currentStep || 'business',
+              completedSteps: noteData.onboarding.completedSteps || [],
+              partnerCode: partnerCode
+            };
+          }
+        } catch (parseError) {
+          console.log('Errore parsing note interne per onboarding:', parseError);
+        }
+      }
+      
+      // Default: nessun onboarding iniziato
+      return {
+        completed: false,
+        currentStep: 'business',
+        completedSteps: [],
+        partnerCode: partnerCode
+      };
+    } catch (error) {
+      console.error('Errore getPartnerOnboardingStatus PostgreSQL:', error);
+      return {
+        completed: false,
+        currentStep: 'business',
+        completedSteps: [],
+        partnerCode: partnerCode
+      };
+    }
+  }
+
+  async savePartnerOnboardingStep(partnerCode: string, step: string, data: any): Promise<void> {
+    try {
+      const iqCodeRecord = await this.getIqCodeByCode(partnerCode);
+      if (iqCodeRecord) {
+        let noteData: any = {};
+        
+        // Parse existing data
+        if (iqCodeRecord.internalNote) {
+          try {
+            noteData = JSON.parse(iqCodeRecord.internalNote);
+          } catch (e) {
+            console.log('Parsing error, starting fresh');
+          }
+        }
+        
+        // Initialize onboarding object if not exists
+        if (!noteData.onboarding) {
+          noteData.onboarding = {
+            currentStep: 'business',
+            completedSteps: [],
+            stepData: {}
+          };
+        }
+        
+        // Save step data
+        noteData.onboarding.stepData[step] = data;
+        
+        // Add to completed steps if not already there
+        if (!noteData.onboarding.completedSteps.includes(step)) {
+          noteData.onboarding.completedSteps.push(step);
+        }
+        
+        // Determine next step
+        const allSteps = ['business', 'accessibility', 'allergies', 'family', 'specialties', 'services'];
+        const currentIndex = allSteps.indexOf(step);
+        if (currentIndex < allSteps.length - 1) {
+          noteData.onboarding.currentStep = allSteps[currentIndex + 1];
+        } else {
+          noteData.onboarding.currentStep = 'completed';
+        }
+        
+        // Update database
+        await this.db.update(iqCodes)
+          .set({ internalNote: JSON.stringify(noteData) })
+          .where(eq(iqCodes.code, partnerCode));
+        
+        console.log(`Step ${step} salvato per partner ${partnerCode}`);
+      }
+    } catch (error) {
+      console.error('Errore savePartnerOnboardingStep PostgreSQL:', error);
+      throw error;
+    }
+  }
+
+  async completePartnerOnboarding(partnerCode: string): Promise<void> {
+    try {
+      const iqCodeRecord = await this.getIqCodeByCode(partnerCode);
+      if (iqCodeRecord) {
+        let noteData: any = {};
+        
+        if (iqCodeRecord.internalNote) {
+          try {
+            noteData = JSON.parse(iqCodeRecord.internalNote);
+          } catch (e) {
+            console.log('Parsing error, starting fresh');
+          }
+        }
+        
+        // Mark as completed
+        noteData.completed = true;
+        noteData.completedAt = new Date().toISOString();
+        
+        await this.db.update(iqCodes)
+          .set({ internalNote: JSON.stringify(noteData) })
+          .where(eq(iqCodes.code, partnerCode));
+        
+        console.log(`Onboarding completato per partner ${partnerCode}`);
+      }
+    } catch (error) {
+      console.error('Errore completePartnerOnboarding PostgreSQL:', error);
+      throw error;
+    }
+  }
 }
 
 // Extend PostgreStorage con metodi impostazioni
