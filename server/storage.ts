@@ -1914,6 +1914,73 @@ class ExtendedPostgreStorage extends PostgreStorage {
     
     return result;
   }
+
+  // Metodi validazione IQCode per PostgreSQL
+  async createIqcodeValidation(data: {partnerCode: string, touristCode: string, requestedAt: Date, status: string, usesRemaining: number, usesTotal: number}): Promise<IqcodeValidation> {
+    const validationData = {
+      partnerIqCode: data.partnerCode,
+      touristIqCode: data.touristCode,
+      requestedAt: data.requestedAt,
+      status: data.status,
+      usesRemaining: data.usesRemaining,
+      usesTotal: data.usesTotal
+    };
+    
+    const result = await this.db.insert(iqcodeValidations).values(validationData).returning();
+    return result[0];
+  }
+
+  async getValidationsByTourist(touristCode: string): Promise<IqcodeValidation[]> {
+    const result = await this.db
+      .select()
+      .from(iqcodeValidations)
+      .where(eq(iqcodeValidations.touristIqCode, touristCode));
+    return result;
+  }
+
+  async getValidationsByPartner(partnerCode: string): Promise<IqcodeValidation[]> {
+    const result = await this.db
+      .select()
+      .from(iqcodeValidations)
+      .where(eq(iqcodeValidations.partnerIqCode, partnerCode));
+    return result;
+  }
+
+  async getValidationById(id: number): Promise<IqcodeValidation | null> {
+    const result = await this.db
+      .select()
+      .from(iqcodeValidations)
+      .where(eq(iqcodeValidations.id, id));
+    return result[0] || null;
+  }
+
+  async updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<IqcodeValidation> {
+    const updateData: any = { status };
+    if (respondedAt) {
+      updateData.respondedAt = respondedAt;
+    }
+    
+    const result = await this.db
+      .update(iqcodeValidations)
+      .set(updateData)
+      .where(eq(iqcodeValidations.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async decrementValidationUses(validationId: number): Promise<IqcodeValidation> {
+    const validation = await this.getValidationById(validationId);
+    if (!validation) throw new Error('Validazione non trovata');
+    
+    const newUsesRemaining = Math.max(0, validation.usesRemaining - 1);
+    
+    const result = await this.db
+      .update(iqcodeValidations)
+      .set({ usesRemaining: newUsesRemaining })
+      .where(eq(iqcodeValidations.id, validationId))
+      .returning();
+    return result[0];
+  }
 }
 
 // Extend MemStorage con metodi impostazioni
@@ -2177,4 +2244,4 @@ class ExtendedMemStorage extends MemStorage {
 }
 
 // Use PostgreSQL storage if DATABASE_URL exists, otherwise fallback to memory
-export const storage = process.env.DATABASE_URL ? new ExtendedPostgreStorage() : new ExtendedMemStorage();
+export const storage = process.env.DATABASE_URL ? new PostgreStorage() : new ExtendedMemStorage();
