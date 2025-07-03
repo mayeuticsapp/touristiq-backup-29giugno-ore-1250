@@ -1,4 +1,4 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeValidations, iqcodeRecharges, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeValidation, type InsertIqcodeValidation, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeValidations, iqcodeRecharges, partnerOffers, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeValidation, type InsertIqcodeValidation, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt, desc, like, sql, inArray } from "drizzle-orm";
@@ -818,7 +818,7 @@ export class PostgreStorage implements IStorage {
 
   constructor() {
     const sql = neon(process.env.DATABASE_URL!);
-    this.db = drizzle(sql, { schema: { iqCodes, sessions, assignedPackages, guests } });
+    this.db = drizzle(sql, { schema: { iqCodes, sessions, assignedPackages, guests, partnerOffers, iqcodeValidations } });
     this.initializeDefaultCodes();
   }
 
@@ -904,7 +904,9 @@ export class PostgreStorage implements IStorage {
   }
 
   async getIqCodeByCode(code: string): Promise<IqCode | undefined> {
+    console.log("🔍 IQ LOGIN ATTEMPT:", code);
     const result = await this.db.select().from(iqCodes).where(eq(iqCodes.code, code)).limit(1);
+    console.log("📋 IQ CODE FOUND:", result[0] ? "✅ SI" : "❌ NO");
     return result[0];
   }
 
@@ -1405,6 +1407,20 @@ export class PostgreStorage implements IStorage {
     } catch (error) {
       console.error('Errore completePartnerOnboarding PostgreSQL:', error);
       throw error;
+    }
+  }
+
+  // Metodo per recuperare offerte partner
+  async getPartnerOffers(partnerCode: string): Promise<any[]> {
+    try {
+      const result = await this.db
+        .select()
+        .from(partnerOffers)
+        .where(eq(partnerOffers.partnerCode, partnerCode));
+      return result;
+    } catch (error) {
+      console.error('Errore getPartnerOffers PostgreSQL:', error);
+      return [];
     }
   }
 }
