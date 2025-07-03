@@ -382,65 +382,84 @@ export default function TouristDashboard() {
 
               {/* Azioni principali */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {selectedPartner.phone && (
-                  <Button 
-                    onClick={() => window.open(`https://wa.me/${selectedPartner.phone.replace(/[^0-9]/g, '')}?text=Ciao! Ho visto la vostra offerta "${selectedPartner.title}" su TouristIQ. Vorrei prenotare e usufruire dello sconto del ${selectedPartner.discountPercentage}%.`, '_blank')}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <Phone className="w-4 h-4 mr-2" />
-                    Contatta su WhatsApp
-                  </Button>
-                )}
+                <Button 
+                  onClick={() => {
+                    if (selectedPartner.phone) {
+                      window.open(`https://wa.me/${selectedPartner.phone.replace(/[^0-9]/g, '')}?text=Ciao! Ho visto la vostra offerta "${selectedPartner.title}" su TouristIQ. Vorrei prenotare e usufruire dello sconto del ${selectedPartner.discountPercentage}%.`, '_blank');
+                    } else {
+                      alert('Numero WhatsApp non disponibile per questo partner');
+                    }
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Contatta su WhatsApp
+                </Button>
                 
-                {selectedPartner.address && (
-                  <Button 
-                    variant="outline"
-                    onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(selectedPartner.address + ', ' + selectedPartner.city)}`, '_blank')}
-                    className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                  >
-                    <Navigation className="w-4 h-4 mr-2" />
-                    Apri in Maps
-                  </Button>
-                )}
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    const searchLocation = selectedPartner.address 
+                      ? `${selectedPartner.address}, ${selectedPartner.city}`
+                      : `${selectedPartner.partnerName}, ${selectedPartner.city || 'Calabria'}`;
+                    window.open(`https://maps.google.com/?q=${encodeURIComponent(searchLocation)}`, '_blank');
+                  }}
+                  className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                >
+                  <Navigation className="w-4 h-4 mr-2" />
+                  Apri in Maps
+                </Button>
               </div>
 
               {/* Azioni secondarie */}
               <div className="flex gap-2 flex-wrap">
-                {selectedPartner.website && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => window.open(selectedPartner.website, '_blank')}
-                    className="text-purple-600 hover:bg-purple-50"
-                  >
-                    <ExternalLink className="w-4 h-4 mr-1" />
-                    Sito Web
-                  </Button>
-                )}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    if (selectedPartner.website) {
+                      window.open(selectedPartner.website, '_blank');
+                    } else {
+                      alert('Sito web non disponibile per questo partner');
+                    }
+                  }}
+                  className="text-purple-600 hover:bg-purple-50"
+                >
+                  <ExternalLink className="w-4 h-4 mr-1" />
+                  Sito Web
+                </Button>
                 
-                {selectedPartner.email && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => window.open(`mailto:${selectedPartner.email}?subject=Richiesta informazioni offerta ${selectedPartner.title}&body=Salve, ho visto la vostra offerta su TouristIQ e vorrei maggiori informazioni per usufruire dello sconto del ${selectedPartner.discountPercentage}%.`, '_blank')}
-                    className="text-gray-600 hover:bg-gray-50"
-                  >
-                    <Mail className="w-4 h-4 mr-1" />
-                    Invia Email
-                  </Button>
-                )}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    if (selectedPartner.email) {
+                      window.open(`mailto:${selectedPartner.email}?subject=Richiesta informazioni offerta ${selectedPartner.title}&body=Salve, ho visto la vostra offerta su TouristIQ e vorrei maggiori informazioni per usufruire dello sconto del ${selectedPartner.discountPercentage}%.`, '_blank');
+                    } else {
+                      alert('Email non disponibile per questo partner');
+                    }
+                  }}
+                  className="text-gray-600 hover:bg-gray-50"
+                >
+                  <Mail className="w-4 h-4 mr-1" />
+                  Invia Email
+                </Button>
 
-                {selectedPartner.phone && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => window.open(`tel:${selectedPartner.phone}`, '_blank')}
-                    className="text-blue-600 hover:bg-blue-50"
-                  >
-                    <Phone className="w-4 h-4 mr-1" />
-                    Chiama
-                  </Button>
-                )}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    if (selectedPartner.phone) {
+                      window.open(`tel:${selectedPartner.phone}`, '_blank');
+                    } else {
+                      alert('Numero di telefono non disponibile per questo partner');
+                    }
+                  }}
+                  className="text-blue-600 hover:bg-blue-50"
+                >
+                  <Phone className="w-4 h-4 mr-1" />
+                  Chiama
+                </Button>
               </div>
 
               {/* Note importanti */}
