@@ -1,4 +1,4 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeValidations, iqcodeRecharges, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeValidation, type InsertIqcodeValidation, type IqcodeRecharge, type InsertIqcodeRecharge } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeValidations, iqcodeRecharges, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeValidation, type InsertIqcodeValidation, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt, desc, like, sql, inArray } from "drizzle-orm";
@@ -90,19 +90,19 @@ export interface IStorage {
   getAllPartnersWithOffers(): Promise<any[]>;
   
   // Validazione IQCode methods
-  createIqcodeValidation(data: {partnerCode: string, touristCode: string, requestedAt: Date, status: string, usesRemaining: number, usesTotal: number}): Promise<any>;
-  getValidationsByTourist(touristCode: string): Promise<any[]>;
-  getValidationsByPartner(partnerCode: string): Promise<any[]>;
-  getValidationById(id: number): Promise<any | null>;
-  updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<any>;
-  decrementValidationUses(validationId: number): Promise<any>;
+  createIqcodeValidation(data: {partnerCode: string, touristCode: string, requestedAt: Date, status: string, usesRemaining: number, usesTotal: number}): Promise<IqcodeValidation>;
+  getValidationsByTourist(touristCode: string): Promise<IqcodeValidation[]>;
+  getValidationsByPartner(partnerCode: string): Promise<IqcodeValidation[]>;
+  getValidationById(id: number): Promise<IqcodeValidation | null>;
+  updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<IqcodeValidation>;
+  decrementValidationUses(validationId: number): Promise<IqcodeValidation>;
   
   // Ricariche IQCode methods
-  createIqcodeRecharge(data: {touristCode: string, amount: number, status: string, requestedAt: Date}): Promise<any>;
-  getRechargesWithFilters(filters: any): Promise<{recharges: any[], total: number}>;
-  activateRecharge(rechargeId: number, adminCode: string): Promise<any>;
-  createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<any>;
-  getPartnerOffers(partnerCode: string): Promise<any[]>;
+  createIqcodeRecharge(data: {touristCode: string, amount: number, status: string, requestedAt: Date}): Promise<IqcodeRecharge>;
+  getRechargesWithFilters(filters: any): Promise<{recharges: IqcodeRecharge[], total: number}>;
+  activateRecharge(rechargeId: number, adminCode: string): Promise<IqcodeRecharge>;
+  createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<PartnerOffer>;
+  getPartnerOffers(partnerCode: string): Promise<PartnerOffer[]>;
   createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any>;
 
   // Partner onboarding methods
@@ -110,19 +110,11 @@ export interface IStorage {
   savePartnerOnboardingStep(partnerCode: string, step: string, data: any): Promise<void>;
   completePartnerOnboarding(partnerCode: string): Promise<void>;
   
-  // IQCode validation methods
-  createIqcodeValidation(data: {partnerCode: string, touristIqCode: string}): Promise<any>;
-  getValidationsByTourist(touristCode: string): Promise<any[]>;
-  getValidationsByPartner(partnerCode: string): Promise<any[]>;
-  getValidationById(id: number): Promise<any>;
-  updateValidationStatus(id: number, status: string): Promise<any>;
-  decrementValidationUses(id: number): Promise<any>;
-  
   // IQCode recharge methods
-  createIqcodeRecharge(validationId: number, touristCode: string): Promise<any>;
-  getPendingRecharges(): Promise<any[]>;
-  activateRecharge(rechargeId: number, adminNote?: string): Promise<any>;
-  getRechargesWithFilters(filters: {page: number, limit: number, search: string, status: string, sort: string}): Promise<{recharges: any[], total: number, stats: any}>;
+  createIqcodeRecharge(validationId: number, touristCode: string): Promise<IqcodeRecharge>;
+  getPendingRecharges(): Promise<IqcodeRecharge[]>;
+  activateRecharge(rechargeId: number, adminNote?: string): Promise<IqcodeRecharge>;
+  getRechargesWithFilters(filters: {page: number, limit: number, search: string, status: string, sort: string}): Promise<{recharges: IqcodeRecharge[], total: number, stats: any}>;
   
   // Metodi per offerte reali
   getAcceptedPartnersByTourist(touristCode: string): Promise<any[]>;
