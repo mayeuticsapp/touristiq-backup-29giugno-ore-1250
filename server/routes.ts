@@ -2493,9 +2493,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
               website: partnerStatus?.businessInfo?.website || '',
               wheelchairAccessible: partnerStatus?.businessInfo?.wheelchairAccessible || false,
               childFriendly: partnerStatus?.businessInfo?.childFriendly || false,
-              glutenFree: partnerStatus?.businessInfo?.glutenFree || falsetatus?.accessibility?.wheelchairAccessible || false,
-              childFriendly: partnerStatus?.family?.childFriendly || false,
-              glutenFree: partnerStatus?.allergies?.glutenFree || false
+              glutenFree: partnerStatus?.businessInfo?.glutenFree || false
             }));
 
           allRealOffers = allRealOffers.concat(formattedPartnerOffers);
