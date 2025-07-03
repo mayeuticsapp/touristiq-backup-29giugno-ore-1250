@@ -2390,10 +2390,17 @@ export async function setupRoutes(app: Express): Promise<Server> {
       console.log("SESSIONE:", session);
       console.log("IQCODE:", partnerIqCode);
       console.log("RUOLO:", partnerIqCode?.role);
+      console.log("STATUS:", partnerIqCode?.status);
       
       if (!partnerIqCode || partnerIqCode.role !== 'partner') {
         console.log("❌ ACCESSO NEGATO - Ruolo non partner:", partnerIqCode?.role);
         return res.status(403).json({ message: "Accesso negato - solo partner" });
+      }
+
+      // Verifica che il partner sia approvato
+      if (partnerIqCode.status !== 'approved') {
+        console.log("❌ ACCESSO NEGATO - Partner non approvato:", partnerIqCode.status);
+        return res.status(403).json({ message: "Partner non ancora approvato dall'admin" });
       }
 
       const { touristIqCode } = req.body;
