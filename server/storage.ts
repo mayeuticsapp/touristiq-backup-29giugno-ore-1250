@@ -56,6 +56,7 @@ export interface IStorage {
   updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<any>;
   getValidationById(id: number): Promise<any | undefined>;
   decrementValidationUses(id: number): Promise<any>;
+  syncAllTouristValidations(touristIqCode: string, newUsesRemaining: number): Promise<void>;
 
   // Admin credits methods - Pacchetto RobS
   getAdminCredits(adminCode: string): Promise<AdminCredits | undefined>;
@@ -780,7 +781,7 @@ export class MemStorage implements IStorage {
   async updateStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
   async checkGestionaleAccess(): Promise<{hasAccess: boolean, hoursRemaining?: number}> { return { hasAccess: false }; }
 
-  // Removed duplicate methods (originals are implemented above)
+  // Removed duplicate methods (originals areimplemented above)
 
   // Partner onboarding methods - IMPLEMENTAZIONE BASE
   async getPartnerOnboardingStatus(partnerCode: string): Promise<{completed: boolean, currentStep?: string, completedSteps?: string[]} | undefined> {
@@ -1136,7 +1137,7 @@ export class PostgreStorage implements IStorage {
       throw new Error("Nessun credito disponibile nel pacchetto");
     }
 
-    // Import emotional words for code generation
+    // Import emotional words for code for code generation
     const { generateEmotionalIQCode } = await import('./iq-generator');
 
     // Generate unique emotional code (TIQ-IT-ROSA format)
@@ -1707,6 +1708,23 @@ export class PostgreStorage implements IStorage {
       throw error;
         }
   }
+
+  async syncAllTouristValidations(touristIqCode: string, newUsesRemaining: number): Promise<void> {
+      try {
+          await this.db
+              .update(iqcodeValidations)
+              .set({
+                  usesRemaining: newUsesRemaining,
+                  updatedAt: new Date()
+              })
+              .where(eq(iqcodeValidations.touristIqCode, touristIqCode));
+
+          console.log(`✅ SYNC OK: Tutte le validazioni di ${touristIqCode} aggiornate a ${newUsesRemaining} utilizzi in PostgreSQL`);
+      } catch (error) {
+          console.error(`❌ ERRORE SYNC: Impossibile aggiornare validazioni di ${touristIqCode} in PostgreSQL`, error);
+          throw error;
+      }
+  }
 }
 
 // Extend PostgreStorage con metodi impostazioni
@@ -1829,6 +1847,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
 class ExtendedMemStorage extends MemStorage {
   private settingsConfigMap: Map<string, SettingsConfig> = new Map();
   private partnerOffers: any[] = [];
+  private iqcodeValidations: any[] = [];
 
   async getSettingsConfig(structureCode: string): Promise<SettingsConfig | null> {
     return this.settingsConfigMap.get(structureCode) || null;
@@ -1893,15 +1912,63 @@ class ExtendedMemStorage extends MemStorage {
   }
 
   async createIqcodeValidation(data: any): Promise<any> {
-    return {
+    const newValidation = {
       id: Date.now(),
       ...data,
       createdAt: new Date()
     };
+    this.iqcodeValidations.push(newValidation);
+    return newValidation;
   }
 
   async getValidationsByPartner(partnerCode: string): Promise<any[]> {
-    return [];
+    return this.iqcodeValidations.filter(v => v.partnerCode === partnerCode);
+  }
+
+  async getValidationsByTourist(touristCode: string): Promise<any[]> {
+    return this.iqcodeValidations.filter(v => v.touristIqCode === touristCode);
+  }
+
+  async getValidationById(id: number): Promise<any | undefined> {
+    return this.iqcodeValidations.find(v => v.id === id);
+  }
+
+  async updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<any> {
+    const validation = this.iqcodeValidations.find(v => v.id === id);
+    if (!validation) {
+      throw new Error("Validazione non trovata");
+    }
+
+    validation.status = status;
+    if (respondedAt) {
+      validation.respondedAt = respondedAt;
+    }
+
+    return validation;
+  }
+
+  async decrementValidationUses(validationId: number): Promise<any> {
+    const validation = this.iqcodeValidations.find(v => v.id === validationId);
+    if (!validation) {
+      throw new Error("Validazione non trovata");
+    }
+
+    if (validation.usesRemaining > 0) {
+      validation.usesRemaining -= 1;
+    }
+
+    return validation;
+  }
+
+  async syncAllTouristValidations(touristIqCode: string, newUsesRemaining: number): Promise<void> {
+    // Aggiorna TUTTE le validazioni dello stesso turista con il nuovo conteggio
+    this.iqcodeValidations.forEach(validation => {
+      if (validation.touristIqCode === touristIqCode && validation.status === 'accepted') {
+        validation.usesRemaining = newUsesRemaining;
+      }
+    });
+
+    console.log(`🔄 SYNC: Tutte le validazioni di ${touristIqCode} aggiornate a ${newUsesRemaining} utilizzi`);
   }
 }
 
