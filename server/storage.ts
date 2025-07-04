@@ -473,7 +473,20 @@ export class MemStorage implements IStorage {
     // Parse the generated code to extract country and word
     const parsedCode = parseIQCode(uniqueCode);
 
-    // Save generated code for tracking
+    // CRITICO: PRIMA crea il codice nella tabella principale iq_codes per abilitare login
+    const iqCodeRecord = await this.createIqCode({
+      code: uniqueCode,
+      role: 'tourist',
+      isActive: true,
+      status: 'approved',
+      assignedTo: guestName,
+      location: parsedCode?.country || 'IT',
+      codeType: 'emotional'
+    });
+
+    console.log(`✅ CODICE LOGIN ATTIVO: ${uniqueCode} inserito in iq_codes con ID ${iqCodeRecord.id}`);
+
+    // SECONDO: Save generated code for tracking
     const generatedCode = {
       id: this.currentGeneratedCodeId++,
       code: uniqueCode,
@@ -489,35 +502,35 @@ export class MemStorage implements IStorage {
     };
 
     this.generatedCodes.set(generatedCode.id, generatedCode);
-    console.log(`DEBUG: Salvato codice ${uniqueCode} con ID ${generatedCode.id} per ospite ${guestId}. Totale codici: ${this.generatedCodes.size}`);
 
-    // Save to PostgreSQL database using neon connection (sync with existing project setup)
+    // TERZO: Save to PostgreSQL database for persistence
     try {
       const { neon } = await import('@neondatabase/serverless');
       const sql = neon(process.env.DATABASE_URL!);
 
-      // 1. Salva nella tabella generated_iq_codes per tracking
-      const result = await sql`
-        INSERT INTO generated_emotional_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
-        VALUES (${uniqueCode}, ${structureCode}, ${packageId}, ${guestName}, ${guestId}, ${parsedCode?.country || 'IT'}, ${parsedCode?.word || 'UNKNOWN'}, 'assigned', NOW())
-        RETURNING id, code
-      `;
-
-      // 2. CRITICO: Inserisce anche nella tabella iq_codes per permettere il login
+      // 1. Salva nella tabella iq_codes per login (PRIORITARIO)
       await sql`
         INSERT INTO iq_codes (code, role, is_active, status, created_at, assigned_to, location, code_type)
         VALUES (${uniqueCode}, 'tourist', true, 'approved', NOW(), ${guestName}, ${parsedCode?.country || 'IT'}, 'emotional')
         ON CONFLICT (code) DO NOTHING
       `;
 
-      console.log(`✅ PERSISTENZA COMPLETA: Codice ${uniqueCode} salvato per tracking (ID ${result[0].id}) e abilitato per login`);
+      // 2. Salva nella tabella generated_emotional_codes per tracking
+      await sql`
+        INSERT INTO generated_emotional_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
+        VALUES (${uniqueCode}, ${structureCode}, ${packageId}, ${guestName}, ${guestId}, ${parsedCode?.country || 'IT'}, ${parsedCode?.word || 'UNKNOWN'}, 'assigned', NOW())
+      `;
+
+      console.log(`✅ PERSISTENZA DOPPIA: ${uniqueCode} salvato in entrambe le tabelle (login + tracking)`);
     } catch (dbError) {
-      console.error(`❌ ERRORE NEON: Salvataggio ${uniqueCode} fallito:`, dbError);
+      console.error(`❌ ERRORE PERSISTENZA: Salvataggio ${uniqueCode} fallito:`, dbError);
     }
 
-    // Decrement credits
+    // QUARTO: Decrement credits
     targetPackage.creditsRemaining--;
     targetPackage.creditsUsed++;
+
+    console.log(`🎯 GENERAZIONE COMPLETATA: ${uniqueCode} PRONTO PER LOGIN OSPITE`);
 
     return {
       code: uniqueCode,
@@ -1167,9 +1180,9 @@ export class PostgreStorage implements IStorage {
     // Parse the generated code to extract country and word
     const parsedCode = parseIQCode(uniqueCode);
 
-    // Salva il codice anche nella tabella principale iq_codes per abilitare il login
+    // CRITICO: PRIMA inserisci nella tabella iq_codes per abilitare login
     try {
-      await this.db.insert(iqCodes).values({
+      const insertedCode = await this.db.insert(iqCodes).values({
         code: uniqueCode,
         role: 'tourist',
         isActive: true,
@@ -1178,13 +1191,15 @@ export class PostgreStorage implements IStorage {
         location: 'IT',
         codeType: 'emotional',
         createdAt: new Date()
-      });
-      console.log(`✅ CODICE ABILITATO LOGIN: ${uniqueCode} inserito in iq_codes per accesso turista`);
+      }).returning();
+      
+      console.log(`✅ CODICE LOGIN ATTIVO: ${uniqueCode} inserito in iq_codes - ID ${insertedCode[0].id}`);
     } catch (insertError) {
-      console.log(`⚠️ CODICE DUPLICATO: ${uniqueCode} già esistente in iq_codes`);
+      console.error(`❌ ERRORE CRITICO: Impossibile inserire ${uniqueCode} in iq_codes:`, insertError);
+      throw new Error(`Generazione fallita: ${uniqueCode} non può essere attivato per login`);
     }
 
-    // CRITICO: Salva nella tabella generated_iq_codes per tracking ospite
+    // SECONDO: Salva tracking nella tabella generated_emotional_codes
     try {
       const { neon } = await import('@neondatabase/serverless');
       const sql = neon(process.env.DATABASE_URL!);
@@ -1194,18 +1209,20 @@ export class PostgreStorage implements IStorage {
         VALUES (${uniqueCode}, ${structureCode}, ${packageId}, ${guestName}, ${guestId || null}, ${parsedCode?.country || 'IT'}, ${parsedCode?.word || 'UNKNOWN'}, 'assigned', NOW())
       `;
 
-      console.log(`✅ TRACKING SALVATO: Codice ${uniqueCode} collegato all'ospite ${guestId} per recupero futuro`);
+      console.log(`✅ TRACKING SALVATO: Codice ${uniqueCode} collegato all'ospite ${guestId}`);
     } catch (dbError) {
-      console.error(`❌ ERRORE TRACKING: Impossibile salvare tracking per ${uniqueCode}:`, dbError);
+      console.error(`⚠️ ERRORE TRACKING (non critico): ${uniqueCode} attivo ma tracking mancante`);
     }
 
-    // Decrement credits
+    // TERZO: Decrementa crediti del pacchetto
     await this.db.update(assignedPackages)
       .set({ 
         creditsRemaining: targetPackage.creditsRemaining - 1,
         creditsUsed: targetPackage.creditsUsed + 1
       })
       .where(eq(assignedPackages.id, packageId));
+
+    console.log(`🎯 GENERAZIONE COMPLETATA: ${uniqueCode} PRONTO PER LOGIN OSPITE`);
 
     return {
       code: uniqueCode,
