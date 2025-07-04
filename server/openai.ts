@@ -56,7 +56,28 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
         if (targetCity) {
           console.log(`🔍 TIQai DB: Ricerca partner per ${targetCity}`);
           try {
-            const cityPartners = await storage.getRealOffersByCity(targetCity);
+            // Prima cerca offerte specifiche per città
+            let cityPartners = await storage.getRealOffersByCity(targetCity);
+            
+            // Se non trova partner per la città specifica, cerca nelle città vicine
+            if (cityPartners.length === 0) {
+              console.log(`🔄 TIQai DB: Ricerca estesa per zone limitrofe a ${targetCity}`);
+              const nearbySearches = [];
+              
+              // Logica di ricerca nelle città vicine per zone specifiche
+              if (targetCity === "Pizzo") {
+                nearbySearches.push("Tropea", "Vibo Valentia", "Briatico");
+              } else if (targetCity === "Tropea") {
+                nearbySearches.push("Pizzo", "Briatico", "Vibo Valentia");
+              } else if (targetCity === "Briatico") {
+                nearbySearches.push("Tropea", "Pizzo", "Vibo Valentia");
+              }
+              
+              for (const nearbyCity of nearbySearches) {
+                const nearbyPartners = await storage.getRealOffersByCity(nearbyCity);
+                cityPartners = cityPartners.concat(nearbyPartners);
+              }
+            }
             
             if (cityPartners.length > 0) {
               hasSpecificPartnerData = true;
@@ -128,7 +149,15 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
       }
     }
     
-    // STEP 2: COSTRUZIONE PROMPT IBRIDO INTELLIGENTE
+    // STEP 2: RILEVAMENTO LINGUA AUTOMATICO
+    const isEnglishQuery = /^[a-zA-Z\s\',\.!\?]+$/.test(message.trim()) && 
+                          !['sono', 'dove', 'devo', 'vorrei', 'posso', 'mi', 'ti', 'un', 'una', 'il', 'la', 'di', 'da', 'per'].some(word => 
+                            message.toLowerCase().includes(word));
+    
+    const responseLanguage = isEnglishQuery ? 'english' : 'italian';
+    console.log(`🌍 TIQai: Lingua rilevata - ${responseLanguage}`);
+
+    // STEP 3: COSTRUZIONE PROMPT IBRIDO INTELLIGENTE
     const hybridSystemPrompt = hasSpecificPartnerData 
       ? `Sei TIQai, l'assistente virtuale di TouristIQ specializzato nel turismo italiano.
 
@@ -144,7 +173,7 @@ ${touristIQData}
 
 🎨 STILE RISPOSTA:
 - Tono amichevole ma professionale
-- Sempre in italiano
+- Lingua: ${responseLanguage === 'english' ? 'SEMPRE IN INGLESE' : 'SEMPRE IN ITALIANO'}
 - Risposte complete ma concise (max 400 caratteri)
 - Evidenzia chiaramente i partner certificati vs consigli generici`
       
@@ -165,7 +194,7 @@ Fornisci informazioni turistiche complete e verificate su:
 - Incoraggia sempre l'uso dell'ecosistema TouristIQ quando disponibile
 - Combina saggezza locale con informazioni pratiche aggiornate
 
-🎨 STILE: Amichevole, professionale, sempre in italiano, max 400 caratteri.${touristIQData}`;
+🎨 STILE: Amichevole, professionale, lingua ${responseLanguage === 'english' ? 'SEMPRE INGLESE' : 'SEMPRE ITALIANA'}, max 400 caratteri.${touristIQData}`;
 
     console.log(`🤖 TIQai IBRIDO: Modalità ${hasSpecificPartnerData ? 'DATABASE+WEB' : 'WEB GENERALE'} attivata`);
 
