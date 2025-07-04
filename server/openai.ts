@@ -267,7 +267,7 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
                   touristIQData += `• ${partner.partnerName}: ${partner.description}\n`;
                   touristIQData += `  💰 SCONTO ESCLUSIVO: ${partner.discountPercentage}% per utenti TouristIQ\n`;
                   if (partner.address) touristIQData += `  📍 ${partner.address}\n`;
-                  if (partner.phone) touristIQData += `  📞 ${partner.phone}\n`;
+                  if (partner.phone) touristIQData += `  📞 CONTATTO: ${partner.phone}\n`;
                   
                   // INFORMAZIONI ACCESSIBILITÀ DETTAGLIATE
                   const accessibilityFeatures = [];
@@ -306,6 +306,7 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
 
               // ISTRUZIONI INTELLIGENTI BASATE SU FILTRI
               touristIQData += `⚠️ PRIORITÀ ASSOLUTA: Suggerisci ESCLUSIVAMENTE questi partner verificati.\n`;
+              touristIQData += `📞 IMPORTANTE: Se presente il numero di telefono, includilo sempre nella risposta per facilitare i contatti diretti.\n`;
               
               if (accessibilityNeeded) {
                 const accessiblePartners = cityPartners.filter(p => p.wheelchairAccessible || p.accessibleBathroom);
@@ -400,6 +401,7 @@ ${touristIQData}
 3. ⚠️ DIVIETO ASSOLUTO: Non inventare mai nomi di ristoranti/hotel/attività non presenti nei dati
 4. 🎯 COMBINAZIONE INTELLIGENTE: Unisci sempre dati specifici TouristIQ + info generali utili
 5. 💎 EVIDENZIA VANTAGGI: Sottolinea sempre sconti e qualità verificata dei partner TouristIQ
+6. 📞 CONTATTI DIRETTI: Se il partner ha un numero di telefono, includilo sempre nella risposta per facilitare prenotazioni e contatti
 
 🎨 STILE RISPOSTA:
 - Tono amichevole ma professionale
