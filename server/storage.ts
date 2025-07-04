@@ -1896,9 +1896,12 @@ class ExtendedMemStorage extends MemStorage {
       throw new Error("Codice turista non valido");
     }
 
-     // Ottieni nome partner dal onboarding
-    //const partnerStatus = await this.getPartnerOnboardingStatus(partnerCode);
-    const partnerName = `Partner ${partnerCode}`; //partnerStatus?.businessInfo?.businessName ||
+    // Ottieni nome partner - PRIORITÀ: onboarding > assignedTo > nome generico
+    const partnerStatus = await this.getPartnerOnboardingStatus(partnerCode);
+    const partnerData = await this.getIqCodeByCode(partnerCode);
+    const partnerName = partnerStatus?.businessInfo?.businessName || 
+                       partnerData?.assignedTo || 
+                       "Partner TouristIQ";
 
     await this.createIqcodeValidation({
       touristIqCode: touristCode,

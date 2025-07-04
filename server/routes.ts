@@ -2494,9 +2494,12 @@ export async function setupRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Codice IQ turista non valido" });
       }
 
-      // Ottieni nome partner dal onboarding
+      // Ottieni nome partner dal onboarding - SOLO NOME, mai IQCode
       const partnerStatus = await storage.getPartnerOnboardingStatus(session.iqCode);
-      const partnerName = partnerStatus?.businessInfo?.businessName || `Partner ${session.iqCode}`;
+      const partnerData = await storage.getIqCodeByCode(session.iqCode);
+      const partnerName = partnerStatus?.businessInfo?.businessName || 
+                         partnerData?.assignedTo || 
+                         "Partner TouristIQ";
 
       // Crea richiesta di validazione
       const validation = await (storage as any).createIqcodeValidation({
