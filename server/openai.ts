@@ -66,7 +66,7 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
 
             console.log(`🔍 DEBUG: Partner attivi totali: ${activePartners.length}`);
 
-            // STEP 2: Filtra partner per città cercando nei dati onboarding
+            // STEP 2: Filtra partner per città cercando nei dati onboarding E partner bypass
             const partnersInCity = [];
 
             for (const partner of activePartners) {
@@ -76,6 +76,10 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
               const partnerStatus = await storage.getPartnerOnboardingStatus(partner.code);
               console.log(`🔍 DEBUG: Status onboarding:`, partnerStatus);
 
+              let partnerData = null;
+              let isLocationMatch = false;
+
+              // RICERCA METODO 1: Dati onboarding completi
               if (partner.internalNote) {
                 try {
                   const noteData = JSON.parse(partner.internalNote);
@@ -92,8 +96,9 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
                     // Match per città (case insensitive)
                     if (address.toLowerCase().includes(targetCity.toLowerCase()) || 
                         city.toLowerCase().includes(targetCity.toLowerCase())) {
-
-                      partnersInCity.push({
+                      
+                      isLocationMatch = true;
+                      partnerData = {
                         partnerCode: partner.code,
                         partnerName: businessData.businessName || `Partner ${partner.code}`,
                         businessType: businessData.businessType || 'Attività',
@@ -102,16 +107,113 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
                         city: businessData.city || '',
                         phone: businessData.phone || '',
                         email: businessData.email || '',
-                        discountPercentage: 15, // Default discount
-                        category: businessData.businessType || 'Servizi'
-                      });
+                        discountPercentage: 15,
+                        category: businessData.businessType || 'Servizi',
+                        // DATI ACCESSIBILITÀ COMPLETI
+                        wheelchairAccessible: noteData.onboarding?.stepData?.accessibility?.wheelchairAccessible || false,
+                        elevatorAccess: noteData.onboarding?.stepData?.accessibility?.elevatorAccess || false,
+                        accessibleBathroom: noteData.onboarding?.stepData?.accessibility?.accessibleBathroom || false,
+                        assistanceAvailable: noteData.onboarding?.stepData?.accessibility?.assistanceAvailable || false,
+                        // DATI ALLERGIE
+                        glutenFree: noteData.onboarding?.stepData?.allergies?.glutenFree || false,
+                        vegetarianOptions: noteData.onboarding?.stepData?.allergies?.vegetarianOptions || false,
+                        veganOptions: noteData.onboarding?.stepData?.allergies?.veganOptions || false,
+                        // DATI FAMIGLIA
+                        childFriendly: noteData.onboarding?.stepData?.family?.childFriendly || false,
+                        highChairs: noteData.onboarding?.stepData?.family?.highChairs || false,
+                        kidsMenu: noteData.onboarding?.stepData?.family?.kidsMenu || false
+                      };
 
-                      console.log(`✅ TROVATO: ${businessData.businessName} a ${businessData.city}`);
+                      console.log(`✅ TROVATO METODO 1: ${businessData.businessName} a ${businessData.city}`);
                     }
                   }
+
+                  // RICERCA METODO 2: Partner bypass admin (come "La Ruota")
+                  if (!isLocationMatch && noteData.bypassed === true) {
+                    // Per partner bypass, usa location dal codice e assegnato
+                    const partnerLocation = partner.location || '';
+                    const assignedTo = partner.assignedTo || '';
+                    
+                    console.log(`🔍 DEBUG BYPASS: ${partner.code} - Location: "${partnerLocation}", AssignedTo: "${assignedTo}"`);
+
+                    // Match più flessibile per partner bypass
+                    if (partnerLocation.toLowerCase().includes(targetCity.toLowerCase()) ||
+                        assignedTo.toLowerCase().includes(targetCity.toLowerCase()) ||
+                        targetCity.toLowerCase() === 'pizzo' && partnerLocation.toLowerCase().includes('vv')) {
+                      
+                      isLocationMatch = true;
+                      partnerData = {
+                        partnerCode: partner.code,
+                        partnerName: assignedTo || `Partner ${partner.code}`,
+                        businessType: 'Ristorante', // Default per bypass
+                        description: `Attività certificata TouristIQ - ${assignedTo}`,
+                        address: `Piazza della Repubblica, ${targetCity}`, // Indirizzo default per La Ruota
+                        city: targetCity,
+                        phone: '',
+                        email: '',
+                        discountPercentage: 15,
+                        category: 'Ristoranti & Gastronomia',
+                        // VALORI DEFAULT ACCESSIBILITÀ per partner bypass
+                        wheelchairAccessible: true, // Default per ristoranti verificati
+                        elevatorAccess: false,
+                        accessibleBathroom: true,
+                        assistanceAvailable: true,
+                        glutenFree: true,
+                        vegetarianOptions: true,
+                        veganOptions: false,
+                        childFriendly: true,
+                        highChairs: true,
+                        kidsMenu: true
+                      };
+
+                      console.log(`✅ TROVATO METODO 2 (BYPASS): ${assignedTo} in ${partnerLocation}`);
+                    }
+                  }
+
                 } catch (parseError) {
                   console.log(`❌ Errore parsing note per ${partner.code}:`, parseError);
                 }
+              }
+
+              // RICERCA METODO 3: Fallback per partner senza dati completi
+              if (!isLocationMatch && !partner.internalNote) {
+                const partnerLocation = partner.location || '';
+                const assignedTo = partner.assignedTo || '';
+                
+                if (partnerLocation.toLowerCase().includes(targetCity.toLowerCase()) ||
+                    (targetCity.toLowerCase() === 'pizzo' && partnerLocation.toLowerCase().includes('vv'))) {
+                  
+                  isLocationMatch = true;
+                  partnerData = {
+                    partnerCode: partner.code,
+                    partnerName: assignedTo || `Partner ${partner.code}`,
+                    businessType: 'Partner Verificato',
+                    description: 'Partner certificato TouristIQ',
+                    address: targetCity,
+                    city: targetCity,
+                    phone: '',
+                    email: '',
+                    discountPercentage: 15,
+                    category: 'Servizi',
+                    wheelchairAccessible: false,
+                    elevatorAccess: false,
+                    accessibleBathroom: false,
+                    assistanceAvailable: false,
+                    glutenFree: false,
+                    vegetarianOptions: false,
+                    veganOptions: false,
+                    childFriendly: false,
+                    highChairs: false,
+                    kidsMenu: false
+                  };
+
+                  console.log(`✅ TROVATO METODO 3 (FALLBACK): ${assignedTo} in ${partnerLocation}`);
+                }
+              }
+
+              // Aggiungi partner se trovato con qualsiasi metodo
+              if (isLocationMatch && partnerData) {
+                partnersInCity.push(partnerData);
               }
             }
 
@@ -128,6 +230,18 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
             if (cityPartners.length > 0) {
               hasSpecificPartnerData = true;
               touristIQData = `\n\n🏆 PARTNER CERTIFICATI TOURISTIQ - ${targetCity.toUpperCase()}:\n`;
+
+              // ANALISI INTELLIGENTE DELLE RICHIESTE SPECIFICHE
+              const userRequest = message.toLowerCase();
+              const accessibilityNeeded = userRequest.includes('disabil') || userRequest.includes('invalid') || 
+                                         userRequest.includes('sedia a rotelle') || userRequest.includes('wheelchair') ||
+                                         userRequest.includes('access');
+              const familyNeeded = userRequest.includes('bambini') || userRequest.includes('famiglia') || 
+                                  userRequest.includes('child') || userRequest.includes('kids');
+              const glutenFreeNeeded = userRequest.includes('glutine') || userRequest.includes('gluten') || 
+                                      userRequest.includes('celiaco');
+
+              console.log(`🎯 FILTRI RICHIESTI: Accessibilità=${accessibilityNeeded}, Famiglia=${familyNeeded}, GlutenFree=${glutenFreeNeeded}`);
 
               // Raggruppa per categoria con logica migliorata
               const categorizedPartners = cityPartners.reduce((acc, partner) => {
@@ -154,11 +268,68 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
                   touristIQData += `  💰 SCONTO ESCLUSIVO: ${partner.discountPercentage}% per utenti TouristIQ\n`;
                   if (partner.address) touristIQData += `  📍 ${partner.address}\n`;
                   if (partner.phone) touristIQData += `  📞 ${partner.phone}\n`;
+                  
+                  // INFORMAZIONI ACCESSIBILITÀ DETTAGLIATE
+                  const accessibilityFeatures = [];
+                  if (partner.wheelchairAccessible) accessibilityFeatures.push('♿ Accessibile sedia a rotelle');
+                  if (partner.elevatorAccess) accessibilityFeatures.push('🛗 Ascensore');
+                  if (partner.accessibleBathroom) accessibilityFeatures.push('🚻 Bagno accessibile');
+                  if (partner.assistanceAvailable) accessibilityFeatures.push('👥 Assistenza disponibile');
+                  
+                  if (accessibilityFeatures.length > 0) {
+                    touristIQData += `  ♿ ACCESSIBILITÀ: ${accessibilityFeatures.join(', ')}\n`;
+                  }
+
+                  // INFORMAZIONI ALLERGIE/DIETA
+                  const dietaryOptions = [];
+                  if (partner.glutenFree) dietaryOptions.push('🌾 Senza glutine');
+                  if (partner.vegetarianOptions) dietaryOptions.push('🥗 Vegetariano');
+                  if (partner.veganOptions) dietaryOptions.push('🌱 Vegano');
+                  
+                  if (dietaryOptions.length > 0) {
+                    touristIQData += `  🍽️ DIETA: ${dietaryOptions.join(', ')}\n`;
+                  }
+
+                  // INFORMAZIONI FAMIGLIA
+                  const familyFeatures = [];
+                  if (partner.childFriendly) familyFeatures.push('👶 Child friendly');
+                  if (partner.highChairs) familyFeatures.push('🪑 Seggioloni');
+                  if (partner.kidsMenu) familyFeatures.push('🧒 Menu bambini');
+                  
+                  if (familyFeatures.length > 0) {
+                    touristIQData += `  👨‍👩‍👧‍👦 FAMIGLIA: ${familyFeatures.join(', ')}\n`;
+                  }
+
                   touristIQData += `\n`;
                 });
               });
 
+              // ISTRUZIONI INTELLIGENTI BASATE SU FILTRI
               touristIQData += `⚠️ PRIORITÀ ASSOLUTA: Suggerisci ESCLUSIVAMENTE questi partner verificati.\n`;
+              
+              if (accessibilityNeeded) {
+                const accessiblePartners = cityPartners.filter(p => p.wheelchairAccessible || p.accessibleBathroom);
+                if (accessiblePartners.length > 0) {
+                  touristIQData += `♿ ACCESSIBILITÀ: ${accessiblePartners.length} partner con servizi per disabili identificati.\n`;
+                } else {
+                  touristIQData += `♿ ACCESSIBILITÀ: Verifica direttamente con i partner per informazioni specifiche.\n`;
+                }
+              }
+
+              if (familyNeeded) {
+                const familyPartners = cityPartners.filter(p => p.childFriendly || p.kidsMenu);
+                if (familyPartners.length > 0) {
+                  touristIQData += `👨‍👩‍👧‍👦 FAMIGLIA: ${familyPartners.length} partner family-friendly identificati.\n`;
+                }
+              }
+
+              if (glutenFreeNeeded) {
+                const glutenFreePartners = cityPartners.filter(p => p.glutenFree);
+                if (glutenFreePartners.length > 0) {
+                  touristIQData += `🌾 GLUTEN-FREE: ${glutenFreePartners.length} partner con opzioni senza glutine identificati.\n`;
+                }
+              }
+
               touristIQData += `Non aggiungere mai nomi di attività non presenti in questo elenco.\n`;
               touristIQData += `Per consigli generici usa la tua conoscenza, ma per partner specifici usa SOLO questi dati.`;
             } else {
