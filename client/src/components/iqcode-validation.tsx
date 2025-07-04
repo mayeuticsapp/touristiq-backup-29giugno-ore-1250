@@ -69,14 +69,14 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
   // Auto-cancellazione messaggi accettati dopo 5 minuti
   useEffect(() => {
     const timers: NodeJS.Timeout[] = [];
-    
+
     validations.forEach((validation) => {
       if (validation.status === 'accepted' && validation.respondedAt && !acceptedMessages.has(validation.id)) {
         const respondedTime = new Date(validation.respondedAt).getTime();
         const now = Date.now();
         const fiveMinutes = 5 * 60 * 1000; // 5 minuti in millisecondi
         const timeElapsed = now - respondedTime;
-        
+
         if (timeElapsed < fiveMinutes) {
           const remainingTime = fiveMinutes - timeElapsed;
           const timer = setTimeout(() => {
@@ -296,14 +296,14 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
                   if (validation.status === 'accepted' && acceptedMessages.has(validation.id)) {
                     return null;
                   }
-                  
+
                   return (
                     <div key={validation.id} className="border p-3 rounded">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-medium">Turista: TIQ-***-****-****</p>
+                          
                           <p className="text-sm text-gray-500">
-                            Richiesta: {formatDateTime(validation.requestedAt)}
+                            Richiesta il: {formatDateTime(validation.requestedAt)}
                           </p>
                           {validation.respondedAt && (
                             <p className="text-sm text-gray-500">
@@ -371,7 +371,7 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
                     {getStatusBadge(validation.status)}
                   </div>
                   <div className="text-sm text-gray-600 mb-3">
-                    Richiesta: {formatDateTime(validation.requestedAt)}
+                     Richiesta: {formatDateTime(validation.requestedAt)}
                     {validation.respondedAt && (
                       <div>Risposta: {formatDateTime(validation.respondedAt)}</div>
                     )}

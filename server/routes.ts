@@ -2671,7 +2671,12 @@ export async function setupRoutes(app: Express): Promise<Server> {
       
       // SOLO IL TURISTA può vedere i suoi utilizzi rimanenti completi con stato accurato
       const enrichedValidations = validations.map((validation: any) => ({
-        ...validation,
+        id: validation.id,
+        partnerName: validation.partnerName,
+        status: validation.status,
+        requestedAt: validation.requestedAt,
+        respondedAt: validation.respondedAt,
+        // PRIVACY: Turista non vede mai l'IQCode del partner, solo il nome
         // Mostra SEMPRE utilizzi rimanenti e totali per il turista proprietario
         displayUsesRemaining: validation.usesRemaining,
         displayUsesTotal: validation.usesTotal,
@@ -2735,7 +2740,11 @@ export async function setupRoutes(app: Express): Promise<Server> {
         const updatedValidation = await storage.decrementValidationUses(validationId);
         finalUsesRemaining = updatedValidation.usesRemaining;
         
+        // SINCRONIZZA TUTTE LE VALIDAZIONI del turista con il nuovo conteggio
+        await storage.syncAllTouristValidations(session.iqCode, finalUsesRemaining);
+        
         console.log(`✅ ACCETTAZIONE: Utilizzi scalati da ${validation.usesRemaining} a ${finalUsesRemaining}`);
+        console.log(`🔄 SYNC: Tutte le validazioni di ${session.iqCode} aggiornate a ${finalUsesRemaining} utilizzi`);
         console.log(`🎯 VALIDAZIONE COMPLETA: Partner può applicare sconto per ${session.iqCode}`);
       } else {
         console.log(`❌ RIFIUTO: Nessun scalamento utilizzi per ${session.iqCode}`);
@@ -2776,15 +2785,14 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       const validations = await (storage as any).getValidationsByPartner(session.iqCode);
       
-      // PRIVACY PROTECTION: Partner vede SOLO stato validazione, NO utilizzi
+      // PRIVACY PROTECTION: Partner NON vede IQCode turista, SOLO stato validazione
       const sanitizedValidations = validations.map((validation: any) => ({
         id: validation.id,
-        touristIqCode: validation.touristIqCode,
-        partnerName: validation.partnerName,
+        // PRIVACY: Partner non vede mai l'IQCode del turista
         status: validation.status,
         requestedAt: validation.requestedAt,
         respondedAt: validation.respondedAt,
-        // Messaggi chiari senza rivelare utilizzi rimanenti
+        // Messaggi chiari senza rivelare utilizzi rimanenti e IQCode
         statusMessage: validation.status === 'accepted' 
           ? `✅ Validazione accettata - Puoi applicare lo sconto al turista`
           : validation.status === 'rejected'
