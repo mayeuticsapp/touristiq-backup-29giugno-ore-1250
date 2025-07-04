@@ -496,13 +496,21 @@ export class MemStorage implements IStorage {
       const { neon } = await import('@neondatabase/serverless');
       const sql = neon(process.env.DATABASE_URL!);
 
+      // 1. Salva nella tabella generated_iq_codes per tracking
       const result = await sql`
         INSERT INTO generated_iq_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
         VALUES (${uniqueCode}, ${structureCode}, ${packageId}, ${guestName}, ${guestId}, ${parsedCode?.country || 'IT'}, ${parsedCode?.word || 'UNKNOWN'}, 'assigned', NOW())
         RETURNING id, code
       `;
 
-      console.log(`✅ PERSISTENZA OK: Codice ${uniqueCode} salvato con ID ${result[0].id}`);
+      // 2. CRITICO: Inserisce anche nella tabella iq_codes per permettere il login
+      await sql`
+        INSERT INTO iq_codes (code, role, is_active, status, created_at, assigned_to, location, code_type)
+        VALUES (${uniqueCode}, 'tourist', true, 'approved', NOW(), ${guestName}, ${parsedCode?.country || 'IT'}, 'emotional')
+        ON CONFLICT (code) DO NOTHING
+      `;
+
+      console.log(`✅ PERSISTENZA COMPLETA: Codice ${uniqueCode} salvato per tracking (ID ${result[0].id}) e abilitato per login`);
     } catch (dbError) {
       console.error(`❌ ERRORE NEON: Salvataggio ${uniqueCode} fallito:`, dbError);
     }
@@ -1154,6 +1162,23 @@ export class PostgreStorage implements IStorage {
 
     if (attempts >= 50) {
       throw new Error("Impossibile generare codice univoco");
+    }
+
+    // Salva il codice anche nella tabella principale iq_codes per abilitare il login
+    try {
+      await this.db.insert(iqCodes).values({
+        code: uniqueCode,
+        role: 'tourist',
+        isActive: true,
+        status: 'approved',
+        assignedTo: guestName,
+        location: 'IT',
+        codeType: 'emotional',
+        createdAt: new Date()
+      });
+      console.log(`✅ CODICE ABILITATO LOGIN: ${uniqueCode} inserito in iq_codes per accesso turista`);
+    } catch (insertError) {
+      console.log(`⚠️ CODICE DUPLICATO: ${uniqueCode} già esistente in iq_codes`);
     }
 
     // Decrement credits
