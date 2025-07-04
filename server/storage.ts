@@ -1964,14 +1964,30 @@ class ExtendedMemStorage extends MemStorage {
   }
 
   async syncAllTouristValidations(touristIqCode: string, newUsesRemaining: number): Promise<void> {
-    // Aggiorna TUTTE le validazioni dello stesso turista con il nuovo conteggio
+    // CORREZIONE CRITICA: Aggiorna TUTTE le validazioni dello stesso turista (accepted e pending)
+    let updatedCount = 0;
     this.iqcodeValidations.forEach(validation => {
-      if (validation.touristIqCode === touristIqCode && validation.status === 'accepted') {
+      if (validation.touristIqCode === touristIqCode) {
+        const oldUses = validation.usesRemaining;
         validation.usesRemaining = newUsesRemaining;
+        updatedCount++;
+        console.log(`🔄 SYNC VALIDATION ${validation.id}: ${oldUses} → ${newUsesRemaining} utilizzi`);
       }
     });
 
-    console.log(`🔄 SYNC: Tutte le validazioni di ${touristIqCode} aggiornate a ${newUsesRemaining} utilizzi`);
+    console.log(`🔄 SYNC COMPLETATA: ${updatedCount} validazioni di ${touristIqCode} aggiornate a ${newUsesRemaining} utilizzi`);
+
+    // Persisti nel database PostgreSQL se disponibile
+    try {
+      if (this.db) {
+        await this.db.update(iqcodeValidations)
+          .set({ usesRemaining: newUsesRemaining })
+          .where(eq(iqcodeValidations.touristIqCode, touristIqCode));
+        console.log(`✅ SYNC DB: Utilizzi ${newUsesRemaining} persistiti in PostgreSQL per ${touristIqCode}`);
+      }
+    } catch (dbError) {
+      console.error(`❌ ERRORE SYNC DB: ${dbError}`);
+    }newUsesRemaining} utilizzi`);
   }
 }
 

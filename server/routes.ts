@@ -2739,15 +2739,21 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       let finalUsesRemaining = validation.usesRemaining;
       if (status === 'accepted') {
-        // SCALAMENTO SINCRONIZZATO: Decrementa utilizzi SOLO quando turista accetta
-        const updatedValidation = await storage.decrementValidationUses(validationId);
-        finalUsesRemaining = updatedValidation.usesRemaining;
+        // CALCOLO UTILIZZI GLOBALI: Conta quante validazioni accepted ha già il turista
+        const allTouristValidations = await storage.getValidationsByTourist(session.iqCode);
+        const currentAcceptedCount = allTouristValidations.filter(v => v.status === 'accepted').length;
         
-        // SINCRONIZZA TUTTE LE VALIDAZIONI del turista con il nuovo conteggio
+        console.log(`📊 STATO TURISTA ${session.iqCode}: ${currentAcceptedCount} validazioni già accettate`);
+        
+        // Il nuovo utilizzo rimanente è 10 - numero totale di accettazioni
+        finalUsesRemaining = Math.max(0, 10 - currentAcceptedCount);
+        
+        console.log(`🧮 CALCOLO: 10 utilizzi iniziali - ${currentAcceptedCount} accettazioni = ${finalUsesRemaining} rimanenti`);
+        
+        // SINCRONIZZA TUTTE LE VALIDAZIONI del turista con il conteggio corretto
         await storage.syncAllTouristValidations(session.iqCode, finalUsesRemaining);
         
-        console.log(`✅ ACCETTAZIONE: Utilizzi scalati da ${validation.usesRemaining} a ${finalUsesRemaining}`);
-        console.log(`🔄 SYNC: Tutte le validazioni di ${session.iqCode} aggiornate a ${finalUsesRemaining} utilizzi`);
+        console.log(`✅ ACCETTAZIONE: Utilizzi aggiornati a ${finalUsesRemaining} per tutte le validazioni`);
         console.log(`🎯 VALIDAZIONE COMPLETA: Partner può applicare sconto per ${session.iqCode}`);
       } else {
         console.log(`❌ RIFIUTO: Nessun scalamento utilizzi per ${session.iqCode}`);
