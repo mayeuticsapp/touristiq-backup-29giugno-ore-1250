@@ -2669,18 +2669,22 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       const validations = await storage.getValidationsByTourist(session.iqCode);
       
-      // SOLO IL TURISTA può vedere i suoi utilizzi rimanenti completi
+      // SOLO IL TURISTA può vedere i suoi utilizzi rimanenti completi con stato accurato
       const enrichedValidations = validations.map((validation: any) => ({
         ...validation,
-        usageInfo: {
-          remaining: validation.usesRemaining,
-          total: validation.usesTotal,
-          used: validation.usesTotal - validation.usesRemaining,
-          canRecharge: validation.usesRemaining <= 0
-        }
+        // Mostra SEMPRE utilizzi rimanenti e totali per il turista proprietario
+        displayUsesRemaining: validation.usesRemaining,
+        displayUsesTotal: validation.usesTotal,
+        displayUsesUsed: validation.usesTotal - validation.usesRemaining,
+        canRequestRecharge: validation.usesRemaining <= 0,
+        statusMessage: validation.status === 'accepted' 
+          ? `IQCode accettato presso ${validation.partnerName} • ${validation.usesRemaining} utilizzi rimanenti (su ${validation.usesTotal} totali)`
+          : validation.status === 'rejected'
+          ? `IQCode rifiutato presso ${validation.partnerName}`
+          : `Richiesta di validazione da ${validation.partnerName} in attesa di risposta`
       }));
 
-      console.log(`👤 TURISTA ${session.iqCode}: ${validations.length} validazioni totali`);
+      console.log(`👤 TURISTA ${session.iqCode}: ${validations.length} validazioni - mostrando utilizzi completi`);
       
       res.json(enrichedValidations);
 
@@ -2772,7 +2776,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       const validations = await (storage as any).getValidationsByPartner(session.iqCode);
       
-      // PRIVACY PROTECTION: Rimuovi utilizzi rimanenti e dati sensibili per partner
+      // PRIVACY PROTECTION: Partner vede SOLO stato validazione, NO utilizzi
       const sanitizedValidations = validations.map((validation: any) => ({
         id: validation.id,
         touristIqCode: validation.touristIqCode,
@@ -2780,9 +2784,16 @@ export async function setupRoutes(app: Express): Promise<Server> {
         status: validation.status,
         requestedAt: validation.requestedAt,
         respondedAt: validation.respondedAt,
-        // NON includere usesRemaining, usesTotal - SOLO il turista può vederli
-        canUseDiscount: validation.status === 'accepted' // Solo stato per applicare sconto
+        // Messaggi chiari senza rivelare utilizzi rimanenti
+        statusMessage: validation.status === 'accepted' 
+          ? `✅ Validazione accettata - Puoi applicare lo sconto al turista ${validation.touristIqCode}`
+          : validation.status === 'rejected'
+          ? `❌ Validazione rifiutata dal turista ${validation.touristIqCode}`
+          : `⏳ In attesa di risposta dal turista ${validation.touristIqCode}`,
+        canApplyDiscount: validation.status === 'accepted'
       }));
+
+      console.log(`🏪 PARTNER ${session.iqCode}: ${validations.length} richieste validazione (utilizzi nascosti per privacy)`);
 
       res.json(sanitizedValidations);
 

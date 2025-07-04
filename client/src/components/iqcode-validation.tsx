@@ -15,6 +15,11 @@ interface ValidationRequest {
   respondedAt?: string;
   usesRemaining: number;
   usesTotal: number;
+  statusMessage?: string;
+  canApplyDiscount?: boolean;
+  canUseDiscount?: boolean;
+  displayUsesRemaining?: number;
+  displayUsesTotal?: number;
 }
 
 interface IQCodeValidationProps {
@@ -34,7 +39,7 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
       const endpoint = userRole === 'partner' 
         ? '/api/iqcode/validation-status' 
         : '/api/iqcode/validation-requests';
-      
+
       const response = await fetch(endpoint, {
         credentials: 'include'
       });
@@ -147,7 +152,7 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
   const handleRechargeRequest = async (validationId: number) => {
     // Apri il link SumUp per il pagamento
     window.open('https://pay.sumup.com/b2c/QKDFS8FD', '_blank');
-    
+
     toast({
       title: "Ricarica Richiesta",
       description: "Dopo il pagamento, l'admin attiverà i tuoi nuovi utilizzi. Controlla periodicamente lo stato."
@@ -231,37 +236,36 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
             ) : (
               <div className="space-y-3">
                 {validations.map((validation) => (
-                  <div key={validation.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-medium">Codice: {validation.touristIqCode}</div>
-                      {getStatusBadge(validation.status)}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-3">
-                      Richiesta: {new Date(validation.requestedAt).toLocaleDateString('it-IT')}
-                      {validation.respondedAt && (
-                        <> • Risposta: {new Date(validation.respondedAt).toLocaleDateString('it-IT')}</>
-                      )}
-                    </div>
-                    {validation.status === 'accepted' && (
-                      <div className="bg-green-50 border border-green-200 rounded p-3">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                          <span className="text-green-800 font-medium">Validazione accettata, puoi applicare lo sconto</span>
-                        </div>
-                        <div className="text-sm text-green-700 mt-1">
-                          <span className="font-medium">{validation.usesRemaining} utilizzi rimanenti</span> (su {validation.usesTotal} totali)
-                        </div>
-                        {validation.usesRemaining === 0 && (
-                          <div className="mt-2">
-                            <Button 
-                              size="sm" 
-                              onClick={() => handleRechargeRequest(validation.id)}
-                              className="bg-blue-600 hover:bg-blue-700"
-                            >
-                              Ricarica 10 Utilizzi
-                            </Button>
-                          </div>
+                  <div key={validation.id} className="border p-3 rounded">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">Turista: {validation.touristIqCode}</p>
+                        <p className="text-sm text-gray-500">
+                          Richiesta: {new Date(validation.requestedAt).toLocaleDateString()}
+                        </p>
+                        {validation.respondedAt && (
+                          <p className="text-sm text-gray-500">
+                            Risposta: {new Date(validation.respondedAt).toLocaleDateString()}
+                          </p>
                         )}
+                      </div>
+                      <div className={`px-2 py-1 rounded text-xs ${
+                        validation.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                        validation.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {validation.status === 'accepted' ? 'Accettato' :
+                         validation.status === 'rejected' ? 'Rifiutato' :
+                         'In Attesa'}
+                      </div>
+                    </div>
+                    {/* Messaggio stato senza rivelare utilizzi rimanenti */}
+                    <div className="mt-2 text-sm">
+                      {validation.statusMessage}
+                    </div>
+                    {validation.canApplyDiscount && (
+                      <div className="mt-2 p-2 bg-green-50 rounded text-green-700 text-sm font-medium">
+                        🎯 Autorizzato ad applicare sconto
                       </div>
                     )}
                   </div>
@@ -329,12 +333,12 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
                   )}
                   {validation.status === 'accepted' && (
                     <div className="text-sm text-green-700 bg-green-50 p-2 rounded">
-                      ✓ IQCode accettato presso {validation.partnerName} • <span className="font-medium">{validation.usesRemaining} utilizzi rimanenti</span> (su {validation.usesTotal} totali)
+                      {validation.statusMessage || `✓ IQCode accettato presso ${validation.partnerName} • ${validation.displayUsesRemaining || validation.usesRemaining} utilizzi rimanenti (su ${validation.displayUsesTotal || validation.usesTotal} totali)`}
                     </div>
                   )}
                   {validation.status === 'rejected' && (
                     <div className="text-sm text-red-700 bg-red-50 p-2 rounded">
-                      ✗ IQCode rifiutato
+                      {validation.statusMessage || `✗ IQCode rifiutato presso ${validation.partnerName}`}
                     </div>
                   )}
                 </div>
