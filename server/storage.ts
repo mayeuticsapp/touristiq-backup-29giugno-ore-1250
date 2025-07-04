@@ -1987,7 +1987,7 @@ class ExtendedMemStorage extends MemStorage {
       }
     } catch (dbError) {
       console.error(`❌ ERRORE SYNC DB: ${dbError}`);
-    }newUsesRemaining} utilizzi`);
+    }
   }
 }
 
