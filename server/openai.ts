@@ -1,4 +1,3 @@
-
 import OpenAI from "openai";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -7,11 +6,11 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export async function chatWithTIQai(message: string, storage?: any): Promise<string> {
   try {
     console.log("🔄 TIQai IBRIDO: Analizzando richiesta:", message);
-    
+
     // STEP 1: RICERCA PRIORITARIA NEL DATABASE TOURISTIQ
     let touristIQData = "";
     let hasSpecificPartnerData = false;
-    
+
     if (storage) {
       // Riconoscimento query specifiche per partner (esteso e potenziato)
       const partnerKeywords = [
@@ -24,14 +23,14 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
         "spa", "benessere", "massaggi", "relax", "centro estetico",
         "sport", "palestra", "diving", "windsurf", "barca", "mare"
       ];
-      
+
       const isPartnerQuery = partnerKeywords.some(keyword => 
         message.toLowerCase().includes(keyword)
       );
-      
+
       if (isPartnerQuery) {
         console.log("🎯 TIQai: Query partner rilevata, priorità database");
-        
+
         // Mappa estesa città calabresi
         const calabrianCities = {
           "briatico": "Briatico", "tropea": "Tropea", "pizzo": "Pizzo",
@@ -44,7 +43,7 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
           "diamante": "Diamante", "amantea": "Amantea", "cetraro": "Cetraro",
           "praia a mare": "Praia a Mare", "cirò": "Cirò", "soverato": "Soverato"
         };
-        
+
         let targetCity = null;
         for (const [searchKey, dbKey] of Object.entries(calabrianCities)) {
           if (message.toLowerCase().includes(searchKey)) {
@@ -52,41 +51,88 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
             break;
           }
         }
-        
+
         if (targetCity) {
           console.log(`🔍 TIQai DB: Ricerca partner per ${targetCity}`);
+
           try {
-            // Prima cerca offerte specifiche per città
-            let cityPartners = await storage.getRealOffersByCity(targetCity);
-            
-            // Se non trova partner per la città specifica, cerca nelle città vicine
-            if (cityPartners.length === 0) {
-              console.log(`🔄 TIQai DB: Ricerca estesa per zone limitrofe a ${targetCity}`);
-              const nearbySearches = [];
-              
-              // Logica di ricerca nelle città vicine per zone specifiche
-              if (targetCity === "Pizzo") {
-                nearbySearches.push("Tropea", "Vibo Valentia", "Briatico");
-              } else if (targetCity === "Tropea") {
-                nearbySearches.push("Pizzo", "Briatico", "Vibo Valentia");
-              } else if (targetCity === "Briatico") {
-                nearbySearches.push("Tropea", "Pizzo", "Vibo Valentia");
-              }
-              
-              for (const nearbyCity of nearbySearches) {
-                const nearbyPartners = await storage.getRealOffersByCity(nearbyCity);
-                cityPartners = cityPartners.concat(nearbyPartners);
+            // STEP 1: Ottieni tutti i partner attivi
+            const allPartners = await storage.getAllIqCodes();
+            const activePartners = allPartners.filter(code => 
+              code.role === 'partner' && 
+              code.status === 'approved' && 
+              code.isActive
+            );
+
+            console.log(`🔍 DEBUG: Partner attivi totali: ${activePartners.length}`);
+
+            // STEP 2: Filtra partner per città cercando nei dati onboarding
+            const partnersInCity = [];
+
+            for (const partner of activePartners) {
+              console.log(`🔍 DEBUG: Analizzando partner ${partner.code}...`);
+
+              // Ottieni dati onboarding completi
+              const partnerStatus = await storage.getPartnerOnboardingStatus(partner.code);
+              console.log(`🔍 DEBUG: Status onboarding:`, partnerStatus);
+
+              if (partner.internalNote) {
+                try {
+                  const noteData = JSON.parse(partner.internalNote);
+                  console.log(`🔍 DEBUG: Note data per ${partner.code}:`, noteData);
+
+                  // Cerca nei dati business dell'onboarding
+                  if (noteData.onboarding?.stepData?.business) {
+                    const businessData = noteData.onboarding.stepData.business;
+                    const address = businessData.address || '';
+                    const city = businessData.city || '';
+
+                    console.log(`🔍 DEBUG: ${partner.code} - Indirizzo: "${address}", Città: "${city}"`);
+
+                    // Match per città (case insensitive)
+                    if (address.toLowerCase().includes(targetCity.toLowerCase()) || 
+                        city.toLowerCase().includes(targetCity.toLowerCase())) {
+
+                      partnersInCity.push({
+                        partnerCode: partner.code,
+                        partnerName: businessData.businessName || `Partner ${partner.code}`,
+                        businessType: businessData.businessType || 'Attività',
+                        description: businessData.description || 'Attività verificata TouristIQ',
+                        address: businessData.address || '',
+                        city: businessData.city || '',
+                        phone: businessData.phone || '',
+                        email: businessData.email || '',
+                        discountPercentage: 15, // Default discount
+                        category: businessData.businessType || 'Servizi'
+                      });
+
+                      console.log(`✅ TROVATO: ${businessData.businessName} a ${businessData.city}`);
+                    }
+                  }
+                } catch (parseError) {
+                  console.log(`❌ Errore parsing note per ${partner.code}:`, parseError);
+                }
               }
             }
-            
+
+            console.log(`🎯 PARTNER TROVATI PER ${targetCity}: ${partnersInCity.length}`);
+
+            // STEP 3: Se trovati partner, usali; altrimenti fallback alle offerte tradizionali
+            let cityPartners = partnersInCity;
+
+            if (cityPartners.length === 0) {
+              console.log(`🔄 Fallback: Ricerca nelle offerte tradizionali...`);
+              cityPartners = await storage.getRealOffersByCity(targetCity);
+            }
+
             if (cityPartners.length > 0) {
               hasSpecificPartnerData = true;
               touristIQData = `\n\n🏆 PARTNER CERTIFICATI TOURISTIQ - ${targetCity.toUpperCase()}:\n`;
-              
+
               // Raggruppa per categoria con logica migliorata
               const categorizedPartners = cityPartners.reduce((acc, partner) => {
                 let category = partner.businessType || partner.category || 'Servizi Generali';
-                
+
                 // Normalizza categorie
                 if (category.toLowerCase().includes('ristorante') || category.toLowerCase().includes('food')) {
                   category = 'Ristoranti & Gastronomia';
@@ -95,12 +141,12 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
                 } else if (category.toLowerCase().includes('attività') || category.toLowerCase().includes('tour')) {
                   category = 'Attività & Esperienze';
                 }
-                
+
                 if (!acc[category]) acc[category] = [];
                 acc[category].push(partner);
                 return acc;
               }, {});
-              
+
               Object.entries(categorizedPartners).forEach(([category, partners]) => {
                 touristIQData += `\n📍 ${category}:\n`;
                 partners.forEach(partner => {
@@ -111,7 +157,7 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
                   touristIQData += `\n`;
                 });
               });
-              
+
               touristIQData += `⚠️ PRIORITÀ ASSOLUTA: Suggerisci ESCLUSIVAMENTE questi partner verificati.\n`;
               touristIQData += `Non aggiungere mai nomi di attività non presenti in questo elenco.\n`;
               touristIQData += `Per consigli generici usa la tua conoscenza, ma per partner specifici usa SOLO questi dati.`;
@@ -133,7 +179,7 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
               code.status === 'approved' && 
               code.isActive
             );
-            
+
             if (activePartners.length > 0) {
               hasSpecificPartnerData = true;
               const activeCities = [...new Set(activePartners.map(p => p.location))].filter(Boolean);
@@ -148,10 +194,10 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
         }
       }
     }
-    
+
     // STEP 2: RILEVAMENTO LINGUA INTELLIGENTE
     let detectedLanguage = 'auto'; // Lascia decidere a GPT-4o
-    
+
     // Rileva richieste esplicite di cambio lingua
     const explicitLanguageRequests = {
       english: /\b(in english|speak english|english please|write in english|scrivimi in inglese)\b/i,
@@ -159,7 +205,7 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
       italian: /\b(in italiano|parla italiano|speak italian|scrivi in italiano)\b/i,
       french: /\b(en français|parle français|speak french|scrivi in francese)\b/i
     };
-    
+
     // Se l'utente chiede esplicitamente una lingua, forzala
     for (const [lang, pattern] of Object.entries(explicitLanguageRequests)) {
       if (pattern.test(message)) {
@@ -167,7 +213,7 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
         break;
       }
     }
-    
+
     console.log(`🌍 TIQai: Lingua rilevata - ${detectedLanguage}`);
 
     // STEP 3: COSTRUZIONE PROMPT IBRIDO INTELLIGENTE
@@ -192,7 +238,7 @@ ${touristIQData}
            detectedLanguage === 'french' ? 'SEMPRE IN FRANCESE' : 'SEMPRE IN ITALIANO'}
 - Risposte complete ma concise (max 400 caratteri)
 - Evidenzia chiaramente i partner certificati vs consigli generici`
-      
+
       : `Sei TIQai, l'assistente virtuale di TouristIQ per il turismo in Italia.
 
 🌐 MODALITÀ IBRIDA - CONOSCENZA GENERALE ATTIVA:
@@ -211,7 +257,7 @@ Fornisci informazioni turistiche complete e verificate su:
 - Combina saggezza locale con informazioni pratiche aggiornate
 
 🎨 STILE: Amichevole, professionale, lingua ${detectedLanguage === 'auto' ? 'NATURALE (rispondi nella lingua della domanda)' : 
-           detectedLanguage === 'english' ? 'SEMPRE INGLESE' :
+           detectedLanguage === 'english' ? 'SEMPRE IN INGLESE' :
            detectedLanguage === 'spanish' ? 'SEMPRE SPAGNOLO' :
            detectedLanguage === 'french' ? 'SEMPRE FRANCESE' : 'SEMPRE ITALIANA'}, max 400 caratteri.${touristIQData}`;
 
@@ -237,21 +283,21 @@ Fornisci informazioni turistiche complete e verificate su:
 
     const finalResponse = (aiResponse as any).choices[0].message.content || 
       "Mi dispiace, non sono riuscito a processare la tua richiesta. Riprova con una domanda più specifica.";
-    
+
     console.log(`✅ TIQai IBRIDO: Risposta generata (${hasSpecificPartnerData ? 'DB+AI' : 'AI puro'})`);
     return finalResponse;
-    
+
   } catch (error) {
     console.error("❌ Errore TIQai:", error);
-    
+
     if (error.message === 'Timeout') {
       return "⏱️ La risposta sta impiegando troppo tempo. Riprova con una domanda più breve e specifica.";
     }
-    
+
     if (error.code === 'rate_limit_exceeded') {
       return "🚦 Troppe richieste. Aspetta qualche secondo e riprova.";
     }
-    
+
     return "🔧 Servizio temporaneamente non disponibile. Riprova tra qualche minuto.";
   }
 }
