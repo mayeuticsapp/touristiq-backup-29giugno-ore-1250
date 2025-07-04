@@ -723,6 +723,43 @@ export async function setupRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint per aggiornamento completo dettagli utente
+  app.patch("/api/admin/users/:id/details", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const userId = parseInt(req.params.id);
+      const { assignedTo, location, status, internalNote, isActive } = req.body;
+
+      // Validazione dati
+      if (status && !['pending', 'approved', 'blocked', 'inactive'].includes(status)) {
+        return res.status(400).json({ message: "Stato non valido" });
+      }
+
+      // Aggiorna tutti i campi dell'utente
+      const updatedUser = await storage.updateIqCodeDetails(userId, {
+        assignedTo: assignedTo || null,
+        location: location || null,
+        status: status || 'pending',
+        internalNote: internalNote || null,
+        isActive: isActive !== undefined ? isActive : true
+      });
+
+      res.json({ success: true, user: updatedUser });
+    } catch (error) {
+      console.error("Errore aggiornamento dettagli utente:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // Admin endpoint per ottenere strutture e partner approvati per assegnazione pacchetti
   app.get("/api/admin/structures", async (req, res) => {
     try {

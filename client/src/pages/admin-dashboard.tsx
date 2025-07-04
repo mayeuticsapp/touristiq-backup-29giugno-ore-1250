@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Users, QrCode, Building2, Settings, BarChart3, Package, Trash2, StickyNote, TrendingUp, Send, RotateCcw, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AdminRechargeManagement } from "@/components/admin-recharge-management";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 function StatsValue({ endpoint, field }: { endpoint: string; field: string }) {
   const [value, setValue] = useState(0);
@@ -315,6 +316,9 @@ function UsersManagement() {
   const [loading, setLoading] = useState(true);
   const [editingNote, setEditingNote] = useState<number | null>(null);
   const [noteText, setNoteText] = useState("");
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [showUserDetailDialog, setShowUserDetailDialog] = useState(false);
+  const [editingUserData, setEditingUserData] = useState<any>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -454,6 +458,60 @@ function UsersManagement() {
     setNoteText("");
   };
 
+  const openUserDetails = (user: any) => {
+    setSelectedUser(user);
+    setEditingUserData({
+      assignedTo: user.assignedTo || '',
+      location: user.location || '',
+      status: user.status,
+      internalNote: user.internalNote || '',
+      isActive: user.isActive
+    });
+    setShowUserDetailDialog(true);
+  };
+
+  const closeUserDetails = () => {
+    setSelectedUser(null);
+    setEditingUserData(null);
+    setShowUserDetailDialog(false);
+  };
+
+  const saveUserDetails = async () => {
+    if (!selectedUser || !editingUserData) return;
+
+    try {
+      // Aggiorna dati utente
+      const response = await fetch(`/api/admin/users/${selectedUser.id}/details`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(editingUserData)
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Successo",
+          description: "Dati utente aggiornati con successo"
+        });
+        closeUserDetails();
+        fetchUsers(); // Ricarica la lista
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Errore",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Errore",
+        description: "Errore durante l'aggiornamento",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-4">Caricamento utenti...</div>;
   }
@@ -528,6 +586,15 @@ function UsersManagement() {
                 </div>
 
                 <div className="flex flex-wrap gap-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-blue-600 hover:bg-blue-50 text-xs px-2 py-1"
+                    onClick={() => openUserDetails(user)}
+                    title="Gestisci utente"
+                  >
+                    📝
+                  </Button>
                   {user.status === 'pending' && (
                     <>
                       <Button
@@ -620,6 +687,187 @@ function UsersManagement() {
           bgColor="bg-green-500"
         />
       </div>
+
+      {/* Dialog Dettagli Utente */}
+      {showUserDetailDialog && selectedUser && editingUserData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">Gestione Utente - {selectedUser.code}</h2>
+              <Button variant="ghost" onClick={closeUserDetails}>✕</Button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Informazioni Base */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <Label className="font-semibold">Codice IQ</Label>
+                  <p className="font-mono text-sm">{selectedUser.code}</p>
+                </div>
+                <div>
+                  <Label className="font-semibold">Ruolo</Label>
+                  <Badge variant={
+                    selectedUser.role === 'admin' ? 'destructive' :
+                    selectedUser.role === 'partner' ? 'default' :
+                    selectedUser.role === 'structure' ? 'secondary' : 'outline'
+                  }>
+                    {selectedUser.role}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="font-semibold">Tipo Codice</Label>
+                  <p className="text-sm">{selectedUser.codeType || 'N/A'}</p>
+                </div>
+                <div>
+                  <Label className="font-semibold">Data Creazione</Label>
+                  <p className="text-sm">{new Date(selectedUser.createdAt).toLocaleDateString('it-IT')}</p>
+                </div>
+              </div>
+
+              {/* Dati Modificabili */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Dati Modificabili</h3>
+                
+                <div>
+                  <Label htmlFor="assignedTo">Assegnato a</Label>
+                  <Input
+                    id="assignedTo"
+                    value={editingUserData.assignedTo}
+                    onChange={(e) => setEditingUserData({...editingUserData, assignedTo: e.target.value})}
+                    placeholder="Nome persona/struttura/partner"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="location">Posizione</Label>
+                  <Input
+                    id="location"
+                    value={editingUserData.location}
+                    onChange={(e) => setEditingUserData({...editingUserData, location: e.target.value})}
+                    placeholder="IT, VV, RC, ecc."
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="status">Stato</Label>
+                  <Select 
+                    value={editingUserData.status} 
+                    onValueChange={(value) => setEditingUserData({...editingUserData, status: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">In Attesa</SelectItem>
+                      <SelectItem value="approved">Approvato</SelectItem>
+                      <SelectItem value="blocked">Bloccato</SelectItem>
+                      <SelectItem value="inactive">Inattivo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="isActive"
+                    checked={editingUserData.isActive}
+                    onChange={(e) => setEditingUserData({...editingUserData, isActive: e.target.checked})}
+                  />
+                  <Label htmlFor="isActive">Account Attivo</Label>
+                </div>
+
+                <div>
+                  <Label htmlFor="internalNote">Note Interne</Label>
+                  <Textarea
+                    id="internalNote"
+                    value={editingUserData.internalNote}
+                    onChange={(e) => setEditingUserData({...editingUserData, internalNote: e.target.value})}
+                    placeholder="Note private per l'amministrazione"
+                    rows={4}
+                  />
+                </div>
+              </div>
+
+              {/* Azioni Rapide */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Azioni Rapide</h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedUser.status !== 'approved' && (
+                    <Button
+                      variant="outline"
+                      className="text-green-600 hover:bg-green-50"
+                      onClick={() => {
+                        updateUserStatus(selectedUser.id, 'approve');
+                        setEditingUserData({...editingUserData, status: 'approved'});
+                      }}
+                    >
+                      ✅ Approva
+                    </Button>
+                  )}
+                  {selectedUser.status !== 'blocked' && (
+                    <Button
+                      variant="outline"
+                      className="text-orange-600 hover:bg-orange-50"
+                      onClick={() => {
+                        updateUserStatus(selectedUser.id, 'block');
+                        setEditingUserData({...editingUserData, status: 'blocked'});
+                      }}
+                    >
+                      🚫 Blocca
+                    </Button>
+                  )}
+                  {selectedUser.role === 'partner' && (
+                    <Button
+                      variant="outline"
+                      className="text-blue-600 hover:bg-blue-50"
+                      onClick={() => bypassOnboarding(selectedUser.id)}
+                    >
+                      🚀 Bypass Onboarding
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="text-red-600 hover:bg-red-50"
+                    onClick={() => {
+                      moveToTrash(selectedUser.id);
+                      closeUserDetails();
+                    }}
+                  >
+                    🗑️ Sposta nel Cestino
+                  </Button>
+                </div>
+              </div>
+
+              {/* Statistiche Aggiuntive */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg">
+                <div>
+                  <Label className="font-semibold">Approvato da</Label>
+                  <p className="text-sm">{selectedUser.approvedBy || 'Non ancora approvato'}</p>
+                </div>
+                <div>
+                  <Label className="font-semibold">Data Approvazione</Label>
+                  <p className="text-sm">
+                    {selectedUser.approvedAt 
+                      ? new Date(selectedUser.approvedAt).toLocaleDateString('it-IT')
+                      : 'Non ancora approvato'
+                    }
+                  </p>
+                </div>
+              </div>
+
+              {/* Pulsanti Azione */}
+              <div className="flex justify-end space-x-2 pt-4 border-t">
+                <Button variant="outline" onClick={closeUserDetails}>
+                  Annulla
+                </Button>
+                <Button onClick={saveUserDetails}>
+                  Salva Modifiche
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

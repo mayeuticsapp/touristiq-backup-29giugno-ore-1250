@@ -122,6 +122,14 @@ export interface IStorage {
   getRealOffersByPartners(partnerCodes: string[]): Promise<any[]>;
   getRealOffersByCity(cityName: string): Promise<any[]>;
   getRealOffersNearby(latitude: number, longitude: number, radius: number): Promise<any[]>;
+
+  updateIqCodeDetails(id: number, details: {
+    assignedTo?: string | null;
+    location?: string | null;
+    status?: string;
+    internalNote?: string | null;
+    isActive?: boolean;
+  }): Promise<IqCode>;
 }
 
 export class MemStorage implements IStorage {
@@ -788,6 +796,39 @@ export class MemStorage implements IStorage {
   async completePartnerOnboarding(partnerCode: string): Promise<void> {
     // Implementazione base - in memoria
     return;
+  }
+
+  async updateIqCodeDetails(id: number, details: {
+    assignedTo?: string | null;
+    location?: string | null;
+    status?: string;
+    internalNote?: string | null;
+    isActive?: boolean;
+  }) {
+    const iqCode = this.iqCodes.get(id);
+    if (!iqCode) {
+      throw new Error("Codice IQ non trovato");
+    }
+
+    // Aggiorna solo i campi forniti
+    if (details.assignedTo !== undefined) {
+      iqCode.assignedTo = details.assignedTo;
+    }
+    if (details.location !== undefined) {
+      iqCode.location = details.location;
+    }
+    if (details.status !== undefined) {
+      iqCode.status = details.status;
+    }
+    if (details.internalNote !== undefined) {
+      iqCode.internalNote = details.internalNote;
+    }
+    if (details.isActive !== undefined) {
+      iqCode.isActive = details.isActive;
+    }
+
+    this.iqCodes.set(id, iqCode);
+    return iqCode;
   }
 
   // Implementazioni stub per offerte reali
@@ -1623,6 +1664,48 @@ export class PostgreStorage implements IStorage {
       console.error('Errore getPartnerOffers PostgreSQL:', error);
       return [];
     }
+  }
+
+  async updateIqCodeDetails(id: number, details: {
+    assignedTo?: string | null;
+    location?: string | null;
+    status?: string;
+    internalNote?: string | null;
+    isActive?: boolean;
+  }): Promise<IqCode> {
+    try {
+      const updateData: any = {};
+      if (details.assignedTo !== undefined) {
+        updateData.assignedTo = details.assignedTo;
+      }
+      if (details.location !== undefined) {
+        updateData.location = details.location;
+      }
+      if (details.status !== undefined) {
+        updateData.status = details.status;
+      }
+      if (details.internalNote !== undefined) {
+        updateData.internalNote = details.internalNote;
+      }
+      if (details.isActive !== undefined) {
+        updateData.isActive = details.isActive;
+      }
+
+      const result = await this.db
+        .update(iqCodes)
+        .set(updateData)
+        .where(eq(iqCodes.id, id))
+        .returning();
+
+      if (result.length === 0) {
+        throw new Error("Codice IQ non trovato");
+      }
+
+      return result[0];
+    } catch (error) {
+      console.error('Errore updateIqCodeDetails PostgreSQL:', error);
+      throw error;
+        }
   }
 }
 
