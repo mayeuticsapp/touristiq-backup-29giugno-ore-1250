@@ -371,7 +371,7 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
                     {getStatusBadge(validation.status)}
                   </div>
                   <div className="text-sm text-gray-600 mb-3">
-                    Richiesta: {formatDateTime(validation.requestedAt)}</div>
+                    Richiesta: {formatDateTime(validation.requestedAt)}
                     {validation.respondedAt && (
                       <div>Risposta: {formatDateTime(validation.respondedAt)}</div>
                     )}
