@@ -369,9 +369,9 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
                   <div className="flex items-center justify-between mb-2">
                     <div className="font-medium">{validation.partnerName}</div>
                     {getStatusBadge(validation.status)}
-                  </div></div>
+                  </div>
                   <div className="text-sm text-gray-600 mb-3">
-                     Richiesta: {formatDateTime(validation.requestedAt)}
+                    Richiesta: {formatDateTime(validation.requestedAt)}</div>
                     {validation.respondedAt && (
                       <div>Risposta: {formatDateTime(validation.respondedAt)}</div>
                     )}
