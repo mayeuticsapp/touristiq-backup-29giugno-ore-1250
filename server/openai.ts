@@ -158,7 +158,7 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
                         description: `Attività certificata TouristIQ - ${assignedTo}`,
                         address: `Piazza della Repubblica, ${targetCity}`, // Indirizzo default per La Ruota
                         city: targetCity,
-                        phone: '',
+                        phone: assignedTo === 'La Ruota di Pizzo' ? '+39 0963 532274' : '',
                         email: '',
                         discountPercentage: 15,
                         category: 'Ristoranti & Gastronomia',
