@@ -570,6 +570,7 @@ function UsersManagement() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       setShowEditDialog(false);
       setEditingUser(null);
+      fetchUsers(); // Ricarica la lista utenti
     },
     onError: (error: any) => {
       toast({
@@ -579,6 +580,12 @@ function UsersManagement() {
       });
     }
   });
+
+  const handleUpdateUser = () => {
+    if (editingUser) {
+      updateUserMutation.mutate(editingUser);
+    }
+  };
 
   if (loading) {
     return <div className="text-center py-4">Caricamento utenti...</div>;
