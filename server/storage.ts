@@ -1146,7 +1146,7 @@ export class PostgreStorage implements IStorage {
     }
 
     // Import emotional words for code for code generation
-    const { generateEmotionalIQCode } = await import('./iq-generator');
+    const { generateEmotionalIQCode, parseIQCode } = await import('./iq-generator');
 
     // Generate unique emotional code (TIQ-IT-ROSA format)
     let uniqueCode: string;
@@ -1164,6 +1164,9 @@ export class PostgreStorage implements IStorage {
       throw new Error("Impossibile generare codice univoco");
     }
 
+    // Parse the generated code to extract country and word
+    const parsedCode = parseIQCode(uniqueCode);
+
     // Salva il codice anche nella tabella principale iq_codes per abilitare il login
     try {
       await this.db.insert(iqCodes).values({
@@ -1179,6 +1182,21 @@ export class PostgreStorage implements IStorage {
       console.log(`✅ CODICE ABILITATO LOGIN: ${uniqueCode} inserito in iq_codes per accesso turista`);
     } catch (insertError) {
       console.log(`⚠️ CODICE DUPLICATO: ${uniqueCode} già esistente in iq_codes`);
+    }
+
+    // CRITICO: Salva nella tabella generated_iq_codes per tracking ospite
+    try {
+      const { neon } = await import('@neondatabase/serverless');
+      const sql = neon(process.env.DATABASE_URL!);
+
+      await sql`
+        INSERT INTO generated_iq_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
+        VALUES (${uniqueCode}, ${structureCode}, ${packageId}, ${guestName}, ${guestId || null}, ${parsedCode?.country || 'IT'}, ${parsedCode?.word || 'UNKNOWN'}, 'assigned', NOW())
+      `;
+
+      console.log(`✅ TRACKING SALVATO: Codice ${uniqueCode} collegato all'ospite ${guestId} per recupero futuro`);
+    } catch (dbError) {
+      console.error(`❌ ERRORE TRACKING: Impossibile salvare tracking per ${uniqueCode}:`, dbError);
     }
 
     // Decrement credits
@@ -1255,8 +1273,31 @@ export class PostgreStorage implements IStorage {
 
   // IQCode management methods - Rimozione e riassegnazione per PostgreStorage
   async getAssignedCodesByGuest(guestId: number): Promise<any[]> {
-    // Return empty for now - would need generatedEmotionalCodes table query
-    return [];
+    try {
+      const { neon } = await import('@neondatabase/serverless');
+      const sql = neon(process.env.DATABASE_URL!);
+
+      const result = await sql`
+        SELECT code, assigned_to, assigned_at, emotional_word, country
+        FROM generated_iq_codes 
+        WHERE guest_id = ${guestId} AND status = 'assigned'
+        ORDER BY assigned_at DESC
+      `;
+
+      const codes = result.map((row: any) => ({
+        code: row.code,
+        assignedTo: row.assigned_to,
+        assignedAt: row.assigned_at,
+        emotionalWord: row.emotional_word,
+        country: row.country
+      }));
+
+      console.log(`✅ RECUPERO PostgreSQL: Trovati ${codes.length} codici per ospite ${guestId}`);
+      return codes;
+    } catch (dbError) {
+      console.error(`❌ ERRORE PostgreSQL: Impossibile recuperare codici per ospite ${guestId}:`, dbError);
+      return [];
+    }
   }
 
   async removeCodeFromGuest(code: string, guestId: number, reason: string): Promise<void> {
