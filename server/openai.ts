@@ -96,7 +96,7 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
                     // Match per città (case insensitive)
                     if (address.toLowerCase().includes(targetCity.toLowerCase()) || 
                         city.toLowerCase().includes(targetCity.toLowerCase())) {
-                      
+
                       isLocationMatch = true;
                       partnerData = {
                         partnerCode: partner.code,
@@ -133,14 +133,14 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
                     // Per partner bypass, usa location dal codice e assegnato
                     const partnerLocation = partner.location || '';
                     const assignedTo = partner.assignedTo || '';
-                    
+
                     console.log(`🔍 DEBUG BYPASS: ${partner.code} - Location: "${partnerLocation}", AssignedTo: "${assignedTo}"`);
 
                     // Match più flessibile per partner bypass
                     if (partnerLocation.toLowerCase().includes(targetCity.toLowerCase()) ||
                         assignedTo.toLowerCase().includes(targetCity.toLowerCase()) ||
                         targetCity.toLowerCase() === 'pizzo' && partnerLocation.toLowerCase().includes('vv')) {
-                      
+
                       isLocationMatch = true;
                       partnerData = {
                         partnerCode: partner.code,
@@ -179,10 +179,10 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
               if (!isLocationMatch && !partner.internalNote) {
                 const partnerLocation = partner.location || '';
                 const assignedTo = partner.assignedTo || '';
-                
+
                 if (partnerLocation.toLowerCase().includes(targetCity.toLowerCase()) ||
                     (targetCity.toLowerCase() === 'pizzo' && partnerLocation.toLowerCase().includes('vv'))) {
-                  
+
                   isLocationMatch = true;
                   partnerData = {
                     partnerCode: partner.code,
@@ -229,7 +229,12 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
 
             if (cityPartners.length > 0) {
               hasSpecificPartnerData = true;
-              touristIQData = `\n\n🏆 PARTNER CERTIFICATI TOURISTIQ - ${targetCity.toUpperCase()}:\n`;
+              // Updated here
+              const citiesFound = [...new Set(cityPartners.map(p => p.city))].filter(Boolean);
+              const titleSuffix = citiesFound.length > 1 ? 
+                `${citiesFound.join(', ')}` : 
+                targetCity.toUpperCase();
+              touristIQData += `\n\n🏆 PARTNER CERTIFICATI TOURISTIQ - ${titleSuffix}:\n`;
 
               // ANALISI INTELLIGENTE DELLE RICHIESTE SPECIFICHE
               const userRequest = message.toLowerCase();
@@ -268,14 +273,14 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
                   touristIQData += `  💰 SCONTO ESCLUSIVO: ${partner.discountPercentage}% per utenti TouristIQ\n`;
                   if (partner.address) touristIQData += `  📍 ${partner.address}\n`;
                   if (partner.phone) touristIQData += `  📞 CONTATTO: ${partner.phone}\n`;
-                  
+
                   // INFORMAZIONI ACCESSIBILITÀ DETTAGLIATE
                   const accessibilityFeatures = [];
                   if (partner.wheelchairAccessible) accessibilityFeatures.push('♿ Accessibile sedia a rotelle');
                   if (partner.elevatorAccess) accessibilityFeatures.push('🛗 Ascensore');
                   if (partner.accessibleBathroom) accessibilityFeatures.push('🚻 Bagno accessibile');
                   if (partner.assistanceAvailable) accessibilityFeatures.push('👥 Assistenza disponibile');
-                  
+
                   if (accessibilityFeatures.length > 0) {
                     touristIQData += `  ♿ ACCESSIBILITÀ: ${accessibilityFeatures.join(', ')}\n`;
                   }
@@ -285,7 +290,7 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
                   if (partner.glutenFree) dietaryOptions.push('🌾 Senza glutine');
                   if (partner.vegetarianOptions) dietaryOptions.push('🥗 Vegetariano');
                   if (partner.veganOptions) dietaryOptions.push('🌱 Vegano');
-                  
+
                   if (dietaryOptions.length > 0) {
                     touristIQData += `  🍽️ DIETA: ${dietaryOptions.join(', ')}\n`;
                   }
@@ -295,7 +300,7 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
                   if (partner.childFriendly) familyFeatures.push('👶 Child friendly');
                   if (partner.highChairs) familyFeatures.push('🪑 Seggioloni');
                   if (partner.kidsMenu) familyFeatures.push('🧒 Menu bambini');
-                  
+
                   if (familyFeatures.length > 0) {
                     touristIQData += `  👨‍👩‍👧‍👦 FAMIGLIA: ${familyFeatures.join(', ')}\n`;
                   }
@@ -307,7 +312,7 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
               // ISTRUZIONI INTELLIGENTI BASATE SU FILTRI
               touristIQData += `⚠️ PRIORITÀ ASSOLUTA: Suggerisci ESCLUSIVAMENTE questi partner verificati.\n`;
               touristIQData += `📞 IMPORTANTE: Se presente il numero di telefono, includilo sempre nella risposta per facilitare i contatti diretti.\n`;
-              
+
               if (accessibilityNeeded) {
                 const accessiblePartners = cityPartners.filter(p => p.wheelchairAccessible || p.accessibleBathroom);
                 if (accessiblePartners.length > 0) {
