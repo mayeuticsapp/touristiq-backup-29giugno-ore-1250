@@ -2681,7 +2681,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
           ? `IQCode accettato presso ${validation.partnerName} • ${validation.usesRemaining} utilizzi rimanenti (su ${validation.usesTotal} totali)`
           : validation.status === 'rejected'
           ? `IQCode rifiutato presso ${validation.partnerName}`
-          : `Richiesta di validazione da ${validation.partnerName} in attesa di risposta`
+          : `${validation.partnerName} ha richiesto la validazione del tuo IQCode`
       }));
 
       console.log(`👤 TURISTA ${session.iqCode}: ${validations.length} validazioni - mostrando utilizzi completi`);
@@ -2786,10 +2786,10 @@ export async function setupRoutes(app: Express): Promise<Server> {
         respondedAt: validation.respondedAt,
         // Messaggi chiari senza rivelare utilizzi rimanenti
         statusMessage: validation.status === 'accepted' 
-          ? `✅ Validazione accettata - Puoi applicare lo sconto al turista ${validation.touristIqCode}`
+          ? `✅ Validazione accettata - Puoi applicare lo sconto al turista`
           : validation.status === 'rejected'
-          ? `❌ Validazione rifiutata dal turista ${validation.touristIqCode}`
-          : `⏳ In attesa di risposta dal turista ${validation.touristIqCode}`,
+          ? `❌ Validazione rifiutata dal turista`
+          : `⏳ In attesa di risposta dal turista`,
         canApplyDiscount: validation.status === 'accepted'
       }));
 
