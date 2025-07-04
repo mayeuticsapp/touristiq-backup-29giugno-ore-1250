@@ -1195,39 +1195,36 @@ export default function StructureDashboard() {
                           size="sm"
                           variant="outline"
                           onClick={async () => {
-                            // Carica i codici dell'ospite per WhatsApp
+                            // Carica i codici reali dell'ospite per WhatsApp
                             try {
                               const response = await fetch(`/api/guest/${guest.id}/codes`, {
                                 credentials: 'include'
                               });
                               const data = await response.json();
                               
-                              let codeToSend = null;
-                              
                               if (data.codes && data.codes.length > 0) {
-                                codeToSend = data.codes[0].code || data.codes[0];
-                              } else {
-                                // Genera un codice temporaneo per la demo
-                                codeToSend = `IQ-${guest.firstName.substring(0,2).toUpperCase()}${guest.lastName.substring(0,2).toUpperCase()}-${Date.now().toString().slice(-4)}`;
-                              }
-                              
-                              // Invia WhatsApp con il codice
-                              if (guest.phone && codeToSend) {
-                                let cleanPhone = guest.phone.replace(/[^0-9]/g, '');
-                                if (cleanPhone.startsWith('39')) {
-                                  cleanPhone = cleanPhone;
-                                } else if (cleanPhone.startsWith('3')) {
-                                  cleanPhone = '39' + cleanPhone;
-                                } else {
-                                  alert('Numero WhatsApp non valido');
-                                  return;
-                                }
+                                const realCode = data.codes[0].code;
                                 
-                                const message = `🎁 Ciao ${guest.firstName}! Ecco il tuo codice sconto TouristIQ: *${codeToSend}*\n\nUsa questo codice per ottenere sconti esclusivi presso i nostri partner! 🌟`;
-                                const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-                                window.open(whatsappUrl, '_blank');
+                                // Invia WhatsApp con il codice reale
+                                if (guest.phone && realCode) {
+                                  let cleanPhone = guest.phone.replace(/[^0-9]/g, '');
+                                  if (cleanPhone.startsWith('39')) {
+                                    cleanPhone = cleanPhone;
+                                  } else if (cleanPhone.startsWith('3')) {
+                                    cleanPhone = '39' + cleanPhone;
+                                  } else {
+                                    alert('Numero WhatsApp non valido');
+                                    return;
+                                  }
+                                  
+                                  const message = `🎁 Ciao ${guest.firstName}! Ecco il tuo codice sconto TouristIQ: *${realCode}*\n\nUsa questo codice per ottenere sconti esclusivi presso i nostri partner! 🌟`;
+                                  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+                                  window.open(whatsappUrl, '_blank');
+                                } else {
+                                  alert("Numero di telefono non disponibile per questo ospite");
+                                }
                               } else {
-                                alert("Numero di telefono non disponibile per questo ospite");
+                                alert(`${guest.firstName} ${guest.lastName} non ha ancora codici IQ assegnati. Assegna prima un codice dalla dashboard principale.`);
                               }
                             } catch (error) {
                               console.error('Errore invio WhatsApp:', error);
@@ -1244,7 +1241,7 @@ export default function StructureDashboard() {
                           size="sm"
                           variant="outline"
                           onClick={async () => {
-                            // Carica e copia il primo codice IQ dell'ospite
+                            // Carica e copia il primo codice IQ reale dell'ospite
                             try {
                               const response = await fetch(`/api/guest/${guest.id}/codes`, {
                                 credentials: 'include'
@@ -1252,14 +1249,11 @@ export default function StructureDashboard() {
                               const data = await response.json();
                               
                               if (data.codes && data.codes.length > 0) {
-                                const firstCode = data.codes[0].code || data.codes[0];
-                                await navigator.clipboard.writeText(firstCode);
-                                alert(`Codice ${firstCode} copiato negli appunti!`);
+                                const realCode = data.codes[0].code;
+                                await navigator.clipboard.writeText(realCode);
+                                alert(`Codice TouristIQ ${realCode} copiato negli appunti!`);
                               } else {
-                                // Se non ci sono codici, genera un codice temporaneo per la demo
-                                const guestCode = `IQ-${guest.firstName.substring(0,2).toUpperCase()}${guest.lastName.substring(0,2).toUpperCase()}-${Date.now().toString().slice(-4)}`;
-                                await navigator.clipboard.writeText(guestCode);
-                                alert(`Codice demo ${guestCode} copiato negli appunti!\n\nNota: Questo ospite non ha ancora codici IQ assegnati.`);
+                                alert(`${guest.firstName} ${guest.lastName} non ha ancora codici IQ assegnati.\n\nVai alla Dashboard Struttura per assegnare un codice IQ dal pacchetto acquistato.`);
                               }
                             } catch (error) {
                               console.error('Errore recupero codice:', error);

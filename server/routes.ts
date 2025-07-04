@@ -805,7 +805,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint per ottenere IQCode assegnati a un ospite
+  // Endpoint per ottenere IQCode assegnati a un ospite - CODICI REALI TouristIQ
   app.get("/api/guest/:guestId/codes", async (req, res) => {
     try {
       const sessionToken = req.cookies.session_token;
@@ -820,31 +820,63 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       const guestId = parseInt(req.params.guestId);
 
-      // Query diretta al database PostgreSQL per recuperare i codici assegnati
+      // PRIORITÀ 1: Query database PostgreSQL per codici emozionali reali
       try {
         const { neon } = await import('@neondatabase/serverless');
         const sql = neon(process.env.DATABASE_URL!);
 
-        const dbCodes = await sql`
+        // Cerca prima nella tabella generated_iq_codes (codici emozionali assegnati)
+        const emotionalCodes = await sql`
           SELECT code, assigned_to, assigned_at, emotional_word, country
           FROM generated_iq_codes 
           WHERE guest_id = ${guestId} AND status = 'assigned'
           ORDER BY assigned_at DESC
         `;
 
-        const codes = dbCodes.map((row: any) => ({
-          code: row.code,
-          assignedTo: row.assigned_to,
-          assignedAt: row.assigned_at,
-          emotionalWord: row.emotional_word,
-          country: row.country
-        }));
+        if (emotionalCodes.length > 0) {
+          const codes = emotionalCodes.map((row: any) => ({
+            code: row.code,
+            assignedTo: row.assigned_to,
+            assignedAt: row.assigned_at,
+            emotionalWord: row.emotional_word,
+            country: row.country,
+            type: 'emotional'
+          }));
 
-        console.log(`✅ ENDPOINT: Recuperati ${codes.length} codici per ospite ${guestId}`);
-        res.json({ codes });
+          console.log(`✅ POSTGRESQL: Trovati ${codes.length} codici emozionali per ospite ${guestId}`);
+          return res.json({ codes });
+        }
+
+        // PRIORITÀ 2: Cerca nei codici principali iq_codes se assegnati al guest
+        const mainCodes = await sql`
+          SELECT code, assigned_to, created_at, location, code_type
+          FROM iq_codes 
+          WHERE assigned_to LIKE '%guest_${guestId}%' OR assigned_to LIKE '%Ospite ${guestId}%'
+          AND role = 'tourist' AND is_active = true
+          ORDER BY created_at DESC
+        `;
+
+        if (mainCodes.length > 0) {
+          const codes = mainCodes.map((row: any) => ({
+            code: row.code,
+            assignedTo: row.assigned_to,
+            assignedAt: row.created_at,
+            country: row.location,
+            type: row.code_type,
+            emotionalWord: row.code.includes('-') ? row.code.split('-').pop() : 'UNKNOWN'
+          }));
+
+          console.log(`✅ POSTGRESQL: Trovati ${codes.length} codici principali per ospite ${guestId}`);
+          return res.json({ codes });
+        }
+
+        // Nessun codice trovato
+        console.log(`❌ POSTGRESQL: Nessun codice trovato per ospite ${guestId}`);
+        res.json({ codes: [] });
+
       } catch (dbError) {
-        console.log(`❌ ENDPOINT: Fallback memoria per ospite ${guestId}`);
-        // Fallback al metodo storage esistente
+        console.error(`❌ ERRORE POSTGRESQL: ${dbError}`);
+        // Fallback storage in memoria
         const assignedCodes = await storage.getAssignedCodesByGuest(guestId);
         res.json({ codes: assignedCodes });
       }
