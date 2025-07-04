@@ -1997,6 +1997,49 @@ export async function setupRoutes(app: Express): Promise<Server> {
   });
 
   // Get approved structures for assignment (accessible by structures)
+
+
+  // DEBUG ENDPOINT - Solo per admin - Verifica sistema validazioni
+  app.get("/api/admin/debug-validations", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const allValidations = await storage.getAllValidations();
+      
+      const debugData = {
+        totalValidations: allValidations.length,
+        byStatus: {
+          pending: allValidations.filter(v => v.status === 'pending').length,
+          accepted: allValidations.filter(v => v.status === 'accepted').length,
+          rejected: allValidations.filter(v => v.status === 'rejected').length
+        },
+        utilizziEsauriti: allValidations.filter(v => v.usesRemaining <= 0).length,
+        validationsData: allValidations.map(v => ({
+          id: v.id,
+          tourist: v.touristIqCode,
+          partner: v.partnerCode,
+          status: v.status,
+          utilizzi: `${v.usesRemaining}/${v.usesTotal}`,
+          requestedAt: v.requestedAt
+        }))
+      };
+
+      res.json(debugData);
+
+    } catch (error) {
+      console.error("Errore debug validazioni:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   app.get("/api/structures", async (req, res) => {
     try {
       const sessionToken = req.cookies.session_token;
@@ -2606,7 +2649,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Turista vede richieste di validazione in sospeso
+  // Turista vede richieste di validazione in sospeso (CON UTILIZZI COMPLETI)
   app.get("/api/iqcode/validation-requests", async (req: any, res: any) => {
     try {
       const sessionToken = req.cookies.session_token;
@@ -2625,7 +2668,21 @@ export async function setupRoutes(app: Express): Promise<Server> {
       }
 
       const validations = await storage.getValidationsByTourist(session.iqCode);
-      res.json(validations);
+      
+      // SOLO IL TURISTA può vedere i suoi utilizzi rimanenti completi
+      const enrichedValidations = validations.map((validation: any) => ({
+        ...validation,
+        usageInfo: {
+          remaining: validation.usesRemaining,
+          total: validation.usesTotal,
+          used: validation.usesTotal - validation.usesRemaining,
+          canRecharge: validation.usesRemaining <= 0
+        }
+      }));
+
+      console.log(`👤 TURISTA ${session.iqCode}: ${validations.length} validazioni totali`);
+      
+      res.json(enrichedValidations);
 
     } catch (error) {
       console.error("Errore recupero richieste:", error);
@@ -2662,29 +2719,40 @@ export async function setupRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Richiesta non trovata" });
       }
 
-      // Aggiorna stato e scala utilizzi se accettato
+      console.log(`🔄 VALIDAZIONE ${validationId}: Turista ${session.iqCode} risponde '${status}'`);
+      console.log(`📊 UTILIZZI PRIMA: ${validation.usesRemaining}/${validation.usesTotal}`);
+
+      // Aggiorna stato
       await storage.updateValidationStatus(validationId, status, new Date());
 
       let finalUsesRemaining = validation.usesRemaining;
       if (status === 'accepted') {
-        // Scala automaticamente gli utilizzi quando turista accetta
-        await storage.decrementValidationUses(validationId);
-        finalUsesRemaining = validation.usesRemaining - 1;
+        // SCALAMENTO SINCRONIZZATO: Decrementa utilizzi SOLO quando turista accetta
+        const updatedValidation = await storage.decrementValidationUses(validationId);
+        finalUsesRemaining = updatedValidation.usesRemaining;
+        
+        console.log(`✅ ACCETTAZIONE: Utilizzi scalati da ${validation.usesRemaining} a ${finalUsesRemaining}`);
+        console.log(`🎯 VALIDAZIONE COMPLETA: Partner può applicare sconto per ${session.iqCode}`);
+      } else {
+        console.log(`❌ RIFIUTO: Nessun scalamento utilizzi per ${session.iqCode}`);
       }
 
       res.json({ 
         success: true, 
-        message: status === 'accepted' ? `IQCode confermato per utilizzo` : "IQCode rifiutato",
-        usesRemaining: finalUsesRemaining
+        message: status === 'accepted' ? 
+          `IQCode confermato per utilizzo. Utilizzi rimanenti: ${finalUsesRemaining}` : 
+          "IQCode rifiutato",
+        usesRemaining: finalUsesRemaining,
+        canRequestRecharge: finalUsesRemaining <= 0
       });
 
     } catch (error) {
-      console.error("Errore risposta validazione:", error);
+      console.error("❌ ERRORE SCALAMENTO:", error);
       res.status(500).json({ message: "Errore del server" });
     }
   });
 
-  // Partner vede stato delle sue richieste di validazione
+  // Partner vede stato delle sue richieste di validazione (SENZA UTILIZZI RIMANENTI)
   app.get("/api/iqcode/validation-status", async (req: any, res: any) => {
     try {
       const sessionToken = req.cookies.session_token;
@@ -2703,7 +2771,20 @@ export async function setupRoutes(app: Express): Promise<Server> {
       }
 
       const validations = await (storage as any).getValidationsByPartner(session.iqCode);
-      res.json(validations);
+      
+      // PRIVACY PROTECTION: Rimuovi utilizzi rimanenti e dati sensibili per partner
+      const sanitizedValidations = validations.map((validation: any) => ({
+        id: validation.id,
+        touristIqCode: validation.touristIqCode,
+        partnerName: validation.partnerName,
+        status: validation.status,
+        requestedAt: validation.requestedAt,
+        respondedAt: validation.respondedAt,
+        // NON includere usesRemaining, usesTotal - SOLO il turista può vederli
+        canUseDiscount: validation.status === 'accepted' // Solo stato per applicare sconto
+      }));
+
+      res.json(sanitizedValidations);
 
     } catch (error) {
       console.error("Errore stato validazioni:", error);
