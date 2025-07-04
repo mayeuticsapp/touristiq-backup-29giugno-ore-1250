@@ -11,6 +11,7 @@ import { Users, QrCode, Building2, Settings, BarChart3, Package, Trash2, StickyN
 import { useToast } from "@/hooks/use-toast";
 import { AdminRechargeManagement } from "@/components/admin-recharge-management";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 function StatsValue({ endpoint, field }: { endpoint: string; field: string }) {
   const [value, setValue] = useState(0);
@@ -158,7 +159,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
                 Ultima generazione: {adminCredits.lastGeneratedAt ? new Date(adminCredits.lastGeneratedAt).toLocaleString('it-IT') : 'Mai'}
               </p>
             </div>
-            
+
             {/* Azioni rapide Pacchetto RobS */}
             <div className="mt-4 pt-4 border-t border-blue-200">
               <div className="flex gap-2 justify-center">
@@ -319,6 +320,10 @@ function UsersManagement() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showUserDetailDialog, setShowUserDetailDialog] = useState(false);
   const [editingUserData, setEditingUserData] = useState<any>(null);
+  const queryClient = useQueryClient();
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchUsers();
@@ -436,7 +441,7 @@ function UsersManagement() {
 
   const sendNotification = async (userId: number, userCode: string, action: string) => {
     const message = `Ciao, il tuo account TouristIQ ${userCode} è stato ${action === 'approve' ? 'approvato' : 'bloccato'}. ${action === 'approve' ? 'Puoi ora accedere alla piattaforma.' : 'Contatta l\'assistenza per chiarimenti.'}`;
-    
+
     if (confirm(`Inviare notifica: "${message}"?\n\nNOTA: Sistema notifiche in sviluppo - attualmente simulato.`)) {
       alert('Notifica simulata inviata. Integrazione WhatsApp/Email in fase di sviluppo con API Twilio/SendGrid.');
     }
@@ -512,6 +517,69 @@ function UsersManagement() {
     }
   };
 
+  const handleEditUser = (user: any) => {
+    // Estrai i dati partner dalle note interne se esistono
+    let partnerData = {};
+    if (user.role === 'partner' && user.internalNote) {
+      try {
+        const noteData = JSON.parse(user.internalNote);
+        partnerData = noteData.partnerData || {};
+      } catch (e) {
+        console.log('Errore parsing note partner:', e);
+      }
+    }
+
+    setEditingUser({
+      ...user,
+      partnerData
+    });
+    setShowEditDialog(true);
+  };
+
+  const updateUserMutation = useMutation({
+    mutationFn: async (userData: any) => {
+      // Prepara i dati base
+      const updateData: any = {
+        assignedTo: userData.assignedTo,
+        location: userData.location,
+        status: userData.status,
+        internalNote: userData.internalNote,
+        isActive: userData.isActive
+      };
+
+      // Se è un partner, aggiungi i dati specifici nelle note interne
+      if (userData.role === 'partner' && userData.partnerData) {
+        const existingNote = userData.internalNote ? JSON.parse(userData.internalNote || '{}') : {};
+        existingNote.partnerData = userData.partnerData;
+        updateData.internalNote = JSON.stringify(existingNote);
+      }
+
+      const response = await fetch(`/api/admin/users/${userData.id}/details`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData)
+      });
+      if (!response.ok) throw new Error('Errore aggiornamento');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Utente aggiornato",
+        description: "Le modifiche sono state salvate con successo"
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      setShowEditDialog(false);
+      setEditingUser(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Errore",
+        description: error.message || "Errore durante l'aggiornamento",
+        variant: "destructive"
+      });
+    }
+  });
+
   if (loading) {
     return <div className="text-center py-4">Caricamento utenti...</div>;
   }
@@ -548,7 +616,7 @@ function UsersManagement() {
                     {user.status}
                   </Badge>
                 </div>
-                
+
                 <div className="text-sm text-gray-600 mb-2">
                   <div><strong>Nome:</strong> {user.assignedTo || 'N/A'}</div>
                   <div><strong>Provincia:</strong> {user.location || 'N/A'}</div>
@@ -654,6 +722,14 @@ function UsersManagement() {
                   >
                     🗑️
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-blue-600 hover:bg-blue-50 text-xs px-2 py-1"
+                    onClick={() => handleEditUser(user)}
+                  >
+                    ⚙️
+                  </Button>
                 </div>
               </div>
             ))}
@@ -669,7 +745,7 @@ function UsersManagement() {
         <Users size={20} />
         <h2 className="text-xl font-semibold">Gestione Utenti ({users.length} totali)</h2>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <UserCategoryColumn 
           title="Partner Commerciali"
@@ -727,7 +803,7 @@ function UsersManagement() {
               {/* Dati Modificabili */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Dati Modificabili</h3>
-                
+
                 <div>
                   <Label htmlFor="assignedTo">Assegnato a</Label>
                   <Input
@@ -868,6 +944,241 @@ function UsersManagement() {
           </div>
         </div>
       )}
+        {/* Dialog Modifica Utente */}
+          <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  Modifica {editingUser?.role === 'partner' ? 'Partner' : 'Utente'}: {editingUser?.code}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6">
+                {/* Informazioni Base */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-semibold mb-3">Informazioni Base</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="editAssignedTo">Nome/Attività</Label>
+                      <Input
+                        id="editAssignedTo"
+                        value={editingUser?.assignedTo || ""}
+                        onChange={(e) => setEditingUser({...editingUser, assignedTo: e.target.value})}
+                        placeholder="Nome o ragione sociale"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="editLocation">Posizione</Label>
+                      <Input
+                        id="editLocation"
+                        value={editingUser?.location || ""}
+                        onChange={(e) => setEditingUser({...editingUser, location: e.target.value})}
+                        placeholder="es: VV, RC, IT"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <Label htmlFor="editStatus">Stato</Label>
+                      <select
+                        id="editStatus"
+                        value={editingUser?.status || "pending"}
+                        onChange={(e) => setEditingUser({...editingUser, status: e.target.value})}
+                        className="w-full p-2 border rounded"
+                      >
+                        <option value="pending">In Attesa</option>
+                        <option value="approved">Approvato</option>
+                        <option value="blocked">Bloccato</option>
+                        <option value="inactive">Inattivo</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="editActive">Attivo</Label>
+                      <select
+                        id="editActive"
+                        value={editingUser?.isActive ? "true" : "false"}
+                        onChange={(e) => setEditingUser({...editingUser, isActive: e.target.value === "true"})}
+                        className="w-full p-2 border rounded"
+                      >
+                        <option value="true">Sì</option>
+                        <option value="false">No</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sezione Partner - Solo se è un partner */}
+                {editingUser?.role === 'partner' && (
+                  <div className="border rounded-lg p-4 bg-orange-50">
+                    <h3 className="font-semibold mb-3 text-orange-800">Configurazione Partner</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="partnerBusinessType">Tipo Attività</Label>
+                        <select
+                          id="partnerBusinessType"
+                          value={editingUser?.partnerData?.businessType || "ristorante"}
+                          onChange={(e) => setEditingUser({
+                            ...editingUser, 
+                            partnerData: {...(editingUser?.partnerData || {}), businessType: e.target.value}
+                          })}
+                          className="w-full p-2 border rounded"
+                        >
+                          <option value="ristorante">Ristorante</option>
+                          <option value="hotel">Hotel</option>
+                          <option value="negozio">Negozio</option>
+                          <option value="attrazione">Attrazione</option>
+                          <option value="servizio">Servizio</option>
+                          <option value="altro">Altro</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label htmlFor="partnerPhone">Telefono</Label>
+                        <Input
+                          id="partnerPhone"
+                          value={editingUser?.partnerData?.phone || ""}
+                          onChange={(e) => setEditingUser({
+                            ...editingUser, 
+                            partnerData: {...(editingUser?.partnerData || {}), phone: e.target.value}
+                          })}
+                          placeholder="+39 123 456 7890"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div>
+                        <Label htmlFor="partnerEmail">Email</Label>
+                        <Input
+                          id="partnerEmail"
+                          type="email"
+                          value={editingUser?.partnerData?.email || ""}
+                          onChange={(e) => setEditingUser({
+                            ...editingUser, 
+                            partnerData: {...(editingUser?.partnerData || {}), email: e.target.value}
+                          })}
+                          placeholder="info@partner.com"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="partnerWebsite">Sito Web</Label>
+                        <Input
+                          id="partnerWebsite"
+                          value={editingUser?.partnerData?.website || ""}
+                          onChange={(e) => setEditingUser({
+                            ...editingUser, 
+                            partnerData: {...(editingUser?.partnerData || {}), website: e.target.value}
+                          })}
+                          placeholder="https://www.partner.com"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <Label htmlFor="partnerAddress">Indirizzo Completo</Label>
+                      <Input
+                        id="partnerAddress"
+                        value={editingUser?.partnerData?.address || ""}
+                        onChange={(e) => setEditingUser({
+                          ...editingUser, 
+                          partnerData: {...(editingUser?.partnerData || {}), address: e.target.value}
+                        })}
+                        placeholder="Via Roma 123, 89900 Vibo Valentia (VV)"
+                      />
+                    </div>
+
+                    <div className="mt-4">
+                      <Label htmlFor="partnerDescription">Descrizione Attività</Label>
+                      <Textarea
+                        id="partnerDescription"
+                        value={editingUser?.partnerData?.description || ""}
+                        onChange={(e) => setEditingUser({
+                          ...editingUser, 
+                          partnerData: {...(editingUser?.partnerData || {}), description: e.target.value}
+                        })}
+                        placeholder="Descrizione dettagliata dell'attività e dei servizi offerti"
+                        rows={3}
+                      />
+                    </div>
+
+                    {/* Caratteristiche Accessibilità */}
+                    <div className="mt-4">
+                      <Label className="text-sm font-medium">Caratteristiche</Label>
+                      <div className="grid grid-cols-3 gap-4 mt-2">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="wheelchairAccessible"
+                            checked={editingUser?.partnerData?.wheelchairAccessible || false}
+                            onChange={(e) => setEditingUser({
+                              ...editingUser, 
+                              partnerData: {...(editingUser?.partnerData || {}), wheelchairAccessible: e.target.checked}
+                            })}
+                          />
+                          <Label htmlFor="wheelchairAccessible" className="text-sm">Accessibile disabili</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="childFriendly"
+                            checked={editingUser?.partnerData?.childFriendly || false}
+                            onChange={(e) => setEditingUser({
+                              ...editingUser, 
+                              partnerData: {...(editingUser?.partnerData || {}), childFriendly: e.target.checked}
+                            })}
+                          />
+                          <Label htmlFor="childFriendly" className="text-sm">Child Friendly</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="glutenFree"
+                            checked={editingUser?.partnerData?.glutenFree || false}
+                            onChange={(e) => setEditingUser({
+                              ...editingUser, 
+                              partnerData: {...(editingUser?.partnerData || {}), glutenFree: e.target.checked}
+                            })}
+                          />
+                          <Label htmlFor="glutenFree" className="text-sm">Senza Glutine</Label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Note Interne */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-semibold mb-3">Note Amministrative</h3>
+                  <div>
+                    <Label htmlFor="editNote">Note Interne</Label>
+                    <Textarea
+                      id="editNote"
+                      value={editingUser?.internalNote || ""}
+                      onChange={(e) => setEditingUser({...editingUser, internalNote: e.target.value})}
+                      placeholder="Note private dell'amministratore"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowEditDialog(false)}
+                    className="flex-1"
+                  >
+                    Annulla
+                  </Button>
+                  <Button
+                    onClick={handleUpdateUser}
+                    disabled={updateUserMutation.isPending}
+                    className="flex-1"
+                  >
+                    {updateUserMutation.isPending ? "Salvataggio..." : "Salva Modifiche"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
     </div>
   );
 }
@@ -1288,7 +1599,7 @@ function AssignPackagesView({
       const response = await fetch('/api/structures', { credentials: 'include' });
       const data = await response.json();
       setStructures(data.structures || []);
-      
+
       // Recupera anche i partner approvati
       const partnerResponse = await fetch('/api/admin/partners', { credentials: 'include' });
       const partnerData = await partnerResponse.json();
