@@ -498,7 +498,7 @@ export class MemStorage implements IStorage {
 
       // 1. Salva nella tabella generated_iq_codes per tracking
       const result = await sql`
-        INSERT INTO generated_iq_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
+        INSERT INTO generated_emotional_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
         VALUES (${uniqueCode}, ${structureCode}, ${packageId}, ${guestName}, ${guestId}, ${parsedCode?.country || 'IT'}, ${parsedCode?.word || 'UNKNOWN'}, 'assigned', NOW())
         RETURNING id, code
       `;
@@ -594,7 +594,7 @@ export class MemStorage implements IStorage {
 
       const result = await sql`
         SELECT code, assigned_to, assigned_at, emotional_word, country
-        FROM generated_iq_codes 
+        FROM generated_emotional_codes 
         WHERE guest_id = ${guestId} AND status = 'assigned'
         ORDER BY assigned_at DESC
       `;
@@ -1190,7 +1190,7 @@ export class PostgreStorage implements IStorage {
       const sql = neon(process.env.DATABASE_URL!);
 
       await sql`
-        INSERT INTO generated_iq_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
+        INSERT INTO generated_emotional_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
         VALUES (${uniqueCode}, ${structureCode}, ${packageId}, ${guestName}, ${guestId || null}, ${parsedCode?.country || 'IT'}, ${parsedCode?.word || 'UNKNOWN'}, 'assigned', NOW())
       `;
 
@@ -1279,7 +1279,7 @@ export class PostgreStorage implements IStorage {
 
       const result = await sql`
         SELECT code, assigned_to, assigned_at, emotional_word, country
-        FROM generated_iq_codes 
+        FROM generated_emotional_codes 
         WHERE guest_id = ${guestId} AND status = 'assigned'
         ORDER BY assigned_at DESC
       `;
