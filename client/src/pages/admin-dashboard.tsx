@@ -113,9 +113,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
 
   return (
     <Layout
-      title="Dashboard Admin"
       role="admin"
-      iqCode="TIQ-IT-ADMIN"
       navigation={navigation}
       sidebarColor="bg-red-500"
     >

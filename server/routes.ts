@@ -9,14 +9,14 @@ import { z } from "zod";
 // PDFKit import rimosso per problema ES modules
 
 export async function setupRoutes(app: Express): Promise<Server> {
-  
+
   // Authentication endpoint
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { iqCode } = loginSchema.parse(req.body);
-      
+
       const iqCodeRecord = await storage.getIqCodeByCode(iqCode.toUpperCase());
-      
+
       if (!iqCodeRecord) {
         return res.status(401).json({ message: "Codice IQ non valido" });
       }
@@ -41,7 +41,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
           default:
             statusMessage = 'Accesso non autorizzato. Contatta l\'amministratore.';
         }
-        
+
         return res.status(403).json({ 
           success: false, 
           message: statusMessage
@@ -82,13 +82,13 @@ export async function setupRoutes(app: Express): Promise<Server> {
   app.get("/api/auth/me", async (req, res) => {
     try {
       const sessionToken = req.cookies.session_token;
-      
+
       if (!sessionToken) {
         return res.status(401).json({ message: "Non autenticato" });
       }
 
       const session = await storage.getSessionByToken(sessionToken);
-      
+
       if (!session) {
         return res.status(401).json({ message: "Sessione non valida" });
       }
@@ -106,7 +106,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/logout", async (req, res) => {
     try {
       const sessionToken = req.cookies.session_token;
-      
+
       if (sessionToken) {
         await storage.deleteSession(sessionToken);
       }
@@ -214,10 +214,10 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       // Validate request
       const { message } = chatSchema.parse(req.body);
-      
+
       // Get AI response with database access
       const response = await chatWithTIQai(message, storage);
-      
+
       res.json({ response });
     } catch (error) {
       console.error("Errore chat TIQai:", error);
@@ -256,7 +256,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       // Validate request
       const { codeType, role, country, province, assignedTo } = generateCodeSchema.parse(req.body);
-      
+
       // Determine location based on code type
       const location = codeType === "emotional" ? country : province;
       if (!location) {
@@ -286,10 +286,10 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
         const { createIQCode } = await import("./createIQCode");
         const result = await createIQCode(codeType, role, location, assignedTo || `Generato da ${session.iqCode}`);
-        
+
         // Scala crediti SOLO per codici emozionali
         await storage.decrementAdminCredits(session.iqCode);
-        
+
         res.json(result);
         return;
       }
@@ -316,7 +316,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       const { chatWithTIQai } = await import("./openai");
       const response = await chatWithTIQai(message, storage);
-      
+
       res.json({ response });
     } catch (error) {
       console.error("Errore TIQai:", error);
@@ -330,7 +330,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
   app.get('/api/structure/:id', async (req, res) => {
     try {
       const structureId = req.params.id;
-      
+
       // Verifico autenticazione
       const sessionToken = req.cookies.session_token;
       if (!sessionToken) {
@@ -361,17 +361,17 @@ export async function setupRoutes(app: Express): Promise<Server> {
       if (userStructureId !== structureId) {
         return res.status(403).json({ message: "Accesso negato - puoi accedere solo alla tua dashboard" });
       }
-      
+
       // Find structure by ID in any province
       const allCodes = await storage.getAllIqCodes();
       const structureCode = allCodes.find(code => 
         code.role === 'structure' && code.code.endsWith(`-${structureId}`)
       );
-      
+
       if (!structureCode) {
         return res.status(404).json({ error: 'Struttura non trovata' });
       }
-      
+
       // Return basic structure data (real data will come from database)
       const structureData = {
         id: structureId,
@@ -487,7 +487,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       const activeCodes = allCodes.filter(c => !c.isDeleted);
       const structureCount = activeCodes.filter(c => c.role === 'structure').length;
       const partnerCount = activeCodes.filter(c => c.role === 'partner').length;
-      
+
       const stats = {
         totalCodes: activeCodes.length,
         activeUsers: activeCodes.filter(c => c.isActive).length,
@@ -557,7 +557,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       const userId = parseInt(req.params.id);
       const targetUser = await storage.getAllIqCodes().then(codes => codes.find(c => c.id === userId));
-      
+
       if (!targetUser || targetUser.role !== 'partner') {
         return res.status(400).json({ message: "Solo i partner possono avere l'onboarding bypassato" });
       }
@@ -647,7 +647,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       }
 
       const userId = parseInt(req.params.id);
-      
+
       // Non permettere cancellazione dell'admin stesso
       const currentUser = await storage.getIqCodeByCode(session.iqCode);
       const targetUser = await storage.getAllIqCodes().then(codes => codes.find(c => c.id === userId));
@@ -779,7 +779,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       // Carico tutti i codici e filtro per strutture e partner approvati
       const allCodes = await storage.getAllIqCodes();
-      
+
       const structures = allCodes
         .filter(code => code.role === 'structure' && code.status === 'approved')
         .map(code => ({
@@ -819,19 +819,19 @@ export async function setupRoutes(app: Express): Promise<Server> {
       }
 
       const guestId = parseInt(req.params.guestId);
-      
+
       // Query diretta al database PostgreSQL per recuperare i codici assegnati
       try {
         const { neon } = await import('@neondatabase/serverless');
         const sql = neon(process.env.DATABASE_URL!);
-        
+
         const dbCodes = await sql`
           SELECT code, assigned_to, assigned_at, emotional_word, country
           FROM generated_iq_codes 
           WHERE guest_id = ${guestId} AND status = 'assigned'
           ORDER BY assigned_at DESC
         `;
-        
+
         const codes = dbCodes.map((row: any) => ({
           code: row.code,
           assignedTo: row.assigned_to,
@@ -839,7 +839,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
           emotionalWord: row.emotional_word,
           country: row.country
         }));
-        
+
         console.log(`✅ ENDPOINT: Recuperati ${codes.length} codici per ospite ${guestId}`);
         res.json({ codes });
       } catch (dbError) {
@@ -875,14 +875,14 @@ export async function setupRoutes(app: Express): Promise<Server> {
       }
 
       await storage.removeCodeFromGuest(code, guestId, reason);
-      
+
       // Remove from PostgreSQL database directly using execute_sql_tool pattern
       setImmediate(async () => {
         try {
           const { exec } = await import('child_process');
           const deleteQuery = `DELETE FROM generated_iq_codes WHERE code = '${code}' AND guest_id = ${guestId};`;
           const command = `echo "${deleteQuery}" | psql "${process.env.DATABASE_URL}"`;
-          
+
           exec(command, (error, stdout, stderr) => {
             if (!error) {
               console.log(`✅ RIMOZIONE DEFINITIVA: Codice ${code} eliminato dal database PostgreSQL`);
@@ -894,7 +894,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
           console.error(`❌ ERRORE RIMOZIONE DB: ${dbError}`);
         }
       });
-      
+
       res.json({ 
         success: true, 
         message: `Codice ${code} rimosso dall'ospite`,
@@ -920,7 +920,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       }
 
       const availableCodes = await storage.getAvailableCodesForStructure(session.iqCode);
-      
+
       res.json({ codes: availableCodes });
     } catch (error) {
       console.error("Errore recupero codici disponibili:", error);
@@ -948,7 +948,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       }
 
       await storage.assignAvailableCodeToGuest(code, guestId, guestName);
-      
+
       res.json({ 
         success: true, 
         message: `Codice ${code} assegnato a ${guestName}`,
@@ -1007,7 +1007,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       }
 
       const userId = parseInt(req.params.id);
-      
+
       // Protezione: admin non può cancellare se stesso
       const userToDelete = await storage.getIqCodeByCode(session.iqCode);
       if (userToDelete && userToDelete.id === userId) {
@@ -1057,7 +1057,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Errore richiesta collegamento:", error);
-      
+
       // Gestisce errori specifici dal storage
       if (error instanceof Error) {
         if (error.message.includes("già inviata")) {
@@ -1067,7 +1067,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: error.message });
         }
       }
-      
+
       res.status(500).json({ message: "Errore del server" });
     }
   });
@@ -1262,7 +1262,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
 </body>
 </html>
         `;
-        
+
         res.setHeader('Content-Type', 'text/html');
         res.setHeader('Content-Disposition', `inline; filename="locandina-${session.iqCode}.html"`);
         res.send(posterHTML);
@@ -1277,7 +1277,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
   <text x="100" y="190" text-anchor="middle" font-family="Arial" font-size="10" fill="gray">TouristIQ QR Code</text>
 </svg>
         `;
-        
+
         res.setHeader('Content-Type', 'image/svg+xml');
         res.setHeader('Content-Disposition', `attachment; filename="qr-${session.iqCode}.svg"`);
         res.send(qrSVG);
@@ -1663,7 +1663,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
   });
 
   // PARTNER ONBOARDING ENDPOINTS
-  
+
   // Get partner onboarding status
   app.get("/api/partner/onboarding-status", async (req, res) => {
     try {
@@ -1684,7 +1684,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       // Controllo onboarding con riconoscimento bypass admin
       const onboardingStatus = await storage.getPartnerOnboardingStatus(userIqCode.code);
-      
+
       res.json(onboardingStatus || { 
         completed: false,
         currentStep: 'business',
@@ -1718,7 +1718,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       const stepData = req.body;
 
       await storage.savePartnerOnboardingStep(userIqCode.code, step, stepData);
-      
+
       res.json({ success: true, message: "Dati salvati con successo" });
     } catch (error) {
       console.error("Errore salvataggio onboarding:", error);
@@ -1745,7 +1745,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       }
 
       await storage.completePartnerOnboarding(userIqCode.code);
-      
+
       res.json({ success: true, message: "Onboarding completato con successo" });
     } catch (error) {
       console.error("Errore completamento onboarding:", error);
@@ -1754,7 +1754,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
   });
 
   // GUEST MANAGEMENT ENDPOINTS
-  
+
   // Get guests for current structure
   app.get("/api/guests", async (req, res) => {
     try {
@@ -1859,7 +1859,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       // Get package details and verify credits
       const packages = await storage.getPackagesByRecipient(userIqCode.code);
       const targetPackage = packages.find(pkg => pkg.id === packageId);
-      
+
       if (!targetPackage) {
         return res.status(404).json({ message: "Pacchetto non trovato" });
       }
@@ -1877,17 +1877,17 @@ export async function setupRoutes(app: Express): Promise<Server> {
         try {
           const codeParts = result.code.split('-');
           const emotionalWord = codeParts.length >= 3 ? codeParts[2] : 'UNKNOWN';
-          
+
           // Direct SQL execution bypassing connection issues
           const insertQuery = `
             INSERT INTO generated_iq_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
             VALUES ('${result.code}', '${userIqCode.code}', ${packageId}, '${guestName}', ${guestId}, 'IT', '${emotionalWord}', 'assigned', NOW())
           `;
-          
+
           // Use child_process to execute SQL directly
           const { exec } = await import('child_process');
           const command = `echo "${insertQuery}" | psql "${process.env.DATABASE_URL}"`;
-          
+
           exec(command, (error, stdout, stderr) => {
             if (!error) {
               console.log(`✅ PERSISTENZA DIRETTA: Codice ${result.code} salvato tramite psql`);
@@ -1930,7 +1930,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
   app.get("/api/partner/onboarding-status/:partnerCode", async (req, res) => {
     try {
       const { partnerCode } = req.params;
-      
+
       const sessionToken = req.cookies.session_token;
       if (!sessionToken) {
         return res.status(401).json({ message: "Non autenticato" });
@@ -1953,7 +1953,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
   app.post("/api/partner/onboarding-step", async (req, res) => {
     try {
       const { partnerCode, step, data } = req.body;
-      
+
       const sessionToken = req.cookies.session_token;
       if (!sessionToken) {
         return res.status(401).json({ message: "Non autenticato" });
@@ -1987,7 +1987,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       // Usa il codice dalla sessione
       const partnerCode = session.iqCode;
-      
+
       await storage.completePartnerOnboarding(partnerCode);
       res.json({ success: true });
     } catch (error) {
@@ -2041,7 +2041,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       const guestId = parseInt(req.params.id);
       const updatedGuest = await storage.updateGuest(guestId, { phone: "" });
-      
+
       res.json({ success: true, guest: updatedGuest });
     } catch (error) {
       console.error("Errore rimozione telefono:", error);
@@ -2097,9 +2097,9 @@ export async function setupRoutes(app: Express): Promise<Server> {
       };
 
       const updatedSettings = await (storage as any).updateSettingsConfig(structureCode, settingsData);
-      
+
       console.log(`✅ IMPOSTAZIONI AGGIORNATE: Struttura ${structureCode} salvata con persistenza PostgreSQL`);
-      
+
       res.json({ 
         success: true, 
         settings: updatedSettings,
@@ -2114,7 +2114,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
 
   // ACCOUNTING MOVEMENTS ENDPOINTS
-  
+
   // Get accounting movements for structure and partner
   app.get("/api/accounting/movements", async (req: any, res: any) => {
     try {
@@ -2137,7 +2137,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       if (userIqCode.role === 'structure') {
         const assignedPackages = await storage.getPackagesByRecipient(userIqCode.code);
         const hasActivePackages = assignedPackages.length > 0 && assignedPackages.some(pkg => pkg.creditsRemaining > 0);
-        
+
         if (!hasActivePackages) {
           return res.status(403).json({ 
             message: "Accesso negato - il gestionale è disponibile solo per strutture con pacchetti IQ attivi. Contatta l'admin per richiedere un pacchetto." 
@@ -2175,7 +2175,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       if (userIqCode.role === 'structure') {
         const assignedPackages = await storage.getPackagesByRecipient(userIqCode.code);
         const hasActivePackages = assignedPackages.length > 0 && assignedPackages.some(pkg => pkg.creditsRemaining > 0);
-        
+
         if (!hasActivePackages) {
           return res.status(403).json({ 
             message: "Accesso negato - il gestionale è disponibile solo per strutture con pacchetti IQ attivi. Contatta l'admin per richiedere un pacchetto." 
@@ -2298,7 +2298,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       if (userIqCode.role === 'structure') {
         const assignedPackages = await storage.getPackagesByRecipient(userIqCode.code);
         const hasActivePackages = assignedPackages.length > 0 && assignedPackages.some(pkg => pkg.creditsRemaining > 0);
-        
+
         if (!hasActivePackages) {
           return res.status(403).json({ 
             message: "Accesso negato - il gestionale è disponibile solo per strutture con pacchetti IQ attivi." 
@@ -2307,7 +2307,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       }
 
       const movements = await storage.getAccountingMovements(userIqCode.code);
-      
+
       // Calcola totali per il riepilogo
       const totalIncome = movements.filter(m => m.type === 'income').reduce((sum, m) => sum + parseFloat(m.amount), 0);
       const totalExpenses = movements.filter(m => m.type === 'expense').reduce((sum, m) => sum + parseFloat(m.amount), 0);
@@ -2345,13 +2345,13 @@ export async function setupRoutes(app: Express): Promise<Server> {
   <div class="print-btn no-print">
     <button onclick="window.print()">🖨️ Stampa/Salva come PDF</button>
   </div>
-  
+
   <div class="header">
     <div class="title">REGISTRO MOVIMENTI CONTABILI</div>
     <div>Codice: ${userIqCode.code}</div>
     <div>Data esportazione: ${new Date().toLocaleDateString('it-IT')}</div>
   </div>
-  
+
   <div class="summary">
     <h3 style="margin-top: 0;">RIEPILOGO</h3>
     <div class="summary-row">
@@ -2364,7 +2364,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
     </div>
     <div class="balance">Saldo: €${balance.toFixed(2)}</div>
   </div>
-  
+
   <h3>DETTAGLIO MOVIMENTI</h3>
   <table>
     <thead>
@@ -2390,7 +2390,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       `).join('')}
     </tbody>
   </table>
-  
+
   <div class="footer">
     Generato da TouristIQ - ${new Date().toISOString()}
   </div>
@@ -2400,7 +2400,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       // Invia HTML pronto per stampa PDF
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.send(htmlContent);
-      
+
     } catch (error) {
       console.error("Errore esportazione PDF:", error);
       res.status(500).json({ message: "Errore durante l'esportazione PDF" });
@@ -2408,7 +2408,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
   });
 
   // ===== SISTEMA VALIDAZIONE IQCODE PARTNER-TURISTA =====
-  
+
   // Partner invia richiesta validazione IQCode turista
   app.post("/api/iqcode/validate-request", async (req: any, res: any) => {
     try {
@@ -2428,7 +2428,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       console.log("IQCODE:", partnerIqCode);
       console.log("RUOLO:", partnerIqCode?.role);
       console.log("STATUS:", partnerIqCode?.status);
-      
+
       if (!partnerIqCode || partnerIqCode.role !== 'partner') {
         console.log("❌ ACCESSO NEGATO - Ruolo non partner:", partnerIqCode?.role);
         return res.status(403).json({ message: "Accesso negato - solo partner" });
@@ -2505,11 +2505,11 @@ export async function setupRoutes(app: Express): Promise<Server> {
       for (const partner of activePartners) {
         try {
           const partnerOffers = await storage.getPartnerOffers(partner.code);
-          
+
           // Ottieni nome partner dal onboarding
           const partnerStatus = await storage.getPartnerOnboardingStatus(partner.code);
           const partnerName = partnerStatus?.businessInfo?.businessName || partner.assignedTo || `Partner ${partner.code}`;
-          
+
           // Aggiungi offerte del partner con i suoi dati
           const formattedPartnerOffers = partnerOffers
             .filter((offer: any) => offer.isActive !== false)
@@ -2563,10 +2563,10 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       const cityName = city.trim();
       console.log(`Endpoint: ricerca per "${cityName}"`);
-      
+
       const realOffers = await storage.getRealOffersByCity(cityName);
       console.log(`Endpoint: ricevute ${realOffers.length} offerte`);
-      
+
       res.json({
         offers: realOffers,
         searchCity: city,
@@ -2592,7 +2592,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       const searchRadius = parseFloat(radius) || 2; // default 2km
 
       const nearbyOffers = await storage.getRealOffersNearby(latitude, longitude, searchRadius);
-      
+
       res.json({
         offers: nearbyOffers,
         userLocation: { latitude, longitude },
@@ -2664,7 +2664,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       // Aggiorna stato e scala utilizzi se accettato
       await storage.updateValidationStatus(validationId, status, new Date());
-      
+
       let finalUsesRemaining = validation.usesRemaining;
       if (status === 'accepted') {
         // Scala automaticamente gli utilizzi quando turista accetta
@@ -2859,12 +2859,12 @@ export async function setupRoutes(app: Express): Promise<Server> {
       // Ottieni validazioni utilizzate dal partner
       const validationsUsed = await storage.getValidationsByPartner(session.iqCode);
       const usedValidations = validationsUsed.filter(v => v.usesRemaining < v.usesTotal);
-      
+
       // Statistiche di utilizzo
       const totalValidations = validationsUsed.length;
       const activeValidations = validationsUsed.filter(v => v.status === 'accepted' && v.usesRemaining > 0).length;
       const totalUsages = validationsUsed.reduce((sum, v) => sum + (v.usesTotal - v.usesRemaining), 0);
-      
+
       res.json({
         stats: {
           totalValidations,
@@ -2901,12 +2901,12 @@ export async function setupRoutes(app: Express): Promise<Server> {
 
       // Ottieni pacchetti assegnati alla struttura
       const assignedPackages = await storage.getPackagesByRecipient(session.iqCode);
-      
+
       // Calcola statistiche distribuzione e utilizzo
       let totalCodesDistributed = 0;
       let totalCodesUsed = 0;
       let totalCreditsUsed = 0;
-      
+
       assignedPackages.forEach(pkg => {
         const used = pkg.creditsTotal - pkg.creditsRemaining;
         totalCreditsUsed += used;
@@ -2918,7 +2918,7 @@ export async function setupRoutes(app: Express): Promise<Server> {
       const structureRelatedValidations = allValidations.filter(v => 
         v.touristIqCode && v.touristIqCode.includes(session.iqCode.split('-')[1]) // stesso provincia
       );
-      
+
       totalCodesUsed = structureRelatedValidations.filter(v => v.usesRemaining < v.usesTotal).length;
 
       res.json({
@@ -2951,15 +2951,15 @@ async function getRealOffersByTourist(storage: any, touristCode: string) {
   try {
     // Cerca partner validati dal turista
     const validatedPartners = await storage.getAcceptedPartnersByTourist(touristCode);
-    
+
     if (validatedPartners.length === 0) {
       return [];
     }
-    
+
     // Ottieni offerte dei partner validati
     const partnerCodes = validatedPartners.map((v: any) => v.partnerCode);
     const realOffers = await storage.getRealOffersByPartners(partnerCodes);
-    
+
     return realOffers.map((offer: any) => ({
       title: offer.title,
       description: offer.description, 
@@ -2973,7 +2973,3 @@ async function getRealOffersByTourist(storage: any, touristCode: string) {
     return [];
   }
 }
-
-
-
-

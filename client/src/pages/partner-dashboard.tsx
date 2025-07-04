@@ -367,7 +367,6 @@ export default function PartnerDashboard() {
 
   return (
     <Layout
-      title="Dashboard Partner"
       role="partner"
       navigation={[
         {

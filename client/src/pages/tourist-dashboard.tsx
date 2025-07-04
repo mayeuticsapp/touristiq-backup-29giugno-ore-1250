@@ -124,9 +124,7 @@ export default function TouristDashboard() {
 
   return (
     <Layout
-      title="Benvenuto, Turista!"
-      role="Area Turista"
-      iqCode={user.iqCode}
+      role="tourist"
       navigation={navigation}
       sidebarColor="bg-tourist-green"
     >

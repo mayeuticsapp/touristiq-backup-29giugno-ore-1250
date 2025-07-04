@@ -973,9 +973,7 @@ export default function StructureDashboard() {
 
   return (
     <Layout
-      title={entityInfo?.displayName || "Dashboard Struttura"}
-      role="Gestione Struttura"
-      iqCode={entityInfo?.code}
+      role="structure"
       navigation={navigation}
       sidebarColor="bg-purple-600"
     >
