@@ -149,13 +149,26 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
       }
     }
     
-    // STEP 2: RILEVAMENTO LINGUA AUTOMATICO
-    const isEnglishQuery = /^[a-zA-Z\s\',\.!\?]+$/.test(message.trim()) && 
-                          !['sono', 'dove', 'devo', 'vorrei', 'posso', 'mi', 'ti', 'un', 'una', 'il', 'la', 'di', 'da', 'per'].some(word => 
-                            message.toLowerCase().includes(word));
+    // STEP 2: RILEVAMENTO LINGUA INTELLIGENTE
+    let detectedLanguage = 'auto'; // Lascia decidere a GPT-4o
     
-    const responseLanguage = isEnglishQuery ? 'english' : 'italian';
-    console.log(`🌍 TIQai: Lingua rilevata - ${responseLanguage}`);
+    // Rileva richieste esplicite di cambio lingua
+    const explicitLanguageRequests = {
+      english: /\b(in english|speak english|english please|write in english|scrivimi in inglese)\b/i,
+      spanish: /\b(en español|habla español|en castellano|speak spanish)\b/i,
+      italian: /\b(in italiano|parla italiano|speak italian|scrivi in italiano)\b/i,
+      french: /\b(en français|parle français|speak french|scrivi in francese)\b/i
+    };
+    
+    // Se l'utente chiede esplicitamente una lingua, forzala
+    for (const [lang, pattern] of Object.entries(explicitLanguageRequests)) {
+      if (pattern.test(message)) {
+        detectedLanguage = lang;
+        break;
+      }
+    }
+    
+    console.log(`🌍 TIQai: Lingua rilevata - ${detectedLanguage}`);
 
     // STEP 3: COSTRUZIONE PROMPT IBRIDO INTELLIGENTE
     const hybridSystemPrompt = hasSpecificPartnerData 
@@ -173,7 +186,10 @@ ${touristIQData}
 
 🎨 STILE RISPOSTA:
 - Tono amichevole ma professionale
-- Lingua: ${responseLanguage === 'english' ? 'SEMPRE IN INGLESE' : 'SEMPRE IN ITALIANO'}
+- Lingua: ${detectedLanguage === 'auto' ? 'Rispondi nella stessa lingua della domanda dell\'utente' : 
+           detectedLanguage === 'english' ? 'SEMPRE IN INGLESE' :
+           detectedLanguage === 'spanish' ? 'SEMPRE IN SPAGNOLO' :
+           detectedLanguage === 'french' ? 'SEMPRE IN FRANCESE' : 'SEMPRE IN ITALIANO'}
 - Risposte complete ma concise (max 400 caratteri)
 - Evidenzia chiaramente i partner certificati vs consigli generici`
       
@@ -194,7 +210,10 @@ Fornisci informazioni turistiche complete e verificate su:
 - Incoraggia sempre l'uso dell'ecosistema TouristIQ quando disponibile
 - Combina saggezza locale con informazioni pratiche aggiornate
 
-🎨 STILE: Amichevole, professionale, lingua ${responseLanguage === 'english' ? 'SEMPRE INGLESE' : 'SEMPRE ITALIANA'}, max 400 caratteri.${touristIQData}`;
+🎨 STILE: Amichevole, professionale, lingua ${detectedLanguage === 'auto' ? 'NATURALE (rispondi nella lingua della domanda)' : 
+           detectedLanguage === 'english' ? 'SEMPRE INGLESE' :
+           detectedLanguage === 'spanish' ? 'SEMPRE SPAGNOLO' :
+           detectedLanguage === 'french' ? 'SEMPRE FRANCESE' : 'SEMPRE ITALIANA'}, max 400 caratteri.${touristIQData}`;
 
     console.log(`🤖 TIQai IBRIDO: Modalità ${hasSpecificPartnerData ? 'DATABASE+WEB' : 'WEB GENERALE'} attivata`);
 
