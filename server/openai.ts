@@ -45,11 +45,19 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
         };
 
         let targetCity = null;
+        // Estrai tutte le città menzionate nel messaggio
+        const mentionedCities = [];
         for (const [searchKey, dbKey] of Object.entries(calabrianCities)) {
           if (message.toLowerCase().includes(searchKey)) {
-            targetCity = dbKey;
-            break;
+            mentionedCities.push(dbKey);
           }
+        }
+        
+        // Prioritizza la città per cui si chiede qualcosa di specifico
+        if (message.toLowerCase().includes("pizzo") && (message.toLowerCase().includes("mangiare") || message.toLowerCase().includes("eat"))) {
+          targetCity = "Pizzo";
+        } else if (mentionedCities.length > 0) {
+          targetCity = mentionedCities[0];
         }
 
         if (targetCity) {
@@ -139,7 +147,8 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
                     // Match più flessibile per partner bypass
                     if (partnerLocation.toLowerCase().includes(targetCity.toLowerCase()) ||
                         assignedTo.toLowerCase().includes(targetCity.toLowerCase()) ||
-                        targetCity.toLowerCase() === 'pizzo' && partnerLocation.toLowerCase().includes('vv')) {
+                        (targetCity.toLowerCase() === 'pizzo' && partnerLocation.toLowerCase().includes('vv')) ||
+                        (targetCity.toLowerCase() === 'pizzo' && assignedTo.toLowerCase().includes('pizzo'))) {
 
                       isLocationMatch = true;
                       partnerData = {
@@ -373,7 +382,7 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
     }
 
     // STEP 2: RILEVAMENTO LINGUA INTELLIGENTE
-    let detectedLanguage = 'auto'; // Lascia decidere a GPT-4o
+    let detectedLanguage = 'auto';
 
     // Rileva richieste esplicite di cambio lingua
     const explicitLanguageRequests = {
@@ -383,11 +392,24 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
       french: /\b(en français|parle français|speak french|scrivi in francese)\b/i
     };
 
+    // Rilevamento lingua del messaggio
+    const isEnglishMessage = /\b(find|would|like|know|between|here|there|any|tourist|places|visit|eat|recommend|where|can|go)\b/i.test(message);
+    const isItalianMessage = /\b(trova|vorrei|sapere|tra|qui|località|turistiche|visitare|mangiare|consiglio|dove|posso|andare)\b/i.test(message);
+    
     // Se l'utente chiede esplicitamente una lingua, forzala
     for (const [lang, pattern] of Object.entries(explicitLanguageRequests)) {
       if (pattern.test(message)) {
         detectedLanguage = lang;
         break;
+      }
+    }
+    
+    // Se non c'è richiesta esplicita, rileva dalla lingua del messaggio
+    if (detectedLanguage === 'auto') {
+      if (isEnglishMessage && !isItalianMessage) {
+        detectedLanguage = 'english';
+      } else if (isItalianMessage && !isEnglishMessage) {
+        detectedLanguage = 'italian';
       }
     }
 
@@ -410,10 +432,11 @@ ${touristIQData}
 
 🎨 STILE RISPOSTA:
 - Tono amichevole ma professionale
-- Lingua: ${detectedLanguage === 'auto' ? 'Rispondi nella stessa lingua della domanda dell\'utente' : 
-           detectedLanguage === 'english' ? 'SEMPRE IN INGLESE' :
-           detectedLanguage === 'spanish' ? 'SEMPRE IN SPAGNOLO' :
-           detectedLanguage === 'french' ? 'SEMPRE IN FRANCESE' : 'SEMPRE IN ITALIANO'}
+- Lingua: ${detectedLanguage === 'english' ? 'ALWAYS RESPOND IN ENGLISH' :
+           detectedLanguage === 'spanish' ? 'ALWAYS RESPOND IN SPANISH' :
+           detectedLanguage === 'french' ? 'ALWAYS RESPOND IN FRENCH' :
+           detectedLanguage === 'italian' ? 'ALWAYS RESPOND IN ITALIAN' :
+           'ALWAYS respond in the same language as the user\'s question'}
 - Risposte complete ma concise (max 400 caratteri)
 - Evidenzia chiaramente i partner certificati vs consigli generici`
 
@@ -434,10 +457,11 @@ Fornisci informazioni turistiche complete e verificate su:
 - Incoraggia sempre l'uso dell'ecosistema TouristIQ quando disponibile
 - Combina saggezza locale con informazioni pratiche aggiornate
 
-🎨 STILE: Amichevole, professionale, lingua ${detectedLanguage === 'auto' ? 'NATURALE (rispondi nella lingua della domanda)' : 
-           detectedLanguage === 'english' ? 'SEMPRE IN INGLESE' :
-           detectedLanguage === 'spanish' ? 'SEMPRE SPAGNOLO' :
-           detectedLanguage === 'french' ? 'SEMPRE FRANCESE' : 'SEMPRE ITALIANA'}, max 400 caratteri.${touristIQData}`;
+🎨 STILE: Amichevole, professionale, lingua ${detectedLanguage === 'english' ? 'ALWAYS ENGLISH' :
+           detectedLanguage === 'spanish' ? 'ALWAYS SPANISH' :
+           detectedLanguage === 'french' ? 'ALWAYS FRENCH' :
+           detectedLanguage === 'italian' ? 'ALWAYS ITALIAN' :
+           'MATCH USER\'S LANGUAGE'}, max 400 caratteri.${touristIQData}`;
 
     console.log(`🤖 TIQai IBRIDO: Modalità ${hasSpecificPartnerData ? 'DATABASE+WEB' : 'WEB GENERALE'} attivata`);
 
