@@ -648,10 +648,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userId = parseInt(req.params.id);
       
-      // Non permettere cancellazione dell'admin stesso
-      const targetUser = await storage.getAllIqCodes().then(codes => codes.find(c => c.id === userId));
-      if (targetUser && targetUser.code === userIqCode.code) {
-        return res.status(400).json({ message: "Non puoi cancellare il tuo stesso account" });
+      // Verifica che il destinatario esista nel database reale
+      const allCodes = await storage.getAllIqCodes();
+      const targetCode = allCodes.find(code => 
+        code.role === targetType && code.code === targetId
+      );
+
+      if (!targetCode) {
+        return res.status(404).json({ message: "Destinatario non trovato nel database" });
       }
 
       await storage.deleteIqCode(userId);
@@ -1405,15 +1409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Dimensione pacchetto non valida" });
       }
 
-      // Verify target exists in real database
-      const allCodes = await storage.getAllIqCodes();
-      const targetCode = allCodes.find(code => 
-        code.role === targetType && code.code === targetId
-      );
-
-      if (!targetCode) {
-        return res.status(404).json({ message: "Destinatario non trovato nel database" });
-      }
+      
 
       // Save package assignment to database (SOLO CREDITI, non liste pregenerate)
       const packageAssignment = await storage.createAssignedPackage({
