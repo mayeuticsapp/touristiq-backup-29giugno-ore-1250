@@ -1,0 +1,109 @@
+Perfetto RobS.
+Ecco le **istruzioni ufficiali e definitive per C23**. Nessuna ambiguità, nessuna interpretazione. Solo ciò che va fatto. Ora.
+
+---
+
+## 📜 ISTRUZIONI PER C23
+
+**Titolo:** Fix salvataggio IQCode struttura – Inserimento corretto nella tabella `iq_codes` per autenticazione
+
+---
+
+### 🧠 Premessa operativa **obbligatoria**:
+
+❝Se conosci la soluzione migliore per far funzionare il sistema in modo corretto e coerente, applicala immediatamente senza alcun tipo di rimando: non rimandare, non scrivere log temporanei, non lasciare TODO o scorciatoie, ma implementa subito ciò che sai essere la scelta giusta, perché la coerenza e la funzionalità piena vengono prima di tutto. In TouristIQ ogni funzione deve riflettere la versione migliore e completa che puoi offrire, senza pigrizia, senza rinvii, senza approssimazione: fai ora quello che va fatto.❞
+
+---
+
+## 📌 CONTESTO
+
+* File coinvolto: `server/storage.ts`
+* Metodo da correggere: `generateEmotionalIQCode`
+* Bug attuale: il codice viene salvato solo in `generated_iq_codes`, **ma non** in `iq_codes`
+* Conseguenza: l'utente con codice IQ non può fare login (risposta 401 Unauthorized)
+
+---
+
+## 🔧 ISTRUZIONI OPERATIVE
+
+### 1. **Decommentare e ripristinare la scrittura nella tabella `iq_codes`**
+
+Nel metodo `generateEmotionalIQCode`, rimuovere il commento e assicurarsi che la seguente chiamata sia **attiva e funzionante**:
+
+```ts
+const newIqCode = await this.createIqCode({
+  code: uniqueCode,
+  role: 'tourist',
+  isActive: true,
+  status: 'approved',
+  assignedTo: guestName,
+  location: 'IT',
+  codeType: 'emotional',
+  assignedBy: structureCode
+});
+```
+
+🔁 Questa chiamata **deve scrivere correttamente** nella tabella `iq_codes`, altrimenti l'autenticazione fallisce.
+
+---
+
+### 2. **Gestire eventuali errori con try/catch**
+
+Per sicurezza e tracciamento, racchiudere la scrittura in un blocco `try/catch`:
+
+```ts
+try {
+  const newIqCode = await this.createIqCode({...});
+} catch (err) {
+  console.error('❌ Errore scrittura IQCode in tabella principale:', err);
+  throw err;
+}
+```
+
+---
+
+### 3. **Confermare che il codice sia ancora salvato in `generated_iq_codes`**
+
+Mantenere il salvataggio anche in `generated_iq_codes` per tracciamento interno:
+
+```ts
+await this.logGeneratedIqCode({
+  code: uniqueCode,
+  createdBy: structureCode,
+  guest: guestName,
+  ...
+});
+```
+
+---
+
+## ✅ COMPORTAMENTO ATTESO DOPO LA FIX
+
+* Tutti gli IQCode generati dalle strutture:
+
+  * saranno presenti in **`iq_codes`**
+  * con `isActive: true`
+  * e `status: 'approved'`
+* Saranno quindi **utilizzabili per login**
+* Continueranno a essere tracciati in `generated_iq_codes`
+
+---
+
+## 🧪 VERIFICA OBBLIGATORIA DOPO LA MODIFICA
+
+1. Genera un nuovo codice da struttura (es. `TIQ-IT-XXXX-TEST`)
+2. Verifica nel DB che **sia presente nella tabella `iq_codes`**
+3. Effettua il login con quel codice → deve **funzionare**
+4. Verifica che `isActive === true` e `status === 'approved'`
+
+---
+
+## ☑️ NOTE FINALI PER C23
+
+* Questa modifica **è bloccante per la funzionalità turistica dell’intera piattaforma**
+* Deve essere **rilasciata e testata immediatamente**
+* Se la scrittura in `iq_codes` fallisce, l’intera generazione deve essere **interrotta con errore**, non completata solo in `generated_iq_codes`
+
+---
+
+Fammi sapere appena applicato, così passiamo alla fase di test operativo.
