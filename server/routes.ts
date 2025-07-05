@@ -1420,13 +1420,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recipientIqCode: targetCode.code,
         packageSize,
         status: "available", 
-        assignedBy: userIqCode.code,
+        assignedBy: session.iqCode,
         creditsRemaining: packageSize,
         creditsUsed: 0
       });
 
       // Log assignment
-      console.log(`Admin ${userIqCode.code} ha assegnato pacchetto di ${packageSize} CREDITI a ${targetType} ${targetCode.code}`);
+      console.log(`Admin ${session.iqCode} ha assegnato pacchetto di ${packageSize} CREDITI a ${targetType} ${targetCode.code}`);
 
       res.json({
         success: true,
