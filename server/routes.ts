@@ -21,32 +21,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Codice IQ non valido" });
       }
 
-      if (!iqCodeRecord.isActive) {
-        return res.status(401).json({ message: "Codice IQ disattivato" });
-      }
-
-      // CONTROLLO STATO APPROVAZIONE PER STRUTTURE E PARTNER
-      if ((iqCodeRecord.role === 'structure' || iqCodeRecord.role === 'partner') && iqCodeRecord.status !== 'approved') {
-        let statusMessage = '';
-        switch (iqCodeRecord.status) {
-          case 'pending':
-            statusMessage = 'Il tuo account è in attesa di approvazione. Contatta l\'amministratore.';
-            break;
-          case 'blocked':
-            statusMessage = 'Il tuo account è stato bloccato. Contatta l\'amministratore.';
-            break;
-          case 'inactive':
-            statusMessage = 'Il tuo account è stato disattivato. Contatta l\'amministratore.';
-            break;
-          default:
-            statusMessage = 'Accesso non autorizzato. Contatta l\'amministratore.';
-        }
-        
-        return res.status(403).json({ 
-          success: false, 
-          message: statusMessage
-        });
-      }
+      // Controlli rimossi: tutti i codici generati sono automaticamente attivi e approvati
 
       // Create session
       const sessionToken = nanoid();
