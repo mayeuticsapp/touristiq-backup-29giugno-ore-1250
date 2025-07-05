@@ -78,6 +78,7 @@ export default function StructureDashboard() {
   const [guestCodes, setGuestCodes] = useState<{code: string; assignedAt?: string}[]>([]);
   const [availableCodes, setAvailableCodes] = useState<any[]>([]);
   const [loadingCodes, setLoadingCodes] = useState(false);
+  const [activeTab, setActiveTab] = useState("info");
 
   // Refs per focus automatico check-in → check-out
   const checkoutDateRef = useRef<HTMLInputElement>(null);
@@ -732,7 +733,19 @@ export default function StructureDashboard() {
                     id="selectGuest"
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                     value={selectedGuestId}
-                    onChange={(e) => setSelectedGuestId(Number(e.target.value))}
+                    onChange={async (e) => {
+                      const guestId = Number(e.target.value);
+                      setSelectedGuestId(guestId);
+                      
+                      // Auto-espansione: apri automaticamente il pannello di gestione dettagliata
+                      if (guestId > 0) {
+                        const guest = guestsData?.guests?.find((g: any) => g.id === guestId);
+                        if (guest) {
+                          setSelectedGuestForManagement(guest);
+                          await loadGuestCodes(guest.id);
+                        }
+                      }
+                    }}
                   >
                     <option value={0}>Seleziona un ospite...</option>
                     {guestsData?.guests?.map((guest: Guest) => (
@@ -748,23 +761,159 @@ export default function StructureDashboard() {
                   )}
                 </div>
                 <div>
-                  <Label>Dettagli Ospite Selezionato</Label>
+                  <Label>Pannello Gestione Ospite</Label>
                   {selectedGuestId > 0 && guestsData?.guests ? (
                     (() => {
                       const guest = guestsData.guests.find((g: any) => g.id === selectedGuestId);
                       return guest ? (
-                        <div className="p-2 bg-gray-50 rounded-md text-sm">
-                          <p><strong>Nome:</strong> {guest.firstName} {guest.lastName}</p>
-                          <p><strong>Telefono:</strong> {guest.phone || 'Non fornito'}</p>
-                          <p><strong>Email:</strong> {guest.email || 'Non fornita'}</p>
-                          <p><strong>Camera:</strong> {guest.roomNumber || 'N/A'}</p>
-                          <p><strong>Codici assegnati:</strong> {guest.assignedCodes || 0}</p>
+                        <div className="border rounded-lg overflow-hidden">
+                          {/* Header Ospite */}
+                          <div className="bg-blue-50 p-3 border-b">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <h3 className="font-semibold text-blue-900">
+                                  {guest.firstName} {guest.lastName}
+                                </h3>
+                                <p className="text-sm text-blue-600">
+                                  Camera {guest.roomNumber || 'N/A'} • {guest.assignedCodes || 0} codici IQ
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={async () => {
+                                    setSelectedGuestForManagement(guest);
+                                    await loadGuestCodes(guest.id);
+                                  }}
+                                  className="text-xs"
+                                >
+                                  <Edit size={14} className="mr-1" />
+                                  Gestisci
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={async () => {
+                                    // Carica i codici dell'ospite per WhatsApp
+                                    const response = await fetch(`/api/guest/${guest.id}/codes`);
+                                    const data = await response.json();
+                                    if (data.codes && data.codes.length > 0) {
+                                      const firstCode = data.codes[0].code;
+                                      if (guest.phone) {
+                                        handleSendWhatsApp(guest.phone, firstCode, guest);
+                                      } else {
+                                        alert("Numero di telefono non disponibile per questo ospite");
+                                      }
+                                    } else {
+                                      alert("Nessun codice IQ trovato per questo ospite");
+                                    }
+                                  }}
+                                  className="text-xs bg-green-50 hover:bg-green-100 text-green-700"
+                                  disabled={!guest.phone}
+                                >
+                                  <MessageCircle size={14} className="mr-1" />
+                                  WhatsApp
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Informazioni Dettagliate */}
+                          <div className="p-3 bg-white">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="font-medium text-gray-700">Telefono:</span>
+                                <p className="text-gray-900">{guest.phone || 'Non fornito'}</p>
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-700">Email:</span>
+                                <p className="text-gray-900">{guest.email || 'Non fornita'}</p>
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-700">Check-in:</span>
+                                <p className="text-gray-900">{guest.checkIn || 'Non specificato'}</p>
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-700">Check-out:</span>
+                                <p className="text-gray-900">{guest.checkOut || 'Non specificato'}</p>
+                              </div>
+                            </div>
+                            
+                            {guest.notes && (
+                              <div className="mt-3 pt-3 border-t">
+                                <span className="font-medium text-gray-700">Note:</span>
+                                <p className="text-sm text-gray-600 mt-1">{guest.notes}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Azioni Rapide */}
+                          <div className="bg-gray-50 p-3 border-t">
+                            <div className="grid grid-cols-3 gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={async () => {
+                                  const response = await fetch(`/api/guest/${guest.id}/codes`);
+                                  const data = await response.json();
+                                  if (data.codes && data.codes.length > 0) {
+                                    const firstCode = data.codes[0].code;
+                                    await navigator.clipboard.writeText(firstCode);
+                                    alert(`Codice ${firstCode} copiato negli appunti!`);
+                                  } else {
+                                    alert("Nessun codice IQ trovato per questo ospite");
+                                  }
+                                }}
+                                className="text-xs"
+                              >
+                                <Copy size={12} className="mr-1" />
+                                Copia IQ
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  if (guest.phone) {
+                                    const whatsappUrl = `https://wa.me/${guest.phone.replace(/[^0-9]/g, '')}`;
+                                    window.open(whatsappUrl, '_blank');
+                                  } else {
+                                    alert("Numero di telefono non disponibile");
+                                  }
+                                }}
+                                className="text-xs"
+                                disabled={!guest.phone}
+                              >
+                                <Phone size={12} className="mr-1" />
+                                Chiama
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  if (guest.email) {
+                                    window.location.href = `mailto:${guest.email}`;
+                                  } else {
+                                    alert("Email non disponibile per questo ospite");
+                                  }
+                                }}
+                                className="text-xs"
+                                disabled={!guest.email}
+                              >
+                                <Mail size={12} className="mr-1" />
+                                Email
+                              </Button>
+                            </div>
+                          </div>
                         </div>
                       ) : null;
                     })()
                   ) : (
-                    <div className="p-2 bg-gray-50 rounded-md text-sm text-gray-500">
-                      Seleziona un ospite per vedere i dettagli
+                    <div className="p-4 bg-gray-50 rounded-md text-center">
+                      <User className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">
+                        Seleziona un ospite per vedere i dettagli e le azioni disponibili
+                      </p>
                     </div>
                   )}
                 </div>
@@ -1368,6 +1517,8 @@ export default function StructureDashboard() {
                   onClick={() => {
                     setSelectedGuestForManagement(null);
                     setGuestCodes([]);
+                    setEditingGuest(null);
+                    setActiveTab("info");
                   }}
                 >
                   Chiudi
@@ -1379,21 +1530,321 @@ export default function StructureDashboard() {
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Informazioni Ospite */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Telefono</Label>
-                  <p className="text-sm">{selectedGuestForManagement.phone || "Non fornito"}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Check-in/Check-out</Label>
-                  <p className="text-sm">
-                    {selectedGuestForManagement.checkIn && selectedGuestForManagement.checkOut
-                      ? `${selectedGuestForManagement.checkIn} - ${selectedGuestForManagement.checkOut}`
-                      : "Date non specificate"}
-                  </p>
-                </div>
+              {/* Tabs per organizzare le funzionalità */}
+              <div className="border-b">
+                <nav className="flex space-x-6">
+                  <button
+                    onClick={() => setActiveTab("info")}
+                    className={`py-2 px-1 text-sm font-medium border-b-2 ${
+                      activeTab === "info" 
+                        ? "border-blue-500 text-blue-600" 
+                        : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    Informazioni
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("codes")}
+                    className={`py-2 px-1 text-sm font-medium border-b-2 ${
+                      activeTab === "codes" 
+                        ? "border-blue-500 text-blue-600" 
+                        : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    Codici IQ ({guestCodes.length})
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("actions")}
+                    className={`py-2 px-1 text-sm font-medium border-b-2 ${
+                      activeTab === "actions" 
+                        ? "border-blue-500 text-blue-600" 
+                        : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    Azioni
+                  </button>
+                </nav>
               </div>
+
+              {/* Contenuto Tabs */}
+              {activeTab === "info" && (
+                <div className="space-y-4">
+                  {/* Informazioni Ospite */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Telefono</Label>
+                      <p className="text-sm">{selectedGuestForManagement.phone || "Non fornito"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Check-in/Check-out</Label>
+                      <p className="text-sm">
+                        {selectedGuestForManagement.checkIn && selectedGuestForManagement.checkOut
+                          ? `${selectedGuestForManagement.checkIn} - ${selectedGuestForManagement.checkOut}`
+                          : "Date non specificate"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Modifica Ospite */}
+                  {editingGuest && editingGuest.id === selectedGuestForManagement.id ? (
+                    <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                      <h3 className="font-semibold mb-3 text-yellow-800">Modifica Ospite</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>Nome</Label>
+                          <Input
+                            value={editingGuest.firstName}
+                            onChange={(e) => setEditingGuest({...editingGuest, firstName: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label>Cognome</Label>
+                          <Input
+                            value={editingGuest.lastName}
+                            onChange={(e) => setEditingGuest({...editingGuest, lastName: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label>Camera</Label>
+                          <Input
+                            value={editingGuest.roomNumber}
+                            onChange={(e) => setEditingGuest({...editingGuest, roomNumber: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label>Telefono</Label>
+                          <Input
+                            value={editingGuest.phone}
+                            onChange={(e) => setEditingGuest({...editingGuest, phone: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2 mt-4">
+                        <Button
+                          size="sm"
+                          onClick={updateGuest}
+                          disabled={loadingCodes}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Check size={14} className="mr-1" />
+                          Salva
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditingGuest(null)}
+                        >
+                          Annulla
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditingGuest(selectedGuestForManagement)}
+                      className="w-full"
+                    >
+                      <Edit size={14} className="mr-2" />
+                      Modifica Informazioni
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {activeTab === "codes" && (
+                <div className="space-y-4">
+                  {/* Codici IQ Assegnati */}
+                  {guestCodes && guestCodes.length > 0 ? (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-blue-800">Codici IQ Assegnati</h3>
+                      {guestCodes.map((codeData, index: number) => (
+                        <div key={index} className="flex justify-between items-center bg-blue-50 p-3 rounded border">
+                          <div className="flex items-center gap-3">
+                            <Badge className="bg-blue-600 text-white">{codeData.code}</Badge>
+                            <span className="text-sm text-gray-600">
+                              Assegnato: {codeData.assignedAt ? new Date(codeData.assignedAt).toLocaleDateString() : 'Oggi'}
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                navigator.clipboard.writeText(codeData.code);
+                                alert(`Codice ${codeData.code} copiato negli appunti`);
+                              }}
+                            >
+                              <Copy size={14} className="mr-1" />
+                              Copia
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                const reason = prompt("Motivo rimozione codice:", "Assegnato per errore");
+                                if (reason && selectedGuestForManagement) {
+                                  handleRemoveCodeFromGuest(codeData.code, selectedGuestForManagement.id, reason);
+                                }
+                              }}
+                            >
+                              <Trash2 size={14} className="mr-1" />
+                              Rimuovi
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Gift className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500">Nessun codice IQ assegnato a questo ospite</p>
+                    </div>
+                  )}
+
+                  {/* Codici Disponibili per Riassegnazione */}
+                  {availableCodesData && Array.isArray((availableCodesData as any).codes) && (availableCodesData as any).codes.length > 0 && (
+                    <div className="border-t pt-4">
+                      <h3 className="font-semibold mb-3 text-green-800">Codici Disponibili per Riassegnazione</h3>
+                      <div className="space-y-2">
+                        {((availableCodesData as any).codes as any[]).map((codeData: any, index: number) => (
+                          <div key={index} className="flex justify-between items-center bg-green-50 p-3 rounded border">
+                            <div className="flex items-center gap-3">
+                              <Badge className="bg-green-600 text-white">{codeData.code}</Badge>
+                              <span className="text-xs text-gray-600">
+                                Liberato da: {codeData.originalGuestName} • {codeData.reason}
+                              </span>
+                            </div>
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                              onClick={() => {
+                                const guestName = `${selectedGuestForManagement.firstName} ${selectedGuestForManagement.lastName}`;
+                                if (confirm(`Assegnare il codice ${codeData.code} a ${guestName}?`)) {
+                                  handleAssignAvailableCode(codeData.code, selectedGuestForManagement.id, guestName);
+                                }
+                              }}
+                            >
+                              <Gift size={14} className="mr-1" />
+                              Assegna
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Assegna Nuovo Codice */}
+                  <div className="border-t pt-4">
+                    <h3 className="font-semibold mb-3">Assegna Nuovo Codice IQ</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {packagesData?.packages?.map((pkg: any) => (
+                        <div key={pkg.id} className="border rounded-lg p-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium">Pacchetto {pkg.packageSize}</span>
+                            <Badge variant="outline">{pkg.availableCodes || 0} disponibili</Badge>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => handleAssignCodeToGuest(selectedGuestForManagement.id, pkg.id)}
+                            disabled={(pkg.availableCodes || 0) <= 0}
+                            className="w-full"
+                          >
+                            <Plus size={14} className="mr-1" />
+                            Assegna
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "actions" && (
+                <div className="space-y-4">
+                  {/* Azioni Comunicazione */}
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h3 className="font-semibold mb-3 text-blue-800">Comunicazione</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={async () => {
+                          const response = await fetch(`/api/guest/${selectedGuestForManagement.id}/codes`);
+                          const data = await response.json();
+                          if (data.codes && data.codes.length > 0) {
+                            const firstCode = data.codes[0].code;
+                            if (selectedGuestForManagement.phone) {
+                              handleSendWhatsApp(selectedGuestForManagement.phone, firstCode, selectedGuestForManagement);
+                            } else {
+                              alert("Numero di telefono non disponibile");
+                            }
+                          } else {
+                            alert("Nessun codice IQ trovato per questo ospite");
+                          }
+                        }}
+                        disabled={!selectedGuestForManagement.phone}
+                        className="text-left justify-start"
+                      >
+                        <MessageCircle size={16} className="mr-2" />
+                        Invia Codice via WhatsApp
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          if (selectedGuestForManagement.phone) {
+                            const whatsappUrl = `https://wa.me/${selectedGuestForManagement.phone.replace(/[^0-9]/g, '')}`;
+                            window.open(whatsappUrl, '_blank');
+                          } else {
+                            alert("Numero di telefono non disponibile");
+                          }
+                        }}
+                        disabled={!selectedGuestForManagement.phone}
+                        className="text-left justify-start"
+                      >
+                        <Phone size={16} className="mr-2" />
+                        Chiama Ospite
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Azioni GDPR e Privacy */}
+                  <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                    <h3 className="font-semibold mb-3 text-yellow-800">Privacy e GDPR</h3>
+                    <div className="space-y-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={removePhoneFromGuest}
+                        disabled={!selectedGuestForManagement.phone}
+                        className="w-full text-left justify-start"
+                      >
+                        <Phone size={16} className="mr-2" />
+                        Rimuovi Telefono (GDPR)
+                      </Button>
+                      <p className="text-xs text-yellow-700">
+                        Rimuove il numero di telefono dall'ospite per conformità GDPR
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Azioni Pericolose */}
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <h3 className="font-semibold mb-3 text-red-800">Azioni Pericolose</h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={deleteGuest}
+                      className="w-full text-left justify-start text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 size={16} className="mr-2" />
+                      Elimina Ospite
+                    </Button>
+                    <p className="text-xs text-red-700 mt-2">
+                      Attenzione: questa azione è irreversibile e eliminerà tutti i dati dell'ospite
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Codici IQ Assegnati all'Ospite */}
               <div>
