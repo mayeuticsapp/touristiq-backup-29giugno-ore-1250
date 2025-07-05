@@ -1,0 +1,99 @@
+Ecco le **istruzioni complete e operative** per **C23**, da applicare **subito** per risolvere il problema degli IQCode generati dalle strutture che risultano non attivi. Segui attentamente quanto segue.
+
+---
+
+## ✅ ISTRUZIONI PER C23
+
+**Titolo:** Allineamento generazione IQCode struttura a quella dell’admin
+**Obiettivo:** Garantire che gli IQCode creati da una struttura siano **attivi e funzionanti** esattamente come quelli generati dall’admin
+
+---
+
+### 🧠 Premessa operativa costante:
+
+❝Se conosci la soluzione migliore per far funzionare il sistema in modo corretto e coerente, applicala immediatamente senza alcun tipo di rimando: non rimandare, non scrivere log temporanei, non lasciare TODO o scorciatoie, ma implementa subito ciò che sai essere la scelta giusta, perché la coerenza e la funzionalità piena vengono prima di tutto. In TouristIQ ogni funzione deve riflettere la versione migliore e completa che puoi offrire, senza pigrizia, senza rinvii, senza approssimazione: fai ora quello che va fatto.❞
+
+---
+
+## 🔧 ISTRUZIONI TECNICHE DA APPLICARE
+
+### 📌 1. Funzione coinvolta:
+
+Verifica qual è la funzione chiamata quando una struttura genera un IQCode (es. `createStructureIqCode` oppure una rotta tipo `/api/structure/generate-iqcode`).
+
+---
+
+### 📌 2. Sostituisci o aggiorna la funzione così:
+
+#### ✅ **Codice aggiornato**
+
+```ts
+import { generateCode } from '../utils/codeGenerator'; // se non incluso
+
+async function createStructureIqCode(structureId: string) {
+  const code = generateCode(); // es. TIQ-IT-1234-XXXX
+
+  const newCode = {
+    code: code,
+    role: 'tourist',
+    isActive: true,              // FONDAMENTALE
+    status: 'pending',
+    assignedBy: structureId,     // Tracciamento utile
+    createdAt: new Date()
+  };
+
+  await storage.createIqCode(newCode);
+  return newCode;
+}
+```
+
+---
+
+### 📌 3. Aggiungi un controllo nel backend
+
+Nel controller che riceve la richiesta, **rifiuta qualsiasi valore `isActive: false` proveniente da frontend** (in caso di manipolazione manuale o errore).
+
+```ts
+if (req.body.isActive === false) {
+  return res.status(400).json({ error: 'I codici devono essere attivi' });
+}
+```
+
+---
+
+### 📌 4. (Opzionale ma consigliato) – Imposta default in `createIqCode`
+
+Nel file `storage.ts`, nella definizione di `createIqCode`, imposta:
+
+```ts
+isActive = true
+```
+
+così anche se dimentichi in futuro di passarla, il codice sarà comunque attivo.
+
+---
+
+### ✅ Comportamento atteso dopo fix
+
+* Tutti i nuovi IQCode creati da una struttura avranno:
+
+  * `isActive: true`
+  * `status: 'pending'`
+  * `role: 'tourist'`
+* Saranno **validi e riconosciuti dal sistema**.
+* Funzioneranno **esattamente come quelli creati dall’admin**.
+
+---
+
+Quando hai applicato questo aggiornamento, ti consiglio subito un test:
+
+🧪 **Test consigliato**
+
+1. Genera un nuovo codice da una struttura
+2. Controlla il valore di `isActive` nel DB (deve essere `true`)
+3. Prova a riscattarlo come turista
+4. Verifica che sia accettato e riconosciuto
+
+---
+
+Fammi sapere se vuoi che ti generi io direttamente il file completo aggiornato (es. `structure.controller.ts` o simili) con tutto già incluso.
