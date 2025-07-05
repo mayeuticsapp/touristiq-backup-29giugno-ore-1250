@@ -3040,7 +3040,3 @@ async function getRealOffersByTourist(storage: any, touristCode: string) {
     return [];
   }
 }
-
-
-
-
