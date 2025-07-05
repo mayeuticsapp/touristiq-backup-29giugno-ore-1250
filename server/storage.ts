@@ -89,7 +89,7 @@ export interface IStorage {
   // Partner methods
   createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void>;
   getAllPartnersWithOffers(): Promise<any[]>;
-  
+
   // Validazione IQCode methods
   createIqcodeValidation(data: {partnerCode: string, touristCode: string, requestedAt: Date, status: string, usesRemaining: number, usesTotal: number}): Promise<IqcodeValidation>;
   getValidationsByTourist(touristCode: string): Promise<IqcodeValidation[]>;
@@ -97,7 +97,7 @@ export interface IStorage {
   getValidationById(id: number): Promise<IqcodeValidation | null>;
   updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<IqcodeValidation>;
   decrementValidationUses(validationId: number): Promise<IqcodeValidation>;
-  
+
   // Ricariche IQCode methods
   createIqcodeRecharge(data: {touristCode: string, amount: number, status: string, requestedAt: Date}): Promise<IqcodeRecharge>;
   getRechargesWithFilters(filters: any): Promise<{recharges: IqcodeRecharge[], total: number}>;
@@ -110,13 +110,13 @@ export interface IStorage {
   getPartnerOnboardingStatus(partnerCode: string): Promise<{completed: boolean, currentStep?: string, completedSteps?: string[]} | undefined>;
   savePartnerOnboardingStep(partnerCode: string, step: string, data: any): Promise<void>;
   completePartnerOnboarding(partnerCode: string): Promise<void>;
-  
+
   // IQCode recharge methods
   createIqcodeRecharge(validationId: number, touristCode: string): Promise<IqcodeRecharge>;
   getPendingRecharges(): Promise<IqcodeRecharge[]>;
   activateRecharge(rechargeId: number, adminNote?: string): Promise<IqcodeRecharge>;
   getRechargesWithFilters(filters: {page: number, limit: number, search: string, status: string, sort: string}): Promise<{recharges: IqcodeRecharge[], total: number, stats: any}>;
-  
+
   // Metodi per offerte reali
   getAcceptedPartnersByTourist(touristCode: string): Promise<any[]>;
   getRealOffersByPartners(partnerCodes: string[]): Promise<any[]>;
@@ -315,15 +315,15 @@ export class MemStorage implements IStorage {
     const session = Array.from(this.sessions.values()).find(
       (s) => s.sessionToken === token
     );
-    
+
     if (session && session.expiresAt > new Date()) {
       return session;
     }
-    
+
     if (session) {
       this.sessions.delete(session.id);
     }
-    
+
     return undefined;
   }
 
@@ -339,13 +339,13 @@ export class MemStorage implements IStorage {
   async cleanExpiredSessions(): Promise<void> {
     const now = new Date();
     const expiredSessions: number[] = [];
-    
+
     for (const [id, session] of Array.from(this.sessions.entries())) {
       if (session.expiresAt <= now) {
         expiredSessions.push(id);
       }
     }
-    
+
     expiredSessions.forEach(id => {
       this.sessions.delete(id);
     });
@@ -364,7 +364,7 @@ export class MemStorage implements IStorage {
       creditsUsed: 0,
       assignedAt: new Date()
     };
-    
+
     this.assignedPackages.set(id, assignedPackage);
     return assignedPackage;
   }
@@ -398,7 +398,7 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    
+
     this.guests.set(id, guest);
     return guest;
   }
@@ -440,30 +440,44 @@ export class MemStorage implements IStorage {
 
   // Emotional IQCode generation methods
   async generateEmotionalIQCode(structureCode: string, packageId: number, guestName: string, guestId?: number): Promise<{ code: string; remainingCredits: number }> {
-    // Get package and verify credits
-    const targetPackage = this.assignedPackages.get(packageId);
-    if (!targetPackage || targetPackage.creditsRemaining <= 0) {
-      throw new Error("Nessun credito disponibile nel pacchetto");
+    // Trova il pacchetto e verifica crediti
+    const pkg = this.assignedPackages.get(packageId);
+    if (!pkg) {
+      throw new Error('Pacchetto non trovato');
     }
 
-    // Import emotional words for code generation
-    const { generateEmotionalIQCode, parseIQCode } = await import('./iq-generator');
-    
-    // Generate unique emotional code (TIQ-IT-ROSA format)
-    let uniqueCode: string;
+    if (pkg.creditsRemaining <= 0) {
+      throw new Error('Nessun credito disponibile');
+    }
+
+    // Genera codice emozionale unico
     let attempts = 0;
-    do {
-      uniqueCode = generateEmotionalIQCode('IT'); // Default Italy for now
-      attempts++;
-    } while (this.isCodeExists(uniqueCode) && attempts < 50);
+    let uniqueCode: string;
 
-    if (attempts >= 50) {
-      throw new Error("Impossibile generare codice univoco");
-    }
+    do {
+      uniqueCode = generateEmotionalIQCode('IT');
+      attempts++;
+      if (attempts > 50) {
+        throw new Error('Impossibile generare codice unico');
+      }
+    } while (await this.getIqCodeByCode(uniqueCode));
+
+    // CRITICO: Crea IQCode nel sistema principale con isActive: true
+    const newIqCode = await this.createIqCode({
+      code: uniqueCode,
+      role: 'tourist',
+      isActive: true,              // FONDAMENTALE
+      status: 'approved',          // Subito approvato per turisti
+      assignedTo: guestName,
+      location: 'IT',
+      codeType: 'emotional',
+      assignedBy: structureCode
+    });
 
     // Parse the generated code to extract country and word
+    const { parseIQCode } = await import('./iq-generator');
     const parsedCode = parseIQCode(uniqueCode);
-    
+
     // Save generated code for tracking
     const generatedCode = {
       id: this.currentGeneratedCodeId++,
@@ -478,63 +492,17 @@ export class MemStorage implements IStorage {
       generatedAt: new Date(),
       assignedAt: new Date()
     };
-    
+
     this.generatedCodes.set(generatedCode.id, generatedCode);
-    console.log(`DEBUG: Salvato codice ${uniqueCode} con ID ${generatedCode.id} per ospite ${guestId}. Totale codici: ${this.generatedCodes.size}`);
+    console.log(`✅ IQCODE ATTIVO CREATO: ${uniqueCode} per ospite ${guestName} - isActive: true, status: approved`);
 
-    // Save to PostgreSQL database using neon connection (sync with existing project setup)
-    try {
-      const { neon } = await import('@neondatabase/serverless');
-      const sql = neon(process.env.DATABASE_URL!);
-      
-      const result = await sql`
-        INSERT INTO generated_iq_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
-        VALUES (${uniqueCode}, ${structureCode}, ${packageId}, ${guestName}, ${guestId}, ${parsedCode?.country || 'IT'}, ${parsedCode?.word || 'UNKNOWN'}, 'assigned', NOW())
-        RETURNING id, code
-      `;
-      
-      console.log(`✅ PERSISTENZA OK: Codice ${uniqueCode} salvato con ID ${result[0].id}`);
-    } catch (dbError) {
-      console.error(`❌ ERRORE NEON: Salvataggio ${uniqueCode} fallito:`, dbError);
-    }
-
-    // IMMEDIATAMENTE ATTIVO: Crea il codice IQ operativo nella tabella principale
-    try {
-      // Per PostgreSQL, usa inserimento diretto nella tabella iq_codes
-      const result = await sql`
-        INSERT INTO iq_codes (code, role, is_active, assigned_to, location, code_type, status, created_at)
-        VALUES (${uniqueCode}, 'tourist', true, ${guestName}, ${parsedCode?.country || 'IT'}, 'emotional', 'approved', NOW())
-        RETURNING id, code
-      `;
-      
-      console.log(`✅ CODICE ATTIVO: ${uniqueCode} inserito direttamente in iq_codes - ID: ${result[0].id}`);
-    } catch (activeError) {
-      console.error(`❌ ERRORE ATTIVAZIONE DIRETTA: ${uniqueCode} non attivato:`, activeError);
-      
-      // Fallback al metodo storage esistente
-      try {
-        const activeIqCode = await this.createIqCode({
-          code: uniqueCode,
-          role: 'tourist',
-          isActive: true,
-          assignedTo: guestName,
-          location: parsedCode?.country || 'IT',
-          codeType: 'emotional',
-          status: 'approved'
-        });
-        console.log(`✅ FALLBACK OK: ${uniqueCode} creato via storage`);
-      } catch (fallbackError) {
-        console.error(`❌ FALLBACK FAILED: ${fallbackError}`);
-      }
-    }
-
-    // Decrement credits
-    targetPackage.creditsRemaining--;
-    targetPackage.creditsUsed++;
+    // Scala i crediti
+    pkg.creditsRemaining--;
+    pkg.creditsUsed++;
 
     return {
       code: uniqueCode,
-      remainingCredits: targetPackage.creditsRemaining
+      remainingCredits: pkg.creditsRemaining
     };
   }
 
@@ -573,7 +541,7 @@ export class MemStorage implements IStorage {
 
   async decrementAdminCredits(adminCode: string): Promise<AdminCredits> {
     let adminCreditsRecord = this.adminCredits.get(adminCode);
-    
+
     if (!adminCreditsRecord) {
       adminCreditsRecord = await this.createAdminCredits({
         adminCode: adminCode,
@@ -600,18 +568,18 @@ export class MemStorage implements IStorage {
   // Metodi gestione IQCode ospiti - implementazione corretta e funzionale
   async getAssignedCodesByGuest(guestId: number): Promise<any[]> {
     console.log(`DEBUG: Cercando codici per ospite ${guestId} nel database PostgreSQL`);
-    
+
     try {
       const { neon } = await import('@neondatabase/serverless');
       const sql = neon(process.env.DATABASE_URL!);
-      
+
       const result = await sql`
         SELECT code, assigned_to, assigned_at, emotional_word, country
         FROM generated_iq_codes 
         WHERE guest_id = ${guestId} AND status = 'assigned'
         ORDER BY assigned_at DESC
       `;
-      
+
       const codes = result.map((row: any) => ({
         code: row.code,
         assignedTo: row.assigned_to,
@@ -619,7 +587,7 @@ export class MemStorage implements IStorage {
         emotionalWord: row.emotional_word,
         country: row.country
       }));
-      
+
       console.log(`✅ RECUPERO OK: Trovati ${codes.length} codici per ospite ${guestId}`);
       return codes;
     } catch (dbError) {
@@ -643,14 +611,14 @@ export class MemStorage implements IStorage {
     const generatedCode = Array.from(this.generatedCodes.values()).find(gc => 
       gc.code === code && gc.guestId === guestId
     );
-    
+
     if (!generatedCode) {
       throw new Error("Codice non trovato per questo ospite");
     }
 
     generatedCode.status = 'available';
     generatedCode.guestId = null;
-    
+
     const availableCode = {
       id: this.currentAvailableCodeId++,
       code: code,
@@ -661,7 +629,7 @@ export class MemStorage implements IStorage {
       reason: reason,
       madeAvailableAt: new Date()
     };
-    
+
     this.availableCodes.set(availableCode.id, availableCode);
 
     const guest = this.guests.get(guestId);
@@ -673,14 +641,14 @@ export class MemStorage implements IStorage {
 
   async assignAvailableCodeToGuest(code: string, guestId: number, guestName: string): Promise<void> {
     const availableCode = Array.from(this.availableCodes.values()).find(ac => ac.code === code);
-    
+
     if (!availableCode) {
       throw new Error("Codice disponibile non trovato");
     }
 
     const availableCodeId = Array.from(this.availableCodes.entries())
       .find(([_, ac]) => ac.code === code)?.[0];
-    
+
     if (availableCodeId) {
       this.availableCodes.delete(availableCodeId);
     }
@@ -761,13 +729,13 @@ export class MemStorage implements IStorage {
     if (!existingMovement) {
       throw new Error("Movimento non trovato");
     }
-    
+
     const updatedMovement: AccountingMovement = {
       ...existingMovement,
       ...updates,
       updatedAt: new Date()
     };
-    
+
     this.accountingMovements.set(id, updatedMovement);
     return updatedMovement;
   }
@@ -829,7 +797,9 @@ export class MemStorage implements IStorage {
     return [];
   }
 
-  async getRealOffersByCity(cityName: string): Promise<any[]> {
+  async getRealOffersByThis code enforces `isActive: true` for newly created IQCodes, especially for those generated by structures.
+```typescript
+City(cityName: string): Promise<any[]> {
     console.log(`MemStorage: ricerca per città "${cityName}" - restituisce array vuoto`);
     return [];
   }
@@ -858,13 +828,13 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    
+
     if (!globalValidationsData.has('validations')) {
       globalValidationsData.set('validations', []);
     }
     const validations = globalValidationsData.get('validations');
     validations.push(validation);
-    
+
     return validation;
   }
 
@@ -887,21 +857,21 @@ export class MemStorage implements IStorage {
     const validations = globalValidationsData.get('validations') || [];
     const validation = validations.find((v: any) => v.id === id);
     if (!validation) throw new Error('Validazione non trovata');
-    
+
     validation.status = status;
     if (respondedAt) validation.respondedAt = respondedAt;
     validation.updatedAt = new Date();
-    
+
     return validation;
   }
 
   async decrementValidationUses(validationId: number): Promise<IqcodeValidation> {
     const validation = await this.getValidationById(validationId);
     if (!validation) throw new Error('Validazione non trovata');
-    
+
     validation.usesRemaining = Math.max(0, validation.usesRemaining - 1);
     validation.updatedAt = new Date();
-    
+
     return validation;
   }
 }
@@ -920,7 +890,7 @@ export class PostgreStorage implements IStorage {
     try {
       // Check if admin already exists
       const existingAdmin = await this.db.select().from(iqCodes).where(eq(iqCodes.code, 'TIQ-IT-ADMIN')).limit(1);
-      
+
       if (existingAdmin.length === 0) {
         await this.db.insert(iqCodes).values({
           code: 'TIQ-IT-ADMIN',
@@ -933,7 +903,7 @@ export class PostgreStorage implements IStorage {
 
       // Crea strutture di esempio se non esistono
       const existingStructures = await this.db.select().from(iqCodes).where(eq(iqCodes.role, 'structure')).limit(1);
-      
+
       if (existingStructures.length === 0) {
         const structures = [
           { code: 'TIQ-VV-STT-9576', role: 'structure' as const },
@@ -974,7 +944,7 @@ export class PostgreStorage implements IStorage {
 
       // Crea partner di esempio se non esistono
       const existingPartners = await this.db.select().from(iqCodes).where(eq(iqCodes.role, 'partner')).limit(1);
-      
+
       if (existingPartners.length === 0) {
         const partners = [
           { code: 'TIQ-VV-PRT-4897', role: 'partner' as const },
@@ -1184,25 +1154,25 @@ export class PostgreStorage implements IStorage {
     // Import SQL client for direct operations
     const { neon } = await import('@neondatabase/serverless');
     const sql = neon(process.env.DATABASE_URL!);
-    
+
     // Get package and verify credits
     const packages = await this.db.select().from(assignedPackages).where(eq(assignedPackages.id, packageId));
     const targetPackage = packages[0];
-    
+
     if (!targetPackage || targetPackage.creditsRemaining <= 0) {
       throw new Error("Nessun credito disponibile nel pacchetto");
     }
 
     // Import emotional words for code generation
-    const { generateEmotionalIQCode } = await import('./iq-generator');
-    
+    const { generateEmotionalIQCode, parseIQCode } = await import('./iq-generator');
+
     // Generate unique emotional code (TIQ-IT-ROSA format)
     let uniqueCode: string;
     let attempts = 0;
     do {
       uniqueCode = generateEmotionalIQCode('IT'); // Default Italy for now
       attempts++;
-      
+
       // Check if code exists in database
       const existing = await this.db.select().from(iqCodes).where(eq(iqCodes.code, uniqueCode)).limit(1);
       if (existing.length === 0) break;
@@ -1212,6 +1182,18 @@ export class PostgreStorage implements IStorage {
       throw new Error("Impossibile generare codice univoco");
     }
 
+    // CRITICO: Crea il codice IQ operativo nella tabella principale
+    // const newIqCode = await this.createIqCode({
+    //   code: uniqueCode,
+    //   role: 'tourist',
+    //   isActive: true,              // FONDAMENTALE
+    //   status: 'approved',          // Subito approvato per turisti
+    //   assignedTo: guestName,
+    //   location: 'IT',
+    //   codeType: 'emotional',
+    //   assignedBy: structureCode
+    // });
+
     // Decrement credits
     await this.db.update(assignedPackages)
       .set({ 
@@ -1219,6 +1201,56 @@ export class PostgreStorage implements IStorage {
         creditsUsed: targetPackage.creditsUsed + 1
       })
       .where(eq(assignedPackages.id, packageId));
+
+    // Save generated code for tracking
+        try {
+          const { neon } = await import('@neondatabase/serverless');
+          const sql = neon(process.env.DATABASE_URL!);
+
+          const result = await sql`
+            INSERT INTO generated_iq_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
+            VALUES (${uniqueCode}, ${structureCode}, ${packageId}, ${guestName}, ${guestId}, ${'IT'}, ${'UNKNOWN'}, 'assigned', NOW())
+            RETURNING id, code
+          `;
+
+          console.log(`✅ PERSISTENZA OK: Codice ${uniqueCode} salvato con ID ${result[0].id}`);
+        } catch (dbError) {
+          console.error(`❌ ERRORE NEON: Salvataggio ${uniqueCode} fallito:`, dbError);
+        }
+
+    // Parse the generated code to extract country and word
+    const parsedCode = parseIQCode(uniqueCode);
+
+        // IMMEDIATAMENTE ATTIVO: Crea il codice IQ operativo nella tabella principale
+        try {
+            // Per PostgreSQL, usa inserimento diretto nella tabella iq_codes
+            const result = await sql`
+              INSERT INTO iq_codes (code, role, is_active, assigned_to, location, code_type, status, created_at, assigned_by)
+              VALUES (${uniqueCode}, 'tourist', true, ${guestName}, ${parsedCode?.country || 'IT'}, 'emotional', 'approved', NOW(), ${structureCode})
+              RETURNING id, code
+            `;
+
+            console.log(`✅ CODICE ATTIVO: ${uniqueCode} inserito direttamente in iq_codes - ID: ${result[0].id}`);
+        } catch (activeError) {
+            console.error(`❌ ERRORE ATTIVAZIONE DIRETTA: ${uniqueCode} non attivato:`, activeError);
+
+            // Fallback al metodo storage esistente
+            try {
+                const activeIqCode = await this.createIqCode({
+                    code: uniqueCode,
+                    role: 'tourist',
+                    isActive: true,
+                    assignedTo: guestName,
+                    location: parsedCode?.country || 'IT',
+                    codeType: 'emotional',
+                    status: 'approved',
+                    assignedBy: structureCode
+                });
+                console.log(`✅ FALLBACK OK: ${uniqueCode} creato via storage`);
+            } catch (fallbackError) {
+                console.error(`❌ FALLBACK FAILED: ${fallbackError}`);
+            }
+        }
 
     return {
       code: uniqueCode,
@@ -1229,7 +1261,7 @@ export class PostgreStorage implements IStorage {
   async decrementPackageCredits(packageId: number): Promise<void> {
     const packages = await this.db.select().from(assignedPackages).where(eq(assignedPackages.id, packageId));
     const targetPackage = packages[0];
-    
+
     if (targetPackage && targetPackage.creditsRemaining > 0) {
       await this.db.update(assignedPackages)
         .set({
@@ -1257,7 +1289,7 @@ export class PostgreStorage implements IStorage {
 
   async decrementAdminCredits(adminCode: string): Promise<AdminCredits> {
     let adminCreditsRecord = await this.getAdminCredits(adminCode);
-    
+
     if (!adminCreditsRecord) {
       adminCreditsRecord = await this.createAdminCredits({
         adminCode: adminCode,
@@ -1382,30 +1414,28 @@ export class PostgreStorage implements IStorage {
         // Controlla se c'è il bypass admin o onboarding completato
         try {
           const noteData = JSON.parse(iqCodeRecord.internalNote);
-          
+
           if (noteData.completed === true || noteData.bypassed === true) {
             return {
               completed: true,
               currentStep: 'completed',
               completedSteps: ['business', 'accessibility', 'allergies', 'family', 'specialties', 'services'],
               partnerCode: partnerCode,
+              businessInfo: true,
+              accessibilityInfo: true,
+              allergyInfo: true,
+              familyInfo: true,
+              specialtyInfo: true,
+              servicesInfo: true,
+              isCompleted: true,
               bypassed: noteData.bypassed || false
-            };
-          }
-          
-          if (noteData.onboarding) {
-            return {
-              completed: false,
-              currentStep: noteData.onboarding.currentStep || 'business',
-              completedSteps: noteData.onboarding.completedSteps || [],
-              partnerCode: partnerCode
             };
           }
         } catch (parseError) {
           console.log('Errore parsing note interne per onboarding:', parseError);
         }
       }
-      
+
       // Default: nessun onboarding iniziato
       return {
         completed: false,
@@ -1429,7 +1459,7 @@ export class PostgreStorage implements IStorage {
       const iqCodeRecord = await this.getIqCodeByCode(partnerCode);
       if (iqCodeRecord) {
         let noteData: any = {};
-        
+
         // Parse existing data
         if (iqCodeRecord.internalNote) {
           try {
@@ -1438,7 +1468,7 @@ export class PostgreStorage implements IStorage {
             console.log('Parsing error, starting fresh');
           }
         }
-        
+
         // Initialize onboarding object if not exists
         if (!noteData.onboarding) {
           noteData.onboarding = {
@@ -1447,15 +1477,15 @@ export class PostgreStorage implements IStorage {
             stepData: {}
           };
         }
-        
+
         // Save step data
         noteData.onboarding.stepData[step] = data;
-        
+
         // Add to completed steps if not already there
         if (!noteData.onboarding.completedSteps.includes(step)) {
           noteData.onboarding.completedSteps.push(step);
         }
-        
+
         // Determine next step
         const allSteps = ['business', 'accessibility', 'allergies', 'family', 'specialties', 'services'];
         const currentIndex = allSteps.indexOf(step);
@@ -1464,12 +1494,12 @@ export class PostgreStorage implements IStorage {
         } else {
           noteData.onboarding.currentStep = 'completed';
         }
-        
+
         // Update database
         await this.db.update(iqCodes)
           .set({ internalNote: JSON.stringify(noteData) })
           .where(eq(iqCodes.code, partnerCode));
-        
+
         console.log(`Step ${step} salvato per partner ${partnerCode}`);
       }
     } catch (error) {
@@ -1483,7 +1513,7 @@ export class PostgreStorage implements IStorage {
       const iqCodeRecord = await this.getIqCodeByCode(partnerCode);
       if (iqCodeRecord) {
         let noteData: any = {};
-        
+
         if (iqCodeRecord.internalNote) {
           try {
             noteData = JSON.parse(iqCodeRecord.internalNote);
@@ -1491,15 +1521,15 @@ export class PostgreStorage implements IStorage {
             console.log('Parsing error, starting fresh');
           }
         }
-        
+
         // Mark as completed
         noteData.completed = true;
         noteData.completedAt = new Date().toISOString();
-        
+
         await this.db.update(iqCodes)
           .set({ internalNote: JSON.stringify(noteData) })
           .where(eq(iqCodes.code, partnerCode));
-        
+
         console.log(`Onboarding completato per partner ${partnerCode}`);
       }
     } catch (error) {
@@ -1532,7 +1562,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .from(settingsConfig)
       .where(eq(settingsConfig.structureCode, structureCode))
       .limit(1);
-    
+
     if (result.length === 0) {
       // Crea impostazioni default se non esistono
       const defaultSettings = {
@@ -1562,22 +1592,22 @@ class ExtendedPostgreStorage extends PostgreStorage {
         enableGuestPortal: true,
         enableWhatsappIntegration: false
       };
-      
+
       const [created] = await this.db
         .insert(settingsConfig)
         .values(defaultSettings)
         .returning();
-      
+
       return created;
     }
-    
+
     return result[0];
   }
 
   async updateSettingsConfig(structureCode: string, settings: Partial<InsertSettingsConfig>): Promise<SettingsConfig> {
     // Prima verifica se esistono già impostazioni
     const existing = await this.getSettingsConfig(structureCode);
-    
+
     if (!existing) {
       // Crea nuove impostazioni
       const [created] = await this.db
@@ -1586,14 +1616,14 @@ class ExtendedPostgreStorage extends PostgreStorage {
         .returning();
       return created;
     }
-    
+
     // Aggiorna esistenti
     const [updated] = await this.db
       .update(settingsConfig)
       .set({ ...settings, updatedAt: new Date() })
       .where(eq(settingsConfig.structureCode, structureCode))
       .returning();
-    
+
     return updated;
   }
 
@@ -1630,7 +1660,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
         usesRemaining: 10,
         usesTotal: 10
       });
-      
+
       console.log(`Richiesta validazione creata: ${partnerCode} → ${touristCode}`);
     } catch (error) {
       console.error('Errore creazione richiesta validazione:', error);
@@ -1638,7 +1668,8 @@ class ExtendedPostgreStorage extends PostgreStorage {
     }
   }
 
-  async createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any> {
+  async createSpecialClient(client:```typescript
+ {partnerCode: string, name: string, notes: string}): Promise<any> {
     const newClient = {
       id: Date.now(),
       ...client,
@@ -1927,7 +1958,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
         // Controlla se c'è il bypass admin o onboarding completato
         try {
           const noteData = JSON.parse(iqCodeRecord.internalNote);
-          
+
           if (noteData.completed === true || noteData.bypassed === true) {
             return {
               completed: true,
@@ -1969,10 +2000,10 @@ class ExtendedPostgreStorage extends PostgreStorage {
     } catch (error) {
       console.log('Errore verifica onboarding database:', error);
     }
-    
+
     // Fallback alla memoria globale
     const isCompleted = globalPartnerOnboardingData.get(`completed_${partnerCode}`) || false;
-    
+
     if (isCompleted) {
       return {
         completed: true,
@@ -1988,7 +2019,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
         isCompleted: true
       };
     }
-    
+
     return {
       completed: false,
       currentStep: 'business',
@@ -2005,46 +2036,17 @@ class ExtendedPostgreStorage extends PostgreStorage {
   }
 
   async savePartnerOnboardingStep(partnerCode: string, step: string, data: any): Promise<void> {
-    // Inizializza memoria se non esiste
-    if (!this.partnerOnboardingData) {
-      this.partnerOnboardingData = new Map();
-    }
-    
-    const stepsKey = `onboarding_steps_${partnerCode}`;
-    const currentSteps = this.partnerOnboardingData.get(stepsKey) || [];
-    
-    // Aggiungi step completato se non già presente
-    if (!currentSteps.includes(step)) {
-      currentSteps.push(step);
-      this.partnerOnboardingData.set(stepsKey, currentSteps);
-    }
-    
-    // Salva i dati dello step
-    this.partnerOnboardingData.set(`${partnerCode}_${step}_data`, data);
-    
-    console.log(`Salvato step ${step} per partner ${partnerCode}:`, data);
+    // Salva step nella memoria globale
+    globalPartnerOnboardingData.set(`${partnerCode}_step_${step}`, data);
   }
 
   async completePartnerOnboarding(partnerCode: string): Promise<void> {
-    try {
-      const iqCodeRecord = await this.getIqCodeByCode(partnerCode);
-      
-      if (iqCodeRecord) {
-        // Aggiorna la nota interna usando il metodo esistente che funziona
-        const newNote = `${iqCodeRecord.internalNote || ''} ONBOARDING_COMPLETED_${new Date().toISOString()}`.trim();
-        await this.updateIqCodeNote(iqCodeRecord.id, newNote);
-        
-        // Marca anche nella memoria globale come backup
-        globalPartnerOnboardingData.set(`completed_${partnerCode}`, true);
-        
-        console.log(`Onboarding completato e salvato per partner ${partnerCode}`);
-      }
-    } catch (error) {
-      console.log('Errore salvataggio completamento onboarding:', error);
-    }
+    // Marca come completato nella memoria globale
+    globalPartnerOnboardingData.set(`completed_${partnerCode}`, true);
+    console.log(`Onboarding completato per partner ${partnerCode}`);
   }
 
-  // Implementazione metodi per offerte reali in ExtendedPostgreStorage
+  // Implementazione metodi per offerte reali
   async getAcceptedPartnersByTourist(touristCode: string): Promise<any[]> {
     const result = await this.db
       .select()
@@ -2057,23 +2059,23 @@ class ExtendedPostgreStorage extends PostgreStorage {
   async getRealOffersByPartners(partnerCodes: string[]): Promise<any[]> {
     const { realOffers } = await import('@shared/schema');
     if (partnerCodes.length === 0) return [];
-    
+
     const { inArray: inArrayOp } = await import('drizzle-orm');
     const result = await this.db
       .select()
       .from(realOffers)
       .where(inArrayOp(realOffers.partnerCode, partnerCodes))
       .where(eq(realOffers.isActive, true));
-    
+
     return result;
   }
 
   async getRealOffersByCity(cityName: string): Promise<any[]> {
     const { realOffers } = await import('@shared/schema');
     const { ilike, and } = await import('drizzle-orm');
-    
+
     console.log(`Ricerca per città: ${cityName}`);
-    
+
     const result = await this.db
       .select()
       .from(realOffers)
@@ -2081,15 +2083,15 @@ class ExtendedPostgreStorage extends PostgreStorage {
         ilike(realOffers.city, cityName),
         eq(realOffers.isActive, true)
       ));
-    
+
     console.log(`Trovate ${result.length} offerte per ${cityName}`);
-    
+
     return result;
   }
 
   async getAllPartnersWithOffers(): Promise<any[]> {
     const { sql } = await import('drizzle-orm');
-    
+
     try {
       // Query SQL diretta per evitare problemi dell'ORM Drizzle
       const result = await this.db.execute(sql`
@@ -2120,7 +2122,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
           AND ic.is_active = true
         ORDER BY ro.created_at DESC
       `);
-      
+
       return result.rows.map((row: any) => ({
         id: row.id,
         title: row.title,
@@ -2150,7 +2152,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
   async getRealOffersNearby(latitude: number, longitude: number, radius: number): Promise<any[]> {
     const { realOffers } = await import('@shared/schema');
     const { sql } = await import('drizzle-orm');
-    
+
     // Calcolo distanza usando formula di Haversine per PostgreSQL
     const result = await this.db
       .select()
@@ -2160,7 +2162,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
       )
       .where(eq(realOffers.isActive, true))
       .where(sql`${realOffers.latitude} IS NOT NULL AND ${realOffers.longitude} IS NOT NULL`);
-    
+
     return result;
   }
 
@@ -2174,7 +2176,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
       usesRemaining: data.usesRemaining,
       usesTotal: data.usesTotal
     };
-    
+
     const result = await this.db.insert(iqcodeValidations).values(validationData).returning();
     return result[0];
   }
@@ -2208,7 +2210,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
     if (respondedAt) {
       updateData.respondedAt = respondedAt;
     }
-    
+
     const result = await this.db
       .update(iqcodeValidations)
       .set(updateData)
@@ -2220,9 +2222,9 @@ class ExtendedPostgreStorage extends PostgreStorage {
   async decrementValidationUses(validationId: number): Promise<IqcodeValidation> {
     const validation = await this.getValidationById(validationId);
     if (!validation) throw new Error('Validazione non trovata');
-    
+
     const newUsesRemaining = Math.max(0, validation.usesRemaining - 1);
-    
+
     const result = await this.db
       .update(iqcodeValidations)
       .set({ usesRemaining: newUsesRemaining })
@@ -2240,7 +2242,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
         // Controlla se c'è il bypass admin o onboarding completato
         try {
           const noteData = JSON.parse(iqCodeRecord.internalNote);
-          
+
           if (noteData.completed === true || noteData.bypassed === true) {
             return {
               completed: true,
@@ -2282,10 +2284,10 @@ class ExtendedPostgreStorage extends PostgreStorage {
     } catch (error) {
       console.log('Errore verifica onboarding database:', error);
     }
-    
+
     // Fallback alla memoria globale
     const isCompleted = globalPartnerOnboardingData.get(`completed_${partnerCode}`) || false;
-    
+
     if (isCompleted) {
       return {
         completed: true,
@@ -2301,7 +2303,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
         isCompleted: true
       };
     }
-    
+
     return {
       completed: false,
       currentStep: 'business',
@@ -2367,7 +2369,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
   async decrementValidationUses(validationId: number): Promise<IqcodeValidation> {
     const validation = await this.getValidationById(validationId);
     if (!validation) throw new Error('Validazione non trovata');
-    
+
     const result = await this.db.update(iqcodeValidations)
       .set({ 
         usesRemaining: Math.max(0, validation.usesRemaining - 1),
@@ -2455,20 +2457,20 @@ class ExtendedMemStorage extends MemStorage {
       };
       this.settingsConfigMap.set(structureCode, defaultSettings);
     }
-    
+
     return this.settingsConfigMap.get(structureCode) || null;
   }
 
   async updateSettingsConfig(structureCode: string, settings: Partial<InsertSettingsConfig>): Promise<SettingsConfig> {
     const existing = await this.getSettingsConfig(structureCode);
     if (!existing) throw new Error("Settings not found");
-    
+
     const updated = {
       ...existing,
       ...settings,
       updatedAt: new Date()
     };
-    
+
     this.settingsConfigMap.set(structureCode, updated);
     return updated;
   }
@@ -2535,7 +2537,7 @@ class ExtendedMemStorage extends MemStorage {
 
     // Usa la memoria globale condivisa
     const isCompleted = globalPartnerOnboardingData.get(`completed_${partnerCode}`) || false;
-    
+
     if (isCompleted) {
       return {
         completed: true,
@@ -2551,7 +2553,7 @@ class ExtendedMemStorage extends MemStorage {
         isCompleted: true
       };
     }
-    
+
     return {
       completed: false,
       currentStep: 'business',
@@ -2579,7 +2581,8 @@ class ExtendedMemStorage extends MemStorage {
   }
 
   // Implementazione metodi per offerte reali
-  async getAcceptedPartnersByTourist(touristCode: string): Promise<any[]> {
+  async getAcceptedPartnersByTourist(touristCode: string):```typescript
+ Promise<any[]> {
     const result = await this.db
       .select()
       .from(iqcodeValidations)
@@ -2591,14 +2594,14 @@ class ExtendedMemStorage extends MemStorage {
   async getRealOffersByPartners(partnerCodes: string[]): Promise<any[]> {
     const { realOffers } = await import('@shared/schema');
     if (partnerCodes.length === 0) return [];
-    
+
     const { inArray: inArrayOp } = await import('drizzle-orm');
     const result = await this.db
       .select()
       .from(realOffers)
       .where(inArrayOp(realOffers.partnerCode, partnerCodes))
       .where(eq(realOffers.isActive, true));
-    
+
     return result;
   }
 
@@ -2627,13 +2630,13 @@ class ExtendedMemStorage extends MemStorage {
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    
+
     if (!globalValidationsData.has('validations')) {
       globalValidationsData.set('validations', []);
     }
     const validations = globalValidationsData.get('validations');
     validations.push(validation);
-    
+
     return validation;
   }
 
@@ -2656,24 +2659,24 @@ class ExtendedMemStorage extends MemStorage {
     const validations = globalValidationsData.get('validations') || [];
     const validation = validations.find((v: any) => v.id === id);
     if (!validation) throw new Error('Validazione non trovata');
-    
+
     validation.status = status;
     if (respondedAt) validation.respondedAt = respondedAt;
     validation.updatedAt = new Date();
-    
+
     return validation;
   }
 
   async decrementValidationUses(validationId: number): Promise<IqcodeValidation> {
     const validation = await this.getValidationById(validationId);
     if (!validation) throw new Error('Validazione non trovata');
-    
+
     validation.usesRemaining = Math.max(0, validation.usesRemaining - 1);
     validation.updatedAt = new Date();
-    
+
     return validation;
   }
 }
 
 // Use PostgreSQL storage if DATABASE_URL exists, otherwise fallback to memory
-export const storage = process.env.DATABASE_URL ? new PostgreStorage() : new ExtendedMemStorage();
+export const storage = process.env.DATABASE_URL ? new ExtendedPostgreStorage() : new ExtendedMemStorage();

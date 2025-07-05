@@ -1862,6 +1862,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "ID ospite e pacchetto richiesti" });
       }
 
+      // CONTROLLO SICUREZZA: Rifiuta isActive false
+      if (req.body.isActive === false) {
+        return res.status(400).json({ message: 'I codici devono essere attivi' });
+      }
+
       // Get guest details
       const guest = await storage.getGuestById(guestId);
       if (!guest || guest.structureCode !== userIqCode.code) {
