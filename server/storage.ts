@@ -1183,16 +1183,22 @@ export class PostgreStorage implements IStorage {
     }
 
     // CRITICO: Crea il codice IQ operativo nella tabella principale
-    // const newIqCode = await this.createIqCode({
-    //   code: uniqueCode,
-    //   role: 'tourist',
-    //   isActive: true,              // FONDAMENTALE
-    //   status: 'approved',          // Subito approvato per turisti
-    //   assignedTo: guestName,
-    //   location: 'IT',
-    //   codeType: 'emotional',
-    //   assignedBy: structureCode
-    // });
+    try {
+      const newIqCode = await this.createIqCode({
+        code: uniqueCode,
+        role: 'tourist',
+        isActive: true,              // FONDAMENTALE
+        status: 'approved',          // Subito approvato per turisti
+        assignedTo: guestName,
+        location: 'IT',
+        codeType: 'emotional',
+        assignedBy: structureCode
+      });
+      console.log(`✅ CODICE ATTIVO CREATO: ${uniqueCode} per ospite ${guestName} - isActive: true, status: approved`);
+    } catch (err) {
+      console.error('❌ Errore scrittura IQCode in tabella principale:', err);
+      throw err;
+    }
 
     // Decrement credits
     await this.db.update(assignedPackages)

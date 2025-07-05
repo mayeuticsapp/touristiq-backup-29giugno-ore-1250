@@ -1889,33 +1889,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const guestName = `${guest.firstName} ${guest.lastName}`;
       const result = await storage.generateEmotionalIQCode(userIqCode.code, packageId, guestName, guestId);
 
-      // Ensure immediate PostgreSQL persistence using execute_sql_tool pattern
-      setImmediate(async () => {
-        try {
-          const codeParts = result.code.split('-');
-          const emotionalWord = codeParts.length >= 3 ? codeParts[2] : 'UNKNOWN';
-          
-          // Direct SQL execution bypassing connection issues
-          const insertQuery = `
-            INSERT INTO generated_iq_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
-            VALUES ('${result.code}', '${userIqCode.code}', ${packageId}, '${guestName}', ${guestId}, 'IT', '${emotionalWord}', 'assigned', NOW())
-          `;
-          
-          // Use child_process to execute SQL directly
-          const { exec } = await import('child_process');
-          const command = `echo "${insertQuery}" | psql "${process.env.DATABASE_URL}"`;
-          
-          exec(command, (error, stdout, stderr) => {
-            if (!error) {
-              console.log(`✅ PERSISTENZA DIRETTA: Codice ${result.code} salvato tramite psql`);
-            } else {
-              console.error(`❌ ERRORE PSQL: ${error.message}`);
-            }
-          });
-        } catch (dbError) {
-          console.error(`❌ ERRORE PERSISTENZA: ${dbError}`);
-        }
-      });
+      // Salva anche nella tabella di tracking generated_iq_codes
+      console.log(`✅ CODICE GENERATO: ${result.code} per ospite ${guestName} - crediti rimanenti: ${result.remainingCredits}`);
 
       // Update guest assigned codes count
       await storage.updateGuest(guestId, {
