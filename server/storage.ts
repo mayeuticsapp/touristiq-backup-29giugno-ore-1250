@@ -498,6 +498,23 @@ export class MemStorage implements IStorage {
       console.error(`❌ ERRORE NEON: Salvataggio ${uniqueCode} fallito:`, dbError);
     }
 
+    // IMMEDIATAMENTE ATTIVO: Crea il codice IQ operativo nella tabella principale
+    try {
+      const activeIqCode = await this.createIqCode({
+        code: uniqueCode,
+        role: 'tourist',
+        isActive: true,
+        assignedTo: guestName,
+        location: parsedCode?.country || 'IT',
+        codeType: 'emotional',
+        status: 'approved' // IMMEDIATAMENTE APPROVATO
+      });
+      
+      console.log(`✅ CODICE ATTIVO: ${uniqueCode} operativo per login immediato`);
+    } catch (activeError) {
+      console.error(`❌ ERRORE ATTIVAZIONE: ${uniqueCode} non attivato:`, activeError);
+    }
+
     // Decrement credits
     targetPackage.creditsRemaining--;
     targetPackage.creditsUsed++;
