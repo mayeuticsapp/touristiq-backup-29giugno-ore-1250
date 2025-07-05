@@ -1409,7 +1409,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Dimensione pacchetto non valida" });
       }
 
-      
+      // Verifica che il destinatario esista nel database
+      const allCodes = await storage.getAllIqCodes();
+      const targetCode = allCodes.find(code => 
+        code.role === targetType && code.code === targetId
+      );
+
+      if (!targetCode) {
+        return res.status(404).json({ message: "Destinatario non trovato nel database" });
+      }
 
       // Save package assignment to database (SOLO CREDITI, non liste pregenerate)
       const packageAssignment = await storage.createAssignedPackage({
