@@ -1672,8 +1672,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
     }
   }
 
-  async createSpecialClient(client:```typescript
- {partnerCode: string, name: string, notes: string}): Promise<any> {
+  async createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any> {
     const newClient = {
       id: Date.now(),
       ...client,
@@ -2585,8 +2584,7 @@ class ExtendedMemStorage extends MemStorage {
   }
 
   // Implementazione metodi per offerte reali
-  async getAcceptedPartnersByTourist(touristCode: string):```typescript
- Promise<any[]> {
+  async getAcceptedPartnersByTourist(touristCode: string): Promise<any[]> {
     const result = await this.db
       .select()
       .from(iqcodeValidations)
