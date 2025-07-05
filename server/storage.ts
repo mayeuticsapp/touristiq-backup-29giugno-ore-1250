@@ -830,15 +830,79 @@ export class MemStorage implements IStorage {
   }
 
   async getRealOffersByCity(cityName: string): Promise<any[]> {
+    console.log(`MemStorage: ricerca per città "${cityName}" - restituisce array vuoto`);
     return [];
   }
 
   async getRealOffersNearby(latitude: number, longitude: number, radius: number): Promise<any[]> {
+    console.log(`MemStorage: ricerca geolocalizzazione - restituisce array vuoto`);
     return [];
   }
 
   async getAllPartnersWithOffers(): Promise<any[]> {
     return [];
+  }
+
+  // Metodi validazione IQCode mancanti
+  async createIqcodeValidation(data: {partnerCode: string, touristCode: string, requestedAt: Date, status: string, usesRemaining: number, usesTotal: number}): Promise<IqcodeValidation> {
+    // Per MemStorage, salva in memoria globale
+    const validation = {
+      id: Date.now(),
+      partnerIqCode: data.partnerCode,
+      touristIqCode: data.touristCode,
+      requestedAt: data.requestedAt,
+      status: data.status,
+      usesRemaining: data.usesRemaining,
+      usesTotal: data.usesTotal,
+      respondedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    if (!globalValidationsData.has('validations')) {
+      globalValidationsData.set('validations', []);
+    }
+    const validations = globalValidationsData.get('validations');
+    validations.push(validation);
+    
+    return validation;
+  }
+
+  async getValidationsByTourist(touristCode: string): Promise<IqcodeValidation[]> {
+    const validations = globalValidationsData.get('validations') || [];
+    return validations.filter((v: any) => v.touristIqCode === touristCode);
+  }
+
+  async getValidationsByPartner(partnerCode: string): Promise<IqcodeValidation[]> {
+    const validations = globalValidationsData.get('validations') || [];
+    return validations.filter((v: any) => v.partnerIqCode === partnerCode);
+  }
+
+  async getValidationById(id: number): Promise<IqcodeValidation | null> {
+    const validations = globalValidationsData.get('validations') || [];
+    return validations.find((v: any) => v.id === id) || null;
+  }
+
+  async updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<IqcodeValidation> {
+    const validations = globalValidationsData.get('validations') || [];
+    const validation = validations.find((v: any) => v.id === id);
+    if (!validation) throw new Error('Validazione non trovata');
+    
+    validation.status = status;
+    if (respondedAt) validation.respondedAt = respondedAt;
+    validation.updatedAt = new Date();
+    
+    return validation;
+  }
+
+  async decrementValidationUses(validationId: number): Promise<IqcodeValidation> {
+    const validation = await this.getValidationById(validationId);
+    if (!validation) throw new Error('Validazione non trovata');
+    
+    validation.usesRemaining = Math.max(0, validation.usesRemaining - 1);
+    validation.updatedAt = new Date();
+    
+    return validation;
   }
 }
 
