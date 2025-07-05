@@ -1,3 +1,7 @@
+The code has been modified to replace the location icon with an animated sun, resize and reposition the location icon, and update the logo section to use the sun icon.
+```
+
+```replit_final_file
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -30,7 +34,7 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Prevent double submission
     if (isLoading || isSubmitting) return;
     if (!iqCode.trim()) return;
@@ -108,7 +112,7 @@ export default function Login() {
           <div className="absolute -bottom-6 -left-6 w-1 h-12 bg-yellow-300/40 transform -rotate-45 animate-pulse" style={{animationDelay: '0.5s'}} />
           <div className="absolute -bottom-6 -right-6 w-1 h-12 bg-yellow-300/40 transform rotate-45 animate-pulse" style={{animationDelay: '0.5s'}} />
         </div>
-        
+
         {/* Nuvole soffici */}
         <div className="absolute top-20 left-16 w-40 h-16 bg-white/80 rounded-full opacity-90 animate-float">
           <div className="absolute -left-4 top-2 w-24 h-12 bg-white/70 rounded-full" />
@@ -116,7 +120,7 @@ export default function Login() {
         </div>
         <div className="absolute top-32 right-40 w-32 h-12 bg-white/70 rounded-full opacity-80 animate-float" style={{animationDelay: '2s'}} />
         <div className="absolute top-10 left-1/2 w-28 h-10 bg-white/60 rounded-full opacity-75 animate-float" style={{animationDelay: '4s'}} />
-        
+
         {/* Montagne calabresi in lontananza */}
         <div className="absolute bottom-1/3 left-0 w-full h-48">
           <div className="absolute bottom-0 left-0 w-1/3 h-32 bg-gradient-to-t from-green-700 to-green-500 opacity-60" 
@@ -126,20 +130,20 @@ export default function Login() {
           <div className="absolute bottom-0 right-0 w-1/3 h-36 bg-gradient-to-t from-green-600 to-green-400 opacity-50" 
                style={{clipPath: 'polygon(0% 100%, 40% 25%, 100% 100%)'}} />
         </div>
-        
+
         {/* Mare cristallino con onde */}
         <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-blue-600 via-cyan-500 to-transparent">
           {/* Onde animate */}
           <div className="absolute bottom-0 w-full h-8 bg-gradient-to-r from-white/30 via-cyan-300/40 to-white/30 animate-pulse" />
           <div className="absolute bottom-2 w-full h-6 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" style={{animationDelay: '0.5s'}} />
           <div className="absolute bottom-4 w-full h-4 bg-gradient-to-r from-white/15 via-cyan-200/30 to-white/15 animate-pulse" style={{animationDelay: '1s'}} />
-          
+
           {/* Riflessi del sole sul mare */}
           <div className="absolute bottom-8 right-16 w-2 h-12 bg-yellow-200/60 animate-twinkle" />
           <div className="absolute bottom-12 right-20 w-1 h-8 bg-yellow-300/50 animate-twinkle" style={{animationDelay: '0.7s'}} />
           <div className="absolute bottom-6 right-24 w-3 h-6 bg-orange-200/40 animate-twinkle" style={{animationDelay: '1.4s'}} />
         </div>
-        
+
         {/* Palme tropicali */}
         <div className="absolute bottom-1/4 left-8 w-4 h-32 bg-gradient-to-t from-amber-700 to-amber-600 opacity-80">
           {/* Fronde */}
@@ -148,20 +152,20 @@ export default function Login() {
           <div className="absolute -top-4 -left-6 w-18 h-5 bg-green-400 rounded-full opacity-60 transform -rotate-45" />
           <div className="absolute -top-4 -right-2 w-14 h-5 bg-green-500 rounded-full opacity-60 transform rotate-45" />
         </div>
-        
+
         <div className="absolute bottom-1/4 right-12 w-3 h-28 bg-gradient-to-t from-amber-800 to-amber-700 opacity-70">
           {/* Fronde */}
           <div className="absolute -top-2 -left-6 w-16 h-5 bg-green-600 rounded-full opacity-80 transform -rotate-20" />
           <div className="absolute -top-2 -right-2 w-14 h-5 bg-green-500 rounded-full opacity-80 transform rotate-20" />
           <div className="absolute -top-3 -left-4 w-12 h-4 bg-green-400 rounded-full opacity-60 transform -rotate-50" />
         </div>
-        
+
         {/* Gabbiani in volo */}
         <div className="absolute top-1/3 left-1/3 text-white/60 animate-float text-2xl">🕊️</div>
         <div className="absolute top-1/4 right-1/3 text-white/50 animate-float text-lg" style={{animationDelay: '2s'}}>🕊️</div>
         <div className="absolute top-2/5 left-2/3 text-white/40 animate-float text-xl" style={{animationDelay: '4s'}}>🕊️</div>
       </div>
-      
+
       {/* Overlay morbido per leggibilità */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/20" />
       <div className="max-w-md w-full space-y-8">
