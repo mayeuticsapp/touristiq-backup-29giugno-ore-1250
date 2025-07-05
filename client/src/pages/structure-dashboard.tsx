@@ -1357,7 +1357,7 @@ export default function StructureDashboard() {
                           <p className="text-sm text-gray-500">Camera {guest.roomNumber}</p>
                         </div>
                         <Badge className="bg-green-100 text-green-800">
-                          {guest.assignedCodes} IQ Code
+                          {guest.assignedCodes || 0} IQ Code
                         </Badge>
                       </div>
 
@@ -1525,7 +1525,7 @@ export default function StructureDashboard() {
                 </Button>
               </div>
               <p className="text-gray-600 mt-1">
-                Camera {selectedGuestForManagement.roomNumber} • {selectedGuestForManagement.assignedCodes || 0} codici assegnati
+                Camera {selectedGuestForManagement.roomNumber} • {guestCodes.length || selectedGuestForManagement.assignedCodes || 0} codici assegnati
               </p>
             </div>
 
@@ -1551,7 +1551,7 @@ export default function StructureDashboard() {
                         : "border-transparent text-gray-500 hover:text-gray-700"
                     }`}
                   >
-                    Codici IQ ({guestCodes.length})
+                    Codici IQ ({selectedGuestForManagement?.assignedCodes || guestCodes.length || 0})
                   </button>
                   <button
                     onClick={() => setActiveTab("actions")}
