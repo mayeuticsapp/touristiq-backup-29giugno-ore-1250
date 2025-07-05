@@ -1790,6 +1790,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update guest data
+  app.put("/api/guests/:id", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const guestId = parseInt(req.params.id);
+      const { firstName, lastName, phone, roomNumber, checkinDate, checkoutDate, notes } = req.body;
+
+      if (!firstName || !lastName) {
+        return res.status(400).json({ message: "Nome e cognome sono obbligatori" });
+      }
+
+      // Verifica che l'ospite appartenga alla struttura
+      const existingGuest = await storage.getGuestById(guestId);
+      if (!existingGuest || existingGuest.structureCode !== userIqCode.code) {
+        return res.status(404).json({ message: "Ospite non trovato o non autorizzato" });
+      }
+
+      const updatedGuest = await storage.updateGuest(guestId, {
+        firstName,
+        lastName,
+        phone,
+        roomNumber,
+        checkinDate,
+        checkoutDate,
+        notes
+      });
+
+      res.json({ success: true, guest: updatedGuest });
+    } catch (error) {
+      console.error("Errore aggiornamento ospite:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // Generate emotional IQCode for guest using credits system
   app.post("/api/assign-code-to-guest", async (req, res) => {
     try {

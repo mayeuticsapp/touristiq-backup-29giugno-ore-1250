@@ -57,7 +57,7 @@ export default function StructureDashboard() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [assignGuestName, setAssignGuestName] = useState("");
   const [assignGuestEmail, setAssignGuestEmail] = useState("");
-  
+
   // Stati per gestione ospiti
   const [newGuest, setNewGuest] = useState({
     firstName: "",
@@ -77,15 +77,15 @@ export default function StructureDashboard() {
   const [guestCodes, setGuestCodes] = useState<{code: string; assignedAt?: string}[]>([]);
   const [availableCodes, setAvailableCodes] = useState<any[]>([]);
   const [loadingCodes, setLoadingCodes] = useState(false);
-  
+
   // Refs per focus automatico check-in → check-out
   const checkoutDateRef = useRef<HTMLInputElement>(null);
-  
+
   // Stati per ricerca ospiti con IQ code
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFilter, setSearchFilter] = useState("all");
   const [filteredGuests, setFilteredGuests] = useState<Guest[]>([]);
-  
+
   // Recupera dati specifici della struttura
   const { data: structureData, isLoading } = useQuery({
     queryKey: ['structure', structureId],
@@ -118,6 +118,165 @@ export default function StructureDashboard() {
     enabled: !!structureId,
   });
 
+  // Mutation per creare nuovo ospite
+  const createGuestMutation = useMutation({
+    mutationFn: async (guestData: any) => {
+      const response = await fetch('/api/guests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(guestData)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Errore nella creazione ospite');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Ospite creato!",
+        description: `${data.guest.firstName} ${data.guest.lastName} aggiunto con successo`,
+      });
+
+      setNewGuest({
+        firstName: "",
+        lastName: "",
+        phone: "",
+        roomNumber: "",
+        checkinDate: "",
+        checkoutDate: "",
+        notes: ""
+      });
+
+      setJustCreatedGuest(data.guest);
+      refetchGuests();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Mutation per aggiornare ospite esistente
+  const updateGuestMutation = useMutation({
+    mutationFn: async (guestData: any) => {
+      const response = await fetch(`/api/guests/${guestData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(guestData)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Errore nell\'aggiornamento ospite');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Ospite aggiornato!",
+        description: `${data.guest.firstName} ${data.guest.lastName} modificato con successo`,
+      });
+
+      setEditingGuest(null);
+      setSelectedGuestForManagement(data.guest);
+      refetchGuests();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Funzione per aggiornare ospite
+  const updateGuest = () => {
+    if (!editingGuest) return;
+
+    if (!editingGuest.firstName || !editingGuest.lastName) {
+      toast({
+        title: "Errore",
+        description: "Nome e cognome sono obbligatori",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoadingCodes(true);
+    updateGuestMutation.mutate(editingGuest);
+    setLoadingCodes(false);
+  };
+
+  // Funzione per rimuovere telefono per GDPR
+  const removePhoneFromGuest = async () => {
+    if (!selectedGuestForManagement?.id) return;
+
+    try {
+      const response = await fetch(`/api/guests/${selectedGuestForManagement.id}/remove-phone`, {
+        method: 'PATCH',
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedGuestForManagement({...selectedGuestForManagement, phone: ""});
+        toast({
+          title: "Telefono rimosso",
+          description: "Numero telefonico rimosso per conformità GDPR",
+        });
+        refetchGuests();
+      }
+    } catch (error) {
+      toast({
+        title: "Errore",
+        description: "Errore nella rimozione del telefono",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Funzione per eliminare ospite
+  const deleteGuest = async () => {
+    if (!selectedGuestForManagement?.id) return;
+
+    if (!confirm(`Sei sicuro di voler eliminare ${selectedGuestForManagement.firstName} ${selectedGuestForManagement.lastName}? Questa azione è irreversibile.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/guests/${selectedGuestForManagement.id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Ospite eliminato",
+          description: `${selectedGuestForManagement.firstName} ${selectedGuestForManagement.lastName} eliminato con successo`,
+        });
+        setSelectedGuestForManagement(null);
+        refetchGuests();
+      }
+    } catch (error) {
+      toast({
+        title: "Errore",
+        description: "Errore nell'eliminazione dell'ospite",
+        variant: "destructive"
+      });
+    }
+  };
+
+
   // Filtra ospiti con IQ code in base a ricerca e filtri
   useEffect(() => {
     if (!guestsData?.guests) {
@@ -136,7 +295,7 @@ export default function StructureDashboard() {
     const filtered = guestsWithCodes.filter(guest => {
       const searchLower = searchQuery.toLowerCase();
       const fullName = `${guest.firstName} ${guest.lastName}`.toLowerCase();
-      
+
       // Ricerca in base al filtro selezionato
       switch (searchFilter) {
         case "name":
@@ -163,7 +322,7 @@ export default function StructureDashboard() {
       alert("Seleziona un ospite registrato per assegnare il codice");
       return;
     }
-    
+
     try {
       const response = await fetch("/api/assign-code-to-guest", {
         method: "POST",
@@ -179,17 +338,17 @@ export default function StructureDashboard() {
         const result = await response.json();
         refetchPackages();
         refetchGuests();
-        
+
         // Mostra dettagli assegnazione con opzione WhatsApp
         const guest = guestsData?.guests?.find((g: Guest) => g.id === selectedGuestId);
         const message = `Codice IQ assegnato con successo!\n\nCodice: ${result.touristCode}\nOspite: ${result.guestName}\nCamera: ${guest?.roomNumber || 'N/A'}\nCodici rimanenti: ${result.remainingCodes}`;
-        
+
         if (guest?.phone && confirm(`${message}\n\nVuoi inviare il codice via WhatsApp al numero ${guest.phone}?`)) {
           handleSendWhatsApp(guest.phone, result.touristCode, guest);
         } else {
           alert(message);
         }
-        
+
         // Reset selezione
         setSelectedGuestId(0);
       } else {
@@ -251,7 +410,7 @@ export default function StructureDashboard() {
   // Funzioni azioni rapide post-creazione
   const handleAssignCodeToNewGuest = async () => {
     if (!justCreatedGuest) return;
-    
+
     // Verifica se ci sono pacchetti disponibili
     if (!packagesData?.packages || packagesData.packages.length === 0) {
       alert("Nessun pacchetto disponibile. Contatta l'admin per ricevere crediti.");
@@ -264,7 +423,7 @@ export default function StructureDashboard() {
       alert("Nessun credito disponibile nei pacchetti assegnati.");
       return;
     }
-    
+
     try {
       const response = await fetch("/api/assign-code-to-guest", {
         method: "POST",
@@ -298,10 +457,10 @@ export default function StructureDashboard() {
 
     const message = `🏨 Benvenuto!\nIl tuo codice TouristIQ è: *${assignedCode}*\n\nScoprilo nei migliori locali della zona per sconti esclusivi!`;
     const whatsappUrl = `https://wa.me/${justCreatedGuest.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
-    
+
     // Apri WhatsApp
     window.open(whatsappUrl, '_blank');
-    
+
     // GDPR: Cancella automaticamente il numero di telefono dal database
     try {
       await fetch(`/api/guests/${justCreatedGuest.id}/remove-phone`, {
@@ -309,7 +468,7 @@ export default function StructureDashboard() {
         headers: { "Content-Type": "application/json" },
         credentials: "include"
       });
-      
+
       alert("Messaggio inviato! Il numero di telefono è stato rimosso per privacy GDPR.");
       refetchGuests();
       setJustCreatedGuest(null);
@@ -323,7 +482,7 @@ export default function StructureDashboard() {
       alert("Prima assegna un codice IQ all'ospite");
       return;
     }
-    
+
     navigator.clipboard.writeText(assignedCode).then(() => {
       alert("Codice copiato negli appunti!");
     }).catch(() => {
@@ -347,11 +506,11 @@ export default function StructureDashboard() {
         const result = await response.json();
         refetchPackages();
         refetchGuests();
-        
+
         // Ricarica immediatamente i codici assegnati all'ospite
         const codesResponse = await fetch(`/api/guest/${guestId}/codes`);
         const codesData = await codesResponse.json();
-        
+
         // Aggiorna i codici assegnati per l'ospite nella visualizzazione
         if (selectedGuestForManagement && selectedGuestForManagement.id === guestId) {
           setSelectedGuestForManagement({
@@ -359,11 +518,11 @@ export default function StructureDashboard() {
             assignedCodes: codesData.codes || []
           });
         }
-        
+
         // Mostra dettagli assegnazione con opzione WhatsApp
         const guest = guestsData?.guests?.find((g: Guest) => g.id === guestId);
         const message = `Codice IQ assegnato con successo!\n\nCodice: ${result.touristCode}\nOspite: ${guest?.firstName} ${guest?.lastName}\nCamera: ${guest?.roomNumber || 'N/A'}`;
-        
+
         if (guest?.phone && confirm(`${message}\n\nVuoi inviare il codice via WhatsApp al numero ${guest.phone}?`)) {
           handleSendWhatsApp(guest.phone, result.touristCode, guest);
         } else {
@@ -381,7 +540,7 @@ export default function StructureDashboard() {
   const handleSendWhatsApp = (phone: string, code: string, guest: any) => {
     // Rimuovi tutti i caratteri non numerici
     let cleanPhone = phone.replace(/[^0-9]/g, '');
-    
+
     // Verifica se il numero inizia con 39 (Italia)
     if (cleanPhone.startsWith('39')) {
       cleanPhone = cleanPhone;
@@ -392,15 +551,15 @@ export default function StructureDashboard() {
       alert('Numero WhatsApp non valido. Deve essere un numero italiano che inizia con 3 (es. 391234567890)');
       return;
     }
-    
+
     // Verifica lunghezza minima (11-13 cifre per numeri italiani)
     if (cleanPhone.length < 11 || cleanPhone.length > 13) {
       alert('Numero WhatsApp non valido. Formato corretto: +39 3xx xxx xxxx');
       return;
     }
-    
+
     const message = `🏨 ${structureData?.name || 'Hotel'}\n\n✨ Il tuo codice sconto personale: *${code}*\n\n🎉 Ciao ${guest.firstName}! Ecco il tuo codice IQ per scoprire sconti esclusivi nei migliori locali della zona.\n\n📱 Usa questo codice per ottenere vantaggi speciali durante il tuo soggiorno!\n\n🌟 Buon divertimento!`;
-    
+
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -413,11 +572,11 @@ export default function StructureDashboard() {
         credentials: "include"
       });
       const data = await response.json();
-      
+
       // Imposta i codici assegnati per la visualizzazione immediata
       const assignedCodes = data.codes || [];
       setGuestCodes(assignedCodes);
-      
+
       console.log(`DEBUG: Caricati ${assignedCodes.length} codici per ospite ${guestId}:`, assignedCodes);
     } catch (error) {
       console.error("Errore caricamento codici ospite:", error);
@@ -437,7 +596,7 @@ export default function StructureDashboard() {
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         await loadGuestCodes(guestId);
         await refetchAvailableCodes();
@@ -462,7 +621,7 @@ export default function StructureDashboard() {
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         await loadGuestCodes(guestId);
         await refetchAvailableCodes();
@@ -508,7 +667,7 @@ export default function StructureDashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="warm-panel">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -522,7 +681,7 @@ export default function StructureDashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="warm-panel">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -593,7 +752,7 @@ export default function StructureDashboard() {
                   )}
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {packagesData?.packages?.map((pkg: Package) => (
                   <Card key={pkg.id} className="border border-purple-200">
@@ -604,7 +763,7 @@ export default function StructureDashboard() {
                           {pkg.availableCodes || pkg.codesGenerated?.length || 0} disponibili
                         </Badge>
                       </div>
-                      
+
                       <Button 
                         onClick={() => handleGenerateTouristCode(pkg.id)}
                         disabled={(pkg.availableCodes || 0) <= 0 || selectedGuestId === 0}
@@ -613,7 +772,7 @@ export default function StructureDashboard() {
                         <Plus size={16} className="mr-2" />
                         Assegna Codice
                       </Button>
-                      
+
                       {(pkg.availableCodes || 0) <= 0 && (
                         <p className="text-xs text-red-600 text-center mt-2">Pacchetto esaurito</p>
                       )}
@@ -621,7 +780,7 @@ export default function StructureDashboard() {
                   </Card>
                 ))}
               </div>
-              
+
               {!assignGuestName.trim() && (
                 <p className="text-sm text-amber-600 text-center">
                   Inserisci il nome dell'ospite per assegnare un codice IQ
@@ -657,7 +816,7 @@ export default function StructureDashboard() {
                       {pkg.availableCodes}/{pkg.packageSize} disponibili
                     </Badge>
                   </div>
-                  
+
                   <div className="mb-3">
                     <div className="flex justify-between text-sm mb-1">
                       <span>Utilizzo</span>
@@ -787,7 +946,7 @@ export default function StructureDashboard() {
               />
             </div>
           </div>
-          
+
           <div className="mt-4">
             <Button 
               onClick={handleCreateGuest}
@@ -814,7 +973,7 @@ export default function StructureDashboard() {
                   <Gift size={16} className="mr-2" />
                   Assegna IQCode
                 </Button>
-                
+
                 <Button 
                   onClick={handleSendWhatsAppToNewGuest}
                   className="bg-green-600 hover:bg-green-700"
@@ -824,7 +983,7 @@ export default function StructureDashboard() {
                   <Send size={16} className="mr-2" />
                   Invia via WhatsApp
                 </Button>
-                
+
                 <Button 
                   onClick={handleCopyCodeToClipboard}
                   className="bg-gray-600 hover:bg-gray-700"
@@ -834,7 +993,7 @@ export default function StructureDashboard() {
                   <Copy size={16} className="mr-2" />
                   Copia Codice
                 </Button>
-                
+
                 <Button 
                   onClick={() => {setJustCreatedGuest(null); setAssignedCode("");}}
                   variant="outline"
@@ -844,7 +1003,7 @@ export default function StructureDashboard() {
                   Fatto
                 </Button>
               </div>
-              
+
               {assignedCode && (
                 <div className="mt-3 p-2 bg-white border rounded font-mono text-sm">
                   Codice assegnato: <strong>{assignedCode}</strong>
@@ -923,7 +1082,7 @@ export default function StructureDashboard() {
                           Apri Gestione
                         </Button>
                       </div>
-                      
+
                       {/* Azioni rapide inline */}
                       {packagesData?.packages && packagesData.packages.length > 0 && (
                         <div className="space-y-2">
@@ -984,10 +1143,10 @@ export default function StructureDashboard() {
         <div className="space-y-6">
           {/* Gestione ospiti integrata */}
           {renderGuestManagement()}
-          
+
           {/* Gestione IQCode integrata */}
           {renderIQCodeManagement()}
-          
+
           {/* Mini gestionale contabile integrato */}
           <AdvancedAccounting 
             structureCode={structureData?.iqCode || `TIQ-VV-STT-${structureId}`}
@@ -1288,7 +1447,7 @@ export default function StructureDashboard() {
       {activeSection === "elimina-account" && (
         <DeleteAccountSection structureId={structureId || ""} />
       )}
-      
+
       {/* Pannello Gestione Dettagliata Ospite */}
       {selectedGuestForManagement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -1313,7 +1472,7 @@ export default function StructureDashboard() {
                 Camera {selectedGuestForManagement.roomNumber} • {selectedGuestForManagement.assignedCodes || 0} codici assegnati
               </p>
             </div>
-            
+
             <div className="p-6 space-y-6">
               {/* Informazioni Ospite */}
               <div className="grid grid-cols-2 gap-4">
@@ -1410,26 +1569,48 @@ export default function StructureDashboard() {
                 </div>
               )}
 
-              
-              {/* Note Ospite */}
-              {selectedGuestForManagement.notes && (
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold mb-2">Note</h3>
-                  <p className="text-sm text-gray-600">{selectedGuestForManagement.notes}</p>
+
+              {/* Azioni GDPR e Gestione */}
+              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                <h3 className="font-semibold mb-3 text-yellow-800">Azioni Privacy e Gestione</h3>
+                <div className="space-y-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={removePhoneFromGuest}
+                    disabled={!selectedGuestForManagement.phone}
+                    className="w-full text-left justify-start"
+                  >
+                    <Phone size={16} className="mr-2" />
+                    Rimuovi Telefono (GDPR)
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={deleteGuest}
+                    className="w-full text-left justify-start text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 size={16} className="mr-2" />
+                    Elimina Ospite
+                  </Button>
                 </div>
-              )}
-              
-              {/* Storico Operazioni */}
-              <div className="border rounded-lg p-4">
-                <h3 className="font-semibold mb-3">Riepilogo Operazioni</h3>
+                <p className="text-xs text-yellow-700 mt-2">
+                  Le azioni di privacy sono irreversibili e conformi al GDPR
+                </p>
+              </div>
+
+              {/* Riepilogo Operazioni */}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-2">Riepilogo Operazioni</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Codici IQ assegnati:</span>
-                    <Badge>{selectedGuestForManagement.assignedCodes || 0}</Badge>
+                    <Badge variant="secondary">{selectedGuestForManagement.assignedCodes || 0}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Data registrazione:</span>
-                    <span className="text-gray-600">Oggi</span>
+                    <span>Oggi</span>
                   </div>
                 </div>
               </div>
@@ -1437,7 +1618,7 @@ export default function StructureDashboard() {
           </div>
         </div>
       )}
-      
+
 
 
 
@@ -1565,7 +1746,7 @@ function DeleteAccountSection({ structureId }: { structureId: string }) {
             >
               Annulla
             </Button>
-            
+
             <Button 
               variant="destructive"
               onClick={handleDelete}
@@ -1709,7 +1890,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Informazioni Generali</h3>
-                
+
                 <div>
                   <Label htmlFor="structureName">Nome Struttura</Label>
                   <Input
@@ -1718,7 +1899,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                     placeholder="Hotel Pazzo Calabria"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="ownerName">Nome Proprietario</Label>
                   <Input
@@ -1727,7 +1908,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                     placeholder="Mario Rossi"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="businessType">Tipo Struttura</Label>
                   <select {...form.register("businessType")} className="w-full border rounded px-3 py-2">
@@ -1742,7 +1923,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
 
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Contatti</h3>
-                
+
                 <div>
                   <Label htmlFor="contactEmail">Email</Label>
                   <Input
@@ -1752,7 +1933,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                     placeholder="info@hotel.com"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="contactPhone">Telefono</Label>
                   <Input
@@ -1761,7 +1942,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                     placeholder="+39 123 456 7890"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="emergencyContact">Contatto Emergenza</Label>
                   <Input
@@ -1778,7 +1959,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
             {/* Indirizzo */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Indirizzo</h3>
-              
+
               <div>
                 <Label htmlFor="address">Via/Piazza</Label>
                 <Input
@@ -1787,7 +1968,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                   placeholder="Via Roma 123"
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="city">Città</Label>
@@ -1797,7 +1978,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                     placeholder="Vibo Valentia"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="province">Provincia</Label>
                   <Input
@@ -1806,7 +1987,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                     placeholder="VV"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="postalCode">CAP</Label>
                   <Input
@@ -1824,7 +2005,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Orari</h3>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="checkinTime">Check-in</Label>
@@ -1834,7 +2015,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                       {...form.register("checkinTime")}
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="checkoutTime">Check-out</Label>
                     <Input
@@ -1859,7 +2040,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
 
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Servizi</h3>
-                
+
                 <div>
                   <Label htmlFor="wifiPassword">Password WiFi</Label>
                   <Input
@@ -1868,7 +2049,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                     placeholder="Password123"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="taxRate">Tassa di Soggiorno (€)</Label>
                   <Input
