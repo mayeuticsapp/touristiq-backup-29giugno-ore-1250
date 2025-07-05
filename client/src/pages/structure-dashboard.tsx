@@ -658,7 +658,6 @@ export default function StructureDashboard() {
 
   const navigation = [
     { icon: <TrendingUp size={16} />, label: "Dashboard Struttura", href: "#", onClick: () => setActiveSection("dashboard") },
-    { icon: <Users size={16} />, label: "Ospiti con IQ Code", href: "#", onClick: () => setActiveSection("ospiti-iqcode") },
     { icon: <Package size={16} />, label: "Acquista Pacchetti", href: `/structure/${structureId}/panel` },
     { icon: <DollarSign size={16} />, label: "Mini-gestionale", href: "#", onClick: () => setActiveSection("contabilita") },
     { icon: <Settings size={16} />, label: "Condizioni Generali", href: "#", onClick: () => setActiveSection("terms") },
@@ -1640,7 +1639,7 @@ export default function StructureDashboard() {
 
 
 
-      {activeSection !== "dashboard" && activeSection !== "iqcode" && activeSection !== "contabilita" && activeSection !== "ospiti-iqcode" && activeSection !== "elimina-account" && (
+      {activeSection !== "dashboard" && activeSection !== "iqcode" && activeSection !== "contabilita" && activeSection !== "elimina-account" && (
         <div className="text-center py-8">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Sezione in Sviluppo</h3>
           <p className="text-gray-500">La sezione "{activeSection}" sarà implementata prossimamente.</p>
