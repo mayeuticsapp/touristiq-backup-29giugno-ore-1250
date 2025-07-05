@@ -607,7 +607,7 @@ export class MemStorage implements IStorage {
 
       const result = await sql`
         SELECT code, assigned_to, assigned_at, emotional_word, country
-        FROM generated_emotional_codes 
+        FROM generated_iq_codes 
         WHERE guest_id = ${guestId} AND status = 'assigned'
         ORDER BY assigned_at DESC
       `;
@@ -779,7 +779,7 @@ export class MemStorage implements IStorage {
   async getMonthlyAccountingSummary(structureCode: string, month: string): Promise<{income: number, expenses: number, balance: number}> {
     const movements = Array.from(this.accountingMovements.values())
       .filter(movement => 
-        movement.structureCode === structureCode && 
+        movement.structureCode === structureCode && ```text
         movement.movementDate.startsWith(month)
       );
 
@@ -1192,7 +1192,7 @@ export class PostgreStorage implements IStorage {
         codeType: 'emotional',
         createdAt: new Date()
       }).returning();
-      
+
       console.log(`✅ CODICE LOGIN ATTIVO: ${uniqueCode} inserito in iq_codes - ID ${insertedCode[0].id}`);
     } catch (insertError) {
       console.error(`❌ ERRORE CRITICO: Impossibile inserire ${uniqueCode} in iq_codes:`, insertError);
@@ -1296,7 +1296,7 @@ export class PostgreStorage implements IStorage {
 
       const result = await sql`
         SELECT code, assigned_to, assigned_at, emotional_word, country
-        FROM generated_emotional_codes 
+        FROM generated_iq_codes 
         WHERE guest_id = ${guestId} AND status = 'assigned'
         ORDER BY assigned_at DESC
       `;
@@ -1670,7 +1670,8 @@ export class PostgreStorage implements IStorage {
         // Initialize onboarding object if not exists
         if (!noteData.onboarding) {
           noteData.onboarding = {
-            currentStep: 'business',
+            ```text
+currentStep: 'business',
             completedSteps: [],
             stepData: {}
           };

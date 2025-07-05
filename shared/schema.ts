@@ -41,7 +41,21 @@ export const assignedPackages = pgTable("assigned_packages", {
 });
 
 // Tabella per i codici IQ emozionali generati al momento dalle strutture
-export const generatedEmotionalCodes = pgTable("generated_emotional_codes", {
+export const generatedIqCodes = pgTable("generated_iq_codes", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  generated_by: text("generated_by").notNull(),
+  package_id: integer("package_id").notNull(),
+  assigned_to: text("assigned_to"),
+  guest_id: integer("guest_id"),
+  country: text("country").notNull(),
+  emotional_word: text("emotional_word").notNull(),
+  status: text("status").notNull().default("assigned"),
+  generated_at: timestamp("generated_at").notNull().defaultNow(),
+  assigned_at: timestamp("assigned_at").defaultNow(),
+});
+
+export const generatedEmotionalCodes = pgTable("generated_emotional_codes", {</old_str>
   id: serial("id").primaryKey(),
   code: text("code").notNull().unique(), // Codice IQ emozionale (es: TIQ-IT-ROSA)
   generatedBy: text("generated_by").notNull(), // Struttura che ha generato
