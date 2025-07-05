@@ -256,21 +256,38 @@ export default function StructureDashboard() {
     try {
       const response = await fetch(`/api/guests/${selectedGuestForManagement.id}`, {
         method: 'DELETE',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response.ok) {
+        const data = await response.json();
+        
         toast({
           title: "Ospite eliminato",
           description: `${selectedGuestForManagement.firstName} ${selectedGuestForManagement.lastName} eliminato con successo`,
         });
+        
+        // Chiudi il pannello di gestione
         setSelectedGuestForManagement(null);
+        setGuestCodes([]);
+        setEditingGuest(null);
+        
+        // Aggiorna la lista ospiti
         refetchGuests();
+        
+        console.log(`✅ OSPITE ELIMINATO: ID ${selectedGuestForManagement.id} rimosso con successo`);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Errore durante l\'eliminazione');
       }
     } catch (error) {
+      console.error("Errore eliminazione ospite:", error);
       toast({
         title: "Errore",
-        description: "Errore nell'eliminazione dell'ospite",
+        description: error instanceof Error ? error.message : "Errore nell'eliminazione dell'ospite",
         variant: "destructive"
       });
     }

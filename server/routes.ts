@@ -2038,6 +2038,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete guest endpoint
+  app.delete("/api/guests/:id", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      const guestId = parseInt(req.params.id);
+      
+      // Verifica che l'ospite appartenga alla struttura
+      const existingGuest = await storage.getGuestById(guestId);
+      if (!existingGuest || existingGuest.structureCode !== userIqCode.code) {
+        return res.status(404).json({ message: "Ospite non trovato o non autorizzato" });
+      }
+
+      // Elimina l'ospite
+      await storage.deleteGuest(guestId);
+      
+      console.log(`✅ OSPITE ELIMINATO: ID ${guestId} dalla struttura ${userIqCode.code}`);
+      
+      res.json({ 
+        success: true, 
+        message: "Ospite eliminato con successo",
+        guestId: guestId
+      });
+    } catch (error) {
+      console.error("Errore eliminazione ospite:", error);
+      res.status(500).json({ 
+        message: "Errore durante l'eliminazione dell'ospite",
+        error: error instanceof Error ? error.message : "Errore sconosciuto"
+      });
+    }
+  });
+
   // Remove phone number from guest (GDPR compliance)
   app.patch("/api/guests/:id/remove-phone", async (req, res) => {
     try {
@@ -2051,13 +2096,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Sessione non valida" });
       }
 
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
       const guestId = parseInt(req.params.id);
+      
+      // Verifica che l'ospite appartenga alla struttura
+      const existingGuest = await storage.getGuestById(guestId);
+      if (!existingGuest || existingGuest.structureCode !== userIqCode.code) {
+        return res.status(404).json({ message: "Ospite non trovato o non autorizzato" });
+      }
+
       const updatedGuest = await storage.updateGuest(guestId, { phone: "" });
       
-      res.json({ success: true, guest: updatedGuest });
+      console.log(`✅ GDPR: Telefono rimosso per ospite ID ${guestId} dalla struttura ${userIqCode.code}`);
+      
+      res.json({ 
+        success: true, 
+        guest: updatedGuest,
+        message: "Telefono rimosso con successo per conformità GDPR"
+      });
     } catch (error) {
       console.error("Errore rimozione telefono:", error);
-      res.status(500).json({ message: "Errore durante la rimozione del telefono" });
+      res.status(500).json({ 
+        message: "Errore durante la rimozione del telefono",
+        error: error instanceof Error ? error.message : "Errore sconosciuto"
+      });
     }
   });
 
