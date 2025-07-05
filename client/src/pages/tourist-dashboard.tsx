@@ -13,8 +13,6 @@ import { useState } from "react";
 export default function TouristDashboard() {
   const [showValidationDialog, setShowValidationDialog] = useState(false);
   const [showLocationSearch, setShowLocationSearch] = useState(false);
-  const [showPartnerDialog, setShowPartnerDialog] = useState(false);
-  const [selectedPartner, setSelectedPartner] = useState<any>(null);
   const [searchCity, setSearchCity] = useState("");
   const [locationOffers, setLocationOffers] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -94,12 +92,6 @@ export default function TouristDashboard() {
   // Determina quali offerte mostrare
   const offersToShow = searchMode === "default" ? (realOffers as any)?.discounts || [] : locationOffers;
   
-  // Funzione per aprire scheda partner
-  const handlePartnerClick = (offer: any) => {
-    setSelectedPartner(offer);
-    setShowPartnerDialog(true);
-  };
-  
   const navigation = [
     { icon: <Tags size={16} />, label: "I Miei Sconti", href: "#" },
     { icon: <MessageCircle size={16} />, label: "TIQai Chat", href: "#" },
@@ -124,7 +116,9 @@ export default function TouristDashboard() {
 
   return (
     <Layout
-      role="tourist"
+      title="Benvenuto, Turista!"
+      role="Area Turista"
+      iqCode={user.iqCode}
       navigation={navigation}
       sidebarColor="bg-tourist-green"
     >
@@ -223,11 +217,7 @@ export default function TouristDashboard() {
             ) : offersToShow?.length > 0 ? (
               <div className="space-y-4">
                 {offersToShow.map((offer: any, index: number) => (
-                  <div 
-                    key={index} 
-                    className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={() => handlePartnerClick(offer)}
-                  >
+                  <div key={index} className="p-4 border rounded-lg hover:bg-gray-50">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center">
                         <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
@@ -237,8 +227,7 @@ export default function TouristDashboard() {
                           <p className="font-bold text-gray-900">{offer.partnerName}</p>
                           <p className="text-sm text-gray-600">{offer.businessType}</p>
                           <p className="text-sm font-medium text-blue-600 mt-1">{offer.title}</p>
-                          <p className="text-xs text-gray-500 line-clamp-2">{offer.description}</p>
-                          <p className="text-xs text-blue-500 mt-1 font-medium">👆 Clicca per vedere dettagli</p>
+                          <p className="text-xs text-gray-500">{offer.description}</p>
                         </div>
                       </div>
                       <Badge className="bg-green-100 text-green-800 text-lg font-bold">
@@ -246,13 +235,64 @@ export default function TouristDashboard() {
                       </Badge>
                     </div>
                     
-                    {/* Anteprima indirizzo */}
+                    {/* Indirizzo e contatti */}
                     {offer.address && (
                       <div className="flex items-center text-sm text-gray-600 mb-2">
                         <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                        <span>{offer.city} ({offer.province})</span>
+                        <span>{offer.address}, {offer.city} ({offer.province})</span>
                       </div>
                     )}
+                    
+                    {/* Azioni rapide */}
+                    <div className="flex gap-2 flex-wrap">
+                      {offer.phone && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(`https://wa.me/${offer.phone.replace(/[^0-9]/g, '')}?text=Ciao! Ho visto la vostra offerta "${offer.title}" su TouristIQ. Vorrei avere maggiori informazioni.`, '_blank')}
+                          className="text-green-600 hover:bg-green-50"
+                        >
+                          <Phone className="w-4 h-4 mr-1" />
+                          WhatsApp
+                        </Button>
+                      )}
+                      
+                      {offer.address && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(offer.address + ', ' + offer.city)}`, '_blank')}
+                          className="text-blue-600 hover:bg-blue-50"
+                        >
+                          <Navigation className="w-4 h-4 mr-1" />
+                          Naviga
+                        </Button>
+                      )}
+                      
+                      {offer.website && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(offer.website, '_blank')}
+                          className="text-purple-600 hover:bg-purple-50"
+                        >
+                          <ExternalLink className="w-4 h-4 mr-1" />
+                          Sito Web
+                        </Button>
+                      )}
+                      
+                      {offer.email && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(`mailto:${offer.email}?subject=Informazioni offerta ${offer.title}`, '_blank')}
+                          className="text-gray-600 hover:bg-gray-50"
+                        >
+                          <Mail className="w-4 h-4 mr-1" />
+                          Email
+                        </Button>
+                      )}
+                    </div>
 
                     {/* Validità offerta */}
                     {offer.validUntil && (
@@ -316,160 +356,6 @@ export default function TouristDashboard() {
             </DialogTitle>
           </DialogHeader>
           <IQCodeValidation userRole="tourist" />
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog Scheda Partner */}
-      <Dialog open={showPartnerDialog} onOpenChange={setShowPartnerDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Utensils className="w-5 h-5" />
-              {selectedPartner?.partnerName}
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedPartner && (
-            <div className="space-y-6">
-              {/* Offerta principale */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border-l-4 border-green-500">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-lg text-gray-900">{selectedPartner.title}</h3>
-                    <p className="text-gray-700 mt-1">{selectedPartner.description}</p>
-                  </div>
-                  <Badge className="bg-green-100 text-green-800 text-xl font-bold px-3 py-1">
-                    -{selectedPartner.discountPercentage}%
-                  </Badge>
-                </div>
-                {selectedPartner.validUntil && (
-                  <p className="text-sm text-gray-600 mt-2">
-                    ⏰ Valido fino al {new Date(selectedPartner.validUntil).toLocaleDateString('it-IT')}
-                  </p>
-                )}
-              </div>
-
-              {/* Informazioni business */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">📍 Informazioni</h4>
-                  <div className="space-y-2 text-sm">
-                    <p><span className="font-medium">Tipo:</span> {selectedPartner.businessType}</p>
-                    {selectedPartner.address && (
-                      <p><span className="font-medium">Indirizzo:</span> {selectedPartner.address}</p>
-                    )}
-                    <p><span className="font-medium">Città:</span> {selectedPartner.city} ({selectedPartner.province})</p>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">♿ Servizi</h4>
-                  <div className="space-y-1 text-sm">
-                    {selectedPartner.wheelchairAccessible && (
-                      <p className="text-green-600">✅ Accessibile disabili</p>
-                    )}
-                    {selectedPartner.childFriendly && (
-                      <p className="text-blue-600">👶 Child friendly</p>
-                    )}
-                    {selectedPartner.glutenFree && (
-                      <p className="text-orange-600">🌾 Opzioni senza glutine</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Azioni principali */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Button 
-                  onClick={() => {
-                    if (selectedPartner.phone) {
-                      window.open(`https://wa.me/${selectedPartner.phone.replace(/[^0-9]/g, '')}?text=Ciao! Ho visto la vostra offerta "${selectedPartner.title}" su TouristIQ. Vorrei prenotare e usufruire dello sconto del ${selectedPartner.discountPercentage}%.`, '_blank');
-                    } else {
-                      alert('Numero WhatsApp non disponibile per questo partner');
-                    }
-                  }}
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Contatta su WhatsApp
-                </Button>
-                
-                <Button 
-                  variant="outline"
-                  onClick={() => {
-                    const searchLocation = selectedPartner.address 
-                      ? `${selectedPartner.address}, ${selectedPartner.city}`
-                      : `${selectedPartner.partnerName}, ${selectedPartner.city || 'Calabria'}`;
-                    window.open(`https://maps.google.com/?q=${encodeURIComponent(searchLocation)}`, '_blank');
-                  }}
-                  className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                >
-                  <Navigation className="w-4 h-4 mr-2" />
-                  Apri in Maps
-                </Button>
-              </div>
-
-              {/* Azioni secondarie */}
-              <div className="flex gap-2 flex-wrap">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    if (selectedPartner.website) {
-                      window.open(selectedPartner.website, '_blank');
-                    } else {
-                      alert('Sito web non disponibile per questo partner');
-                    }
-                  }}
-                  className="text-purple-600 hover:bg-purple-50"
-                >
-                  <ExternalLink className="w-4 h-4 mr-1" />
-                  Sito Web
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    if (selectedPartner.email) {
-                      window.open(`mailto:${selectedPartner.email}?subject=Richiesta informazioni offerta ${selectedPartner.title}&body=Salve, ho visto la vostra offerta su TouristIQ e vorrei maggiori informazioni per usufruire dello sconto del ${selectedPartner.discountPercentage}%.`, '_blank');
-                    } else {
-                      alert('Email non disponibile per questo partner');
-                    }
-                  }}
-                  className="text-gray-600 hover:bg-gray-50"
-                >
-                  <Mail className="w-4 h-4 mr-1" />
-                  Invia Email
-                </Button>
-
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    if (selectedPartner.phone) {
-                      window.open(`tel:${selectedPartner.phone}`, '_blank');
-                    } else {
-                      alert('Numero di telefono non disponibile per questo partner');
-                    }
-                  }}
-                  className="text-blue-600 hover:bg-blue-50"
-                >
-                  <Phone className="w-4 h-4 mr-1" />
-                  Chiama
-                </Button>
-              </div>
-
-              {/* Note importanti */}
-              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                <h4 className="font-semibold text-yellow-800 mb-2">💡 Come usufruire dello sconto</h4>
-                <p className="text-yellow-700 text-sm">
-                  Mostra il tuo <strong>IQCode {user?.iqCode}</strong> al momento del pagamento per ottenere lo sconto del {selectedPartner.discountPercentage}%. 
-                  Ti consigliamo di contattare prima il partner per confermare disponibilità e prenotazione.
-                </p>
-              </div>
-            </div>
-          )}
         </DialogContent>
       </Dialog>
     </Layout>

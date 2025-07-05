@@ -57,7 +57,7 @@ export default function StructureDashboard() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [assignGuestName, setAssignGuestName] = useState("");
   const [assignGuestEmail, setAssignGuestEmail] = useState("");
-
+  
   // Stati per gestione ospiti
   const [newGuest, setNewGuest] = useState({
     firstName: "",
@@ -77,15 +77,15 @@ export default function StructureDashboard() {
   const [guestCodes, setGuestCodes] = useState<{code: string; assignedAt?: string}[]>([]);
   const [availableCodes, setAvailableCodes] = useState<any[]>([]);
   const [loadingCodes, setLoadingCodes] = useState(false);
-
+  
   // Refs per focus automatico check-in → check-out
   const checkoutDateRef = useRef<HTMLInputElement>(null);
-
+  
   // Stati per ricerca ospiti con IQ code
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFilter, setSearchFilter] = useState("all");
   const [filteredGuests, setFilteredGuests] = useState<Guest[]>([]);
-
+  
   // Recupera dati specifici della struttura
   const { data: structureData, isLoading } = useQuery({
     queryKey: ['structure', structureId],
@@ -112,18 +112,11 @@ export default function StructureDashboard() {
     enabled: !!structureId,
   });
 
-  // Carica codici disponibili per riassegnazione
+  // Query per codici disponibili per riassegnazione
   const { data: availableCodesData, refetch: refetchAvailableCodes } = useQuery({
     queryKey: ["/api/available-codes"],
     enabled: !!structureId,
   });
-
-  // Debug: Stato codici caricati
-  useEffect(() => {
-    if (selectedGuestForManagement && guestCodes) {
-      console.log(`DEBUG: Codici caricati per ospite ${selectedGuestForManagement.id}:`, guestCodes);
-    }
-  }, [selectedGuestForManagement, guestCodes]);
 
   // Filtra ospiti con IQ code in base a ricerca e filtri
   useEffect(() => {
@@ -143,7 +136,7 @@ export default function StructureDashboard() {
     const filtered = guestsWithCodes.filter(guest => {
       const searchLower = searchQuery.toLowerCase();
       const fullName = `${guest.firstName} ${guest.lastName}`.toLowerCase();
-
+      
       // Ricerca in base al filtro selezionato
       switch (searchFilter) {
         case "name":
@@ -170,7 +163,7 @@ export default function StructureDashboard() {
       alert("Seleziona un ospite registrato per assegnare il codice");
       return;
     }
-
+    
     try {
       const response = await fetch("/api/assign-code-to-guest", {
         method: "POST",
@@ -186,17 +179,17 @@ export default function StructureDashboard() {
         const result = await response.json();
         refetchPackages();
         refetchGuests();
-
+        
         // Mostra dettagli assegnazione con opzione WhatsApp
         const guest = guestsData?.guests?.find((g: Guest) => g.id === selectedGuestId);
         const message = `Codice IQ assegnato con successo!\n\nCodice: ${result.touristCode}\nOspite: ${result.guestName}\nCamera: ${guest?.roomNumber || 'N/A'}\nCodici rimanenti: ${result.remainingCodes}`;
-
+        
         if (guest?.phone && confirm(`${message}\n\nVuoi inviare il codice via WhatsApp al numero ${guest.phone}?`)) {
           handleSendWhatsApp(guest.phone, result.touristCode, guest);
         } else {
           alert(message);
         }
-
+        
         // Reset selezione
         setSelectedGuestId(0);
       } else {
@@ -258,7 +251,7 @@ export default function StructureDashboard() {
   // Funzioni azioni rapide post-creazione
   const handleAssignCodeToNewGuest = async () => {
     if (!justCreatedGuest) return;
-
+    
     // Verifica se ci sono pacchetti disponibili
     if (!packagesData?.packages || packagesData.packages.length === 0) {
       alert("Nessun pacchetto disponibile. Contatta l'admin per ricevere crediti.");
@@ -271,7 +264,7 @@ export default function StructureDashboard() {
       alert("Nessun credito disponibile nei pacchetti assegnati.");
       return;
     }
-
+    
     try {
       const response = await fetch("/api/assign-code-to-guest", {
         method: "POST",
@@ -305,10 +298,10 @@ export default function StructureDashboard() {
 
     const message = `🏨 Benvenuto!\nIl tuo codice TouristIQ è: *${assignedCode}*\n\nScoprilo nei migliori locali della zona per sconti esclusivi!`;
     const whatsappUrl = `https://wa.me/${justCreatedGuest.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
-
+    
     // Apri WhatsApp
     window.open(whatsappUrl, '_blank');
-
+    
     // GDPR: Cancella automaticamente il numero di telefono dal database
     try {
       await fetch(`/api/guests/${justCreatedGuest.id}/remove-phone`, {
@@ -316,7 +309,7 @@ export default function StructureDashboard() {
         headers: { "Content-Type": "application/json" },
         credentials: "include"
       });
-
+      
       alert("Messaggio inviato! Il numero di telefono è stato rimosso per privacy GDPR.");
       refetchGuests();
       setJustCreatedGuest(null);
@@ -330,7 +323,7 @@ export default function StructureDashboard() {
       alert("Prima assegna un codice IQ all'ospite");
       return;
     }
-
+    
     navigator.clipboard.writeText(assignedCode).then(() => {
       alert("Codice copiato negli appunti!");
     }).catch(() => {
@@ -354,11 +347,11 @@ export default function StructureDashboard() {
         const result = await response.json();
         refetchPackages();
         refetchGuests();
-
+        
         // Ricarica immediatamente i codici assegnati all'ospite
         const codesResponse = await fetch(`/api/guest/${guestId}/codes`);
         const codesData = await codesResponse.json();
-
+        
         // Aggiorna i codici assegnati per l'ospite nella visualizzazione
         if (selectedGuestForManagement && selectedGuestForManagement.id === guestId) {
           setSelectedGuestForManagement({
@@ -366,11 +359,11 @@ export default function StructureDashboard() {
             assignedCodes: codesData.codes || []
           });
         }
-
+        
         // Mostra dettagli assegnazione con opzione WhatsApp
         const guest = guestsData?.guests?.find((g: Guest) => g.id === guestId);
         const message = `Codice IQ assegnato con successo!\n\nCodice: ${result.touristCode}\nOspite: ${guest?.firstName} ${guest?.lastName}\nCamera: ${guest?.roomNumber || 'N/A'}`;
-
+        
         if (guest?.phone && confirm(`${message}\n\nVuoi inviare il codice via WhatsApp al numero ${guest.phone}?`)) {
           handleSendWhatsApp(guest.phone, result.touristCode, guest);
         } else {
@@ -388,7 +381,7 @@ export default function StructureDashboard() {
   const handleSendWhatsApp = (phone: string, code: string, guest: any) => {
     // Rimuovi tutti i caratteri non numerici
     let cleanPhone = phone.replace(/[^0-9]/g, '');
-
+    
     // Verifica se il numero inizia con 39 (Italia)
     if (cleanPhone.startsWith('39')) {
       cleanPhone = cleanPhone;
@@ -399,15 +392,15 @@ export default function StructureDashboard() {
       alert('Numero WhatsApp non valido. Deve essere un numero italiano che inizia con 3 (es. 391234567890)');
       return;
     }
-
+    
     // Verifica lunghezza minima (11-13 cifre per numeri italiani)
     if (cleanPhone.length < 11 || cleanPhone.length > 13) {
       alert('Numero WhatsApp non valido. Formato corretto: +39 3xx xxx xxxx');
       return;
     }
-
+    
     const message = `🏨 ${structureData?.name || 'Hotel'}\n\n✨ Il tuo codice sconto personale: *${code}*\n\n🎉 Ciao ${guest.firstName}! Ecco il tuo codice IQ per scoprire sconti esclusivi nei migliori locali della zona.\n\n📱 Usa questo codice per ottenere vantaggi speciali durante il tuo soggiorno!\n\n🌟 Buon divertimento!`;
-
+    
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -420,11 +413,11 @@ export default function StructureDashboard() {
         credentials: "include"
       });
       const data = await response.json();
-
+      
       // Imposta i codici assegnati per la visualizzazione immediata
       const assignedCodes = data.codes || [];
       setGuestCodes(assignedCodes);
-
+      
       console.log(`DEBUG: Caricati ${assignedCodes.length} codici per ospite ${guestId}:`, assignedCodes);
     } catch (error) {
       console.error("Errore caricamento codici ospite:", error);
@@ -444,7 +437,7 @@ export default function StructureDashboard() {
       });
 
       const result = await response.json();
-
+      
       if (result.success) {
         await loadGuestCodes(guestId);
         await refetchAvailableCodes();
@@ -469,7 +462,7 @@ export default function StructureDashboard() {
       });
 
       const result = await response.json();
-
+      
       if (result.success) {
         await loadGuestCodes(guestId);
         await refetchAvailableCodes();
@@ -515,7 +508,7 @@ export default function StructureDashboard() {
             </div>
           </CardContent>
         </Card>
-
+        
         <Card className="warm-panel">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -529,7 +522,7 @@ export default function StructureDashboard() {
             </div>
           </CardContent>
         </Card>
-
+        
         <Card className="warm-panel">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -600,7 +593,7 @@ export default function StructureDashboard() {
                   )}
                 </div>
               </div>
-
+              
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {packagesData?.packages?.map((pkg: Package) => (
                   <Card key={pkg.id} className="border border-purple-200">
@@ -611,7 +604,7 @@ export default function StructureDashboard() {
                           {pkg.availableCodes || pkg.codesGenerated?.length || 0} disponibili
                         </Badge>
                       </div>
-
+                      
                       <Button 
                         onClick={() => handleGenerateTouristCode(pkg.id)}
                         disabled={(pkg.availableCodes || 0) <= 0 || selectedGuestId === 0}
@@ -620,7 +613,7 @@ export default function StructureDashboard() {
                         <Plus size={16} className="mr-2" />
                         Assegna Codice
                       </Button>
-
+                      
                       {(pkg.availableCodes || 0) <= 0 && (
                         <p className="text-xs text-red-600 text-center mt-2">Pacchetto esaurito</p>
                       )}
@@ -628,7 +621,7 @@ export default function StructureDashboard() {
                   </Card>
                 ))}
               </div>
-
+              
               {!assignGuestName.trim() && (
                 <p className="text-sm text-amber-600 text-center">
                   Inserisci il nome dell'ospite per assegnare un codice IQ
@@ -664,7 +657,7 @@ export default function StructureDashboard() {
                       {pkg.availableCodes}/{pkg.packageSize} disponibili
                     </Badge>
                   </div>
-
+                  
                   <div className="mb-3">
                     <div className="flex justify-between text-sm mb-1">
                       <span>Utilizzo</span>
@@ -794,7 +787,7 @@ export default function StructureDashboard() {
               />
             </div>
           </div>
-
+          
           <div className="mt-4">
             <Button 
               onClick={handleCreateGuest}
@@ -821,7 +814,7 @@ export default function StructureDashboard() {
                   <Gift size={16} className="mr-2" />
                   Assegna IQCode
                 </Button>
-
+                
                 <Button 
                   onClick={handleSendWhatsAppToNewGuest}
                   className="bg-green-600 hover:bg-green-700"
@@ -831,7 +824,7 @@ export default function StructureDashboard() {
                   <Send size={16} className="mr-2" />
                   Invia via WhatsApp
                 </Button>
-
+                
                 <Button 
                   onClick={handleCopyCodeToClipboard}
                   className="bg-gray-600 hover:bg-gray-700"
@@ -841,7 +834,7 @@ export default function StructureDashboard() {
                   <Copy size={16} className="mr-2" />
                   Copia Codice
                 </Button>
-
+                
                 <Button 
                   onClick={() => {setJustCreatedGuest(null); setAssignedCode("");}}
                   variant="outline"
@@ -851,7 +844,7 @@ export default function StructureDashboard() {
                   Fatto
                 </Button>
               </div>
-
+              
               {assignedCode && (
                 <div className="mt-3 p-2 bg-white border rounded font-mono text-sm">
                   Codice assegnato: <strong>{assignedCode}</strong>
@@ -930,7 +923,7 @@ export default function StructureDashboard() {
                           Apri Gestione
                         </Button>
                       </div>
-
+                      
                       {/* Azioni rapide inline */}
                       {packagesData?.packages && packagesData.packages.length > 0 && (
                         <div className="space-y-2">
@@ -980,7 +973,9 @@ export default function StructureDashboard() {
 
   return (
     <Layout
-      role="structure"
+      title={entityInfo?.displayName || "Dashboard Struttura"}
+      role="Gestione Struttura"
+      iqCode={entityInfo?.code}
       navigation={navigation}
       sidebarColor="bg-purple-600"
     >
@@ -989,10 +984,10 @@ export default function StructureDashboard() {
         <div className="space-y-6">
           {/* Gestione ospiti integrata */}
           {renderGuestManagement()}
-
+          
           {/* Gestione IQCode integrata */}
           {renderIQCodeManagement()}
-
+          
           {/* Mini gestionale contabile integrato */}
           <AdvancedAccounting 
             structureCode={structureData?.iqCode || `TIQ-VV-STT-${structureId}`}
@@ -1195,40 +1190,20 @@ export default function StructureDashboard() {
                           size="sm"
                           variant="outline"
                           onClick={async () => {
-                            // Carica i codici reali dell'ospite per WhatsApp
-                            try {
-                              const response = await fetch(`/api/guest/${guest.id}/codes`, {
-                                credentials: 'include'
-                              });
-                              const data = await response.json();
-                              
-                              if (data.codes && data.codes.length > 0) {
-                                const realCode = data.codes[0].code;
-                                
-                                // Invia WhatsApp con il codice reale
-                                if (guest.phone && realCode) {
-                                  let cleanPhone = guest.phone.replace(/[^0-9]/g, '');
-                                  if (cleanPhone.startsWith('39')) {
-                                    cleanPhone = cleanPhone;
-                                  } else if (cleanPhone.startsWith('3')) {
-                                    cleanPhone = '39' + cleanPhone;
-                                  } else {
-                                    alert('Numero WhatsApp non valido');
-                                    return;
-                                  }
-                                  
-                                  const message = `🎁 Ciao ${guest.firstName}! Ecco il tuo codice sconto TouristIQ: *${realCode}*\n\nUsa questo codice per ottenere sconti esclusivi presso i nostri partner! 🌟`;
-                                  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-                                  window.open(whatsappUrl, '_blank');
-                                } else {
-                                  alert("Numero di telefono non disponibile per questo ospite");
-                                }
+                            // Carica i codici dell'ospite per WhatsApp
+                            const response = await fetch(`/api/guest/${guest.id}/codes`);
+                            const data = await response.json();
+                            if (data.codes && data.codes.length > 0) {
+                              const firstCode = data.codes[0].code;
+                              // Invia WhatsApp con il primo codice
+                              if (guest.phone) {
+                                const whatsappUrl = `https://wa.me/${guest.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`🎁 Ciao ${guest.firstName}! Ecco il tuo codice sconto TouristIQ: ${firstCode}\\n\\nUsa questo codice per ottenere sconti esclusivi presso i nostri partner! 🌟`)}`;
+                                window.open(whatsappUrl, '_blank');
                               } else {
-                                alert(`${guest.firstName} ${guest.lastName} non ha ancora codici IQ assegnati. Assegna prima un codice dalla dashboard principale.`);
+                                alert("Numero di telefono non disponibile per questo ospite");
                               }
-                            } catch (error) {
-                              console.error('Errore invio WhatsApp:', error);
-                              alert("Errore durante l'invio del messaggio WhatsApp");
+                            } else {
+                              alert("Nessun codice IQ trovato per questo ospite");
                             }
                           }}
                           className="text-xs bg-green-50 hover:bg-green-100 text-green-700"
@@ -1241,23 +1216,15 @@ export default function StructureDashboard() {
                           size="sm"
                           variant="outline"
                           onClick={async () => {
-                            // Carica e copia il primo codice IQ reale dell'ospite
-                            try {
-                              const response = await fetch(`/api/guest/${guest.id}/codes`, {
-                                credentials: 'include'
-                              });
-                              const data = await response.json();
-                              
-                              if (data.codes && data.codes.length > 0) {
-                                const realCode = data.codes[0].code;
-                                await navigator.clipboard.writeText(realCode);
-                                alert(`Codice TouristIQ ${realCode} copiato negli appunti!`);
-                              } else {
-                                alert(`${guest.firstName} ${guest.lastName} non ha ancora codici IQ assegnati.\n\nVai alla Dashboard Struttura per assegnare un codice IQ dal pacchetto acquistato.`);
-                              }
-                            } catch (error) {
-                              console.error('Errore recupero codice:', error);
-                              alert("Errore durante il recupero del codice IQ");
+                            // Carica e copia il primo codice IQ dell'ospite
+                            const response = await fetch(`/api/guest/${guest.id}/codes`);
+                            const data = await response.json();
+                            if (data.codes && data.codes.length > 0) {
+                              const firstCode = data.codes[0].code;
+                              await navigator.clipboard.writeText(firstCode);
+                              alert(`Codice ${firstCode} copiato negli appunti!`);
+                            } else {
+                              alert("Nessun codice IQ trovato per questo ospite");
                             }
                           }}
                           className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700"
@@ -1321,33 +1288,16 @@ export default function StructureDashboard() {
       {activeSection === "elimina-account" && (
         <DeleteAccountSection structureId={structureId || ""} />
       )}
-
-      {/* Pannello Gestione Dettagliata Ospite - COMPLETO */}
+      
+      {/* Pannello Gestione Dettagliata Ospite */}
       {selectedGuestForManagement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto">
-            {/* Header Pannello */}
-            <div className="sticky top-0 bg-white p-6 border-b shadow-sm z-10">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
               <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">
-                    🏨 Gestione Completa Ospite: {selectedGuestForManagement.firstName} {selectedGuestForManagement.lastName}
-                  </h2>
-                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                    <span className="flex items-center gap-1">
-                      <Bed size={14} />
-                      Camera {selectedGuestForManagement.roomNumber || 'N/A'}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Gift size={14} />
-                      {guestCodes.length} IQ Code attivi
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Calendar size={14} />
-                      {selectedGuestForManagement.checkinDate || 'Check-in non specificato'}
-                    </span>
-                  </div>
-                </div>
+                <h2 className="text-xl font-bold">
+                  Gestione Ospite: {selectedGuestForManagement.firstName} {selectedGuestForManagement.lastName}
+                </h2>
                 <Button
                   variant="outline"
                   size="sm"
@@ -1355,467 +1305,139 @@ export default function StructureDashboard() {
                     setSelectedGuestForManagement(null);
                     setGuestCodes([]);
                   }}
-                  className="flex items-center gap-2"
                 >
-                  ✕ Chiudi Gestione
+                  Chiudi
                 </Button>
               </div>
+              <p className="text-gray-600 mt-1">
+                Camera {selectedGuestForManagement.roomNumber} • {selectedGuestForManagement.assignedCodes || 0} codici assegnati
+              </p>
             </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Informazioni Ospite */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Telefono</Label>
+                  <p className="text-sm">{selectedGuestForManagement.phone || "Non fornito"}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Check-in/Check-out</Label>
+                  <p className="text-sm">
+                    {selectedGuestForManagement.checkIn && selectedGuestForManagement.checkOut
+                      ? `${selectedGuestForManagement.checkIn} - ${selectedGuestForManagement.checkOut}`
+                      : "Date non specificate"}
+                  </p>
+                </div>
+              </div>
 
-            <div className="p-6 space-y-8">
-              {/* SEZIONE 1: Informazioni Personali Ospite */}
-              <Card className="border-blue-200">
-                <CardHeader className="bg-blue-50">
-                  <CardTitle className="flex items-center gap-2 text-blue-800">
-                    <User size={20} />
-                    Informazioni Personali
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <Label className="font-semibold text-gray-700">Nome Completo</Label>
-                        <p className="text-lg">{selectedGuestForManagement.firstName} {selectedGuestForManagement.lastName}</p>
-                      </div>
-                      <div>
-                        <Label className="font-semibold text-gray-700">Email</Label>
-                        <p className="text-sm">{selectedGuestForManagement.email || "❌ Non fornita (GDPR compliant)"}</p>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div>
-                        <Label className="font-semibold text-gray-700">Telefono</Label>
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm">{selectedGuestForManagement.phone || "❌ Non fornito"}</p>
-                          {selectedGuestForManagement.phone && (
+              {/* Codici IQ Assegnati all'Ospite */}
+              <div>
+                {guestCodes && guestCodes.length > 0 && (
+                  <div className="border rounded-lg p-4 bg-blue-50">
+                    <h3 className="font-semibold mb-3 text-blue-800">Codici IQ Assegnati</h3>
+                    <div className="space-y-2">
+                      {guestCodes.map((codeData, index: number) => (
+                        <div key={index} className="flex justify-between items-center bg-white p-3 rounded border">
+                          <div className="flex items-center gap-3">
+                            <Badge className="bg-blue-600 text-white">{codeData.code}</Badge>
+                            <span className="text-sm text-gray-600">
+                              Assegnato: {codeData.assignedAt ? new Date(codeData.assignedAt).toLocaleDateString() : 'Oggi'}
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => {
-                                const whatsappUrl = `https://wa.me/${selectedGuestForManagement.phone?.replace(/[^0-9]/g, '')}`;
-                                window.open(whatsappUrl, '_blank');
+                                navigator.clipboard.writeText(codeData.code);
+                                alert(`Codice ${codeData.code} copiato negli appunti`);
                               }}
-                              className="text-green-600 border-green-200"
                             >
-                              <MessageCircle size={12} className="mr-1" />
-                              WhatsApp
+                              <Copy size={14} className="mr-1" />
+                              Copia
                             </Button>
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <Label className="font-semibold text-gray-700">Camera Assegnata</Label>
-                        <p className="text-lg font-mono bg-gray-100 px-2 py-1 rounded inline-block">
-                          {selectedGuestForManagement.roomNumber || "Non assegnata"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div>
-                        <Label className="font-semibold text-gray-700">Check-in</Label>
-                        <p className="text-sm">{selectedGuestForManagement.checkinDate || "Data non specificata"}</p>
-                      </div>
-                      <div>
-                        <Label className="font-semibold text-gray-700">Check-out</Label>
-                        <p className="text-sm">{selectedGuestForManagement.checkoutDate || "Data non specificata"}</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* SEZIONE 2: Codici IQ Assegnati - CON GESTIONE COMPLETA */}
-              <Card className="border-green-200">
-                <CardHeader className="bg-green-50">
-                  <CardTitle className="flex items-center gap-2 text-green-800">
-                    <Gift size={20} />
-                    Codici IQ Assegnati ({guestCodes.length})
-                    {loadingCodes && <div className="animate-spin w-4 h-4 border border-green-600 border-t-transparent rounded-full"></div>}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  {loadingCodes ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <div className="animate-spin w-8 h-8 border border-gray-300 border-t-green-600 rounded-full mx-auto mb-2"></div>
-                      Caricamento codici IQ...
-                    </div>
-                  ) : guestCodes && guestCodes.length > 0 ? (
-                    <div className="space-y-3">
-                      {guestCodes.map((codeData, index: number) => (
-                        <div key={index} className="bg-white border border-green-200 rounded-lg p-4 shadow-sm">
-                          <div className="flex justify-between items-start">
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-3">
-                                <Badge className="bg-green-600 text-white text-lg px-3 py-1">{codeData.code}</Badge>
-                                <Badge variant="outline" className="text-green-700 border-green-300">
-                                  Parola: {codeData.emotionalWord || 'SCONOSCIUTA'}
-                                </Badge>
-                                <Badge variant="outline" className="text-blue-700 border-blue-300">
-                                  {codeData.country || 'IT'}
-                                </Badge>
-                              </div>
-                              <div className="text-sm text-gray-600 space-y-1">
-                                <p><strong>Assegnato:</strong> {codeData.assignedAt ? new Date(codeData.assignedAt).toLocaleDateString('it-IT', {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                }) : 'Oggi'}</p>
-                                <p><strong>Ospite:</strong> {codeData.assignedTo}</p>
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(codeData.code);
-                                  alert(`✅ Codice ${codeData.code} copiato negli appunti!`);
-                                }}
-                                className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                              >
-                                <Copy size={14} className="mr-1" />
-                                Copia
-                              </Button>
-                              {selectedGuestForManagement.phone && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => {
-                                    const message = `🎁 Ciao ${selectedGuestForManagement.firstName}! Ecco il tuo codice sconto TouristIQ: *${codeData.code}*\n\nUsa questo codice per ottenere sconti esclusivi presso i nostri partner! 🌟`;
-                                    const cleanPhone = selectedGuestForManagement.phone?.replace(/[^0-9]/g, '') || '';
-                                    const whatsappUrl = `https://wa.me/${cleanPhone.startsWith('39') ? cleanPhone : '39' + cleanPhone}?text=${encodeURIComponent(message)}`;
-                                    window.open(whatsappUrl, '_blank');
-                                  }}
-                                  className="bg-green-600 hover:bg-green-700 text-white"
-                                >
-                                  <MessageCircle size={14} className="mr-1" />
-                                  Invia
-                                </Button>
-                              )}
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => {
-                                  const reason = prompt("⚠️ Motivo rimozione codice:", "Assegnato per errore");
-                                  if (reason && selectedGuestForManagement) {
-                                    if (confirm(`Sei sicuro di voler rimuovere il codice ${codeData.code} da ${selectedGuestForManagement.firstName} ${selectedGuestForManagement.lastName}?`)) {
-                                      handleRemoveCodeFromGuest(codeData.code, selectedGuestForManagement.id, reason);
-                                    }
-                                  }
-                                }}
-                              >
-                                <Trash2 size={14} className="mr-1" />
-                                Rimuovi
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <Gift size={48} className="mx-auto mb-4 text-gray-300" />
-                      <p className="font-medium">Nessun codice IQ assegnato</p>
-                      <p className="text-sm">Torna alla Dashboard Struttura per assegnare un codice IQ dal pacchetto acquistato</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* SEZIONE 3: Assegnazione Rapida Nuovo Codice */}
-              <Card className="border-purple-200">
-                <CardHeader className="bg-purple-50">
-                  <CardTitle className="flex items-center gap-2 text-purple-800">
-                    <Plus size={20} />
-                    Assegna Nuovo Codice IQ
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  {packagesData?.packages && packagesData.packages.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {packagesData.packages.map((pkg: any) => (
-                        <Card key={pkg.id} className="border border-purple-200 hover:shadow-md transition-shadow">
-                          <CardContent className="p-4 text-center">
-                            <h4 className="font-semibold mb-2">Pacchetto {pkg.packageSize}</h4>
-                            <Badge className="bg-purple-100 text-purple-800 mb-3">
-                              {pkg.creditsRemaining} crediti disponibili
-                            </Badge>
-                            <Button 
-                              onClick={() => {
-                                if (selectedGuestForManagement) {
-                                  if (confirm(`Assegnare un nuovo codice IQ a ${selectedGuestForManagement.firstName} ${selectedGuestForManagement.lastName}?`)) {
-                                    handleAssignCodeToGuest(selectedGuestForManagement.id, pkg.id);
-                                  }
-                                }
-                              }}
-                              disabled={pkg.creditsRemaining <= 0}
-                              className="w-full bg-purple-600 hover:bg-purple-700"
-                            >
-                              <Plus size={16} className="mr-2" />
-                              Assegna Codice
-                            </Button>
-                            {pkg.creditsRemaining <= 0 && (
-                              <p className="text-xs text-red-600 mt-2">Pacchetto esaurito</p>
-                            )}
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 text-gray-500">
-                      <Package size={32} className="mx-auto mb-2 text-gray-300" />
-                      <p>Nessun pacchetto disponibile per assegnare nuovi codici</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* SEZIONE 4: Codici Disponibili per Riassegnazione */}
-              {availableCodesData && Array.isArray((availableCodesData as any).codes) && (availableCodesData as any).codes.length > 0 && (
-                <Card className="border-orange-200">
-                  <CardHeader className="bg-orange-50">
-                    <CardTitle className="flex items-center gap-2 text-orange-800">
-                      <Gift size={20} />
-                      Codici Disponibili per Riassegnazione ({(availableCodesData as any).codes.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
-                      {((availableCodesData as any).codes as any[]).map((codeData: any, index: number) => (
-                        <div key={index} className="bg-white border border-orange-200 rounded-lg p-4 shadow-sm">
-                          <div className="flex justify-between items-start">
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-3">
-                                <Badge className="bg-orange-600 text-white text-lg px-3 py-1">{codeData.code}</Badge>
-                                <Badge variant="outline" className="text-orange-700 border-orange-300">
-                                  Disponibile
-                                </Badge>
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                <p><strong>Liberato da:</strong> {codeData.originalGuestName}</p>
-                                <p><strong>Motivo:</strong> {codeData.reason}</p>
-                                <p><strong>Disponibile dal:</strong> {new Date(codeData.madeAvailableAt).toLocaleDateString('it-IT')}</p>
-                              </div>
-                            </div>
                             <Button
                               size="sm"
-                              className="bg-orange-600 hover:bg-orange-700 text-white"
+                              variant="destructive"
                               onClick={() => {
-                                const guestName = `${selectedGuestForManagement.firstName} ${selectedGuestForManagement.lastName}`;
-                                if (confirm(`Assegnare il codice ${codeData.code} a ${guestName}?\n\nQuesto codice era precedentemente assegnato a: ${codeData.originalGuestName}`)) {
-                                  handleAssignAvailableCode(codeData.code, selectedGuestForManagement.id, guestName);
+                                const reason = prompt("Motivo rimozione codice:", "Assegnato per errore");
+                                if (reason && selectedGuestForManagement) {
+                                  handleRemoveCodeFromGuest(codeData.code, selectedGuestForManagement.id, reason);
                                 }
                               }}
                             >
-                              <Gift size={14} className="mr-1" />
-                              Riassegna
+                              <Trash2 size={14} className="mr-1" />
+                              Rimuovi
                             </Button>
                           </div>
                         </div>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                )}
+              </div>
+
+              {/* Codici Disponibili per Riassegnazione */}
+              {availableCodesData && Array.isArray((availableCodesData as any).codes) && (availableCodesData as any).codes.length > 0 && (
+                <div className="border rounded-lg p-4 bg-green-50">
+                  <h3 className="font-semibold mb-3 text-green-800">Codici Disponibili per Riassegnazione</h3>
+                  <div className="space-y-2">
+                    {((availableCodesData as any).codes as any[]).map((codeData: any, index: number) => (
+                      <div key={index} className="flex justify-between items-center bg-white p-3 rounded border">
+                        <div className="flex items-center gap-3">
+                          <Badge className="bg-green-600 text-white">{codeData.code}</Badge>
+                          <span className="text-xs text-gray-600">
+                            Liberato da: {codeData.originalGuestName} • {codeData.reason}
+                          </span>
+                        </div>
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() => {
+                            const guestName = `${selectedGuestForManagement.firstName} ${selectedGuestForManagement.lastName}`;
+                            if (confirm(`Assegnare il codice ${codeData.code} a ${guestName}?`)) {
+                              handleAssignAvailableCode(codeData.code, selectedGuestForManagement.id, guestName);
+                            }
+                          }}
+                        >
+                          <Gift size={14} className="mr-1" />
+                          Assegna
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
 
-              {/* SEZIONE 5: Note e Preferenze Ospite */}
-              <Card className="border-gray-200">
-                <CardHeader className="bg-gray-50">
-                  <CardTitle className="flex items-center gap-2 text-gray-800">
-                    <Edit size={20} />
-                    Note e Preferenze
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="space-y-4">
-                    {selectedGuestForManagement.notes ? (
-                      <div className="bg-gray-50 p-4 rounded-lg border">
-                        <Label className="font-semibold text-gray-700">Note attuali:</Label>
-                        <p className="text-sm text-gray-600 mt-1">{selectedGuestForManagement.notes}</p>
-                      </div>
-                    ) : (
-                      <div className="text-center py-4 text-gray-500">
-                        <p>Nessuna nota registrata per questo ospite</p>
-                      </div>
-                    )}
-                    
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const newNote = prompt("Aggiungi/Modifica note per l'ospite:", selectedGuestForManagement.notes || "");
-                          if (newNote !== null && selectedGuestForManagement) {
-                            // Qui implementeresti l'update delle note
-                            alert("Funzionalità di modifica note sarà implementata");
-                          }
-                        }}
-                      >
-                        <Edit size={14} className="mr-1" />
-                        Modifica Note
-                      </Button>
-                    </div>
+              
+              {/* Note Ospite */}
+              {selectedGuestForManagement.notes && (
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-semibold mb-2">Note</h3>
+                  <p className="text-sm text-gray-600">{selectedGuestForManagement.notes}</p>
+                </div>
+              )}
+              
+              {/* Storico Operazioni */}
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold mb-3">Riepilogo Operazioni</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Codici IQ assegnati:</span>
+                    <Badge>{selectedGuestForManagement.assignedCodes || 0}</Badge>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* SEZIONE 6: Riepilogo e Statistiche */}
-              <Card className="border-blue-200">
-                <CardHeader className="bg-blue-50">
-                  <CardTitle className="flex items-center gap-2 text-blue-800">
-                    <Star size={20} />
-                    Riepilogo Operazioni
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
-                      <div className="text-2xl font-bold text-green-700">{guestCodes.length}</div>
-                      <div className="text-sm text-green-600">Codici IQ Attivi</div>
-                    </div>
-                    <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="text-2xl font-bold text-blue-700">
-                        {selectedGuestForManagement.checkinDate && selectedGuestForManagement.checkoutDate
-                          ? Math.ceil((new Date(selectedGuestForManagement.checkoutDate).getTime() - new Date(selectedGuestForManagement.checkinDate).getTime()) / (1000 * 60 * 60 * 24))
-                          : '?'}
-                      </div>
-                      <div className="text-sm text-blue-600">Giorni Soggiorno</div>
-                    </div>
-                    <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-200">
-                      <div className="text-2xl font-bold text-purple-700">
-                        {selectedGuestForManagement.notes?.split(' ').length || 0}
-                      </div>
-                      <div className="text-sm text-purple-600">Parole nelle Note</div>
-                    </div>
-                    <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-200">
-                      <div className="text-2xl font-bold text-orange-700">Oggi</div>
-                      <div className="text-sm text-orange-600">Data Registrazione</div>
-                    </div>
+                  <div className="flex justify-between">
+                    <span>Data registrazione:</span>
+                    <span className="text-gray-600">Oggi</span>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* SEZIONE 7: Azioni Rapide */}
-              <Card className="border-indigo-200">
-                <CardHeader className="bg-indigo-50">
-                  <CardTitle className="flex items-center gap-2 text-indigo-800">
-                    <Settings size={20} />
-                    Azioni Rapide
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (guestCodes.length > 0) {
-                          const allCodes = guestCodes.map(c => c.code).join('\n');
-                          navigator.clipboard.writeText(allCodes);
-                          alert(`✅ Tutti i ${guestCodes.length} codici copiati negli appunti!`);
-                        } else {
-                          alert("❌ Nessun codice da copiare");
-                        }
-                      }}
-                      className="w-full"
-                    >
-                      <Copy size={14} className="mr-1" />
-                      Copia Tutti
-                    </Button>
-                    
-                    {selectedGuestForManagement.phone && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (guestCodes.length > 0) {
-                            const allCodes = guestCodes.map(c => c.code).join(', ');
-                            const message = `🏨 ${selectedGuestForManagement.firstName}, ecco tutti i tuoi codici TouristIQ:\n\n${allCodes}\n\nUsa questi codici per sconti esclusivi! 🎉`;
-                            const cleanPhone = selectedGuestForManagement.phone?.replace(/[^0-9]/g, '') || '';
-                            const whatsappUrl = `https://wa.me/${cleanPhone.startsWith('39') ? cleanPhone : '39' + cleanPhone}?text=${encodeURIComponent(message)}`;
-                            window.open(whatsappUrl, '_blank');
-                          } else {
-                            alert("❌ Nessun codice da inviare");
-                          }
-                        }}
-                        className="w-full text-green-600 border-green-200"
-                      >
-                        <MessageCircle size={14} className="mr-1" />
-                        Invia Tutti
-                      </Button>
-                    )}
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const printContent = `
-                          OSPITE: ${selectedGuestForManagement.firstName} ${selectedGuestForManagement.lastName}
-                          CAMERA: ${selectedGuestForManagement.roomNumber}
-                          CODICI IQ: ${guestCodes.map(c => c.code).join(', ')}
-                          DATA: ${new Date().toLocaleDateString('it-IT')}
-                        `;
-                        const printWindow = window.open('', '_blank');
-                        printWindow?.document.write(`<pre>${printContent}</pre>`);
-                        printWindow?.print();
-                      }}
-                      className="w-full"
-                    >
-                      <Edit size={14} className="mr-1" />
-                      Stampa
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        await loadGuestCodes(selectedGuestForManagement.id);
-                        alert("🔄 Dati ricaricati con successo!");
-                      }}
-                      className="w-full"
-                    >
-                      <Settings size={14} className="mr-1" />
-                      Ricarica
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Footer con pulsanti principali */}
-            <div className="sticky bottom-0 bg-gray-50 p-4 border-t flex justify-between items-center">
-              <div className="text-sm text-gray-600">
-                Ultimo aggiornamento: {new Date().toLocaleString('it-IT')}
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedGuestForManagement(null);
-                    setGuestCodes([]);
-                  }}
-                >
-                  ✕ Chiudi Gestione
-                </Button>
-                <Button
-                  onClick={async () => {
-                    await loadGuestCodes(selectedGuestForManagement.id);
-                    await refetchGuests();
-                    await refetchPackages();
-                    alert("🔄 Tutti i dati aggiornati!");
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  🔄 Aggiorna Tutto
-                </Button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
-
+      
 
 
 
@@ -1943,7 +1565,7 @@ function DeleteAccountSection({ structureId }: { structureId: string }) {
             >
               Annulla
             </Button>
-
+            
             <Button 
               variant="destructive"
               onClick={handleDelete}
@@ -2033,7 +1655,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
         emergencyContact: settings.emergencyContact || "",
         taxRate: settings.taxRate || "3.00",
         defaultCurrency: settings.defaultCurrency || "EUR",
-        enableGuestPortal: settings.enableGuestPortal!== false,
+        enableGuestPortal: settings.enableGuestPortal !== false,
         enableWhatsappIntegration: settings.enableWhatsappIntegration || false,
         autoLogoutMinutes: settings.autoLogoutMinutes || 30
       });
@@ -2087,7 +1709,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Informazioni Generali</h3>
-
+                
                 <div>
                   <Label htmlFor="structureName">Nome Struttura</Label>
                   <Input
@@ -2096,7 +1718,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                     placeholder="Hotel Pazzo Calabria"
                   />
                 </div>
-
+                
                 <div>
                   <Label htmlFor="ownerName">Nome Proprietario</Label>
                   <Input
@@ -2105,7 +1727,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                     placeholder="Mario Rossi"
                   />
                 </div>
-
+                
                 <div>
                   <Label htmlFor="businessType">Tipo Struttura</Label>
                   <select {...form.register("businessType")} className="w-full border rounded px-3 py-2">
@@ -2120,7 +1742,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
 
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Contatti</h3>
-
+                
                 <div>
                   <Label htmlFor="contactEmail">Email</Label>
                   <Input
@@ -2130,7 +1752,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                     placeholder="info@hotel.com"
                   />
                 </div>
-
+                
                 <div>
                   <Label htmlFor="contactPhone">Telefono</Label>
                   <Input
@@ -2139,7 +1761,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                     placeholder="+39 123 456 7890"
                   />
                 </div>
-
+                
                 <div>
                   <Label htmlFor="emergencyContact">Contatto Emergenza</Label>
                   <Input
@@ -2156,7 +1778,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
             {/* Indirizzo */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Indirizzo</h3>
-
+              
               <div>
                 <Label htmlFor="address">Via/Piazza</Label>
                 <Input
@@ -2165,7 +1787,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                   placeholder="Via Roma 123"
                 />
               </div>
-
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="city">Città</Label>
@@ -2175,7 +1797,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                     placeholder="Vibo Valentia"
                   />
                 </div>
-
+                
                 <div>
                   <Label htmlFor="province">Provincia</Label>
                   <Input
@@ -2184,7 +1806,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                     placeholder="VV"
                   />
                 </div>
-
+                
                 <div>
                   <Label htmlFor="postalCode">CAP</Label>
                   <Input
@@ -2202,7 +1824,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Orari</h3>
-
+                
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="checkinTime">Check-in</Label>
@@ -2212,7 +1834,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                       {...form.register("checkinTime")}
                     />
                   </div>
-
+                  
                   <div>
                     <Label htmlFor="checkoutTime">Check-out</Label>
                     <Input
@@ -2237,7 +1859,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
 
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Servizi</h3>
-
+                
                 <div>
                   <Label htmlFor="wifiPassword">Password WiFi</Label>
                   <Input
@@ -2246,7 +1868,7 @@ function SettingsSection({ structureId }: { structureId: string }) {
                     placeholder="Password123"
                   />
                 </div>
-
+                
                 <div>
                   <Label htmlFor="taxRate">Tassa di Soggiorno (€)</Label>
                   <Input

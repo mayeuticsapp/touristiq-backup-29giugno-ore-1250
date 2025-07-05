@@ -1,10 +1,9 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot, User, Loader2, Trash2 } from "lucide-react";
+import { Send, Bot, User, Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface Message {
@@ -15,85 +14,27 @@ interface Message {
 }
 
 export function TIQaiChat() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputMessage, setInputMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-
-  // Carica messaggi salvati e pulisce quelli vecchi
-  useEffect(() => {
-    loadSavedMessages();
-  }, []);
-
-  const loadSavedMessages = () => {
-    try {
-      const savedMessages = localStorage.getItem('tiqai-chat-messages');
-      const currentTime = new Date().getTime();
-      
-      if (savedMessages) {
-        const parsedMessages: Message[] = JSON.parse(savedMessages).map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        }));
-        
-        // Filtra messaggi più vecchi di 24 ore
-        const validMessages = parsedMessages.filter(msg => {
-          const messageTime = msg.timestamp.getTime();
-          const timeDiff = currentTime - messageTime;
-          const hoursOld = timeDiff / (1000 * 60 * 60);
-          return hoursOld < 24;
-        });
-        
-        // Se ci sono messaggi validi, caricali. Altrimenti inizia con messaggio di benvenuto
-        if (validMessages.length > 0) {
-          setMessages(validMessages);
-        } else {
-          initializeWelcomeMessage();
-        }
-        
-        // Salva messaggi puliti se sono cambiati
-        if (validMessages.length !== parsedMessages.length) {
-          localStorage.setItem('tiqai-chat-messages', JSON.stringify(validMessages));
-        }
-      } else {
-        initializeWelcomeMessage();
-      }
-    } catch (error) {
-      console.error("Errore caricamento messaggi:", error);
-      initializeWelcomeMessage();
-    }
-  };
-
-  const initializeWelcomeMessage = () => {
-    const welcomeMessage: Message = {
+  const [messages, setMessages] = useState<Message[]>([
+    {
       id: '1',
       type: 'ai',
       content: 'Ciao! Sono TIQai, il tuo assistente virtuale per il turismo in Italia. Come posso aiutarti oggi?',
       timestamp: new Date()
-    };
-    setMessages([welcomeMessage]);
-    localStorage.setItem('tiqai-chat-messages', JSON.stringify([welcomeMessage]));
-  };
-
-  // Salva messaggi ad ogni aggiornamento
-  useEffect(() => {
-    if (messages.length > 0) {
-      localStorage.setItem('tiqai-chat-messages', JSON.stringify(messages));
     }
-  }, [messages]);
+  ]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer) {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
-      }
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isLoading]);
+  }, [messages]);
 
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -138,11 +79,6 @@ export function TIQaiChat() {
     }
   };
 
-  const clearChat = () => {
-    localStorage.removeItem('tiqai-chat-messages');
-    initializeWelcomeMessage();
-  };
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -153,20 +89,9 @@ export function TIQaiChat() {
   return (
     <Card className="h-96 flex flex-col">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between text-lg">
-          <div className="flex items-center">
-            <Bot className="mr-2 text-blue-600" size={20} />
-            TIQai - Assistente Turismo
-          </div>
-          <Button
-            onClick={clearChat}
-            size="sm"
-            variant="ghost"
-            className="text-gray-500 hover:text-red-600"
-            title="Cancella cronologia chat"
-          >
-            <Trash2 size={16} />
-          </Button>
+        <CardTitle className="flex items-center text-lg">
+          <Bot className="mr-2 text-blue-600" size={20} />
+          TIQai - Assistente Turismo
         </CardTitle>
       </CardHeader>
       
@@ -180,7 +105,7 @@ export function TIQaiChat() {
                   message.type === 'user' ? 'flex-row-reverse' : ''
                 }`}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                   message.type === 'user' 
                     ? 'bg-green-100' 
                     : 'bg-blue-100'
@@ -197,7 +122,7 @@ export function TIQaiChat() {
                     ? 'bg-green-500 text-white ml-auto'
                     : 'bg-gray-100 text-gray-900'
                 }`}>
-                  <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                   <span className={`text-xs mt-1 block ${
                     message.type === 'user' ? 'text-green-100' : 'text-gray-500'
                   }`}>
@@ -232,7 +157,6 @@ export function TIQaiChat() {
               placeholder="Chiedi a TIQai qualsiasi cosa sul turismo..."
               disabled={isLoading}
               maxLength={500}
-              className="flex-1"
             />
             <Button 
               onClick={sendMessage}
@@ -242,9 +166,6 @@ export function TIQaiChat() {
             >
               <Send size={16} />
             </Button>
-          </div>
-          <div className="text-xs text-gray-500 mt-2 text-center">
-            Messaggi più vecchi di 24 ore vengono eliminati automaticamente
           </div>
         </div>
       </CardContent>

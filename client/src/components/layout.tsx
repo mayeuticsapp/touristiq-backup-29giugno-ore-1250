@@ -4,76 +4,36 @@ import { useLocation } from "wouter";
 import { MapPin, LogOut, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { queryClient } from "@/lib/queryClient";
-import { useQuery } from "@tanstack/react-query";
 
 interface LayoutProps {
   children: React.ReactNode;
-  title?: string;
-  role?: string;
+  title: string;
+  role: string;
   iqCode?: string;
-  navigation?: Array<{
+  navigation: Array<{
     icon: React.ReactNode;
     label: string;
     href: string;
     onClick?: () => void;
   }>;
-  sidebarColor?: string;
+  sidebarColor: string;
 }
 
-export function Layout({ children, title, role, iqCode, navigation = [], sidebarColor = "bg-gray-800" }: LayoutProps) {
+export function Layout({ children, title, role, iqCode, navigation, sidebarColor }: LayoutProps) {
   const [, setLocation] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // Recupera informazioni personalizzate dell'entità
-  const { data: entityInfo } = useQuery({
-    queryKey: ['/api/entity-info'],
-    queryFn: () => fetch('/api/entity-info', { credentials: 'include' }).then(res => res.json()),
-    staleTime: 5 * 60 * 1000, // 5 minuti di cache
-  });
-
-  // Determina il titolo personalizzato
-  const getPersonalizedTitle = () => {
-    if (title) return title; // Se il title è passato esplicitamente, usalo
-
-    if (entityInfo?.displayName) {
-      const name = entityInfo.displayName;
-
-      // Logica personalizzazione saluto
-      if (entityInfo.role === 'admin') {
-        return `Benvenuto, ${name}`;
-      } else if (entityInfo.role === 'partner') {
-        // Se il nome contiene "ristorante", "bar", etc. mantieni il formato originale
-        if (name.toLowerCase().includes('ristorante') || 
-            name.toLowerCase().includes('bar') || 
-            name.toLowerCase().includes('hotel') ||
-            name.toLowerCase().includes('pizzeria') ||
-            name.toLowerCase().includes('gelateria')) {
-          return `Benvenuto, ${name}`;
-        } else {
-          return `Benvenuto, ${name}`;
-        }
-      } else if (entityInfo.role === 'structure') {
-        return `Benvenuto, ${name}`;
-      } else if (entityInfo.role === 'tourist') {
-        return name.includes('TIQ-') ? `Benvenuto, Turista` : `Benvenuto, ${name}`;
-      }
-    }
-
-    // Fallback ai titoli generici
-    return title || (role ? `Dashboard ${role}` : "Dashboard");
-  };
 
   const handleLogout = async () => {
     try {
       await logout();
-
+      
       // Clear all cached data on logout
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       queryClient.invalidateQueries({ queryKey: ["/api/iqcode/validation-requests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/iqcode/validation-status"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tourist/real-offers"] });
       queryClient.clear(); // Clear all cache
-
+      
       setLocation("/");
     } catch (error) {
       console.error("Errore durante il logout:", error);
@@ -105,14 +65,14 @@ export function Layout({ children, title, role, iqCode, navigation = [], sidebar
           >
             {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </Button>
-
+          
           <div className="flex items-center">
             <div className={`h-8 w-8 ${sidebarColor} rounded-full flex items-center justify-center mr-2`}>
               <MapPin className="text-white" size={16} />
             </div>
             <h2 className="text-lg font-semibold text-gray-900">TouristIQ</h2>
           </div>
-
+          
           <Button variant="ghost" size="sm" onClick={handleLogout} className="p-2">
             <LogOut size={16} />
           </Button>
@@ -139,18 +99,11 @@ export function Layout({ children, title, role, iqCode, navigation = [], sidebar
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">TouristIQ</h2>
-              {(role || entityInfo?.role) && (
-                <span className="text-sm text-gray-300">
-                  {role || (entityInfo?.role === 'admin' ? 'Amministratore' : 
-                            entityInfo?.role === 'partner' ? 'Partner Commerciale' :
-                            entityInfo?.role === 'structure' ? 'Struttura Ricettiva' :
-                            entityInfo?.role === 'tourist' ? 'Turista' : 'Utente')}
-                </span>
-              )}
+              <p className="text-sm text-gray-500">{role}</p>
             </div>
           </div>
         </div>
-
+        
         <nav className="p-4">
           <ul className="space-y-2">
             {navigation.map((item, index) => (
@@ -185,17 +138,17 @@ export function Layout({ children, title, role, iqCode, navigation = [], sidebar
         {/* Desktop Header */}
         <header className="hidden md:block bg-white shadow-sm border-b p-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">{getPersonalizedTitle()}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
             <Button variant="ghost" onClick={handleLogout} className="flex items-center text-gray-600 hover:text-gray-900">
               <LogOut className="mr-2" size={16} />
               Esci
             </Button>
           </div>
         </header>
-
+        
         {/* Mobile Header Spacer */}
         <div className="md:hidden h-16"></div>
-
+        
         <main className="p-6">
           {children}
         </main>
