@@ -1,7 +1,4 @@
-The code has been modified to replace the location icon with an animated sun, resize and reposition the location icon, and update the logo section to use the sun icon.
-```
 
-```replit_final_file
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
