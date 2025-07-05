@@ -53,6 +53,7 @@ interface PackagesResponse {
 export default function StructureDashboard() {
   const params = useParams();
   const structureId = params.id;
+  const { toast } = useToast();
   const [guestName, setGuestName] = useState("");
   const [activeSection, setActiveSection] = useState("dashboard");
   const [assignGuestName, setAssignGuestName] = useState("");
