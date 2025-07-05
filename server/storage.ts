@@ -500,19 +500,32 @@ export class MemStorage implements IStorage {
 
     // IMMEDIATAMENTE ATTIVO: Crea il codice IQ operativo nella tabella principale
     try {
-      const activeIqCode = await this.createIqCode({
-        code: uniqueCode,
-        role: 'tourist',
-        isActive: true,
-        assignedTo: guestName,
-        location: parsedCode?.country || 'IT',
-        codeType: 'emotional',
-        status: 'approved' // IMMEDIATAMENTE APPROVATO
-      });
+      // Per PostgreSQL, usa inserimento diretto nella tabella iq_codes
+      const result = await sql`
+        INSERT INTO iq_codes (code, role, is_active, assigned_to, location, code_type, status, created_at)
+        VALUES (${uniqueCode}, 'tourist', true, ${guestName}, ${parsedCode?.country || 'IT'}, 'emotional', 'approved', NOW())
+        RETURNING id, code
+      `;
       
-      console.log(`✅ CODICE ATTIVO: ${uniqueCode} operativo per login immediato`);
+      console.log(`✅ CODICE ATTIVO: ${uniqueCode} inserito direttamente in iq_codes - ID: ${result[0].id}`);
     } catch (activeError) {
-      console.error(`❌ ERRORE ATTIVAZIONE: ${uniqueCode} non attivato:`, activeError);
+      console.error(`❌ ERRORE ATTIVAZIONE DIRETTA: ${uniqueCode} non attivato:`, activeError);
+      
+      // Fallback al metodo storage esistente
+      try {
+        const activeIqCode = await this.createIqCode({
+          code: uniqueCode,
+          role: 'tourist',
+          isActive: true,
+          assignedTo: guestName,
+          location: parsedCode?.country || 'IT',
+          codeType: 'emotional',
+          status: 'approved'
+        });
+        console.log(`✅ FALLBACK OK: ${uniqueCode} creato via storage`);
+      } catch (fallbackError) {
+        console.error(`❌ FALLBACK FAILED: ${fallbackError}`);
+      }
     }
 
     // Decrement credits
@@ -1104,6 +1117,10 @@ export class PostgreStorage implements IStorage {
 
   // Emotional IQCode generation methods
   async generateEmotionalIQCode(structureCode: string, packageId: number, guestName: string, guestId?: number): Promise<{ code: string; remainingCredits: number }> {
+    // Import SQL client for direct operations
+    const { neon } = await import('@neondatabase/serverless');
+    const sql = neon(process.env.DATABASE_URL!);
+    
     // Get package and verify credits
     const packages = await this.db.select().from(assignedPackages).where(eq(assignedPackages.id, packageId));
     const targetPackage = packages[0];
