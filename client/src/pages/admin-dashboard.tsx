@@ -578,7 +578,7 @@ function UsersManagement() {
               </div>
               <div className="flex gap-2 mt-2">
                 {strategic.usagePercentage && strategic.usagePercentage < 10 && (
-                  <Badge variant="secondary" className="text-xs">🟠 Crediti < 10%</Badge>
+                  <Badge variant="secondary" className="text-xs">🟠 Crediti &lt; 10%</Badge>
                 )}
                 {strategic.totalCredits > 100 && (
                   <Badge variant="default" className="text-xs">💎 Premium</Badge>
@@ -629,8 +629,8 @@ function UsersManagement() {
                 )}
               </div>
               <div className="flex gap-2 mt-2">
-                {strategic.lastAccess && new Date() - new Date(strategic.lastAccess) > 30 * 24 * 60 * 60 * 1000 && (
-                  <Badge variant="secondary" className="text-xs">⚪ Inattivo > 30gg</Badge>
+                {strategic.lastAccess && new Date().getTime() - new Date(strategic.lastAccess).getTime() > 30 * 24 * 60 * 60 * 1000 && (
+                  <Badge variant="secondary" className="text-xs">⚪ Inattivo &gt; 30gg</Badge>
                 )}
                 {strategic.totalValidations && strategic.totalValidations > 5 && (
                   <Badge variant="default" className="text-xs">🔥 Attivo</Badge>
