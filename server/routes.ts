@@ -8,6 +8,30 @@ import { createIQCode } from "./createIQCode";
 import { z } from "zod";
 // PDFKit import rimosso per problema ES modules
 
+// Middleware per controlli di sicurezza avanzati
+async function verifyRoleAccess(req: any, res: any, allowedRoles: string[]): Promise<boolean> {
+  const sessionToken = req.cookies.session_token;
+  if (!sessionToken) {
+    res.status(401).json({ message: "Non autenticato" });
+    return false;
+  }
+
+  const session = await storage.getSessionByToken(sessionToken);
+  if (!session) {
+    res.status(401).json({ message: "Sessione non valida" });
+    return false;
+  }
+
+  if (!allowedRoles.includes(session.role)) {
+    console.log(`🚨 TENTATIVO ACCESSO NON AUTORIZZATO: ${session.iqCode} (${session.role}) ha provato ad accedere a endpoint riservato a ${allowedRoles.join(', ')}`);
+    res.status(403).json({ message: "Accesso negato - ruolo non autorizzato" });
+    return false;
+  }
+
+  req.userSession = session;
+  return true;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // Authentication endpoint
@@ -2449,29 +2473,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ===== SISTEMA VALIDAZIONE IQCODE PARTNER-TURISTA =====
   
-  // Partner invia richiesta validazione IQCode turista
+  // Partner invia richiesta validazione IQCode turista  
   app.post("/api/iqcode/validate-request", async (req: any, res: any) => {
     try {
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      const partnerIqCode = await storage.getIqCodeByCode(session.iqCode);
-      console.log("🔍 CONTROLLO ACCESSO PARTNER VALIDATE-REQUEST:");
-      console.log("SESSIONE:", session);
-      console.log("IQCODE:", partnerIqCode);
-      console.log("RUOLO:", partnerIqCode?.role);
-      
-      if (!partnerIqCode || partnerIqCode.role !== 'partner') {
-        console.log("❌ ACCESSO NEGATO - Ruolo non partner:", partnerIqCode?.role);
-        return res.status(403).json({ message: "Accesso negato - solo partner" });
-      }
+      // Controlli di sicurezza rinforzati
+      if (!await verifyRoleAccess(req, res, ['partner'])) return;
 
       const { touristIqCode } = req.body;
       if (!touristIqCode) {
@@ -2493,7 +2499,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verifica se esiste già una richiesta di validazione pendente
-      const existingValidations = await storage.getValidationsByPartner(session.iqCode);
+      const existingValidations = await storage.getValidationsByPartner(req.userSession.iqCode);
       const existingRequest = existingValidations.find(v => 
         v.touristIqCode === touristIqCode && v.status === 'pending'
       );
@@ -2503,13 +2509,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Ottieni nome partner dal onboarding
-      const partnerStatus = await storage.getPartnerOnboardingStatus(session.iqCode);
-      const partnerName = partnerStatus?.businessInfo?.businessName || `Partner ${session.iqCode}`;
+      const partnerStatus = await storage.getPartnerOnboardingStatus(req.userSession.iqCode);
+      const partnerName = partnerStatus?.businessInfo?.businessName || `Partner ${req.userSession.iqCode}`;
 
       // Crea richiesta di validazione
       const validation = await storage.createIqcodeValidation({
         touristCode: touristIqCode,
-        partnerCode: session.iqCode,
+        partnerCode: req.userSession.iqCode,
         partnerName,
         requestedAt: new Date(),
         status: 'pending',

@@ -197,11 +197,22 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
           <CardContent>
             <div className="flex gap-3">
               <Input
-                placeholder="Es: TIQ-IT-ROMA123"
-                value={touristCode}
-                onChange={(e) => setTouristCode(e.target.value.toUpperCase())}
-                className="flex-1"
+                placeholder="Inserisci il codice IQ che ti ha comunicato il turista"
+                value={touristCode.length > 0 ? '*'.repeat(Math.max(1, touristCode.length - 3)) + touristCode.slice(-3) : ''}
+                onChange={(e) => {
+                  const realValue = e.target.value;
+                  // Se sta cancellando, mantieni il valore reale
+                  if (realValue.length < touristCode.length) {
+                    setTouristCode(realValue.toUpperCase());
+                  } else {
+                    // Se sta scrivendo, aggiungi solo i caratteri reali
+                    const newChars = realValue.replace(/\*/g, '');
+                    setTouristCode(newChars.toUpperCase());
+                  }
+                }}
+                className="flex-1 font-mono"
                 maxLength={100}
+                data-real-value={touristCode}
               />
               <Button 
                 onClick={handleValidationRequest}
