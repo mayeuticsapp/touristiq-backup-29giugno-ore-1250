@@ -2085,15 +2085,18 @@ class ExtendedPostgreStorage extends PostgreStorage {
 
   async getRealOffersByCity(cityName: string): Promise<any[]> {
     const { realOffers } = await import('@shared/schema');
-    const { ilike, and } = await import('drizzle-orm');
+    const { ilike, and, eq } = await import('drizzle-orm');
 
     console.log(`Ricerca per città: ${cityName}`);
 
+    // Ricerca case-insensitive con matching parziale per città
+    const searchPattern = `%${cityName.toLowerCase()}%`;
+    
     const result = await this.db
       .select()
       .from(realOffers)
       .where(and(
-        ilike(realOffers.city, cityName),
+        ilike(realOffers.city, searchPattern),
         eq(realOffers.isActive, true)
       ));
 
