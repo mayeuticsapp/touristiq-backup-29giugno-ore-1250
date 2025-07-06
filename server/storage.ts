@@ -1212,7 +1212,7 @@ export class PostgreStorage implements IStorage {
           const sql = neon(process.env.DATABASE_URL!);
 
           const result = await sql`
-            INSERT INTO generated_iq_codes (code, generated_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
+            INSERT INTO generated_iq_codes (code, assigned_by, package_id, assigned_to, guest_id, country, emotional_word, status, assigned_at)
             VALUES (${uniqueCode}, ${structureCode}, ${packageId}, ${guestName}, ${guestId}, ${'IT'}, ${'UNKNOWN'}, 'assigned', NOW())
             RETURNING id, code
           `;
