@@ -103,7 +103,7 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
     onSuccess: () => {
       toast({
         title: "✅ Custode del Codice Aggiornato!",
-        description: "I tuoi nuovi dati di recupero sono stati salvati con successo.",
+        description: "Dati aggiornati correttamente. Ricorda che non possiamo recuperare queste informazioni: custodiscile bene!",
       });
       setShowUpdateDialog(false);
       setSecretWord("");
@@ -135,9 +135,13 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
     }
   };
 
-  const tooltipText = roleType === "structure" 
-    ? "Attiva il Custode del Codice per recuperare il tuo IQCode struttura in modo sicuro, senza email o telefono. Ti basta una parola segreta e una data di nascita."
-    : "Attiva il Custode del Codice per recuperare il tuo IQCode partner in modo sicuro, senza email o telefono. Ti basta una parola segreta e una data di nascita.";
+  const tooltipText = (custodeStatus as any)?.hasRecoveryData
+    ? (roleType === "structure" 
+        ? "Modifica la parola segreta e la data di nascita associate al tuo IQCode struttura per un futuro recupero. I dati restano anonimi e non recuperabili dal nostro sistema."
+        : "Modifica la parola segreta e la data di nascita associate al tuo IQCode partner per un futuro recupero. I dati restano anonimi e non recuperabili dal nostro sistema.")
+    : (roleType === "structure" 
+        ? "Attiva il Custode del Codice per recuperare il tuo IQCode struttura in modo sicuro, senza email o telefono. Ti basta una parola segreta e una data di nascita."
+        : "Attiva il Custode del Codice per recuperare il tuo IQCode partner in modo sicuro, senza email o telefono. Ti basta una parola segreta e una data di nascita.");
 
   return (
     <>
@@ -176,7 +180,7 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
                     className="border-blue-300 text-blue-700 hover:bg-blue-50"
                   >
                     <Edit className="w-4 h-4 mr-2" />
-                    Modifica
+                    Gestisci Custode del Codice
                   </Button>
                 </div>
               ) : (
@@ -222,6 +226,7 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
                 <li>• Inserisci una data di nascita (anche inventata)</li>
                 <li>• I dati vengono hashati e salvati in modo anonimo</li>
                 <li>• Potrai recuperare il tuo IQCode dal login quando serve</li>
+                <li>⚠️ <strong>Importante:</strong> non possiamo recuperare questi dati, custodiscili bene!</li>
               </ul>
             </div>
 
@@ -299,7 +304,7 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
           <div className="space-y-4">
             <div className="text-sm text-gray-600 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <strong>Attenzione:</strong> Modificando questi dati, i vecchi dati di recupero non funzioneranno più. 
-              Salva i nuovi dati in un posto sicuro.
+              Ricorda che non possiamo recuperare queste informazioni: custodiscile bene!
             </div>
             
             <div className="space-y-3">

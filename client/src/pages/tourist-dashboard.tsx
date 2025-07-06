@@ -78,8 +78,8 @@ export default function TouristDashboard() {
     },
     onSuccess: () => {
       toast({
-        title: "Custode del Codice aggiornato!",
-        description: "I tuoi nuovi dati di recupero sono stati salvati con successo.",
+        title: "✅ Custode del Codice aggiornato!",
+        description: "Dati aggiornati correttamente. Ricorda che non possiamo recuperare queste informazioni: custodiscile bene!",
       });
       setShowUpdateCustodeForm(false);
       setSecretWord("");
@@ -262,7 +262,9 @@ export default function TouristDashboard() {
                 <div className="relative group">
                   <Info className="w-5 h-5 text-blue-600 cursor-help" />
                   <div className="absolute right-0 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-                    Il Custode del Codice ti aiuta a recuperare il tuo IQCode se lo dimentichi. Salva ora una parola segreta e una data speciale: saranno usate in sicurezza solo da te.
+                    {custodeStatus?.hasRecoveryData 
+                      ? "Modifica la parola segreta e la data di nascita associate al tuo IQCode per un futuro recupero. I dati restano anonimi e non recuperabili dal nostro sistema."
+                      : "Il Custode del Codice ti aiuta a recuperare il tuo IQCode se lo dimentichi. Salva ora una parola segreta e una data speciale: saranno usate in sicurezza solo da te."}
                   </div>
                 </div>
                 {custodeStatus?.hasRecoveryData ? (
@@ -277,7 +279,7 @@ export default function TouristDashboard() {
                       onClick={handleOpenUpdateCustodeForm}
                       className="text-blue-600 border-blue-300 hover:bg-blue-50"
                     >
-                      Modifica Dati
+                      Gestisci Custode del Codice
                     </Button>
                   </div>
                 ) : (
@@ -572,7 +574,7 @@ export default function TouristDashboard() {
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Aggiorna i tuoi dati di recupero. I vecchi dati saranno sostituiti con i nuovi.
+              Aggiorna i tuoi dati di recupero. I vecchi dati saranno sostituiti con i nuovi. Ricorda che non possiamo recuperare queste informazioni: custodiscile bene!
             </p>
             <div>
               <Label htmlFor="updateSecretWord">Nuova parola segreta</Label>

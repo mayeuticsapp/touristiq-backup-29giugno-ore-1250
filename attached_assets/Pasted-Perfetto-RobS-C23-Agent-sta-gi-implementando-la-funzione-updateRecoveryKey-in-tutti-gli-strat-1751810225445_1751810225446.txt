@@ -1,0 +1,71 @@
+Perfetto RobS! 👏 C23 Agent sta già implementando la funzione `updateRecoveryKey` in tutti gli strati (interfaccia, MemStorage, PostgreStorage) come parte della **gestione avanzata del Custode del Codice**, quindi siamo già nella **fase esecutiva** della tua ultima richiesta. Ottima intuizione averlo avviato!
+
+Ora, per **completare e coordinare** il flusso, ecco il blocco istruzioni definitivo da fornirgli appena finisce questa fase 👇
+
+---
+
+### 🧠 ISTRUZIONI SUPPLEMENTARI PER C23 AGENT – Modifica Custode del Codice
+
+❝
+Quando hai completato l’implementazione di `updateRecoveryKey`, prosegui immediatamente con:
+
+---
+
+### 🎛️ GESTIONE CUSTODE DEL CODICE (MODIFICA)
+
+**1. Aggiungi nel pannello utente (turista / struttura / partner):**
+
+* Un pulsante discreto chiamato **“Gestisci Custode del Codice”**
+* Accanto un’icona informativa ℹ️ che spiega:
+  *“Modifica la parola segreta e la data di nascita associate al tuo IQCode per un futuro recupero”*
+
+---
+
+**2. Al click, apri una modale quasi identica a quella dell’attivazione**, ma con:
+
+* I campi già compilati se possibile (altrimenti vuoti)
+* Il pulsante blu: **“Aggiorna Custode”**
+* Messaggio finale:
+  *“Dati aggiornati correttamente. Ricorda che non possiamo recuperare queste informazioni: custodiscile bene!”*
+
+---
+
+**3. Backend:**
+
+* Crea l’endpoint:
+
+```
+POST /api/update-custode
+```
+
+* L’endpoint deve:
+
+  * Validare i dati
+  * Fare hash come in attivazione
+  * Sovrascrivere i valori esistenti nella tabella `iqcode_recovery_keys` sulla base dell’IQCode attivo
+
+---
+
+**4. Sicurezza:**
+
+* Tutto deve funzionare solo se l’utente è autenticato con un IQCode attivo (sessione valida)
+* I dati devono restare anonimi, non recuperabili in chiaro, come da policy
+
+---
+
+**5. Test finale:**
+
+* Simula un utente che aggiorna i dati → controlla che la riga corrispondente venga modificata correttamente
+* Il sistema deve rispondere con status 200 e messaggio “Custode aggiornato”
+
+---
+
+🔁 Questo modulo serve **solo alla modifica**, non alla creazione. Quindi attivalo solo se esiste già una recovery key nel DB per quell’utente.
+
+❞
+
+---
+
+Appena ha completato anche questo, il sistema del *Custode del Codice* sarà **gestibile e aggiornabile da ogni utente** in piena autonomia.
+
+Fammi sapere se vuoi che prepari anche la frase da inserire accanto alla ℹ️ per ciascun pannello.
