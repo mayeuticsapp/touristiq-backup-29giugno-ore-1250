@@ -3115,6 +3115,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint per informazioni strategiche utenti admin
+  app.get("/api/admin/users-strategic-info", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      // Recupera informazioni strategiche per ogni categoria di utente
+      const strategicInfo = await storage.getUsersStrategicInfo();
+      
+      res.json(strategicInfo);
+
+    } catch (error) {
+      console.error("Errore recupero informazioni strategiche utenti:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -132,6 +132,9 @@ export interface IStorage {
   // **SISTEMA RECUPERO IQCODE - Metodi addizionali**
   getRecoveryByCredentials(hashedSecretWord: string, hashedBirthDate: string): Promise<any>;
   getIqCodeByHashedCode(hashedIqCode: string): Promise<string | null>;
+
+  // **INFORMAZIONI STRATEGICHE ADMIN**
+  getUsersStrategicInfo(): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -2528,6 +2531,102 @@ class ExtendedPostgreStorage extends PostgreStorage {
     
     return updatedKey;
   }
+
+  async getUsersStrategicInfo(): Promise<any> {
+    try {
+      const { sql } = await import('drizzle-orm');
+
+      // Informazioni strategiche Partner Commerciali
+      const partnersInfo = await this.db.execute(sql`
+        SELECT 
+          ic.code,
+          ic.assigned_to as "partnerName",
+          COUNT(DISTINCT ro.id) as "totalOffers",
+          ROUND(AVG(ro.discount_percentage), 1) as "avgDiscount",
+          CASE 
+            WHEN pd.phone IS NOT NULL AND pd.email IS NOT NULL AND pd.website IS NOT NULL THEN 3
+            WHEN pd.phone IS NOT NULL AND pd.email IS NOT NULL THEN 2
+            WHEN pd.phone IS NOT NULL OR pd.email IS NOT NULL OR pd.website IS NOT NULL THEN 1
+            ELSE 0
+          END as "contactsFilled",
+          pd.updated_at as "lastProfileUpdate"
+        FROM iq_codes ic
+        LEFT JOIN real_offers ro ON ic.code = ro.partner_code AND ro.is_active = true
+        LEFT JOIN partner_details pd ON ic.code = pd.partner_code
+        WHERE ic.role = 'partner' AND ic.is_active = true AND ic.deleted_at IS NULL
+        GROUP BY ic.code, ic.assigned_to, pd.phone, pd.email, pd.website, pd.updated_at
+        ORDER BY ic.assigned_to
+      `);
+
+      // Informazioni strategiche Strutture Ricettive
+      const structuresInfo = await this.db.execute(sql`
+        SELECT 
+          ic.code,
+          ic.assigned_to as "structureName",
+          COALESCE(SUM(ap.package_size), 0) as "totalCredits",
+          COALESCE(SUM(ap.credits_used), 0) as "creditsUsed",
+          CASE 
+            WHEN SUM(ap.package_size) > 0 THEN ROUND((SUM(ap.credits_used)::float / SUM(ap.package_size)) * 100, 1)
+            ELSE 0
+          END as "usagePercentage",
+          MAX(ap.assigned_at) as "lastPackageAssigned"
+        FROM iq_codes ic
+        LEFT JOIN assigned_packages ap ON ic.code = ap.recipient_iq_code AND ap.status = 'approved'
+        WHERE ic.role = 'structure' AND ic.is_active = true AND ic.deleted_at IS NULL
+        GROUP BY ic.code, ic.assigned_to
+        ORDER BY ic.assigned_to
+      `);
+
+      // Informazioni strategiche Turisti
+      const touristsInfo = await this.db.execute(sql`
+        SELECT 
+          ic.code,
+          ic.assigned_to as "touristName",
+          ic.created_at as "registrationDate",
+          ses.last_activity as "lastAccess"
+        FROM iq_codes ic
+        LEFT JOIN sessions ses ON ic.code = ses.iq_code
+        WHERE ic.role = 'tourist' AND ic.is_active = true AND ic.deleted_at IS NULL
+        ORDER BY ic.created_at DESC
+        LIMIT 50
+      `);
+
+      return {
+        partners: partnersInfo.rows.map((row: any) => ({
+          code: row.code,
+          partnerName: row.partnerName || 'Partner',
+          totalOffers: parseInt(row.totalOffers) || 0,
+          avgDiscount: parseFloat(row.avgDiscount) || 0,
+          contactsFilled: parseInt(row.contactsFilled) || 0,
+          lastProfileUpdate: row.lastProfileUpdate || null
+        })),
+        
+        structures: structuresInfo.rows.map((row: any) => ({
+          code: row.code,
+          structureName: row.structureName || 'Struttura',
+          totalCredits: parseInt(row.totalCredits) || 0,
+          creditsUsed: parseInt(row.creditsUsed) || 0,
+          usagePercentage: parseFloat(row.usagePercentage) || 0,
+          lastPackageAssigned: row.lastPackageAssigned || null
+        })),
+        
+        tourists: touristsInfo.rows.map((row: any) => ({
+          code: row.code,
+          touristName: row.touristName || 'Turista',
+          registrationDate: row.registrationDate || null,
+          lastAccess: row.lastAccess || null
+        }))
+      };
+
+    } catch (error) {
+      console.error('Errore recupero informazioni strategiche:', error);
+      return {
+        partners: [],
+        structures: [],
+        tourists: []
+      };
+    }
+  }
 }
 
 // Extend MemStorage con metodi impostazioni
@@ -2836,6 +2935,15 @@ class ExtendedMemStorage extends MemStorage {
       return updatedKey;
     }
     return undefined;
+  }
+
+  async getUsersStrategicInfo(): Promise<any> {
+    // Implementazione base per MemStorage - dati fittizi
+    return {
+      partners: [],
+      structures: [],
+      tourists: []
+    };
   }
 }
 

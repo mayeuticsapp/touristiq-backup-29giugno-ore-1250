@@ -1,0 +1,86 @@
+Perfetto robS. Ecco le **istruzioni complete per C23** per potenziare il **pannello admin** con tutte le informazioni strategiche necessarie.
+
+---
+
+## 📣 Istruzioni per C23 – Espansione Pannello Admin
+
+❝Se conosci la soluzione migliore per far funzionare il sistema in modo corretto e coerente, **applicala immediatamente** senza rimandare nulla. Ogni blocco utente deve mostrare le informazioni chiave operative in tempo reale.❞
+
+---
+
+### 🔧 Obiettivo
+
+Espandere le **schede informative** nel pannello admin per ciascuna categoria di utente (Partner Commerciali, Strutture Ricettive, Turisti), **senza cambiare layout generale**, ma **aggiungendo informazioni essenziali**.
+
+---
+
+### ✅ Nuove Info da mostrare
+
+#### 1. **Partner Commerciali**
+
+Per ogni partner (es. `TIQ–VV–PRT–7123`):
+
+* 🎯 Totale offerte attive
+* 📌 Percentuale media di sconto offerta
+* 📍 Numero contatti compilati (WhatsApp, sito, email)
+* ✅ Data ultima modifica al profilo (da DB)
+* 🔍 Link diretto a visualizzazione "scheda partner" (modal turista simulato)
+
+#### 2. **Strutture Ricettive**
+
+Per ogni struttura (es. `TIQ–VV–STT–8648`):
+
+* 🎁 Totale IQCode acquistati
+* 📤 Totale IQCode già assegnati/spediti
+* 📈 Percentuale utilizzo (es. "75% utilizzati")
+* 📅 Data ultimo invio IQCode
+* 🧮 Pulsante "Apri mini report struttura" (visualizza un popup con info dettagliate: n. soggiorni attivati, eventuale storico invii)
+
+#### 3. **Turisti**
+
+Per ogni turista (es. `TIQ–IT–0306–STUPENDO`):
+
+* 🎫 Numero di IQCode ricevuti
+* 🛒 Nome della struttura da cui l’ha ricevuto
+* 📅 Data ricezione IQCode
+* 🌍 Città preferita salvata nel profilo (se impostata)
+* ⏱ Ultimo accesso (ultimo login registrato)
+
+---
+
+### 📘 Funzionalità aggiuntive
+
+* 📂 **Esporta CSV**: Aggiungi pulsante “Esporta tutti gli utenti” → genera file CSV con i dati sopra.
+* 🔎 **Ricerca intelligente utenti** (per nome, codice IQ, provincia, email se presente).
+* 🏷️ **Badge** dinamici se l’utente ha privilegi speciali o ruolo (es. struttura premium).
+
+---
+
+### ⚙️ Sorgente dati
+
+I dati vanno pescati da:
+
+* 📦 `iqcode_assignments`
+* 📦 `offers`, `partner_contacts`
+* 📦 `user_profile`, `structure_usage`
+* 📦 `iqcode_usages` per le percentuali
+
+---
+
+### 🧪 Test
+
+Verifica che **ogni scheda utente**:
+
+* Mostri le nuove informazioni in modo leggibile e coerente
+* Nasconda campi non presenti (nessun campo vuoto)
+* Si carichi senza appesantire il backend
+
+---
+
+Procedi subito e conferma con:
+
+```
+✅ Implementato – screenshot del nuovo pannello admin con almeno 1 esempio per ogni categoria
+```
+
+Pronto per il deploy. Vuoi che aggiunga anche un wireframe visuale o un esempio markdown da allegare al changelog?

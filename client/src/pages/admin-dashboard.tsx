@@ -309,15 +309,18 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
   );
 }
 
-// Users Management Component con Note Interne e Notifiche
+// Enhanced Users Management Component con Informazioni Strategiche
 function UsersManagement() {
   const [users, setUsers] = useState<any[]>([]);
+  const [strategicInfo, setStrategicInfo] = useState<any>({ partners: [], structures: [], tourists: [] });
   const [loading, setLoading] = useState(true);
   const [editingNote, setEditingNote] = useState<number | null>(null);
   const [noteText, setNoteText] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchUsers();
+    fetchStrategicInfo();
   }, []);
 
   const fetchUsers = async () => {
@@ -329,6 +332,16 @@ function UsersManagement() {
       console.error('Errore caricamento utenti:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStrategicInfo = async () => {
+    try {
+      const response = await fetch('/api/admin/users-strategic-info', { credentials: 'include' });
+      const data = await response.json();
+      setStrategicInfo(data);
+    } catch (error) {
+      console.error('Errore caricamento informazioni strategiche:', error);
     }
   };
 
