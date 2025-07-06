@@ -11,6 +11,7 @@ import TouristDashboard from "@/pages/tourist-dashboard";
 import StructureDashboard from "@/pages/structure-dashboard";
 import StructurePanel from "@/pages/structure-panel-fixed";
 import PartnerDashboard from "@/pages/partner-dashboard";
+import UserManagement from "@/pages/user-management";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 
@@ -75,6 +76,12 @@ function Router() {
       <Route path="/admin/settings">
         <ProtectedRoute requiredRole="admin">
           <AdminDashboard activeSection="settings" />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/admin/user-management">
+        <ProtectedRoute requiredRole="admin">
+          <UserManagement />
         </ProtectedRoute>
       </Route>
       

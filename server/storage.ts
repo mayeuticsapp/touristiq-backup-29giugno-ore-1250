@@ -2585,7 +2585,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
           ic.created_at as "registrationDate",
           COUNT(iv.id) as "totalValidations"
         FROM iq_codes ic
-        LEFT JOIN iqcode_validations iv ON ic.code = iv.tourist_code
+        LEFT JOIN iqcode_validations iv ON ic.code = iv.tourist_iq_code
         WHERE ic.role = 'tourist' AND ic.is_active = true AND ic.deleted_at IS NULL
         GROUP BY ic.code, ic.assigned_to, ic.created_at
         ORDER BY ic.created_at DESC

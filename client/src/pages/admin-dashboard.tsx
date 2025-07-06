@@ -50,6 +50,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
 
   const navigation = [
     { icon: <Users size={20} />, label: "Utenti", href: "/admin/users", onClick: () => setActiveView("users") },
+    { icon: <Settings size={20} />, label: "Gestione Utenti", href: "/admin/user-management", external: true },
     { icon: <Trash2 size={20} />, label: "Cestino", href: "/admin/trash", onClick: () => setActiveView("trash") },
     { icon: <QrCode size={20} />, label: "Codici Generati", href: "/admin/iqcodes", onClick: () => setActiveView("iqcodes") },
     { icon: <Package size={20} />, label: "Genera Diretto", href: "/admin/generate-direct", onClick: () => setActiveView("generate-direct") },
@@ -280,7 +281,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
       </div>
 
       {/* Conditional Rendering Based on Active View */}
-      {activeView === "users" && <UsersManagement />}
+      {activeView === "users" && <SimpleUsersManagement />}
       {activeView === "trash" && <TrashManagement />}
       {activeView === "iqcodes" && <CodesManagement />}
       {activeView === "generate-direct" && (
@@ -309,10 +310,10 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
   );
 }
 
-// Enhanced Users Management Component con Informazioni Strategiche
-function UsersManagement() {
+// Simple Users Management Component (senza informazioni strategiche)
+function SimpleUsersManagement() {
   const [users, setUsers] = useState<any[]>([]);
-  const [strategicInfo, setStrategicInfo] = useState<any>({ partners: [], structures: [], tourists: [] });
+
   const [loading, setLoading] = useState(true);
   const [editingNote, setEditingNote] = useState<number | null>(null);
   const [noteText, setNoteText] = useState("");
@@ -320,7 +321,6 @@ function UsersManagement() {
 
   useEffect(() => {
     fetchUsers();
-    fetchStrategicInfo();
   }, []);
 
   const fetchUsers = async () => {
@@ -335,27 +335,7 @@ function UsersManagement() {
     }
   };
 
-  const fetchStrategicInfo = async () => {
-    try {
-      const response = await fetch('/api/admin/users-strategic-info', { credentials: 'include' });
-      const data = await response.json();
-      setStrategicInfo(data);
-    } catch (error) {
-      console.error('Errore caricamento informazioni strategiche:', error);
-    }
-  };
 
-  // Funzione per recuperare dati strategici per un utente specifico
-  const getStrategicData = (userCode: string, userRole: string) => {
-    if (userRole === 'partner') {
-      return strategicInfo.partners?.find((p: any) => p.code === userCode);
-    } else if (userRole === 'structure') {
-      return strategicInfo.structures?.find((s: any) => s.code === userCode);
-    } else if (userRole === 'tourist') {
-      return strategicInfo.tourists?.find((t: any) => t.code === userCode);
-    }
-    return null;
-  };
 
   const updateUserStatus = async (userId: number, action: string) => {
     try {
