@@ -345,10 +345,7 @@ function UsersManagement() {
     }
   };
 
-  // Raggruppa utenti per categoria
-  const partnerUsers = users.filter(user => user.role === 'partner');
-  const structureUsers = users.filter(user => user.role === 'structure');
-  const touristUsers = users.filter(user => user.role === 'tourist');
+  // Raggruppa utenti per categoria (ora utilizzato nella sezione filtri)
 
   const updateUserStatus = async (userId: number, action: string) => {
     try {
@@ -468,170 +465,256 @@ function UsersManagement() {
   };
 
   if (loading) {
-    return <div className="text-center py-4">Caricamento utenti...</div>;
+    return <div className="text-center py-4">Caricamento utenti e informazioni strategiche...</div>;
   }
 
-  // Componente per una singola colonna di categoria
-  const UserCategoryColumn = ({ title, users: categoryUsers, bgColor }: {
-    title: string;
-    users: any[];
-    bgColor: string;
-  }) => (
-    <Card className="h-fit">
-      <CardHeader className={`${bgColor} text-white`}>
-        <CardTitle className="text-center">
-          {title} ({categoryUsers.length})
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        {categoryUsers.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Users size={48} className="mx-auto mb-4 opacity-50" />
-            <p>Nessun {title.toLowerCase()}</p>
-          </div>
-        ) : (
-          <div className="space-y-2 p-4">
-            {categoryUsers.map((user) => (
-              <div key={user.id} className="border rounded-lg p-3 hover:bg-gray-50">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="font-mono text-sm font-medium">{user.code}</div>
-                  <Badge variant={
-                    user.status === 'approved' ? 'default' : 
-                    user.status === 'pending' ? 'secondary' : 
-                    'destructive'
-                  }>
-                    {user.status}
-                  </Badge>
-                </div>
-                
-                <div className="text-sm text-gray-600 mb-2">
-                  <div><strong>Nome:</strong> {user.assignedTo || 'N/A'}</div>
-                  <div><strong>Provincia:</strong> {user.location || 'N/A'}</div>
-                </div>
+  // Funzione helper per unire dati utenti con informazioni strategiche
+  const getStrategicData = (userCode: string, role: string) => {
+    switch (role) {
+      case 'partner':
+        return strategicInfo.partners.find((p: any) => p.code === userCode);
+      case 'structure':
+        return strategicInfo.structures.find((s: any) => s.code === userCode);
+      case 'tourist':
+        return strategicInfo.tourists.find((t: any) => t.code === userCode);
+      default:
+        return null;
+    }
+  };
 
-                <div className="mb-3">
-                  {editingNote === user.id ? (
-                    <div className="space-y-2">
-                      <Textarea
-                        value={noteText}
-                        onChange={(e) => setNoteText(e.target.value)}
-                        placeholder="Aggiungi nota interna..."
-                        className="min-h-16 text-xs"
-                      />
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={saveNote}>Salva</Button>
-                        <Button size="sm" variant="outline" onClick={cancelEditingNote}>Annulla</Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-start gap-2">
-                      <div className="text-xs text-gray-600 flex-1">
-                        <strong>Note:</strong> {user.internalNote || "Nessuna nota"}
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => startEditingNote(user.id, user.internalNote)}
-                        className="h-6 w-6 p-0"
-                      >
-                        <StickyNote size={12} />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap gap-1">
-                  {user.status === 'pending' && (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-green-600 hover:bg-green-50 text-xs px-2 py-1"
-                        onClick={() => updateUserStatus(user.id, 'approve')}
-                      >
-                        ✅
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-orange-600 hover:bg-orange-50 text-xs px-2 py-1"
-                        onClick={() => updateUserStatus(user.id, 'block')}
-                      >
-                        🚫
-                      </Button>
-                    </>
-                  )}
-                  {user.status === 'approved' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-orange-600 hover:bg-orange-50 text-xs px-2 py-1"
-                      onClick={() => updateUserStatus(user.id, 'block')}
-                    >
-                      🚫
-                    </Button>
-                  )}
-                  {user.status === 'blocked' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-green-600 hover:bg-green-50 text-xs px-2 py-1"
-                      onClick={() => updateUserStatus(user.id, 'approve')}
-                    >
-                      ✅
-                    </Button>
-                  )}
-                  {user.role === 'partner' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-blue-600 hover:bg-blue-50 text-xs px-2 py-1"
-                      onClick={() => bypassOnboarding(user.id)}
-                      title="Bypass onboarding per test"
-                    >
-                      🚀
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-red-600 hover:bg-red-50 text-xs px-2 py-1"
-                    onClick={() => moveToTrash(user.id)}
-                  >
-                    🗑️
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+  // Funzione di ricerca
+  const filteredUsers = users.filter(user => 
+    user.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.assignedTo && user.assignedTo.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (user.location && user.location.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  // Separazione per categoria
+  const filteredPartnerUsers = filteredUsers.filter(user => user.role === 'partner');
+  const filteredStructureUsers = filteredUsers.filter(user => user.role === 'structure');  
+  const filteredTouristUsers = filteredUsers.filter(user => user.role === 'tourist');
+
+  // Componente Enhanced per Partner Commerciali
+  const PartnerCard = ({ user }: { user: any }) => {
+    const strategic = getStrategicData(user.code, 'partner');
+    return (
+      <div className="border rounded-lg p-4 hover:bg-gray-50 space-y-3">
+        <div className="flex justify-between items-start">
+          <div className="font-mono text-sm font-medium">{user.code}</div>
+          <Badge variant={user.status === 'approved' ? 'default' : user.status === 'pending' ? 'secondary' : 'destructive'}>
+            {user.status}
+          </Badge>
+        </div>
+        
+        <div className="text-sm space-y-1">
+          <div><strong>Nome:</strong> {user.assignedTo || 'N/A'}</div>
+          {strategic && (
+            <>
+              <div className="flex gap-4">
+                <span>🎯 <strong>{strategic.totalOffers}</strong> offerte</span>
+                <span>📌 <strong>{strategic.avgDiscount}%</strong> sconto medio</span>
+              </div>
+              <div className="flex gap-4">
+                <span>📍 <strong>{strategic.contactsFilled}/3</strong> contatti</span>
+                {strategic.lastProfileUpdate && (
+                  <span>✅ Agg. {new Date(strategic.lastProfileUpdate).toLocaleDateString('it-IT')}</span>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
+          {user.status === 'pending' && (
+            <Button size="sm" variant="outline" className="text-green-600 hover:bg-green-50 text-xs px-2 py-1"
+              onClick={() => updateUserStatus(user.id, 'approve')}>
+              ✅
+            </Button>
+          )}
+          {user.role === 'partner' && (
+            <Button size="sm" variant="outline" className="text-blue-600 hover:bg-blue-50 text-xs px-2 py-1"
+              onClick={() => bypassOnboarding(user.id)} title="Bypass onboarding">
+              🚀
+            </Button>
+          )}
+          <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50 text-xs px-2 py-1"
+            onClick={() => moveToTrash(user.id)}>
+            🗑️
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // Componente Enhanced per Strutture Ricettive  
+  const StructureCard = ({ user }: { user: any }) => {
+    const strategic = getStrategicData(user.code, 'structure');
+    return (
+      <div className="border rounded-lg p-4 hover:bg-gray-50 space-y-3">
+        <div className="flex justify-between items-start">
+          <div className="font-mono text-sm font-medium">{user.code}</div>
+          <Badge variant={user.status === 'approved' ? 'default' : user.status === 'pending' ? 'secondary' : 'destructive'}>
+            {user.status}
+          </Badge>
+        </div>
+        
+        <div className="text-sm space-y-1">
+          <div><strong>Nome:</strong> {user.assignedTo || 'N/A'}</div>
+          {strategic && (
+            <>
+              <div className="flex gap-4">
+                <span>🎁 <strong>{strategic.totalCredits}</strong> crediti</span>
+                <span>📤 <strong>{strategic.creditsUsed}</strong> utilizzati</span>
+              </div>
+              <div className="flex gap-4">
+                <span>📈 <strong>{strategic.usagePercentage}%</strong> utilizzo</span>
+                {strategic.lastPackageAssigned && (
+                  <span>📅 {new Date(strategic.lastPackageAssigned).toLocaleDateString('it-IT')}</span>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
+          {user.status === 'pending' && (
+            <Button size="sm" variant="outline" className="text-green-600 hover:bg-green-50 text-xs px-2 py-1"
+              onClick={() => updateUserStatus(user.id, 'approve')}>
+              ✅
+            </Button>
+          )}
+          <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50 text-xs px-2 py-1"
+            onClick={() => moveToTrash(user.id)}>
+            🗑️
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // Componente Enhanced per Turisti
+  const TouristCard = ({ user }: { user: any }) => {
+    const strategic = getStrategicData(user.code, 'tourist');
+    return (
+      <div className="border rounded-lg p-4 hover:bg-gray-50 space-y-3">
+        <div className="flex justify-between items-start">
+          <div className="font-mono text-sm font-medium">{user.code}</div>
+          <Badge variant={user.status === 'approved' ? 'default' : user.status === 'pending' ? 'secondary' : 'destructive'}>
+            {user.status}
+          </Badge>
+        </div>
+        
+        <div className="text-sm space-y-1">
+          <div><strong>Nome:</strong> {user.assignedTo || 'N/A'}</div>
+          {strategic && (
+            <>
+              <div className="flex gap-4">
+                {strategic.registrationDate && (
+                  <span>📅 {new Date(strategic.registrationDate).toLocaleDateString('it-IT')}</span>
+                )}
+                {strategic.lastAccess && (
+                  <span>⏱ {new Date(strategic.lastAccess).toLocaleDateString('it-IT')}</span>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
+          {user.status === 'pending' && (
+            <Button size="sm" variant="outline" className="text-green-600 hover:bg-green-50 text-xs px-2 py-1"
+              onClick={() => updateUserStatus(user.id, 'approve')}>
+              ✅
+            </Button>
+          )}
+          <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50 text-xs px-2 py-1"
+            onClick={() => moveToTrash(user.id)}>
+            🗑️
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Users size={20} />
-        <h2 className="text-xl font-semibold">Gestione Utenti ({users.length} totali)</h2>
+    <div className="space-y-6">
+      {/* Header con ricerca e esporta CSV */}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Users size={20} />
+          <h2 className="text-xl font-semibold">Gestione Utenti ({filteredUsers.length} di {users.length})</h2>
+        </div>
+        <div className="flex gap-3">
+          <Input
+            placeholder="🔍 Cerca per codice, nome, provincia..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-80"
+          />
+          <Button variant="outline" onClick={() => alert('Funzione esporta CSV in sviluppo')}>
+            📂 Esporta CSV
+          </Button>
+        </div>
       </div>
       
+      {/* Layout a 3 colonne */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <UserCategoryColumn 
-          title="Partner Commerciali"
-          users={partnerUsers}
-          bgColor="bg-orange-500"
-        />
-        <UserCategoryColumn 
-          title="Strutture Ricettive"
-          users={structureUsers}
-          bgColor="bg-blue-500"
-        />
-        <UserCategoryColumn 
-          title="Turisti"
-          users={touristUsers}
-          bgColor="bg-green-500"
-        />
+        {/* Partner Commerciali */}
+        <Card>
+          <CardHeader className="bg-orange-500 text-white">
+            <CardTitle className="text-center">
+              Partner Commerciali ({filteredPartnerUsers.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-3 max-h-96 overflow-y-auto">
+            {filteredPartnerUsers.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Users size={48} className="mx-auto mb-4 opacity-50" />
+                <p>Nessun partner</p>
+              </div>
+            ) : (
+              filteredPartnerUsers.map((user) => <PartnerCard key={user.id} user={user} />)
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Strutture Ricettive */}
+        <Card>
+          <CardHeader className="bg-blue-500 text-white">
+            <CardTitle className="text-center">
+              Strutture Ricettive ({filteredStructureUsers.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-3 max-h-96 overflow-y-auto">
+            {filteredStructureUsers.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Users size={48} className="mx-auto mb-4 opacity-50" />
+                <p>Nessuna struttura</p>
+              </div>
+            ) : (
+              filteredStructureUsers.map((user) => <StructureCard key={user.id} user={user} />)
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Turisti */}
+        <Card>
+          <CardHeader className="bg-green-500 text-white">
+            <CardTitle className="text-center">
+              Turisti ({filteredTouristUsers.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-3 max-h-96 overflow-y-auto">
+            {filteredTouristUsers.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Users size={48} className="mx-auto mb-4 opacity-50" />
+                <p>Nessun turista</p>
+              </div>
+            ) : (
+              filteredTouristUsers.map((user) => <TouristCard key={user.id} user={user} />)
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
