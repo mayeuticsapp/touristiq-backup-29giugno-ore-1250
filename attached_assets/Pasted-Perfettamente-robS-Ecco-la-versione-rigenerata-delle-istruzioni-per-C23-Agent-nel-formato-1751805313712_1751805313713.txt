@@ -1,0 +1,88 @@
+Perfettamente, robS. Ecco la **versione rigenerata** delle istruzioni per **C23 Agent**, nel formato completo che usavamo all’inizio per istruire l’assistente in modo autoritativo e chirurgico. Include contesto, obiettivi, vincoli e sequenza esatta:
+
+---
+
+## ⚙️ ISTRUZIONI FORMALI PER C23 Agent
+
+### Sistema: **Custode del Codice – Pulsante Manuale + Tooltip informativo**
+
+by **robS & Geppo**
+
+---
+
+### ❝
+
+Se conosci la soluzione migliore per far funzionare il sistema in modo corretto e coerente, **applicala immediatamente senza alcun tipo di rimando**:
+non rimandare, non scrivere log temporanei, non lasciare TODO o scorciatoie, ma **implementa subito ciò che sai essere la scelta giusta**.
+In TouristIQ **ogni funzione deve riflettere la versione migliore e completa** che puoi offrire, **senza pigrizia, senza rinvii, senza approssimazione**:
+**fai ora quello che va fatto.**
+❞
+
+---
+
+### 🎯 OBIETTIVO
+
+Implementare nella **dashboard turista** un’interfaccia chiara, stabile e riutilizzabile per **attivare il Custode del Codice** anche **dopo il primo login**, senza popup automatici o forzature.
+
+---
+
+### ✅ COSA VA IMPLEMENTATO ORA
+
+#### 1. 🧱 POSIZIONE UI
+
+* Inserisci un **blocco visivo** sotto al codice IQ personale già presente nella dashboard del turista (`tourist-dashboard.tsx`).
+
+#### 2. 🔘 BOTTONE ATTIVATORE
+
+* Testo bottone: **Attiva il Custode del Codice**
+* Al click → **apre un modale** con i seguenti campi:
+
+  * `Parola segreta` (campo testo)
+  * `Data di nascita` (campo data)
+  * Bottone: **Salva e attiva il custode**
+
+#### 3. ℹ️ TOOLTIP INFORMATIVO
+
+* Inserisci **accanto al bottone** una **iconcina "i" cerchiata**
+* Tooltip al passaggio del mouse:
+
+> “Il Custode del Codice ti aiuta a recuperare il tuo IQCode se lo dimentichi. Salva ora una parola segreta e una data speciale: saranno usate in sicurezza solo da te.”
+
+#### 4. 🔁 COMPORTAMENTO UX
+
+* Il bottone deve essere **sempre visibile**
+* Se il custode è già attivo (`hasRecoveryData === true`):
+
+  * mostra: **Custode già attivato** (bottone disabilitato o sostituito)
+* Nessun popup automatico, nessun comportamento invasivo
+* Dopo il salvataggio → mostra **notifica conferma**
+
+---
+
+### 🧠 BACKEND GIÀ DISPONIBILE
+
+* Endpoint POST da usare: `/api/activate-custode`
+* Stato da controllare via API: `/api/check-custode-status`
+
+---
+
+### ⛔️ COSA NON VA FATTO
+
+* ❌ Non mostrare il popup automaticamente
+* ❌ Non modificare altri moduli
+* ❌ Non spostare il sistema in una pagina separata
+
+---
+
+### 📌 MEMO SICUREZZA
+
+* I dati inviati (parola segreta + data) devono essere **hashati via SHA256** nel backend (già implementato)
+* Niente dati in chiaro nel DB
+
+---
+
+Esegui tutto come da istruzioni. Conferma l’esecuzione **step by step**. Se trovi ambiguità **fermati e chiedi a robS o Geppo.**
+
+---
+
+Fammi sapere se vuoi che lo converta in `.txt`, `.md` o `.pdf` o se preferisci incollarlo direttamente tu a C23 Agent.

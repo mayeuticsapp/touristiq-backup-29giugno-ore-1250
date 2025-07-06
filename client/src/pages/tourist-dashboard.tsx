@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tags, Utensils, Check, MessageCircle, QrCode, MapPin, Heart, Phone, Navigation, ExternalLink, Mail, Shield } from "lucide-react";
+import { Tags, Utensils, Check, MessageCircle, QrCode, MapPin, Heart, Phone, Navigation, ExternalLink, Mail, Shield, Info } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/auth";
 import { useState, useEffect } from "react";
@@ -23,7 +23,6 @@ export default function TouristDashboard() {
   const [searchMode, setSearchMode] = useState<"default" | "city" | "geolocation">("default");
   
   // Stati per "Custode del Codice"
-  const [showCustodePopup, setShowCustodePopup] = useState(false);
   const [showCustodeForm, setShowCustodeForm] = useState(false);
   const [secretWord, setSecretWord] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -36,28 +35,9 @@ export default function TouristDashboard() {
     queryFn: getCurrentUser,
   });
 
-  // Mostra automaticamente il popup "Custode del Codice" quando l'utente accede
-  useEffect(() => {
-    if (user && user.iqCode) {
-      // Controlla se l'utente ha già salvato le informazioni di recupero
-      const checkRecoveryStatus = async () => {
-        try {
-          const response = await fetch(`/api/check-custode-status`);
-          const data = await response.json();
-          
-          if (response.ok && !data.hasRecoveryData) {
-            // Mostra il popup se non ha ancora salvato i dati di recupero
-            setShowCustodePopup(true);
-          }
-        } catch (error) {
-          // Se l'endpoint non esiste ancora, mostra sempre il popup per ora
-          setShowCustodePopup(true);
-        }
-      };
-      
-      checkRecoveryStatus();
-    }
-  }, [user]);
+  const { data: custodeStatus } = useQuery({
+    queryKey: ["/api/check-custode-status"],
+  });
 
   // Query per offerte reali basate su validazioni
   const { data: realOffers, isLoading: isLoadingOffers } = useQuery({
@@ -76,9 +56,10 @@ export default function TouristDashboard() {
         description: "I tuoi dati di recupero sono stati salvati in modo sicuro.",
       });
       setShowCustodeForm(false);
-      setShowCustodePopup(false);
       setSecretWord("");
       setBirthDate("");
+      // Aggiorna lo stato del custode
+      queryClient.invalidateQueries({ queryKey: ["/api/check-custode-status"] });
     },
     onError: (error: any) => {
       toast({
@@ -104,6 +85,11 @@ export default function TouristDashboard() {
       secretWord: secretWord.trim(),
       birthDate: birthDate.trim(),
     });
+  }
+
+  // Gestore per aprire il form "Custode del Codice"
+  const handleOpenCustodeForm = () => {
+    setShowCustodeForm(true);
   };
 
   // Funzione per cercare offerte per città
@@ -207,6 +193,44 @@ export default function TouristDashboard() {
               <span className="text-2xl font-bold tracking-wider text-gray-900">{user.iqCode}</span>
             </div>
             <p className="mt-3 text-white font-medium">Mostra questo codice ai partner per ottenere sconti esclusivi!</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Blocco "Custode del Codice" */}
+      <div className="mb-8">
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Shield className="w-6 h-6 text-blue-600" />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Custode del Codice</h3>
+                  <p className="text-sm text-gray-600">Proteggi il tuo accesso con un sistema di recupero sicuro</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="relative group">
+                  <Info className="w-5 h-5 text-blue-600 cursor-help" />
+                  <div className="absolute right-0 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                    Il Custode del Codice ti aiuta a recuperare il tuo IQCode se lo dimentichi. Salva ora una parola segreta e una data speciale: saranno usate in sicurezza solo da te.
+                  </div>
+                </div>
+                {custodeStatus?.hasRecoveryData ? (
+                  <div className="flex items-center gap-2 text-green-600">
+                    <Check className="w-5 h-5" />
+                    <span className="font-medium">Custode già attivato</span>
+                  </div>
+                ) : (
+                  <Button 
+                    onClick={handleOpenCustodeForm}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Attiva il Custode del Codice
+                  </Button>
+                )}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -436,38 +460,7 @@ export default function TouristDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Custode del Codice - Popup Informativo */}
-      <Dialog open={showCustodePopup} onOpenChange={setShowCustodePopup}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-blue-600" />
-              Hai già salvato il tuo IQCode?
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-gray-600">
-              Tranquillo, ci pensiamo noi. Inserisci una parola segreta e la tua data di nascita: 
-              così se un giorno dimenticherai il tuo IQCode, potrai recuperarlo facilmente.
-            </p>
-            <div className="flex gap-3">
-              <Button 
-                onClick={() => setShowCustodeForm(true)}
-                className="flex-1 bg-green-600 hover:bg-green-700"
-              >
-                🟢 Procedi
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => setShowCustodePopup(false)}
-                className="flex-1"
-              >
-                🔴 Annulla (lo farò più tardi)
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+
 
       {/* Dialog Custode del Codice - Form */}
       <Dialog open={showCustodeForm} onOpenChange={setShowCustodeForm}>
@@ -503,7 +496,7 @@ export default function TouristDashboard() {
               disabled={custodeMutation.isPending}
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
-              {custodeMutation.isPending ? "Salvando..." : "Salva con il Custode del Codice"}
+              {custodeMutation.isPending ? "Salvando..." : "Salva e attiva il custode"}
             </Button>
           </div>
         </DialogContent>
