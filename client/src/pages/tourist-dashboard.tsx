@@ -22,6 +22,10 @@ export default function TouristDashboard() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchMode, setSearchMode] = useState<"default" | "city" | "geolocation">("default");
   
+  // Stati per scheda dettagliata partner
+  const [showPartnerDetail, setShowPartnerDetail] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState<any>(null);
+  
   // Stati per "Custode del Codice"
   const [showCustodeForm, setShowCustodeForm] = useState(false);
   const [showUpdateCustodeForm, setShowUpdateCustodeForm] = useState(false);
@@ -94,6 +98,12 @@ export default function TouristDashboard() {
       });
     },
   });
+
+  // Funzione per aprire scheda dettagliata partner
+  const handleOpenPartnerDetail = (offer: any) => {
+    setSelectedPartner(offer);
+    setShowPartnerDetail(true);
+  };
 
   // Gestore per salvare i dati del "Custode del Codice"
   const handleSaveCustode = () => {
@@ -381,15 +391,16 @@ export default function TouristDashboard() {
                 {offersToShow.map((offer: any, index: number) => (
                   <div key={index} className="p-4 border rounded-lg hover:bg-gray-50">
                     <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center">
+                      <div className="flex items-center cursor-pointer" onClick={() => handleOpenPartnerDetail(offer)}>
                         <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
                           <Utensils className="text-red-600" size={20} />
                         </div>
                         <div>
-                          <p className="font-bold text-gray-900">{offer.partnerName}</p>
+                          <p className="font-bold text-gray-900 hover:text-blue-600 transition-colors">{offer.partnerName}</p>
                           <p className="text-sm text-gray-600">{offer.businessType}</p>
                           <p className="text-sm font-medium text-blue-600 mt-1">{offer.title}</p>
                           <p className="text-xs text-gray-500">{offer.description}</p>
+                          <p className="text-xs text-blue-500 mt-1 font-medium">👆 Clicca per vedere i dettagli del partner</p>
                         </div>
                       </div>
                       <Badge className="bg-green-100 text-green-800 text-lg font-bold">
@@ -603,6 +614,130 @@ export default function TouristDashboard() {
               {updateCustodeMutation.isPending ? "Aggiornando..." : "Aggiorna dati di recupero"}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Scheda Dettagliata Partner */}
+      <Dialog open={showPartnerDetail} onOpenChange={setShowPartnerDetail}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center">
+                <Utensils className="text-red-600" size={24} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">{selectedPartner?.partnerName}</h2>
+                <p className="text-sm text-gray-600">{selectedPartner?.businessType}</p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedPartner && (
+            <div className="space-y-6">
+              {/* Offerta Principale */}
+              <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-green-800">{selectedPartner.title}</h3>
+                  <Badge className="bg-green-100 text-green-800 text-lg font-bold">
+                    -{selectedPartner.discountPercentage}%
+                  </Badge>
+                </div>
+                <p className="text-green-700">{selectedPartner.description}</p>
+              </div>
+              
+              {/* Informazioni di Base */}
+              {selectedPartner.address && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-blue-600" />
+                    Dove siamo
+                  </h4>
+                  <p className="text-gray-700 mb-3">
+                    {selectedPartner.address}, {selectedPartner.city} ({selectedPartner.province})
+                  </p>
+                  <Button 
+                    onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(selectedPartner.address + ', ' + selectedPartner.city)}`, '_blank')}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Navigation className="w-4 h-4 mr-2" />
+                    Apri in Google Maps - Inizia la navigazione
+                  </Button>
+                </div>
+              )}
+              
+              {/* Contatti */}
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">Contatti</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {selectedPartner.phone && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => window.open(`https://wa.me/${selectedPartner.phone.replace(/[^0-9]/g, '')}?text=Ciao! Ho visto la vostra offerta "${selectedPartner.title}" su TouristIQ. Vorrei avere maggiori informazioni.`, '_blank')}
+                      className="text-green-600 hover:bg-green-50 border-green-300"
+                    >
+                      <Phone className="w-4 h-4 mr-2" />
+                      Contatta su WhatsApp
+                    </Button>
+                  )}
+                  
+                  {selectedPartner.website && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => window.open(selectedPartner.website, '_blank')}
+                      className="text-purple-600 hover:bg-purple-50 border-purple-300"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Visita il sito web
+                    </Button>
+                  )}
+                  
+                  {selectedPartner.email && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => window.open(`mailto:${selectedPartner.email}?subject=Informazioni offerta ${selectedPartner.title}`, '_blank')}
+                      className="text-blue-600 hover:bg-blue-50 border-blue-300"
+                    >
+                      <Mail className="w-4 h-4 mr-2" />
+                      Invia una email
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
+              {/* Accessibilità e Servizi */}
+              {(selectedPartner.wheelchairAccessible || selectedPartner.childFriendly || selectedPartner.glutenFree) && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3">Servizi e Accessibilità</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedPartner.wheelchairAccessible && (
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                        ♿ Accessibile
+                      </Badge>
+                    )}
+                    {selectedPartner.childFriendly && (
+                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                        👶 Family Friendly
+                      </Badge>
+                    )}
+                    {selectedPartner.glutenFree && (
+                      <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                        🌾 Gluten Free
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Note di validazione */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-900 mb-2">Come utilizzare lo sconto</h4>
+                <p className="text-sm text-gray-600">
+                  📱 Mostra il tuo <strong>Codice IQ</strong> al partner per ottenere lo sconto. 
+                  Il partner può validare il codice tramite l'app TouristIQ.
+                </p>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </Layout>
