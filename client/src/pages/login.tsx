@@ -8,7 +8,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { MapPin, LogIn, AlertTriangle, Loader2, Shield, KeyRound } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { MapPin, LogIn, AlertTriangle, Loader2, Shield, KeyRound, Info } from "lucide-react";
 import { login } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -152,7 +153,8 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <TooltipProvider>
+      <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Sfondo Naturale Mediterraneo */}
       <div className="absolute inset-0 bg-gradient-to-b from-sky-400 via-blue-500 to-cyan-600">
         {/* Sole splendente */}
@@ -268,13 +270,34 @@ export default function Login() {
               {/* Frase di supporto per recupero IQCode */}
               <div className="text-center text-sm text-gray-600 space-y-2">
                 <p>Hai dimenticato il tuo IQCode? Tranquillo, è tutto sotto controllo.</p>
-                <button
-                  type="button"
-                  onClick={() => setShowRecoveryModal(true)}
-                  className="text-blue-600 hover:text-blue-800 font-medium underline transition-colors"
-                >
-                  👉 Recuperalo con il Custode del Codice
-                </button>
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowRecoveryModal(true)}
+                    className="text-blue-600 hover:text-blue-800 font-medium underline transition-colors"
+                  >
+                    👉 Recuperalo con il Custode del Codice
+                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info 
+                        className="h-4 w-4 text-blue-500 hover:text-blue-700 cursor-help transition-colors"
+                        aria-label="Cos'è il Custode del Codice?"
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs p-3 text-sm bg-white border border-blue-200 shadow-lg">
+                      <div className="space-y-2">
+                        <p className="font-semibold text-blue-800">Il Custode del Codice</p>
+                        <p className="text-gray-700">
+                          è un sistema creato da TouristIQ per permetterti di recuperare il tuo IQCode <strong>senza mai fornire email o telefono</strong>.
+                        </p>
+                        <p className="text-gray-700">
+                          Basta una parola segreta e la tua data di nascita: tutto <span className="font-medium">anonimo</span>, <span className="font-medium">sicuro</span> e sotto il tuo pieno controllo.
+                        </p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               </div>
 
               <div className="flex items-center space-x-3">
@@ -406,5 +429,6 @@ export default function Login() {
         </Dialog>
       </div>
     </div>
+    </TooltipProvider>
   );
 }
