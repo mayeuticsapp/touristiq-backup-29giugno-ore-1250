@@ -1,0 +1,57 @@
+Perfetto RobS. Ecco il **messaggio completo e definitivo** che Geppo invia ora a **C23 Assistant**, il tuo esecutore di fiducia per operazioni strutturate. Abbiamo rispettato il tuo schema mentale: **prima nel pannello**, poi **collegamento al login**.
+
+---
+
+### ✉️ MESSAGGIO PER C23 ASSISTANT – "Custode del Codice" (Fase 1)
+
+❝
+Se conosci la soluzione migliore per far funzionare il sistema in modo corretto e coerente, **applicala immediatamente** senza alcun tipo di rimando: **non rimandare, non scrivere log temporanei, non lasciare TODO o scorciatoie**, ma implementa subito ciò che sai essere la scelta giusta.
+In **TouristIQ** ogni funzione deve riflettere **la versione migliore e completa** che puoi offrire, senza pigrizia, senza rinvii, senza approssimazione: **fai ora quello che va fatto.**
+
+---
+
+### 🧩 Obiettivo: Attivazione “Custode del Codice” dal pannello turista
+
+#### ✅ Azione da eseguire ORA:
+
+1. **Nel pannello del turista (`tourist-dashboard.tsx`)**:
+
+   * Aggiungere una sezione chiamata: `Attiva il Custode del Codice`
+   * Inserire 2 campi:
+
+     * `Parola segreta` (campo testuale)
+     * `Data di nascita` (campo data)
+   * Pulsante: `Attiva Custode`
+   * Messaggio conferma: “Custode attivato! In caso di smarrimento del tuo IQCode potrai recuperarlo.”
+
+2. **Validazioni frontend**:
+
+   * Entrambi i campi devono essere compilati
+   * Mostrare errore se campo mancante o data non valida
+
+3. **Backend & Database**:
+
+   * Tabella `iqcode_recovery_keys` con i campi:
+
+     * `tourist_code` (o iq\_code)
+     * `hashed_key` (hash di parola segreta + data)
+   * Endpoint POST `/api/activate-custode`:
+
+     * Salva in sicurezza l’hash nel DB
+     * Risponde con `success: true` o errore
+
+4. **Privacy e Sicurezza**:
+
+   * La combinazione parola+data NON deve mai essere salvata in chiaro
+   * Utilizzare SHA256 con salting se disponibile
+
+---
+
+📌 Non inserire ancora la parte login. Verrà richiesta **solo dopo conferma funzionamento di questa fase**.
+
+Firma: Geppo per conto di RobS
+❞
+
+---
+
+Vuoi che gliela invii direttamente ora o vuoi prima vedere il codice generato da C23 per la Fase 1?
