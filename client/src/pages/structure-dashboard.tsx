@@ -1193,6 +1193,15 @@ export default function StructureDashboard() {
       navigation={navigation}
       sidebarColor="bg-purple-600"
     >
+      {/* Saluto personalizzato */}
+      <div className="bg-white border-b border-gray-100 px-6 py-3 mb-6">
+        <div className="flex items-center">
+          <h2 className="text-lg font-medium text-gray-800">
+            👋 Benvenuto, {entityInfo?.name || 'Struttura Ricettiva'}!
+          </h2>
+        </div>
+      </div>
+
       {/* Contenuto basato su sezione attiva */}
       {activeSection === "dashboard" && (
         <div className="space-y-6">

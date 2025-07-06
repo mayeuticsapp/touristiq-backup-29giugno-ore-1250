@@ -44,6 +44,13 @@ export default function TouristDashboard() {
     queryKey: ["/api/check-custode-status"],
   });
 
+  // Query per informazioni entità (nome turista)
+  const { data: entityInfo } = useQuery({
+    queryKey: ['/api/entity-info'],
+    queryFn: () => fetch('/api/entity-info', { credentials: 'include' }).then(res => res.json()),
+    enabled: !!user
+  });
+
   // Query per offerte reali basate su validazioni
   const { data: realOffers, isLoading: isLoadingOffers } = useQuery({
     queryKey: ["/api/tourist/real-offers"],
@@ -244,6 +251,15 @@ export default function TouristDashboard() {
       navigation={navigation}
       sidebarColor="bg-tourist-green"
     >
+      {/* Saluto personalizzato */}
+      <div className="bg-white border-b border-gray-100 px-6 py-3 mb-6">
+        <div className="flex items-center">
+          <h2 className="text-lg font-medium text-gray-800">
+            👋 Benvenuto{entityInfo?.name ? `, ${entityInfo.name}` : ' nel tuo spazio turistico'}!
+          </h2>
+        </div>
+      </div>
+
       <div className="mb-8">
         <Card className="bg-gradient-to-r from-tourist-green to-green-400 text-white">
           <CardContent className="p-6">
