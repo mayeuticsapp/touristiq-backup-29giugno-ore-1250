@@ -1059,8 +1059,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo partner" });
       }
 
-      // Recupero offerte dal database
+      console.log(`🔍 PARTNER OFFERS DEBUG: Partner ${session.iqCode} richiede le sue offerte`);
+      
+      // Recupero offerte dal database - SOLO del partner autenticato
       const offers = await (storage as any).getPartnerOffers(session.iqCode);
+      
+      console.log(`📊 PARTNER OFFERS RESULT: Trovate ${offers.length} offerte per ${session.iqCode}`);
+      offers.forEach((offer: any, index: number) => {
+        console.log(`   ${index + 1}. ${offer.title} (Partner: ${offer.partnerCode})`);
+      });
 
       res.json(offers);
     } catch (error) {

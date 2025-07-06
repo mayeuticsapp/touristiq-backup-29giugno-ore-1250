@@ -886,7 +886,7 @@ export class MemStorage implements IStorage {
 
 // PostgreSQL Storage Class
 export class PostgreStorage implements IStorage {
-  private db: any;
+  protected db: any;
 
   constructor() {
     const sql = neon(process.env.DATABASE_URL!);
@@ -1552,19 +1552,7 @@ export class PostgreStorage implements IStorage {
     }
   }
 
-  // Metodo per recuperare offerte partner
-  async getPartnerOffers(partnerCode: string): Promise<any[]> {
-    try {
-      const result = await this.db
-        .select()
-        .from(partnerOffers)
-        .where(eq(partnerOffers.partnerCode, partnerCode));
-      return result;
-    } catch (error) {
-      console.error('Errore getPartnerOffers PostgreSQL:', error);
-      return [];
-    }
-  }
+
 }
 
 // Extend PostgreStorage con metodi impostazioni
@@ -1711,12 +1699,23 @@ class ExtendedPostgreStorage extends PostgreStorage {
 
   async getPartnerOffers(partnerCode: string): Promise<any[]> {
     const { partnerOffers } = await import('@shared/schema');
-    const { eq } = await import('drizzle-orm');
+    const { eq, and } = await import('drizzle-orm');
+    
+    console.log(`🔍 STORAGE DEBUG: Cercando offerte per partner: ${partnerCode}`);
+    
     const result = await this.db
       .select()
       .from(partnerOffers)
-      .where(eq(partnerOffers.partnerCode, partnerCode))
-      .where(eq(partnerOffers.isActive, true));
+      .where(and(
+        eq(partnerOffers.partnerCode, partnerCode),
+        eq(partnerOffers.isActive, true)
+      ));
+    
+    console.log(`📊 STORAGE RESULT: Trovate ${result.length} offerte per ${partnerCode}`);
+    result.forEach((offer: any, index: number) => {
+      console.log(`   ${index + 1}. "${offer.title}" (ID: ${offer.id}, Partner: ${offer.partnerCode})`);
+    });
+    
     return result;
   }
 
@@ -2604,9 +2603,7 @@ class ExtendedMemStorage extends MemStorage {
     return newOffer;
   }
 
-  async getPartnerOffers(partnerCode: string): Promise<any[]> {
-    return this.partnerOffers.filter(offer => offer.partnerCode === partnerCode);
-  }
+
 
   async createSpecialClient(client: {partnerCode: string, name: string, notes: string}): Promise<any> {
     return {
