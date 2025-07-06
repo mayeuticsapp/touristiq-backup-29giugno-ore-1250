@@ -5,16 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, XCircle, Clock, Users, RefreshCw } from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
 
 interface ValidationRequest {
   id: number;
   // touristIqCode: string; // ❌ RIMOSSO PER PRIVACY
-  // partnerName: string; // ❌ RIMOSSO PER PRIVACY
+  // partnerName: string; // ❌ RIMOSSO PER PRIVACY  
   status: 'pending' | 'accepted' | 'rejected';
   requestedAt: string;
   respondedAt?: string;
-  usesRemaining: number;
-  usesTotal: number;
+  usesRemaining?: number; // Solo per turisti
+  usesTotal?: number; // Solo per turisti
 }
 
 interface IQCodeValidationProps {
@@ -168,6 +169,35 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
     }
   };
 
+  const handleUseValidatedCode = async (validationId: number) => {
+    try {
+      const response = await apiRequest('POST', '/api/iqcode/use-validated', { validationId });
+      
+      if (response.success) {
+        toast({
+          title: "Sconto Applicato",
+          description: "L'utilizzo è stato registrato con successo",
+          variant: "default"
+        });
+        
+        // Aggiorna la lista delle validazioni
+        loadValidations();
+      } else {
+        toast({
+          title: "Errore",
+          description: response.message || "Errore durante l'applicazione dello sconto",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Errore",
+        description: "Errore di connessione",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
@@ -255,24 +285,19 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
                     </div>
                     {validation.status === 'accepted' && (
                       <div className="bg-green-50 border border-green-200 rounded p-3">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                          <span className="text-green-800 font-medium">Codice convalidato. Puoi procedere con lo sconto.</span>
-                        </div>
-                        <div className="text-sm text-green-700 mt-1">
-                          <span className="font-medium">{validation.usesRemaining} utilizzi rimanenti</span> (su {validation.usesTotal} totali)
-                        </div>
-                        {validation.usesRemaining === 0 && (
-                          <div className="mt-2">
-                            <Button 
-                              size="sm" 
-                              onClick={() => handleRechargeRequest(validation.id)}
-                              className="bg-blue-600 hover:bg-blue-700"
-                            >
-                              Ricarica 10 Utilizzi
-                            </Button>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                            <span className="text-green-800 font-medium">Codice convalidato. Pronto per l'utilizzo.</span>
                           </div>
-                        )}
+                          <Button 
+                            size="sm"
+                            onClick={() => handleUseValidatedCode(validation.id)}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            Applica Sconto
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>

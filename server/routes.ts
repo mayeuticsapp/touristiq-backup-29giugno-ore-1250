@@ -2729,24 +2729,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Richiesta non trovata" });
       }
 
-      // Aggiorna stato e scala utilizzi se accettato
+      // Aggiorna stato SENZA scalare utilizzi
       await storage.updateValidationStatus(validationId, status, new Date());
       
-      let finalUsesRemaining = validation.usesRemaining;
-      if (status === 'accepted') {
-        // Scala automaticamente gli utilizzi quando turista accetta
-        await storage.decrementValidationUses(validationId);
-        finalUsesRemaining = validation.usesRemaining - 1;
-      }
+      // ✅ PRIVACY: Non decloriamo utilizzi rimanenti nella risposta
+      // Il decremento avverrà solo quando il partner usa fisicamente il codice
 
       res.json({ 
         success: true, 
-        message: status === 'accepted' ? "Convalida accettata" : "Convalida rifiutata",
-        usesRemaining: finalUsesRemaining
+        message: status === 'accepted' ? "Convalida accettata" : "Convalida rifiutata"
+        // ❌ RIMOSSO usesRemaining PER PRIVACY
       });
 
     } catch (error) {
       console.error("Errore risposta validazione:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Partner utilizza fisicamente il codice validato (qui scalano gli utilizzi)
+  app.post("/api/iqcode/use-validated", async (req: any, res: any) => {
+    try {
+      // Controlli di sicurezza
+      if (!await verifyRoleAccess(req, res, ['partner'])) return;
+
+      const { validationId } = req.body;
+      if (!validationId) {
+        return res.status(400).json({ message: "ID validazione richiesto" });
+      }
+
+      // Ottieni la sessione come negli altri endpoint
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      // Verifica che la validazione appartenga al partner
+      const validation = await storage.getValidationById(validationId);
+      if (!validation || validation.partnerCode !== session.iqCode) {
+        return res.status(404).json({ message: "Validazione non trovata" });
+      }
+
+      // Verifica che sia accettata e abbia utilizzi rimanenti
+      if (validation.status !== 'accepted') {
+        return res.status(400).json({ message: "Codice non validato" });
+      }
+
+      if (validation.usesRemaining <= 0) {
+        return res.status(400).json({ message: "Nessun utilizzo rimanente" });
+      }
+
+      // Scala gli utilizzi
+      await storage.decrementValidationUses(validationId);
+
+      res.json({ 
+        success: true, 
+        message: "Sconto applicato con successo"
+      });
+
+    } catch (error) {
+      console.error("Errore utilizzo codice:", error);
       res.status(500).json({ message: "Errore del server" });
     }
   });
@@ -2771,7 +2818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const validations = await storage.getValidationsByPartner(session.iqCode);
       
-      // 🔒 PRIVACY: Rimuovi codici IQ turista dalla risposta API
+      // 🔒 PRIVACY: Rimuovi TUTTE le informazioni sensibili turista dalla risposta API
       const sanitizedValidations = validations.map(v => ({
         id: v.id,
         // touristIqCode: v.touristIqCode, // ❌ RIMOSSO PER PRIVACY
@@ -2779,8 +2826,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: v.status,
         requestedAt: v.requestedAt,
         respondedAt: v.respondedAt,
-        usesRemaining: v.usesRemaining,
-        usesTotal: v.usesTotal
+        // usesRemaining: v.usesRemaining, // ❌ RIMOSSO PER PRIVACY
+        // usesTotal: v.usesTotal // ❌ RIMOSSO PER PRIVACY
       }));
       
       res.json(sanitizedValidations);
