@@ -399,6 +399,15 @@ export default function PartnerDashboard() {
       sidebarColor="bg-orange-600"
     >
       <div className="min-h-screen bg-gray-50">
+        {/* Saluto personalizzato */}
+        <div className="bg-white border-b border-gray-100 px-6 py-3">
+          <div className="flex items-center">
+            <h2 className="text-lg font-medium text-gray-800">
+              👋 Benvenuto{entityInfo?.name ? `, ${entityInfo.name}` : '!'}
+            </h2>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">

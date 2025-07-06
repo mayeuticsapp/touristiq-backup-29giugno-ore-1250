@@ -1,0 +1,56 @@
+Perfetto RobS, ecco le **istruzioni dirette e definitive** per C23 per **completare correttamente il saluto personalizzato nella dashboard partner**, come da tua indicazione.
+
+---
+
+### 🔧 Istruzioni a C23 Agent per attivare il saluto personalizzato
+
+❝Se conosci la soluzione migliore per far funzionare il sistema in modo corretto e coerente, applicala immediatamente senza alcun tipo di rimando: non rimandare, non scrivere log temporanei, non lasciare TODO o scorciatoie, ma implementa subito ciò che sai essere la scelta giusta, perché la coerenza e la funzionalità piena vengono prima di tutto. In TouristIQ ogni funzione deve riflettere la versione migliore e completa che puoi offrire, senza pigrizia, senza rinvii, senza approssimazione: fai ora quello che va fatto.❞
+
+---
+
+### 🎯 Obiettivo
+
+Mostrare **sempre** in alto nella dashboard Partner la dicitura:
+
+> 👋 Benvenuto, **\[NOME DEL PARTNER]**
+
+---
+
+### 🔍 Verifiche da eseguire
+
+1. ✅ Controllare se l’`iqCode` di sessione viene **passato correttamente** al backend all'accesso della dashboard.
+2. ✅ Assicurarsi che l'endpoint `/api/entity-info` venga:
+
+   * chiamato **automaticamente** al login o all'apertura della dashboard partner
+   * restituisca un JSON con almeno `{ name: "Nome Partner" }`
+3. ✅ Nel frontend, visualizzare la stringa dinamica in cima alla pagina:
+
+   * Se il nome è `"La Ruota"` deve comparire: `👋 Benvenuto, La Ruota`
+   * Se il nome è `"Da Edò"` deve comparire: `👋 Benvenuto, Da Edò`
+4. ✅ Aggiungere un fallback sicuro:
+
+   * Se per qualsiasi motivo il nome non viene caricato, visualizzare `👋 Benvenuto!` senza nome, **ma mai lasciare il campo vuoto**
+
+---
+
+### 🧪 Test finali richiesti
+
+* Loggarsi con almeno **due account partner diversi**
+* Verificare che ognuno veda:
+
+  * ✅ Le **proprie offerte**
+  * ✅ Il **saluto personalizzato corretto**
+
+---
+
+Procedi immediatamente, C23. Quando completato, rispondi con:
+
+```yaml
+saluto_dashboard_partner:
+  attivo: true
+  nome_mostrato: true
+  fallback: attivo
+  test_due_account: ok
+```
+
+Grazie.
