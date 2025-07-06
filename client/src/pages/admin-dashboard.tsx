@@ -624,13 +624,11 @@ function UsersManagement() {
                 {strategic.registrationDate && (
                   <span>📅 Reg. {new Date(strategic.registrationDate).toLocaleDateString('it-IT')}</span>
                 )}
-                {strategic.lastAccess && (
-                  <span>⏱ Ultimo: {new Date(strategic.lastAccess).toLocaleDateString('it-IT')}</span>
-                )}
+                <span>🎯 <strong>{strategic.totalValidations || 0}</strong> validazioni</span>
               </div>
               <div className="flex gap-2 mt-2">
-                {strategic.lastAccess && new Date().getTime() - new Date(strategic.lastAccess).getTime() > 30 * 24 * 60 * 60 * 1000 && (
-                  <Badge variant="secondary" className="text-xs">⚪ Inattivo &gt; 30gg</Badge>
+                {(!strategic.totalValidations || strategic.totalValidations === 0) && (
+                  <Badge variant="secondary" className="text-xs">⚪ Nessuna attività</Badge>
                 )}
                 {strategic.totalValidations && strategic.totalValidations > 5 && (
                   <Badge variant="default" className="text-xs">🔥 Attivo</Badge>
