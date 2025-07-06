@@ -244,7 +244,7 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
                 {validations.map((validation) => (
                   <div key={validation.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="font-medium">Codice: {validation.touristIqCode}</div>
+                      <div className="font-medium">Richiesta di Validazione</div>
                       {getStatusBadge(validation.status)}
                     </div>
                     <div className="text-sm text-gray-600 mb-3">

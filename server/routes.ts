@@ -2757,7 +2757,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const validations = await storage.getValidationsByPartner(session.iqCode);
-      res.json(validations);
+      
+      // 🔒 PRIVACY: Rimuovi codici IQ turista dalla risposta API
+      const sanitizedValidations = validations.map(v => ({
+        id: v.id,
+        // touristIqCode: v.touristIqCode, // ❌ RIMOSSO PER PRIVACY
+        partnerName: v.partnerName,
+        status: v.status,
+        requestedAt: v.requestedAt,
+        respondedAt: v.respondedAt,
+        usesRemaining: v.usesRemaining,
+        usesTotal: v.usesTotal
+      }));
+      
+      res.json(sanitizedValidations);
 
     } catch (error) {
       console.error("Errore stato validazioni:", error);
