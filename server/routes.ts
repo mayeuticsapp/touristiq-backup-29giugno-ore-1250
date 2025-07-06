@@ -2510,6 +2510,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validation = await storage.createIqcodeValidation({
         touristCode: touristIqCode,
         partnerCode: session.iqCode,
+        partnerName,
         requestedAt: new Date(),
         status: 'pending',
         usesRemaining: 10,

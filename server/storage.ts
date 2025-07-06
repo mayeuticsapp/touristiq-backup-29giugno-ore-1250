@@ -2185,9 +2185,10 @@ class ExtendedPostgreStorage extends PostgreStorage {
   }
 
   // Metodi validazione IQCode per PostgreSQL
-  async createIqcodeValidation(data: {partnerCode: string, touristCode: string, requestedAt: Date, status: string, usesRemaining: number, usesTotal: number}): Promise<IqcodeValidation> {
+  async createIqcodeValidation(data: {partnerCode: string, partnerName: string, touristCode: string, requestedAt: Date, status: string, usesRemaining: number, usesTotal: number}): Promise<IqcodeValidation> {
     const validationData = {
-      partnerIqCode: data.partnerCode,
+      partnerCode: data.partnerCode,
+      partnerName: data.partnerName,
       touristIqCode: data.touristCode,
       requestedAt: data.requestedAt,
       status: data.status,
