@@ -24,6 +24,7 @@ export default function TouristDashboard() {
   
   // Stati per "Custode del Codice"
   const [showCustodeForm, setShowCustodeForm] = useState(false);
+  const [showUpdateCustodeForm, setShowUpdateCustodeForm] = useState(false);
   const [secretWord, setSecretWord] = useState("");
   const [birthDate, setBirthDate] = useState("");
   
@@ -70,6 +71,30 @@ export default function TouristDashboard() {
     },
   });
 
+  // Mutation per aggiornare dati "Custode del Codice"
+  const updateCustodeMutation = useMutation({
+    mutationFn: async (data: { secretWord: string; birthDate: string }) => {
+      return await apiRequest("POST", "/api/update-custode", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Custode del Codice aggiornato!",
+        description: "I tuoi nuovi dati di recupero sono stati salvati con successo.",
+      });
+      setShowUpdateCustodeForm(false);
+      setSecretWord("");
+      setBirthDate("");
+      queryClient.invalidateQueries({ queryKey: ["/api/check-custode-status"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Errore",
+        description: error.message || "Errore nell'aggiornamento dei dati di recupero",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Gestore per salvare i dati del "Custode del Codice"
   const handleSaveCustode = () => {
     if (!secretWord.trim() || !birthDate.trim()) {
@@ -90,6 +115,30 @@ export default function TouristDashboard() {
   // Gestore per aprire il form "Custode del Codice"
   const handleOpenCustodeForm = () => {
     setShowCustodeForm(true);
+  };
+
+  // Gestore per aggiornare i dati del "Custode del Codice"
+  const handleUpdateCustode = () => {
+    if (!secretWord.trim() || !birthDate.trim()) {
+      toast({
+        title: "Campi obbligatori",
+        description: "Inserisci sia la parola segreta che la data di nascita",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateCustodeMutation.mutate({
+      secretWord: secretWord.trim(),
+      birthDate: birthDate.trim(),
+    });
+  };
+
+  // Gestore per aprire il form di modifica "Custode del Codice"
+  const handleOpenUpdateCustodeForm = () => {
+    setSecretWord("");
+    setBirthDate("");
+    setShowUpdateCustodeForm(true);
   };
 
   // Funzione per cercare offerte per città
@@ -217,9 +266,19 @@ export default function TouristDashboard() {
                   </div>
                 </div>
                 {custodeStatus?.hasRecoveryData ? (
-                  <div className="flex items-center gap-2 text-green-600">
-                    <Check className="w-5 h-5" />
-                    <span className="font-medium">Custode già attivato</span>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 text-green-600">
+                      <Check className="w-5 h-5" />
+                      <span className="font-medium">Custode già attivato</span>
+                    </div>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={handleOpenUpdateCustodeForm}
+                      className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                    >
+                      Modifica Dati
+                    </Button>
                   </div>
                 ) : (
                   <Button 
@@ -497,6 +556,49 @@ export default function TouristDashboard() {
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
               {custodeMutation.isPending ? "Salvando..." : "Salva e attiva il custode"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Modifica Custode del Codice */}
+      <Dialog open={showUpdateCustodeForm} onOpenChange={setShowUpdateCustodeForm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-blue-600" />
+              Modifica Custode del Codice
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Aggiorna i tuoi dati di recupero. I vecchi dati saranno sostituiti con i nuovi.
+            </p>
+            <div>
+              <Label htmlFor="updateSecretWord">Nuova parola segreta</Label>
+              <Input
+                id="updateSecretWord"
+                type="text"
+                value={secretWord}
+                onChange={(e) => setSecretWord(e.target.value)}
+                placeholder="Inserisci una nuova parola che ricorderai"
+              />
+            </div>
+            <div>
+              <Label htmlFor="updateBirthDate">Nuova data di nascita</Label>
+              <Input
+                id="updateBirthDate"
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+              />
+            </div>
+            <Button 
+              onClick={handleUpdateCustode}
+              disabled={updateCustodeMutation.isPending}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              {updateCustodeMutation.isPending ? "Aggiornando..." : "Aggiorna dati di recupero"}
             </Button>
           </div>
         </DialogContent>

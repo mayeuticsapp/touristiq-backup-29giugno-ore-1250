@@ -127,6 +127,7 @@ export interface IStorage {
   createRecoveryKey(data: {hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string}): Promise<any>;
   getRecoveryKeyByIqCode(iqCode: string): Promise<any>;
   verifyRecoveryData(hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string): Promise<any>;
+  updateRecoveryKey(id: number, data: {hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string, updatedAt: Date}): Promise<any>;
   
   // **SISTEMA RECUPERO IQCODE - Metodi addizionali**
   getRecoveryByCredentials(hashedSecretWord: string, hashedBirthDate: string): Promise<any>;
@@ -2511,6 +2512,20 @@ class ExtendedPostgreStorage extends PostgreStorage {
 
     return null;
   }
+
+  async updateRecoveryKey(id: number, data: {hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string, updatedAt: Date}): Promise<any> {
+    const [updatedKey] = await this.db
+      .update(iqcodeRecoveryKeys)
+      .set({
+        hashedSecretWord: data.hashedSecretWord,
+        hashedBirthDate: data.hashedBirthDate,
+        updatedAt: data.updatedAt
+      })
+      .where(eq(iqcodeRecoveryKeys.id, id))
+      .returning();
+    
+    return updatedKey;
+  }
 }
 
 // Extend MemStorage con metodi impostazioni
@@ -2805,6 +2820,21 @@ class ExtendedMemStorage extends MemStorage {
       return recoveryKey;
     }
     
+    return undefined;
+  }
+
+  async updateRecoveryKey(id: number, data: {hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string, updatedAt: Date}): Promise<any> {
+    const existingKey = this.recoveryKeys.get(data.hashedIqCode);
+    if (existingKey && existingKey.id === id) {
+      const updatedKey = {
+        ...existingKey,
+        hashedSecretWord: data.hashedSecretWord,
+        hashedBirthDate: data.hashedBirthDate,
+        updatedAt: data.updatedAt
+      };
+      this.recoveryKeys.set(data.hashedIqCode, updatedKey);
+      return updatedKey;
+    }
     return undefined;
   }
 }

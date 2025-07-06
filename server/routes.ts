@@ -3153,6 +3153,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // **SISTEMA MODIFICA CUSTODE DEL CODICE**
+  
+  // Aggiorna dati hashati del Custode del Codice per utente autenticato
+  app.post("/api/update-custode", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || !['tourist', 'structure', 'partner'].includes(session.role)) {
+        return res.status(401).json({ message: "Sessione non valida o non autorizzata" });
+      }
+
+      const { secretWord, birthDate } = req.body;
+
+      if (!secretWord || !birthDate) {
+        return res.status(400).json({ message: "Parola segreta e data di nascita sono obbligatorie" });
+      }
+
+      // Verifica se esistono già dati di recupero per questo IQCode
+      const existingRecovery = await storage.getRecoveryKeyByIqCode(session.iqCode);
+      if (!existingRecovery) {
+        return res.status(404).json({ message: "Custode del Codice non trovato - attivalo prima di modificarlo" });
+      }
+
+      // Hash SHA256 dei nuovi dati
+      const crypto = await import('crypto');
+      const hashedIqCode = crypto.createHash('sha256').update(session.iqCode).digest('hex');
+      const hashedSecretWord = crypto.createHash('sha256').update(secretWord.trim().toLowerCase()).digest('hex');
+      const hashedBirthDate = crypto.createHash('sha256').update(birthDate.trim()).digest('hex');
+
+      // Aggiorna i dati di recupero esistenti
+      await storage.updateRecoveryKey(existingRecovery.id, {
+        hashedIqCode,
+        hashedSecretWord,
+        hashedBirthDate,
+        updatedAt: new Date()
+      });
+
+      res.json({
+        success: true,
+        message: "Il tuo Custode del Codice è stato aggiornato con successo!"
+      });
+
+    } catch (error) {
+      console.error("Errore aggiornamento Custode:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // **SISTEMA RECUPERO IQCODE - STEP 2**
   
   // Recupera IQCode con parola segreta e data di nascita

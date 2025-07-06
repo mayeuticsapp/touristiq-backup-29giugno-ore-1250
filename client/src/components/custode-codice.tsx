@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Shield, Info, Check } from "lucide-react";
+import { Shield, Info, Check, Edit, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -19,6 +19,7 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showCustodeDialog, setShowCustodeDialog] = useState(false);
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [secretWord, setSecretWord] = useState("");
   const [birthDate, setBirthDate] = useState("");
 
@@ -73,8 +74,57 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
     }
   });
 
+  // Mutation per aggiornare i dati del Custode del Codice
+  const updateCustode = useMutation({
+    mutationFn: async () => {
+      if (!secretWord.trim() || !birthDate) {
+        throw new Error("Compila tutti i campi obbligatori");
+      }
+
+      const response = await fetch('/api/update-custode', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          secretWord: secretWord.trim(),
+          birthDate: birthDate
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Errore durante l\'aggiornamento');
+      }
+
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "✅ Custode del Codice Aggiornato!",
+        description: "I tuoi nuovi dati di recupero sono stati salvati con successo.",
+      });
+      setShowUpdateDialog(false);
+      setSecretWord("");
+      setBirthDate("");
+      queryClient.invalidateQueries({ queryKey: ['/api/check-custode-status'] });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Errore Aggiornamento",
+        description: error.message || "Si è verificato un errore durante l'aggiornamento.",
+      });
+    }
+  });
+
   const handleActivateCustode = () => {
     activateCustode.mutate();
+  };
+
+  const handleUpdateCustode = () => {
+    updateCustode.mutate();
   };
 
   const formatActivationDate = (dateString: string) => {
@@ -114,9 +164,20 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
                 </div>
               </div>
               {(custodeStatus as any)?.hasRecoveryData ? (
-                <div className="flex items-center gap-2 text-green-600">
-                  <Check className="w-5 h-5" />
-                  <span className="font-medium">Custode già attivato</span>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-green-600">
+                    <Check className="w-5 h-5" />
+                    <span className="font-medium">Custode già attivato</span>
+                  </div>
+                  <Button
+                    onClick={() => setShowUpdateDialog(true)}
+                    variant="outline"
+                    size="sm"
+                    className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Modifica
+                  </Button>
                 </div>
               ) : (
                 <Button
@@ -220,6 +281,81 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
                 className="flex-1 bg-blue-600 hover:bg-blue-700"
               >
                 {activateCustode.isPending ? "Attivazione..." : "Attiva Custode"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Modifica Custode del Codice */}
+      <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="w-5 h-5 text-blue-600" />
+              Modifica Custode del Codice
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-sm text-gray-600 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <strong>Attenzione:</strong> Modificando questi dati, i vecchi dati di recupero non funzioneranno più. 
+              Salva i nuovi dati in un posto sicuro.
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="update-secret-word" className="text-sm font-medium">
+                  Nuova Parola Segreta *
+                </Label>
+                <Input
+                  id="update-secret-word"
+                  type="text"
+                  placeholder="Inserisci una nuova parola segreta"
+                  value={secretWord}
+                  onChange={(e) => setSecretWord(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="update-birth-date" className="text-sm font-medium">
+                  Nuova Data di Nascita *
+                </Label>
+                <Input
+                  id="update-birth-date"
+                  type="date"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowUpdateDialog(false);
+                  setSecretWord("");
+                  setBirthDate("");
+                }}
+                className="flex-1"
+              >
+                Annulla
+              </Button>
+              <Button
+                onClick={handleUpdateCustode}
+                disabled={!secretWord.trim() || !birthDate || updateCustode.isPending}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                {updateCustode.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Aggiornamento...
+                  </>
+                ) : (
+                  "Aggiorna Custode"
+                )}
               </Button>
             </div>
           </div>
