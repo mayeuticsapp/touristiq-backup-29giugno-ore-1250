@@ -2480,8 +2480,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Verifica che il codice turista esista e sia valido
       const touristCode = await storage.getIqCodeByCode(touristIqCode);
-      if (!touristCode || touristCode.role !== 'tourist') {
-        return res.status(404).json({ message: "Codice IQ turista non valido" });
+      if (!touristCode) {
+        return res.status(404).json({ message: "Codice IQ turista non trovato" });
+      }
+      
+      if (touristCode.role !== 'tourist') {
+        return res.status(400).json({ message: "Codice inserito non è un codice turista valido" });
+      }
+      
+      if (!touristCode.isActive) {
+        return res.status(400).json({ message: "Codice IQ turista non attivo" });
+      }
+      
+      // Verifica se esiste già una richiesta di validazione pendente
+      const existingValidations = await storage.getValidationsByPartner(session.iqCode);
+      const existingRequest = existingValidations.find(v => 
+        v.touristIqCode === touristIqCode && v.status === 'pending'
+      );
+      
+      if (existingRequest) {
+        return res.status(400).json({ message: "Richiesta di validazione già inviata per questo codice" });
       }
 
       // Ottieni nome partner dal onboarding
@@ -2490,9 +2508,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Crea richiesta di validazione
       const validation = await storage.createIqcodeValidation({
-        touristIqCode,
+        touristCode: touristIqCode,
         partnerCode: session.iqCode,
-        partnerName,
+        requestedAt: new Date(),
         status: 'pending',
         usesRemaining: 10,
         usesTotal: 10
@@ -2506,7 +2524,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Errore richiesta validazione:", error);
-      res.status(500).json({ message: "Errore del server" });
+      
+      // Gestisci errori specifici del database PostgreSQL
+      if (error && typeof error === 'object' && 'code' in error) {
+        if (error.code === '23502') {
+          return res.status(400).json({ message: "Errore nei dati: campo obbligatorio mancante" });
+        }
+        
+        if (error.code === '23505') {
+          return res.status(400).json({ message: "Richiesta di validazione già esistente per questo codice" });
+        }
+        
+        if (error.code === '23503') {
+          return res.status(400).json({ message: "Codice IQ turista non valido o non esistente" });
+        }
+      }
+      
+      // Errori generici con maggiori dettagli
+      return res.status(500).json({ message: "Errore durante la creazione della richiesta di validazione" });
     }
   });
 
