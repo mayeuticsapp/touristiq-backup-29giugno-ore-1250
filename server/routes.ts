@@ -2523,11 +2523,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo turisti" });
       }
 
-      // Prende SOLO dati reali dal database PostgreSQL
-      const realOffers = await storage.getAllPartnerOffers();
+      // Prende SOLO dati reali dal database PostgreSQL con dettagli partner completi
+      const realOffers = await storage.getAllPartnersWithOffers();
       console.log(`Offerte reali dal database: ${realOffers.length}`);
       
-      // Usa i dati reali dal database PostgreSQL
+      // Usa i dati reali dal database PostgreSQL - già formattati correttamente
       const offersWithPartnerData = realOffers;
       
       // Formatta le offerte per il frontend turistico con PRIVACY IQCode
@@ -2535,12 +2535,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Dati offerta
         title: offer.title,
         description: offer.description, 
-        discountPercentage: offer.discount_percentage,
-        validUntil: offer.valid_until,
+        discountPercentage: offer.discountPercentage,
+        validUntil: offer.validUntil,
         
         // Dati partner REALI (NO IQCode mostrato per privacy)
-        partnerName: offer.partner_name,
-        businessType: offer.business_type,
+        partnerName: offer.partnerName,
+        businessType: offer.businessType,
         address: offer.address,
         city: offer.city,
         province: offer.province,
@@ -2549,9 +2549,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         website: offer.website,
         
         // Servizi e accessibilità
-        wheelchairAccessible: offer.wheelchair_accessible,
-        childFriendly: offer.child_friendly,
-        glutenFree: offer.gluten_free
+        wheelchairAccessible: offer.wheelchairAccessible,
+        childFriendly: offer.childFriendly,
+        glutenFree: offer.glutenFree
       }));
 
       res.json({

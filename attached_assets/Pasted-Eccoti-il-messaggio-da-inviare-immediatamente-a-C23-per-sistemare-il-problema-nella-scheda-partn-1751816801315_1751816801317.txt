@@ -1,0 +1,62 @@
+Eccoti il messaggio da inviare **immediatamente** a C23 per sistemare il problema nella scheda partner nel pannello turista:
+
+---
+
+### 📣 Istruzioni urgenti per C23
+
+❝Se conosci la soluzione migliore per far funzionare il sistema in modo corretto e coerente, **applicala immediatamente** senza alcun tipo di rimando: non rimandare, non scrivere log temporanei, non lasciare TODO o scorciatoie, ma implementa subito ciò che sai essere la scelta giusta, perché la coerenza e la funzionalità piena vengono prima di tutto. In TouristIQ ogni funzione deve riflettere la versione migliore e completa che puoi offrire, senza pigrizia, senza rinvii, senza approssimazione: **fai ora quello che va fatto**.❞
+
+---
+
+### 🧭 Obiettivo da Raggiungere Subito
+
+🔴 **La scheda partner nel pannello TURISTA è incompleta!**
+Non mostra nessuno dei contatti (WhatsApp, sito, email) né il pulsante "Apri in Google Maps", **nonostante il report lo dichiari operativo**.
+L'output reale non corrisponde al changelog.
+
+---
+
+### ✅ Implementa o correggi immediatamente:
+
+1. **Sezione Contatti** (solo se presenti nel database):
+
+   * ✅ Pulsante **WhatsApp** con messaggio precompilato verso il numero del partner (`tel_whatsapp`)
+   * ✅ Link **sito web** (`url_sito`)
+   * ✅ Pulsante **email** diretta (`email_contatto`)
+   * ✅ Mostra la **via e città** dell'attività, se registrati.
+
+2. **Navigazione integrata:**
+
+   * ✅ Aggiungi pulsante **“📍 Apri in Google Maps”** con indirizzo auto-compilato sulla base dei campi:
+     `indirizzo + città + CAP` → URL generato dinamicamente.
+
+3. **Verifica il corretto collegamento ai dati del partner specifico**, non dati statici o generici.
+
+   * Il sistema deve pescare tutto **dal record associato all’offerta**, collegato al `partnerCode`.
+
+4. **Rendi le sezioni dinamiche ma visibili solo se presenti i dati.**
+   Nessun blocco vuoto. Nessun campo hardcoded.
+
+---
+
+### 🧪 Test e Verifica
+
+Effettua il test cliccando su un’offerta da un account turista reale (es. `TIQ-IT-0306-STUPENDO`) e verifica che:
+
+* La scheda mostri titolo + descrizione + contatti
+* Il pulsante WhatsApp invii un messaggio al partner corretto
+* “Apri in Google Maps” apra l’indirizzo preciso
+* Nessun dato sia di un altro partner
+
+---
+
+⚠️ RobS ha già confermato con screenshot che il sistema NON sta mostrando le informazioni, **nonostante i dati siano nel database**. Quindi:
+
+* Non fare finta di niente,
+* Non dare conferma testuale finché **non è funzionante in produzione**.
+
+Applica. Testa. Rispondi con **fatto, vedi esempio qui: \[link o screenshot]**.
+
+---
+
+Vuoi che glielo invii io direttamente sotto forma markdown?
