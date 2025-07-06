@@ -246,7 +246,7 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
                       <div className="bg-green-50 border border-green-200 rounded p-3">
                         <div className="flex items-center gap-2">
                           <CheckCircle className="w-4 h-4 text-green-600" />
-                          <span className="text-green-800 font-medium">Validazione accettata, puoi applicare lo sconto</span>
+                          <span className="text-green-800 font-medium">Codice convalidato. Puoi procedere con lo sconto.</span>
                         </div>
                         <div className="text-sm text-green-700 mt-1">
                           <span className="font-medium">{validation.usesRemaining} utilizzi rimanenti</span> (su {validation.usesTotal} totali)

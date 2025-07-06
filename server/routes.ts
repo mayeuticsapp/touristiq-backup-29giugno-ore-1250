@@ -2519,7 +2519,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ 
         success: true, 
-        message: `Richiesta inviata al turista ${touristIqCode}`,
+        message: "Richiesta di validazione inviata al turista",
         validationId: validation.id 
       });
 
@@ -2722,7 +2722,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ 
         success: true, 
-        message: status === 'accepted' ? `IQCode confermato per utilizzo` : "IQCode rifiutato",
+        message: status === 'accepted' ? "Convalida accettata" : "Convalida rifiutata",
         usesRemaining: finalUsesRemaining
       });
 
