@@ -16,6 +16,7 @@ interface ValidationRequest {
   respondedAt?: string;
   usesRemaining?: number; // Solo per turisti
   usesTotal?: number; // Solo per turisti
+  usedAt?: string; // ✅ Campo per controllo anti-doppio-click
 }
 
 interface IQCodeValidationProps {
@@ -173,7 +174,10 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
     try {
       const response = await apiRequest('POST', '/api/iqcode/use-validated', { validationId });
       
-      if (response.success) {
+      // ✅ FIX: Gestione corretta della risposta JSON
+      const data = response instanceof Response ? await response.json() : response;
+      
+      if (data.success) {
         toast({
           title: "Sconto Applicato",
           description: "L'utilizzo è stato registrato con successo",
@@ -185,16 +189,25 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
       } else {
         toast({
           title: "Errore",
-          description: response.message || "Errore durante l'applicazione dello sconto",
+          description: data.message || "Errore durante l'applicazione dello sconto",
           variant: "destructive"
         });
       }
-    } catch (error) {
-      toast({
-        title: "Errore",
-        description: "Errore di connessione",
-        variant: "destructive"
-      });
+    } catch (error: any) {
+      // ✅ Gestisce errori da risposte HTTP (come 400)
+      if (error.response && error.response.status === 400) {
+        toast({
+          title: "Errore",
+          description: error.response.data?.message || "Codice già utilizzato",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Errore",
+          description: "Errore di connessione",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -284,20 +297,31 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
                       )}
                     </div>
                     {validation.status === 'accepted' && (
-                      <div className="bg-green-50 border border-green-200 rounded p-3">
+                      <div className={`border rounded p-3 ${validation.usedAt ? 'bg-gray-50 border-gray-200' : 'bg-green-50 border-green-200'}`}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-green-600" />
-                            <span className="text-green-800 font-medium">Codice convalidato. Pronto per l'utilizzo.</span>
+                            <CheckCircle className={`w-4 h-4 ${validation.usedAt ? 'text-gray-600' : 'text-green-600'}`} />
+                            <span className={`font-medium ${validation.usedAt ? 'text-gray-800' : 'text-green-800'}`}>
+                              {validation.usedAt ? 'Codice già utilizzato' : 'Codice convalidato. Pronto per l\'utilizzo.'}
+                            </span>
                           </div>
                           <Button 
                             size="sm"
                             onClick={() => handleUseValidatedCode(validation.id)}
-                            className="bg-green-600 hover:bg-green-700 text-white"
+                            disabled={!!validation.usedAt}
+                            className={validation.usedAt ? 
+                              "bg-gray-400 text-gray-600 cursor-not-allowed" : 
+                              "bg-green-600 hover:bg-green-700 text-white"
+                            }
                           >
-                            Applica Sconto
+                            {validation.usedAt ? 'Già Utilizzato' : 'Applica Sconto'}
                           </Button>
                         </div>
+                        {validation.usedAt && (
+                          <div className="mt-2 text-sm text-gray-600">
+                            Utilizzato il {new Date(validation.usedAt).toLocaleString('it-IT')}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

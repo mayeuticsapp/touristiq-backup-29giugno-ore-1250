@@ -97,6 +97,7 @@ export interface IStorage {
   getValidationById(id: number): Promise<IqcodeValidation | null>;
   updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<IqcodeValidation>;
   decrementValidationUses(validationId: number): Promise<IqcodeValidation>;
+  markValidationAsUsed(validationId: number): Promise<IqcodeValidation>;
 
   // Ricariche IQCode methods
   createIqcodeRecharge(data: {touristCode: string, amount: number, status: string, requestedAt: Date}): Promise<IqcodeRecharge>;
@@ -711,6 +712,36 @@ export class MemStorage implements IStorage {
   async getPurchasedPackagesByStructure(): Promise<PurchasedPackage[]> { return []; }
   async getTotalIQCodesRemaining(): Promise<number> { return 0; }
   async useIQCodeFromPackage(): Promise<boolean> { return false; }
+  
+  // Validazione metodi placeholder
+  async createIqcodeValidation(): Promise<any> { throw new Error("Not implemented"); }
+  async getValidationsByTourist(): Promise<any[]> { return []; }
+  async getValidationsByPartner(): Promise<any[]> { return []; }
+  async getValidationById(): Promise<any> { return null; }
+  async updateValidationStatus(): Promise<any> { throw new Error("Not implemented"); }
+  async decrementValidationUses(): Promise<any> { throw new Error("Not implemented"); }
+  async markValidationAsUsed(): Promise<any> { throw new Error("Not implemented"); }
+  async createIqcodeRecharge(): Promise<any> { throw new Error("Not implemented"); }
+  async getRechargesWithFilters(): Promise<any> { throw new Error("Not implemented"); }
+  async activateRecharge(): Promise<any> { throw new Error("Not implemented"); }
+  async createPartnerOffer(): Promise<any> { throw new Error("Not implemented"); }
+  async getPartnerOffers(): Promise<any[]> { return []; }
+  async createSpecialClient(): Promise<any> { throw new Error("Not implemented"); }
+  async getPartnerOnboardingStatus(): Promise<any> { return undefined; }
+  async savePartnerOnboardingStep(): Promise<void> { }
+  async completePartnerOnboarding(): Promise<void> { }
+  async getPendingRecharges(): Promise<any[]> { return []; }
+  async getAcceptedPartnersByTourist(): Promise<any[]> { return []; }
+  async getRealOffersByPartners(): Promise<any[]> { return []; }
+  async getRealOffersByCity(): Promise<any[]> { return []; }
+  async getRealOffersNearby(): Promise<any[]> { return []; }
+  async createRecoveryKey(): Promise<any> { throw new Error("Not implemented"); }
+  async getRecoveryKeyByIqCode(): Promise<any> { return null; }
+  async verifyRecoveryData(): Promise<any> { return null; }
+  async updateRecoveryKey(): Promise<any> { throw new Error("Not implemented"); }
+  async getRecoveryByCredentials(): Promise<any> { return null; }
+  async getIqCodeByHashedCode(): Promise<any> { return null; }
+  async getAllValidations(): Promise<any[]> { return []; }
   async createAccountingMovement(movement: InsertAccountingMovement): Promise<AccountingMovement> {
     const newMovement: AccountingMovement = {
       id: this.currentAccountingMovementId++,
@@ -2362,6 +2393,17 @@ class ExtendedPostgreStorage extends PostgreStorage {
     const result = await this.db.update(iqcodeValidations)
       .set({ 
         usesRemaining: Math.max(0, validation.usesRemaining - 1),
+        updatedAt: new Date()
+      })
+      .where(eq(iqcodeValidations.id, validationId))
+      .returning();
+    return result[0];
+  }
+
+  async markValidationAsUsed(validationId: number): Promise<IqcodeValidation> {
+    const result = await this.db.update(iqcodeValidations)
+      .set({ 
+        usedAt: new Date(),
         updatedAt: new Date()
       })
       .where(eq(iqcodeValidations.id, validationId))

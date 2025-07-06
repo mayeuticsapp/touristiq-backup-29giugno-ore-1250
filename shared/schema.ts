@@ -151,6 +151,7 @@ export const iqcodeValidations = pgTable("iqcode_validations", {
   status: text("status").notNull().default("pending"), // pending, accepted, rejected
   requestedAt: timestamp("requested_at").notNull().defaultNow(),
   respondedAt: timestamp("responded_at"),
+  usedAt: timestamp("used_at"), // Timestamp quando è stato utilizzato il codice
   usesRemaining: integer("uses_remaining").notNull().default(10), // Utilizzi rimanenti
   usesTotal: integer("uses_total").notNull().default(10), // Utilizzi totali iniziali
   createdAt: timestamp("created_at").notNull().defaultNow(),

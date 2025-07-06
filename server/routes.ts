@@ -2780,11 +2780,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Codice non validato" });
       }
 
+      // ✅ CONTROLLO ANTI-DOPPIO-CLICK: Verifica se già utilizzata
+      if (validation.usedAt) {
+        return res.status(400).json({ 
+          message: "Questo codice è già stato utilizzato. Richiedi una nuova validazione per un altro utilizzo." 
+        });
+      }
+
       if (validation.usesRemaining <= 0) {
         return res.status(400).json({ message: "Nessun utilizzo rimanente" });
       }
 
-      // Scala gli utilizzi
+      // ✅ MARCA COME UTILIZZATA E scala gli utilizzi
+      await storage.markValidationAsUsed(validationId);
       await storage.decrementValidationUses(validationId);
 
       res.json({ 
