@@ -1229,8 +1229,8 @@ export class PostgreStorage implements IStorage {
         try {
             // Per PostgreSQL, usa inserimento diretto nella tabella iq_codes
             const result = await sql`
-              INSERT INTO iq_codes (code, role, is_active, assigned_to, location, code_type, status, created_at, assigned_by)
-              VALUES (${uniqueCode}, 'tourist', true, ${guestName}, ${parsedCode?.country || 'IT'}, 'emotional', 'approved', NOW(), ${structureCode})
+              INSERT INTO iq_codes (code, role, is_active, assigned_to, location, code_type, status, created_at)
+              VALUES (${uniqueCode}, 'tourist', true, ${guestName}, ${parsedCode?.country || 'IT'}, 'emotional', 'approved', NOW())
               RETURNING id, code
             `;
 

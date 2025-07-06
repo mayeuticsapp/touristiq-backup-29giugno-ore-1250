@@ -388,6 +388,24 @@ export const insertIqcodeRechargeSchema = createInsertSchema(iqcodeRecharges).om
   updatedAt: true,
 });
 
+// Tabella per il sistema di recupero "Custode del Codice IQ"
+export const iqcodeRecoveryKeys = pgTable("iqcode_recovery_keys", {
+  id: serial("id").primaryKey(),
+  touristCode: text("tourist_code").notNull(), // Codice IQ del turista
+  hashedCode: text("hashed_code").notNull(), // Hash di parola segreta + data di nascita
+  secretWord: text("secret_word").notNull(), // Parola segreta (cifrata)
+  birthdate: text("birthdate").notNull(), // Data di nascita (cifrata)
+  assignedBy: text("assigned_by").notNull(), // Chi ha attivato il custode
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
+
+export const insertIqcodeRecoveryKeySchema = createInsertSchema(iqcodeRecoveryKeys).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const loginSchema = z.object({
   iqCode: z.string().min(1, "Codice IQ richiesto").max(100),
 });
@@ -422,6 +440,9 @@ export type InsertStructureSettings = z.infer<typeof insertStructureSettingsSche
 
 export type SettingsConfig = typeof settingsConfig.$inferSelect;
 export type InsertSettingsConfig = z.infer<typeof insertSettingsConfigSchema>;
+
+export type IqcodeRecoveryKey = typeof iqcodeRecoveryKeys.$inferSelect;
+export type InsertIqcodeRecoveryKey = z.infer<typeof insertIqcodeRecoveryKeySchema>;
 
 export type LoginRequest = z.infer<typeof loginSchema>;
 
