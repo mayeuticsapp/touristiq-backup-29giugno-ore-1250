@@ -2542,7 +2542,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
           ic.code,
           ic.assigned_to as "partnerName",
           COUNT(DISTINCT ro.id) as "totalOffers",
-          ROUND(AVG(ro.discount_percentage), 1) as "avgDiscount",
+          ROUND(CAST(AVG(ro.discount_percentage) AS NUMERIC), 1) as "avgDiscount",
           CASE 
             WHEN pd.phone IS NOT NULL AND pd.email IS NOT NULL AND pd.website IS NOT NULL THEN 3
             WHEN pd.phone IS NOT NULL AND pd.email IS NOT NULL THEN 2
@@ -2566,7 +2566,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
           COALESCE(SUM(ap.package_size), 0) as "totalCredits",
           COALESCE(SUM(ap.credits_used), 0) as "creditsUsed",
           CASE 
-            WHEN SUM(ap.package_size) > 0 THEN ROUND((SUM(ap.credits_used)::float / SUM(ap.package_size)) * 100, 1)
+            WHEN SUM(ap.package_size) > 0 THEN ROUND(CAST((SUM(ap.credits_used)::float / SUM(ap.package_size)) * 100 AS NUMERIC), 1)
             ELSE 0
           END as "usagePercentage",
           MAX(ap.assigned_at) as "lastPackageAssigned"

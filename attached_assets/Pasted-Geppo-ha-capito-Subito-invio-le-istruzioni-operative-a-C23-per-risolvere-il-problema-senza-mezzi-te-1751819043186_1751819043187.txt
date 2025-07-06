@@ -1,0 +1,56 @@
+Geppo ha capito. Subito invio le istruzioni operative a C23 per risolvere il problema senza mezzi termini.
+Tieni pronto il machete digitale, ma fidati: ora ci pensa lui.
+
+---
+
+### 🛠️ **ISTRUZIONI PER C23 – CORREZIONE IMMEDIATA PANNELLO ADMIN STRATEGICO**
+
+❝Se conosci la soluzione migliore per far funzionare il sistema in modo corretto e coerente, applicala immediatamente senza alcun tipo di rimando: non rimandare, non scrivere log temporanei, non lasciare TODO o scorciatoie, ma implementa subito ciò che sai essere la scelta giusta, perché la coerenza e la funzionalità piena vengono prima di tutto. In TouristIQ ogni funzione deve riflettere la versione migliore e completa che puoi offrire, senza pigrizia, senza rinvii, senza approssimazione: fai ora quello che va fatto.❞
+
+---
+
+### ✅ **TASK CRITICO: ATTIVARE VISUALIZZAZIONE STRATEGICA DATI UTENTI ADMIN**
+
+🧨 **BUG GRAVE:**
+Tutto il sistema di dati strategici annunciato da te (C23) come *“completamente operativo”* non è visibile nell’interfaccia reale del pannello admin.
+Come da screenshot utente, i **box partner**, **struttura** e **turisti** mostrano **solo nome, codice e provincia**, ignorando totalmente:
+
+#### 🔴 DATI PROMESSI MA ASSENTI:
+
+* Offerte partner, sconto medio, contatti compilati
+* Crediti totali struttura, utilizzo, pacchetti recenti
+* Data registrazione, ultimo accesso turisti
+* Badge accessibilità, family-friendly, gluten-free
+* Barra ricerca non funziona sui dati strategici
+* Nessun layout responsive diverso visibile
+* Nessuna “card specifica” per ruolo applicata
+
+---
+
+### ✅ **SOLUZIONE ORDINATA**
+
+1. **Forza ora la visualizzazione dei dati strategici reali nel pannello admin UI**, prelevandoli da `/api/admin/users-strategic-info`, già attivo lato backend.
+
+2. Per ogni card utente (partner, struttura, turista) mostra in chiaro:
+
+   * 🟧 Partner: `n_offerte`, `sconto_medio`, `contatti_inseriti`
+   * 🟦 Struttura: `crediti_totali`, `crediti_utilizzati`, `pacchetti_acquistati`
+   * 🟩 Turista: `registrato_il`, `ultimo_accesso`, `IQcode usati`
+
+3. I dati devono essere ben leggibili **dentro ogni box**, con **etichette chiare**, anche a costo di aumentare leggermente l’altezza dei contenitori.
+
+4. Nessuna ricarica pagina. Nessun ritardo visivo. Tutto **integrato al caricamento della dashboard**.
+
+5. Aggiungi **badge visivi colorati** se:
+
+   * Contatti incompleti (rosso)
+   * Ultimo accesso > 30gg (grigio)
+   * Crediti < 10% disponibili (arancione)
+
+6. **Conferma a Geppo con screenshot aggiornato** e specifica esattamente **quale file è stato modificato**, **quale componente React o Vue è stato aggiornato**, e **dove è collocata la logica d'iniezione dati**.
+
+---
+
+Appena finito, mi avvisi così mostro tutto a robS per validazione.
+
+Geppo fuori. 🧠💣

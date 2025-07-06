@@ -345,7 +345,17 @@ function UsersManagement() {
     }
   };
 
-  // Raggruppa utenti per categoria (ora utilizzato nella sezione filtri)
+  // Funzione per recuperare dati strategici per un utente specifico
+  const getStrategicData = (userCode: string, userRole: string) => {
+    if (userRole === 'partner') {
+      return strategicInfo.partners?.find((p: any) => p.code === userCode);
+    } else if (userRole === 'structure') {
+      return strategicInfo.structures?.find((s: any) => s.code === userCode);
+    } else if (userRole === 'tourist') {
+      return strategicInfo.tourists?.find((t: any) => t.code === userCode);
+    }
+    return null;
+  };
 
   const updateUserStatus = async (userId: number, action: string) => {
     try {
@@ -468,20 +478,6 @@ function UsersManagement() {
     return <div className="text-center py-4">Caricamento utenti e informazioni strategiche...</div>;
   }
 
-  // Funzione helper per unire dati utenti con informazioni strategiche
-  const getStrategicData = (userCode: string, role: string) => {
-    switch (role) {
-      case 'partner':
-        return strategicInfo.partners.find((p: any) => p.code === userCode);
-      case 'structure':
-        return strategicInfo.structures.find((s: any) => s.code === userCode);
-      case 'tourist':
-        return strategicInfo.tourists.find((t: any) => t.code === userCode);
-      default:
-        return null;
-    }
-  };
-
   // Funzione di ricerca
   const filteredUsers = users.filter(user => 
     user.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -496,7 +492,7 @@ function UsersManagement() {
 
   // Componente Enhanced per Partner Commerciali
   const PartnerCard = ({ user }: { user: any }) => {
-    const strategic = getStrategicData(user.code, 'partner');
+    const strategic = getStrategicData(user.code, user.role);
     return (
       <div className="border rounded-lg p-4 hover:bg-gray-50 space-y-3">
         <div className="flex justify-between items-start">
@@ -518,6 +514,14 @@ function UsersManagement() {
                 <span>📍 <strong>{strategic.contactsFilled}/3</strong> contatti</span>
                 {strategic.lastProfileUpdate && (
                   <span>✅ Agg. {new Date(strategic.lastProfileUpdate).toLocaleDateString('it-IT')}</span>
+                )}
+              </div>
+              <div className="flex gap-2 mt-2">
+                {strategic.contactsFilled < 2 && (
+                  <Badge variant="destructive" className="text-xs">🔴 Contatti incompleti</Badge>
+                )}
+                {strategic.avgDiscount && strategic.avgDiscount > 20 && (
+                  <Badge variant="default" className="text-xs">⭐ Top sconti</Badge>
                 )}
               </div>
             </>
@@ -548,7 +552,7 @@ function UsersManagement() {
 
   // Componente Enhanced per Strutture Ricettive  
   const StructureCard = ({ user }: { user: any }) => {
-    const strategic = getStrategicData(user.code, 'structure');
+    const strategic = getStrategicData(user.code, user.role);
     return (
       <div className="border rounded-lg p-4 hover:bg-gray-50 space-y-3">
         <div className="flex justify-between items-start">
@@ -570,6 +574,14 @@ function UsersManagement() {
                 <span>📈 <strong>{strategic.usagePercentage}%</strong> utilizzo</span>
                 {strategic.lastPackageAssigned && (
                   <span>📅 {new Date(strategic.lastPackageAssigned).toLocaleDateString('it-IT')}</span>
+                )}
+              </div>
+              <div className="flex gap-2 mt-2">
+                {strategic.usagePercentage && strategic.usagePercentage < 10 && (
+                  <Badge variant="secondary" className="text-xs">🟠 Crediti < 10%</Badge>
+                )}
+                {strategic.totalCredits > 100 && (
+                  <Badge variant="default" className="text-xs">💎 Premium</Badge>
                 )}
               </div>
             </>
@@ -594,7 +606,7 @@ function UsersManagement() {
 
   // Componente Enhanced per Turisti
   const TouristCard = ({ user }: { user: any }) => {
-    const strategic = getStrategicData(user.code, 'tourist');
+    const strategic = getStrategicData(user.code, user.role);
     return (
       <div className="border rounded-lg p-4 hover:bg-gray-50 space-y-3">
         <div className="flex justify-between items-start">
@@ -610,10 +622,18 @@ function UsersManagement() {
             <>
               <div className="flex gap-4">
                 {strategic.registrationDate && (
-                  <span>📅 {new Date(strategic.registrationDate).toLocaleDateString('it-IT')}</span>
+                  <span>📅 Reg. {new Date(strategic.registrationDate).toLocaleDateString('it-IT')}</span>
                 )}
                 {strategic.lastAccess && (
-                  <span>⏱ {new Date(strategic.lastAccess).toLocaleDateString('it-IT')}</span>
+                  <span>⏱ Ultimo: {new Date(strategic.lastAccess).toLocaleDateString('it-IT')}</span>
+                )}
+              </div>
+              <div className="flex gap-2 mt-2">
+                {strategic.lastAccess && new Date() - new Date(strategic.lastAccess) > 30 * 24 * 60 * 60 * 1000 && (
+                  <Badge variant="secondary" className="text-xs">⚪ Inattivo > 30gg</Badge>
+                )}
+                {strategic.totalValidations && strategic.totalValidations > 5 && (
+                  <Badge variant="default" className="text-xs">🔥 Attivo</Badge>
                 )}
               </div>
             </>
