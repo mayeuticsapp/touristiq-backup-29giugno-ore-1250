@@ -48,7 +48,7 @@ export default function TouristDashboard() {
   // Mutation per salvare dati "Custode del Codice"
   const custodeMutation = useMutation({
     mutationFn: async (data: { secretWord: string; birthDate: string }) => {
-      return await apiRequest("/api/activate-custode", "POST", data);
+      return await apiRequest("POST", "/api/activate-custode", data);
     },
     onSuccess: () => {
       toast({
