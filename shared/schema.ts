@@ -391,11 +391,9 @@ export const insertIqcodeRechargeSchema = createInsertSchema(iqcodeRecharges).om
 // Tabella per il sistema di recupero "Custode del Codice IQ"
 export const iqcodeRecoveryKeys = pgTable("iqcode_recovery_keys", {
   id: serial("id").primaryKey(),
-  touristCode: text("tourist_code").notNull(), // Codice IQ del turista
-  hashedCode: text("hashed_code").notNull(), // Hash di parola segreta + data di nascita
-  secretWord: text("secret_word").notNull(), // Parola segreta (cifrata)
-  birthdate: text("birthdate").notNull(), // Data di nascita (cifrata)
-  assignedBy: text("assigned_by").notNull(), // Chi ha attivato il custode
+  hashedIqCode: text("hashed_iqcode").notNull(), // Hash del codice IQ del turista
+  hashedSecretWord: text("hashed_secret_word").notNull(), // Hash della parola segreta
+  hashedBirthDate: text("hashed_birth_date").notNull(), // Hash della data di nascita
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow()
 });

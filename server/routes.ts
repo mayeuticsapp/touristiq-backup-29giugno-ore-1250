@@ -3082,7 +3082,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // **SISTEMA CUSTODE DEL CODICE - STEP 1**
+  
+  // Verifica se il turista ha già salvato dati di recupero
+  app.get("/api/check-custode-status", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
 
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      // Verifica se esistono già dati di recupero per questo IQCode
+      const existingRecovery = await storage.getRecoveryKeyByIqCode(session.iqCode);
+      
+      res.json({
+        hasRecoveryData: !!existingRecovery
+      });
+
+    } catch (error) {
+      console.error("Errore verifica stato Custode:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Attiva sistema "Custode del Codice" - Salva dati hashati
+  app.post("/api/activate-custode", async (req: any, res: any) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'tourist') {
+        return res.status(401).json({ message: "Sessione non valida o non autorizzata" });
+      }
+
+      const { secretWord, birthDate } = req.body;
+
+      if (!secretWord || !birthDate) {
+        return res.status(400).json({ message: "Parola segreta e data di nascita sono obbligatorie" });
+      }
+
+      // Hash SHA256 dei dati sensibili
+      const crypto = await import('crypto');
+      const hashedIqCode = crypto.createHash('sha256').update(session.iqCode).digest('hex');
+      const hashedSecretWord = crypto.createHash('sha256').update(secretWord.trim().toLowerCase()).digest('hex');
+      const hashedBirthDate = crypto.createHash('sha256').update(birthDate.trim()).digest('hex');
+
+      // Salva nel database
+      await storage.createRecoveryKey({
+        hashedIqCode,
+        hashedSecretWord,
+        hashedBirthDate
+      });
+
+      res.json({
+        success: true,
+        message: "Custode del Codice attivato con successo!"
+      });
+
+    } catch (error) {
+      console.error("Errore attivazione Custode:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

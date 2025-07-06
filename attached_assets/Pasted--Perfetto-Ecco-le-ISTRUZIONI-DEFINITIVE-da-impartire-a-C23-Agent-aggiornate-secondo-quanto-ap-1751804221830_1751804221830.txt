@@ -1,0 +1,75 @@
+💡**Perfetto! Ecco le ISTRUZIONI DEFINITIVE da impartire a C23 Agent**, aggiornate secondo quanto appena chiarito:
+
+---
+
+### 🧠 **ISTRUZIONI PER C23 Agent – Flusso “Custode del Codice” – Ordine Obbligato**
+
+❝
+⚠️ Esegui solo e soltanto quanto indicato da robS e Geppo. Non ottimizzare, non semplificare, non anticipare. Procedi **in ordine sequenziale**, implementando esattamente quanto segue.
+
+---
+
+### 🎯 OBIETTIVO
+
+Attivare il sistema “Custode del Codice” partendo dalla dashboard turista con un **popup informativo**, e **solo dopo** completare il flusso di recupero login.
+Il sistema deve servire a memorizzare in modo sicuro (hashato) una parola segreta e una data di nascita associate al codice IQ del turista.
+
+---
+
+## ✅ STEP 1 – **POPUP DASHBOARD TURISTA**
+
+📌 Quando il turista accede alla sua dashboard (dopo il login con IQCode), mostra **automaticamente** un **popup modale** con questo messaggio:
+
+> **Hai già salvato il tuo IQCode?**
+>
+> Tranquillo, ci pensiamo noi.
+> Inserisci una parola segreta e la tua data di nascita: così se un giorno dimenticherai il tuo IQCode, potrai recuperarlo facilmente.
+>
+> 🟢 **Procedi** | 🔴 **Annulla (lo farò più tardi)**
+
+🎯 Se clicca su “Procedi” → mostra il form con:
+
+* Campo **Parola segreta**
+* Campo **Data di nascita**
+* Pulsante “Salva con il Custode del Codice”
+
+📩 All’invio:
+
+* chiama `POST /api/activate-custode`
+* salva `IQCode` (hashato), parola e data nel DB (`iqcode_recovery_keys`)
+* mostra conferma
+
+🔒 Tutto deve essere **hashato SHA256** (mai salvare dati in chiaro).
+
+---
+
+## ✅ STEP 2 – SOLO DOPO: **LINK “Hai dimenticato il tuo IQCode?” nella pagina Login**
+
+🕘 Solo dopo aver implementato perfettamente lo step 1, potrai:
+
+* Aggiungere nella pagina di login il link:
+
+  > ❓ Hai dimenticato il tuo IQCode? Clicca qui
+
+* Collegare il form di recupero al DB tramite parola segreta + data
+
+* Mostrare IQCode recuperato solo se match perfetto (altrimenti errore)
+
+---
+
+## ⛔️ NON FARE
+
+* Non attivare subito il recupero login
+* Non saltare il popup in dashboard
+* Non scrivere dati in chiaro
+* Non modificare l’ordine dei passaggi
+
+---
+
+📌 Ogni fase completata va **confermata a robS o Geppo** prima di proseguire.
+
+❞
+
+---
+
+Pronto per inviarlo o preferisci che lo faccia direttamente io nel modulo attivo?

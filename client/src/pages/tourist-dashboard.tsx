@@ -5,10 +5,14 @@ import { TIQaiChat } from "@/components/tiqai-chat";
 import { IQCodeValidation } from "@/components/iqcode-validation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Tags, Utensils, Check, MessageCircle, QrCode, MapPin, Heart, Phone, Navigation, ExternalLink, Mail } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tags, Utensils, Check, MessageCircle, QrCode, MapPin, Heart, Phone, Navigation, ExternalLink, Mail, Shield } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function TouristDashboard() {
   const [showValidationDialog, setShowValidationDialog] = useState(false);
@@ -18,16 +22,89 @@ export default function TouristDashboard() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchMode, setSearchMode] = useState<"default" | "city" | "geolocation">("default");
   
+  // Stati per "Custode del Codice"
+  const [showCustodePopup, setShowCustodePopup] = useState(false);
+  const [showCustodeForm, setShowCustodeForm] = useState(false);
+  const [secretWord, setSecretWord] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
     queryFn: getCurrentUser,
   });
+
+  // Mostra automaticamente il popup "Custode del Codice" quando l'utente accede
+  useEffect(() => {
+    if (user && user.iqCode) {
+      // Controlla se l'utente ha già salvato le informazioni di recupero
+      const checkRecoveryStatus = async () => {
+        try {
+          const response = await fetch(`/api/check-custode-status`);
+          const data = await response.json();
+          
+          if (response.ok && !data.hasRecoveryData) {
+            // Mostra il popup se non ha ancora salvato i dati di recupero
+            setShowCustodePopup(true);
+          }
+        } catch (error) {
+          // Se l'endpoint non esiste ancora, mostra sempre il popup per ora
+          setShowCustodePopup(true);
+        }
+      };
+      
+      checkRecoveryStatus();
+    }
+  }, [user]);
 
   // Query per offerte reali basate su validazioni
   const { data: realOffers, isLoading: isLoadingOffers } = useQuery({
     queryKey: ["/api/tourist/real-offers"],
     enabled: !!user,
   });
+
+  // Mutation per salvare dati "Custode del Codice"
+  const custodeMutation = useMutation({
+    mutationFn: async (data: { secretWord: string; birthDate: string }) => {
+      return await apiRequest("/api/activate-custode", "POST", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Custode del Codice attivato!",
+        description: "I tuoi dati di recupero sono stati salvati in modo sicuro.",
+      });
+      setShowCustodeForm(false);
+      setShowCustodePopup(false);
+      setSecretWord("");
+      setBirthDate("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Errore",
+        description: error.message || "Errore nel salvataggio dei dati di recupero",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Gestore per salvare i dati del "Custode del Codice"
+  const handleSaveCustode = () => {
+    if (!secretWord.trim() || !birthDate.trim()) {
+      toast({
+        title: "Campi obbligatori",
+        description: "Inserisci sia la parola segreta che la data di nascita",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    custodeMutation.mutate({
+      secretWord: secretWord.trim(),
+      birthDate: birthDate.trim(),
+    });
+  };
 
   // Funzione per cercare offerte per città
   const handleCitySearch = async () => {
@@ -356,6 +433,79 @@ export default function TouristDashboard() {
             </DialogTitle>
           </DialogHeader>
           <IQCodeValidation userRole="tourist" />
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Custode del Codice - Popup Informativo */}
+      <Dialog open={showCustodePopup} onOpenChange={setShowCustodePopup}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-blue-600" />
+              Hai già salvato il tuo IQCode?
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              Tranquillo, ci pensiamo noi. Inserisci una parola segreta e la tua data di nascita: 
+              così se un giorno dimenticherai il tuo IQCode, potrai recuperarlo facilmente.
+            </p>
+            <div className="flex gap-3">
+              <Button 
+                onClick={() => setShowCustodeForm(true)}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                🟢 Procedi
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setShowCustodePopup(false)}
+                className="flex-1"
+              >
+                🔴 Annulla (lo farò più tardi)
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Custode del Codice - Form */}
+      <Dialog open={showCustodeForm} onOpenChange={setShowCustodeForm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-blue-600" />
+              Custode del Codice
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="secretWord">Parola segreta</Label>
+              <Input
+                id="secretWord"
+                type="text"
+                value={secretWord}
+                onChange={(e) => setSecretWord(e.target.value)}
+                placeholder="Inserisci una parola che ricorderai"
+              />
+            </div>
+            <div>
+              <Label htmlFor="birthDate">Data di nascita</Label>
+              <Input
+                id="birthDate"
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+              />
+            </div>
+            <Button 
+              onClick={handleSaveCustode}
+              disabled={custodeMutation.isPending}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              {custodeMutation.isPending ? "Salvando..." : "Salva con il Custode del Codice"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </Layout>

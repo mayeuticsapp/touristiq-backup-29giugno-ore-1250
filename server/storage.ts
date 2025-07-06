@@ -1,4 +1,4 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeValidations, iqcodeRecharges, partnerOffers, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeValidation, type InsertIqcodeValidation, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeValidations, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeValidation, type InsertIqcodeValidation, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt, desc, like, sql, inArray } from "drizzle-orm";
@@ -122,6 +122,11 @@ export interface IStorage {
   getRealOffersByPartners(partnerCodes: string[]): Promise<any[]>;
   getRealOffersByCity(cityName: string): Promise<any[]>;
   getRealOffersNearby(latitude: number, longitude: number, radius: number): Promise<any[]>;
+
+  // **CUSTODE DEL CODICE - Metodi per gestione dati di recupero hashati**
+  createRecoveryKey(data: {hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string}): Promise<any>;
+  getRecoveryKeyByIqCode(iqCode: string): Promise<any>;
+  verifyRecoveryData(hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -880,7 +885,7 @@ export class PostgreStorage implements IStorage {
 
   constructor() {
     const sql = neon(process.env.DATABASE_URL!);
-    this.db = drizzle(sql, { schema: { iqCodes, sessions, assignedPackages, guests, partnerOffers, iqcodeValidations } });
+    this.db = drizzle(sql, { schema: { iqCodes, sessions, assignedPackages, guests, partnerOffers, iqcodeValidations, iqcodeRecoveryKeys } });
     this.initializeDefaultCodes();
   }
 
@@ -2418,6 +2423,50 @@ class ExtendedPostgreStorage extends PostgreStorage {
     // Implementazione base per richieste collegamento turistico
     console.log(`Richiesta collegamento da ${partnerCode} a ${touristCode}`);
   }
+
+  // **CUSTODE DEL CODICE - Implementazione PostgreSQL**
+  async createRecoveryKey(data: {hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string}): Promise<any> {
+    const [recoveryKey] = await this.db
+      .insert(iqcodeRecoveryKeys)
+      .values({
+        hashedIqCode: data.hashedIqCode,
+        hashedSecretWord: data.hashedSecretWord,
+        hashedBirthDate: data.hashedBirthDate
+      })
+      .returning();
+    
+    return recoveryKey;
+  }
+
+  async getRecoveryKeyByIqCode(iqCode: string): Promise<any> {
+    // Hash del codice per confronto sicuro
+    const crypto = await import('crypto');
+    const hashedIqCode = crypto.createHash('sha256').update(iqCode).digest('hex');
+    
+    const [recoveryKey] = await this.db
+      .select()
+      .from(iqcodeRecoveryKeys)
+      .where(eq(iqcodeRecoveryKeys.hashedIqCode, hashedIqCode))
+      .limit(1);
+    
+    return recoveryKey;
+  }
+
+  async verifyRecoveryData(hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string): Promise<any> {
+    const [recoveryKey] = await this.db
+      .select()
+      .from(iqcodeRecoveryKeys)
+      .where(
+        and(
+          eq(iqcodeRecoveryKeys.hashedIqCode, hashedIqCode),
+          eq(iqcodeRecoveryKeys.hashedSecretWord, hashedSecretWord),
+          eq(iqcodeRecoveryKeys.hashedBirthDate, hashedBirthDate)
+        )
+      )
+      .limit(1);
+    
+    return recoveryKey;
+  }
 }
 
 // Extend MemStorage con metodi impostazioni
@@ -2678,7 +2727,45 @@ class ExtendedMemStorage extends MemStorage {
 
     return validation;
   }
+
+  // **CUSTODE DEL CODICE - Implementazione MemStorage**
+  private recoveryKeys: Map<string, any> = new Map();
+
+  async createRecoveryKey(data: {hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string}): Promise<any> {
+    const recoveryKey = {
+      id: this.recoveryKeys.size + 1,
+      hashedIqCode: data.hashedIqCode,
+      hashedSecretWord: data.hashedSecretWord,
+      hashedBirthDate: data.hashedBirthDate,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    this.recoveryKeys.set(data.hashedIqCode, recoveryKey);
+    return recoveryKey;
+  }
+
+  async getRecoveryKeyByIqCode(iqCode: string): Promise<any> {
+    const crypto = await import('crypto');
+    const hashedIqCode = crypto.createHash('sha256').update(iqCode).digest('hex');
+    
+    return this.recoveryKeys.get(hashedIqCode);
+  }
+
+  async verifyRecoveryData(hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string): Promise<any> {
+    const recoveryKey = this.recoveryKeys.get(hashedIqCode);
+    
+    if (recoveryKey && 
+        recoveryKey.hashedSecretWord === hashedSecretWord && 
+        recoveryKey.hashedBirthDate === hashedBirthDate) {
+      return recoveryKey;
+    }
+    
+    return undefined;
+  }
 }
+
+
 
 // Use PostgreSQL storage if DATABASE_URL exists, otherwise fallback to memory
 export const storage = process.env.DATABASE_URL ? new ExtendedPostgreStorage() : new ExtendedMemStorage();
