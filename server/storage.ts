@@ -127,6 +127,10 @@ export interface IStorage {
   createRecoveryKey(data: {hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string}): Promise<any>;
   getRecoveryKeyByIqCode(iqCode: string): Promise<any>;
   verifyRecoveryData(hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string): Promise<any>;
+  
+  // **SISTEMA RECUPERO IQCODE - Metodi addizionali**
+  getRecoveryByCredentials(hashedSecretWord: string, hashedBirthDate: string): Promise<any>;
+  getIqCodeByHashedCode(hashedIqCode: string): Promise<string | null>;
 }
 
 export class MemStorage implements IStorage {
@@ -2466,6 +2470,46 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .limit(1);
     
     return recoveryKey;
+  }
+
+  // **SISTEMA RECUPERO IQCODE - Metodi addizionali**
+  async getRecoveryByCredentials(hashedSecretWord: string, hashedBirthDate: string): Promise<any> {
+    const [recoveryKey] = await this.db
+      .select()
+      .from(iqcodeRecoveryKeys)
+      .where(
+        and(
+          eq(iqcodeRecoveryKeys.hashedSecretWord, hashedSecretWord),
+          eq(iqcodeRecoveryKeys.hashedBirthDate, hashedBirthDate)
+        )
+      )
+      .limit(1);
+    
+    return recoveryKey;
+  }
+
+  async getIqCodeByHashedCode(hashedIqCode: string): Promise<string | null> {
+    // Dobbiamo fare il reverse lookup - cerchiamo tutti i codici IQ attivi e confrontiamo l'hash
+    const activeCodes = await this.db
+      .select()
+      .from(iqCodes)
+      .where(
+        and(
+          eq(iqCodes.isActive, true),
+          eq(iqCodes.role, 'tourist') // Solo codici turistici possono essere recuperati
+        )
+      );
+
+    // Confrontiamo l'hash di ogni codice con quello richiesto
+    const crypto = await import('crypto');
+    for (const codeRecord of activeCodes) {
+      const codeHash = crypto.createHash('sha256').update(codeRecord.code).digest('hex');
+      if (codeHash === hashedIqCode) {
+        return codeRecord.code;
+      }
+    }
+
+    return null;
   }
 }
 

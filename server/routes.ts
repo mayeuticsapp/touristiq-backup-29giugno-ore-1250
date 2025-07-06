@@ -3153,6 +3153,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // **SISTEMA RECUPERO IQCODE - STEP 2**
+  
+  // Recupera IQCode con parola segreta e data di nascita
+  app.post("/api/recover-iqcode", async (req: any, res: any) => {
+    try {
+      const { secretWord, birthDate } = req.body;
+
+      if (!secretWord || !birthDate) {
+        return res.status(400).json({ message: "Parola segreta e data di nascita sono obbligatorie" });
+      }
+
+      // Hash degli input per confronto
+      const crypto = await import('crypto');
+      const hashedSecretWord = crypto.createHash('sha256').update(secretWord.trim().toLowerCase()).digest('hex');
+      const hashedBirthDate = crypto.createHash('sha256').update(birthDate.trim()).digest('hex');
+
+      // Cerca i dati di recupero corrispondenti
+      const recoveryData = await storage.getRecoveryByCredentials(hashedSecretWord, hashedBirthDate);
+
+      if (!recoveryData) {
+        return res.status(404).json({ message: "Nessun codice trovato con questi dati di recupero" });
+      }
+
+      // Decodifica l'IQCode dal hash (dovremmo avere una tabella di lookup)
+      const originalIqCode = await storage.getIqCodeByHashedCode(recoveryData.hashedIqCode);
+
+      if (!originalIqCode) {
+        return res.status(404).json({ message: "IQCode non trovato" });
+      }
+
+      res.json({
+        success: true,
+        iqCode: originalIqCode,
+        message: "IQCode recuperato con successo!"
+      });
+
+    } catch (error) {
+      console.error("Errore recupero IQCode:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

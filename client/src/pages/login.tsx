@@ -6,9 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MapPin, LogIn, AlertTriangle, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { MapPin, LogIn, AlertTriangle, Loader2, Shield, KeyRound } from "lucide-react";
 import { login } from "@/lib/auth";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
 
 const STORAGE_KEY = "touristiq_last_code";
 
@@ -19,6 +23,61 @@ export default function Login() {
   const [error, setError] = useState("");
   const [rememberCode, setRememberCode] = useState(false);
   const [, setLocation] = useLocation();
+  
+  // Stati per recupero IQCode
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [secretWord, setSecretWord] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const { toast } = useToast();
+
+  // Mutation per recupero IQCode
+  const recoveryMutation = useMutation({
+    mutationFn: async (data: { secretWord: string; birthDate: string }) => {
+      const response = await apiRequest("POST", "/api/recover-iqcode", data);
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "IQCode recuperato!",
+        description: `Il tuo IQCode è: ${data.iqCode}`,
+        duration: 8000,
+      });
+      setIqCode(data.iqCode);
+      setShowRecoveryModal(false);
+      setSecretWord("");
+      setBirthDate("");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message.includes("404") 
+        ? "Nessun codice trovato con questi dati"
+        : error.message.includes("409")
+        ? "Hai già un codice attivo"
+        : "Errore nel recupero del codice";
+      
+      toast({
+        title: "Errore",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Funzione per il recupero IQCode
+  const handleRecovery = () => {
+    if (!secretWord.trim() || !birthDate.trim()) {
+      toast({
+        title: "Campi obbligatori",
+        description: "Inserisci sia la parola segreta che la data di nascita",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    recoveryMutation.mutate({
+      secretWord: secretWord.trim(),
+      birthDate: birthDate.trim(),
+    });
+  };
 
   // Carica ultimo codice salvato al mount
   useEffect(() => {
@@ -206,6 +265,18 @@ export default function Login() {
                 />
               </div>
 
+              {/* Frase di supporto per recupero IQCode */}
+              <div className="text-center text-sm text-gray-600 space-y-2">
+                <p>Hai dimenticato il tuo IQCode? Tranquillo, è tutto sotto controllo.</p>
+                <button
+                  type="button"
+                  onClick={() => setShowRecoveryModal(true)}
+                  className="text-blue-600 hover:text-blue-800 font-medium underline transition-colors"
+                >
+                  👉 Recuperalo con il Custode del Codice
+                </button>
+              </div>
+
               <div className="flex items-center space-x-3">
                 <Checkbox
                   id="remember"
@@ -275,6 +346,64 @@ export default function Login() {
             </span>
           </div>
         </Card>
+
+        {/* Modale Recupero IQCode */}
+        <Dialog open={showRecoveryModal} onOpenChange={setShowRecoveryModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-blue-600" />
+                Recupera il tuo IQCode
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Inserisci i dati che hai salvato con il Custode del Codice per recuperare il tuo IQCode.
+              </p>
+              
+              <div>
+                <Label htmlFor="recoverySecretWord">Parola segreta</Label>
+                <Input
+                  id="recoverySecretWord"
+                  type="text"
+                  value={secretWord}
+                  onChange={(e) => setSecretWord(e.target.value)}
+                  placeholder="La parola che hai salvato"
+                  disabled={recoveryMutation.isPending}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="recoveryBirthDate">Data di nascita</Label>
+                <Input
+                  id="recoveryBirthDate"
+                  type="date"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                  disabled={recoveryMutation.isPending}
+                />
+              </div>
+              
+              <Button 
+                onClick={handleRecovery}
+                disabled={recoveryMutation.isPending || !secretWord.trim() || !birthDate.trim()}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                {recoveryMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Recuperando...
+                  </>
+                ) : (
+                  <>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Recupera il mio IQCode
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
