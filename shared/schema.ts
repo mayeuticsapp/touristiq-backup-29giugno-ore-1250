@@ -11,7 +11,6 @@ export const iqCodes = pgTable("iq_codes", {
   status: text("status").notNull().default("pending"), // pending, approved, blocked, inactive
   createdAt: timestamp("created_at").notNull().defaultNow(),
   assignedTo: text("assigned_to"), // Nome persona/azienda
-  assignedBy: text("assigned_by"), // Chi ha assegnato il codice
   location: text("location"), // IT, VV, RC, etc.
   codeType: text("code_type"), // emotional, professional
   approvedAt: timestamp("approved_at"),
@@ -42,23 +41,6 @@ export const assignedPackages = pgTable("assigned_packages", {
 });
 
 // Tabella per i codici IQ emozionali generati al momento dalle strutture
-export const generatedIqCodes = pgTable("generated_iq_codes", {
-  id: serial("id").primaryKey(),
-  code: text("code").notNull().unique(), // Codice IQ emozionale (es: TIQ-IT-ROSA)
-  generatedBy: text("generated_by").notNull(), // Struttura che ha generato
-  packageId: integer("package_id").notNull(), // Pacchetto da cui provengono i crediti
-  assignedTo: text("assigned_to"), // Nome ospite a cui è assegnato
-  guestId: integer("guest_id"), // ID ospite dalla gestione ospiti
-  country: text("country").notNull(), // Paese (IT, FR, ES, etc.)
-  emotionalWord: text("emotional_word").notNull(), // Parola emozionale usata
-  status: text("status").notNull().default("assigned"), // assigned, available, used
-  generatedAt: timestamp("generated_at").notNull().defaultNow(),
-  assignedAt: timestamp("assigned_at"),
-  removedAt: timestamp("removed_at"), // Quando è stato rimosso dall'ospite
-  removedReason: text("removed_reason") // Motivo rimozione
-});
-
-// Tabella per i codici IQ emozionali generati al momento dalle strutture - LEGACY
 export const generatedEmotionalCodes = pgTable("generated_emotional_codes", {
   id: serial("id").primaryKey(),
   code: text("code").notNull().unique(), // Codice IQ emozionale (es: TIQ-IT-ROSA)
