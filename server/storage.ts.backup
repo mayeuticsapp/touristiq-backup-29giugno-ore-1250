@@ -825,6 +825,29 @@ export class MemStorage implements IStorage {
   }
 
   // Metodi validazione IQCode mancanti
+  async createIqcodeValidation(data: {partnerCode: string, touristCode: string, requestedAt: Date, status: string, usesRemaining: number, usesTotal: number}): Promise<IqcodeValidation> {
+    // Per MemStorage, salva in memoria globale
+    const validation = {
+      id: Date.now(),
+      partnerIqCode: data.partnerCode,
+      touristIqCode: data.touristCode,
+      requestedAt: data.requestedAt,
+      status: data.status,
+      usesRemaining: data.usesRemaining,
+      usesTotal: data.usesTotal,
+      respondedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    if (!globalValidationsData.has('validations')) {
+      globalValidationsData.set('validations', []);
+    }
+    const validations = globalValidationsData.get('validations');
+    validations.push(validation);
+
+    return validation;
+  }
 
   async getValidationsByTourist(touristCode: string): Promise<IqcodeValidation[]> {
     const validations = globalValidationsData.get('validations') || [];
@@ -1741,7 +1764,14 @@ class ExtendedPostgreStorage extends PostgreStorage {
     return result;
   }
 
-  // REMOVED DUPLICATE - using typed version below
+  // IQCode validation methods implementation
+  async createIqcodeValidation(validation: any): Promise<any> {
+    const [created] = await this.db
+      .insert(iqcodeValidations)
+      .values(validation)
+      .returning();
+    return created;
+  }
 
   async getValidationsByTourist(touristCode: string): Promise<any[]> {
     return await this.db
@@ -2797,6 +2827,29 @@ class ExtendedMemStorage extends MemStorage {
   }
 
   // Metodi validazione IQCode mancanti
+  async createIqcodeValidation(data: {partnerCode: string, touristCode: string, requestedAt: Date, status: string, usesRemaining: number, usesTotal: number}): Promise<IqcodeValidation> {
+    // Per MemStorage, salva in memoria globale
+    const validation = {
+      id: Date.now(),
+      partnerIqCode: data.partnerCode,
+      touristIqCode: data.touristCode,
+      requestedAt: data.requestedAt,
+      status: data.status,
+      usesRemaining: data.usesRemaining,
+      usesTotal: data.usesTotal,
+      respondedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    if (!globalValidationsData.has('validations')) {
+      globalValidationsData.set('validations', []);
+    }
+    const validations = globalValidationsData.get('validations');
+    validations.push(validation);
+
+    return validation;
+  }
 
   async getValidationsByTourist(touristCode: string): Promise<IqcodeValidation[]> {
     const validations = globalValidationsData.get('validations') || [];
