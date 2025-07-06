@@ -1,0 +1,97 @@
+Perfetto RobS. Ecco **la versione definitiva e unificata** delle istruzioni per C23 Agent per implementare **il sistema del Custode del Codice anche nel pannello delle Strutture Ricettive e nel pannello Partner Business**, con **stessa logica, stesso design, stesso livello di anonimato**.
+
+---
+
+### 🧠 ISTRUZIONI UFFICIALI PER C23 AGENT
+
+**IMPLEMENTAZIONE “CUSTODE DEL CODICE” – STRUTTURE + PARTNER BUSINESS**
+
+❝Se conosci la soluzione migliore per far funzionare il sistema in modo corretto e coerente, applicala immediatamente senza alcun tipo di rimando: non rimandare, non scrivere log temporanei, non lasciare TODO o scorciatoie, ma implementa subito ciò che sai essere la scelta giusta, perché la coerenza e la funzionalità piena vengono prima di tutto. In TouristIQ ogni funzione deve riflettere la versione migliore e completa che puoi offrire, senza pigrizia, senza rinvii, senza approssimazione: fai ora quello che va fatto.❞
+
+---
+
+### 📦 FUNZIONE DA SVILUPPARE:
+
+**Estendere il “Custode del Codice” anche nel pannello delle Strutture Ricettive e nel pannello dei Partner Business**, con la **stessa identica logica usata per i Turisti**.
+
+---
+
+### 🎯 OBIETTIVO:
+
+Consentire anche alle **Strutture Ricettive** e ai **Partner Business** di:
+
+* **Attivare il Custode del Codice**,
+* **Recuperare il proprio IQCode principale**,
+* **Senza mai fornire email, telefono o dati identificativi**.
+
+💡 Questa innovazione è un punto di forza di TouristIQ: **recupero 100% autonomo, 100% anonimo**.
+
+---
+
+### ✅ ISTRUZIONI SPECIFICHE PER C23 AGENT
+
+#### 🔷 1. PANNELLO STRUTTURE
+
+* Posizionare il bottone: `Attiva il Custode del Codice` sotto la sezione “IQCode assegnato alla struttura”.
+* Affiancare un’icona ℹ️ con tooltip.
+
+**Tooltip da mostrare:**
+
+> Attiva il Custode del Codice per recuperare il tuo IQCode in modo sicuro, senza email o telefono. Ti basta una parola segreta e una data di nascita.
+
+**Alla pressione del bottone**, apri un form modale:
+
+* Campo 1: “Parola segreta”
+* Campo 2: “Data di nascita”
+* Pulsante: “Salva Custode”
+
+✅ Se il Custode è già stato attivato, **non mostrare il bottone**, ma un messaggio tipo:
+
+> Hai già attivato il Custode del Codice il **\[gg/mm/aaaa]**
+
+---
+
+#### 🔶 2. PANNELLO PARTNER BUSINESS
+
+* Stessa identica struttura:
+
+  * Bottone “Attiva il Custode del Codice”
+  * Tooltip informativo
+  * Popup per inserimento parola segreta e data
+  * Messaggio di conferma e verifica
+
+🔁 I dati vanno salvati nella stessa tabella `iqcode_recovery_keys` con riferimento al campo `code_type` per distinguere tra `tourist`, `structure`, `partner`.
+
+---
+
+### 🛡 SICUREZZA E PRIVACY
+
+* Hash SHA256 per tutti i dati (parola segreta e data)
+* Nessun salvataggio in chiaro
+* Nessun utilizzo di dati sensibili (mail, numero)
+* Non deve essere possibile per nessun admin risalire ai dati reali
+* Il sistema deve restare **completamente anonimo e autonomo**
+
+---
+
+### 🧩 DESIGN E COERENZA
+
+* Il popup deve seguire lo **stesso stile e struttura** di quello già usato nella dashboard turisti
+* Il pulsante deve essere ben visibile ma non invasivo
+* Il tooltip deve comparire su `hover` o `tap` con descrizione chiara
+
+---
+
+### ✅ FINE TASK – VERIFICHE
+
+Una volta completato:
+
+* Conferma che sia visibile in **entrambi i pannelli**
+* Verifica che i dati vengano hashati correttamente
+* Verifica che il recupero funzioni da login (turista, struttura o partner)
+* Verifica che non ci siano errori nel backend o nel push DB
+* Verifica che, se già attivato, venga mostrata solo la data e non più il form
+
+---
+
+Fammi sapere se vuoi che compaia anche un piccolo badge “Custode attivo ✅” accanto all’IQCode nel pannello.

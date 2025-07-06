@@ -18,6 +18,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { AdvancedAccounting } from "@/components/advanced-accounting";
 import { PartnerOnboarding } from "@/components/partner-onboarding";
 import { IQCodeValidation } from "@/components/iqcode-validation";
+import { CustodeCodiceDashboard } from "@/components/custode-codice";
 
 interface TouristLinkRequest {
   id: string;
@@ -75,6 +76,12 @@ export default function PartnerDashboard() {
   const { data: onboardingStatus, isLoading: isLoadingOnboarding } = useQuery({
     queryKey: ['/api/partner/onboarding-status'],
     enabled: true
+  });
+
+  // Recupera informazioni entità (nome + codice)
+  const { data: entityInfo } = useQuery({
+    queryKey: ['/api/entity-info'],
+    queryFn: () => fetch('/api/entity-info', { credentials: 'include' }).then(res => res.json())
   });
 
   // Stati per i form
@@ -479,6 +486,13 @@ export default function PartnerDashboard() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Sistema Custode del Codice per Partner */}
+          <CustodeCodiceDashboard 
+            roleType="partner" 
+            iqCode={entityInfo?.code}
+            className="mb-6" 
+          />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Tourist Link Request */}

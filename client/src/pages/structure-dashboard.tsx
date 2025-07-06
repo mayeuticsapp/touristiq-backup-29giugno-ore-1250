@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ReactNode } from "react";
 import { AdvancedAccounting } from "@/components/advanced-accounting";
+import { CustodeCodiceDashboard } from "@/components/custode-codice";
 
 // Interfacce TypeScript per tipizzazione completa
 interface Guest {
@@ -1200,6 +1201,13 @@ export default function StructureDashboard() {
 
           {/* Gestione IQCode integrata */}
           {renderIQCodeManagement()}
+
+          {/* Sistema Custode del Codice per Strutture */}
+          <CustodeCodiceDashboard 
+            roleType="structure" 
+            iqCode={entityInfo?.code}
+            className="mb-6" 
+          />
 
           {/* Mini gestionale contabile integrato */}
           <AdvancedAccounting 
