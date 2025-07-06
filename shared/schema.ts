@@ -11,7 +11,6 @@ export const iqCodes = pgTable("iq_codes", {
   status: text("status").notNull().default("pending"), // pending, approved, blocked, inactive
   createdAt: timestamp("created_at").notNull().defaultNow(),
   assignedTo: text("assigned_to"), // Nome persona/azienda
-  assignedBy: text("assigned_by"),
   location: text("location"), // IT, VV, RC, etc.
   codeType: text("code_type"), // emotional, professional
   approvedAt: timestamp("approved_at"),
@@ -44,32 +43,24 @@ export const assignedPackages = pgTable("assigned_packages", {
 // Tabella per i codici IQ emozionali generati al momento dalle strutture
 export const generatedEmotionalCodes = pgTable("generated_emotional_codes", {
   id: serial("id").primaryKey(),
-  code: text("code").notNull().unique(),
-  generatedBy: text("generated_by").notNull(),
-  packageId: integer("package_id").notNull(),
-  assignedTo: text("assigned_to"),
-  guestId: integer("guest_id"),
-  country: text("country").notNull(),
-  emotionalWord: text("emotional_word").notNull(),
-  status: text("status").default("assigned").notNull(),
-  generatedAt: timestamp("generated_at").defaultNow().notNull(),
+  code: text("code").notNull().unique(), // Codice IQ emozionale (es: TIQ-IT-ROSA)
+  generatedBy: text("generated_by").notNull(), // Struttura che ha generato
+  packageId: integer("package_id").notNull(), // Pacchetto da cui provengono i crediti
+  assignedTo: text("assigned_to"), // Nome ospite a cui è assegnato
+  guestId: integer("guest_id"), // ID ospite dalla gestione ospiti
+  country: text("country").notNull(), // Paese (IT, FR, ES, etc.)
+  emotionalWord: text("emotional_word").notNull(), // Parola emozionale usata
+  status: text("status").notNull().default("assigned"), // assigned, available, used
+  generatedAt: timestamp("generated_at").notNull().defaultNow(),
   assignedAt: timestamp("assigned_at"),
-  removedAt: timestamp("removed_at"),
-  removedReason: text("removed_reason"),
-});
-
-export const generatedIqCodes = pgTable("generated_iq_codes", {
-  id: serial("id").primaryKey(),
-  code: text("code").notNull().unique(),
-  assignedTo: text("assigned_to").notNull(),
-  assignedBy: text("assigned_by").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  removedAt: timestamp("removed_at"), // Quando è stato rimosso dall'ospite
+  removedReason: text("removed_reason") // Motivo rimozione
 });
 
 // Tabella per tracciare i codici IQ disponibili per riassegnazione
 export const availableIqCodes = pgTable("available_iq_codes", {
   id: serial("id").primaryKey(),
-  code: text("code").notNull().unique(),
+  code: text("code").notNull().unique(), // Codice IQ disponibile
   structureCode: text("structure_code").notNull(), // Struttura proprietaria
   originalGuestId: integer("original_guest_id"), // Ospite originale (se rimosso)
   originalGuestName: text("original_guest_name"), // Nome ospite originale
@@ -233,7 +224,7 @@ export const partnerOnboarding = pgTable("partner_onboarding", {
 export const partnerDetails = pgTable("partner_details", {
   id: serial("id").primaryKey(),
   partnerCode: text("partner_code").notNull().unique(),
-
+  
   // Informazioni Business Base
   businessName: text("business_name").notNull(),
   businessType: text("business_type").notNull(), // ristorante, hotel, attrazione, negozio, etc.
@@ -244,11 +235,11 @@ export const partnerDetails = pgTable("partner_details", {
   phone: text("phone").notNull(),
   email: text("email").notNull(),
   website: text("website"),
-
+  
   // Orari di apertura
   openingHours: text("opening_hours").notNull(), // JSON string con orari settimanali
   seasonalHours: text("seasonal_hours"), // JSON per orari stagionali
-
+  
   // Accessibilità
   wheelchairAccessible: boolean("wheelchair_accessible").notNull().default(false),
   rampWidth: text("ramp_width"), // Larghezza rampa in cm
@@ -259,7 +250,7 @@ export const partnerDetails = pgTable("partner_details", {
   accessibleParking: integer("accessible_parking").default(0),
   assistanceAvailable: boolean("assistance_available").notNull().default(false),
   accessibilityNotes: text("accessibility_notes"),
-
+  
   // Allergie e intolleranze
   glutenFree: boolean("gluten_free").notNull().default(false),
   glutenFreeKitchen: boolean("gluten_free_kitchen").notNull().default(false), // Cucina separata
@@ -272,7 +263,7 @@ export const partnerDetails = pgTable("partner_details", {
   allergyTraining: boolean("allergy_training").notNull().default(false), // Staff formato
   allergyMenu: boolean("allergy_menu").notNull().default(false), // Menu specifico
   allergyNotes: text("allergy_notes"),
-
+  
   // Famiglia e bambini
   childFriendly: boolean("child_friendly").notNull().default(false),
   highChairs: boolean("high_chairs").notNull().default(false),
@@ -286,7 +277,7 @@ export const partnerDetails = pgTable("partner_details", {
   familyPackages: boolean("family_packages").notNull().default(false),
   babysittingService: boolean("babysitting_service").notNull().default(false),
   familyNotes: text("family_notes"),
-
+  
   // Specialità uniche
   uniqueSpecialties: text("unique_specialties"), // JSON array di specialità uniche
   localTraditions: text("local_traditions"), // Tradizioni locali offerte
@@ -296,7 +287,7 @@ export const partnerDetails = pgTable("partner_details", {
   languagesSpoken: text("languages_spoken"), // JSON array lingue parlate
   certifications: text("certifications"), // JSON array certificazioni
   awards: text("awards"), // JSON array premi/riconoscimenti
-
+  
   // Servizi aggiuntivi
   wifiAvailable: boolean("wifi_available").notNull().default(false),
   petsAllowed: boolean("pets_allowed").notNull().default(false),
@@ -307,7 +298,7 @@ export const partnerDetails = pgTable("partner_details", {
   reservationsRequired: boolean("reservations_required").notNull().default(false),
   groupBookings: boolean("group_bookings").notNull().default(false),
   privateEvents: boolean("private_events").notNull().default(false),
-
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
