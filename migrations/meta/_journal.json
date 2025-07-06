@@ -8,6 +8,13 @@
       "when": 1751186327695,
       "tag": "0000_public_scorpion",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1751797503378,
+      "tag": "0001_tearful_captain_britain",
+      "breakpoints": true
     }
   ]
 }
