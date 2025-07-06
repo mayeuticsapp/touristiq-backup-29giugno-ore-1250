@@ -2512,6 +2512,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const partnerStatus = await storage.getPartnerOnboardingStatus(req.userSession.iqCode);
       const partnerName = partnerStatus?.businessInfo?.businessName || `Partner ${req.userSession.iqCode}`;
 
+      // Ottieni gli utilizzi attuali del turista
+      const currentUses = await storage.getCurrentUsesForTourist(touristIqCode);
+
       // Crea richiesta di validazione
       const validation = await storage.createIqcodeValidation({
         touristCode: touristIqCode,
@@ -2519,8 +2522,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         partnerName,
         requestedAt: new Date(),
         status: 'pending',
-        usesRemaining: 10,
-        usesTotal: 10
+        usesRemaining: currentUses.usesRemaining,
+        usesTotal: currentUses.usesTotal
       });
 
       res.json({ 

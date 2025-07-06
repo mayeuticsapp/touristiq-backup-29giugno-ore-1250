@@ -98,6 +98,7 @@ export interface IStorage {
   updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<IqcodeValidation>;
   decrementValidationUses(validationId: number): Promise<IqcodeValidation>;
   markValidationAsUsed(validationId: number): Promise<IqcodeValidation>;
+  getCurrentUsesForTourist(touristCode: string): Promise<{usesRemaining: number, usesTotal: number}>;
 
   // Ricariche IQCode methods
   createIqcodeRecharge(data: {touristCode: string, amount: number, status: string, requestedAt: Date}): Promise<IqcodeRecharge>;
@@ -721,6 +722,7 @@ export class MemStorage implements IStorage {
   async updateValidationStatus(): Promise<any> { throw new Error("Not implemented"); }
   async decrementValidationUses(): Promise<any> { throw new Error("Not implemented"); }
   async markValidationAsUsed(): Promise<any> { throw new Error("Not implemented"); }
+  async getCurrentUsesForTourist(): Promise<any> { throw new Error("Not implemented"); }
   async createIqcodeRecharge(): Promise<any> { throw new Error("Not implemented"); }
   async getRechargesWithFilters(): Promise<any> { throw new Error("Not implemented"); }
   async activateRecharge(): Promise<any> { throw new Error("Not implemented"); }
@@ -2411,6 +2413,28 @@ class ExtendedPostgreStorage extends PostgreStorage {
     return result[0];
   }
 
+  // Ottieni gli utilizzi attuali di un turista
+  async getCurrentUsesForTourist(touristCode: string): Promise<{usesRemaining: number, usesTotal: number}> {
+    const { desc } = await import('drizzle-orm');
+    const result = await this.db
+      .select()
+      .from(iqcodeValidations)
+      .where(eq(iqcodeValidations.touristIqCode, touristCode))
+      .orderBy(desc(iqcodeValidations.id))
+      .limit(1);
+    
+    if (result.length === 0) {
+      // Prima validazione del turista, inizia con 10 utilizzi
+      return { usesRemaining: 10, usesTotal: 10 };
+    }
+    
+    // Validazioni successive, mantiene il conteggio attuale
+    return { 
+      usesRemaining: result[0].usesRemaining,
+      usesTotal: result[0].usesTotal 
+    };
+  }
+
   async getAllValidations(): Promise<IqcodeValidation[]> {
     const result = await this.db.select().from(iqcodeValidations);
     return result;
@@ -2640,6 +2664,28 @@ class ExtendedPostgreStorage extends PostgreStorage {
         tourists: []
       };
     }
+  }
+
+  // Override del metodo per utilizzi attuali del turista
+  async getCurrentUsesForTourist(touristCode: string): Promise<{usesRemaining: number, usesTotal: number}> {
+    const { desc } = await import('drizzle-orm');
+    const result = await this.db
+      .select()
+      .from(iqcodeValidations)
+      .where(eq(iqcodeValidations.touristIqCode, touristCode))
+      .orderBy(desc(iqcodeValidations.id))
+      .limit(1);
+    
+    if (result.length === 0) {
+      // Prima validazione del turista, inizia con 10 utilizzi
+      return { usesRemaining: 10, usesTotal: 10 };
+    }
+    
+    // Validazioni successive, mantiene il conteggio attuale
+    return { 
+      usesRemaining: result[0].usesRemaining,
+      usesTotal: result[0].usesTotal 
+    };
   }
 }
 
