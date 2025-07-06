@@ -8,8 +8,8 @@ import { CheckCircle, XCircle, Clock, Users, RefreshCw } from 'lucide-react';
 
 interface ValidationRequest {
   id: number;
-  touristIqCode: string;
-  partnerName: string;
+  // touristIqCode: string; // ❌ RIMOSSO PER PRIVACY
+  // partnerName: string; // ❌ RIMOSSO PER PRIVACY
   status: 'pending' | 'accepted' | 'rejected';
   requestedAt: string;
   respondedAt?: string;
@@ -311,7 +311,7 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
               {validations.map((validation) => (
                 <div key={validation.id} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="font-medium">{validation.partnerName}</div>
+                    <div className="font-medium">Richiesta da Partner</div>
                     {getStatusBadge(validation.status)}
                   </div>
                   <div className="text-sm text-gray-600 mb-3">
@@ -340,7 +340,7 @@ export function IQCodeValidation({ userRole }: IQCodeValidationProps) {
                   )}
                   {validation.status === 'accepted' && (
                     <div className="text-sm text-green-700 bg-green-50 p-2 rounded">
-                      ✓ IQCode accettato presso {validation.partnerName} • <span className="font-medium">{validation.usesRemaining} utilizzi rimanenti</span> (su {validation.usesTotal} totali)
+                      ✓ IQCode accettato dal partner • <span className="font-medium">{validation.usesRemaining} utilizzi rimanenti</span> (su {validation.usesTotal} totali)
                     </div>
                   )}
                   {validation.status === 'rejected' && (
