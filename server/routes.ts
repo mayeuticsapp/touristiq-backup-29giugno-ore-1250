@@ -3119,7 +3119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const session = await storage.getSessionByToken(sessionToken);
-      if (!session || session.role !== 'tourist') {
+      if (!session || !['tourist', 'structure', 'partner'].includes(session.role)) {
         return res.status(401).json({ message: "Sessione non valida o non autorizzata" });
       }
 
