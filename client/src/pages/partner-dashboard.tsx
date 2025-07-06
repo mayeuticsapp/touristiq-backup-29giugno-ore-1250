@@ -503,9 +503,9 @@ export default function PartnerDashboard() {
             className="mb-6" 
           />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Tourist Link Request */}
-            <Card className="bg-green-50 border-green-200">
+          <div className="grid grid-cols-1 gap-6">
+            {/* Tourist Link Request - NASCOSTA TEMPORANEAMENTE */}
+            {/* <Card className="bg-green-50 border-green-200">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -552,7 +552,7 @@ export default function PartnerDashboard() {
                   )}
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Active Tourists */}
             <Card>
