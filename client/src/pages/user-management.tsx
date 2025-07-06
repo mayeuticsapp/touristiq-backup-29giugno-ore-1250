@@ -97,7 +97,10 @@ export default function UserManagement() {
     return undefined;
   };
 
-  const filteredUsers = users.filter(user => 
+  // Verifica che users sia un array valido prima di usare filter
+  const safeUsers = Array.isArray(users) ? users : [];
+  
+  const filteredUsers = safeUsers.filter(user => 
     user.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.assignedTo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.role?.toLowerCase().includes(searchTerm.toLowerCase())
