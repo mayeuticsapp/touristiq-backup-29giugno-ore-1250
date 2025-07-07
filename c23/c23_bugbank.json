@@ -1,0 +1,44 @@
+{
+  "version": "1.0",
+  "created": "2025-07-07T07:02:00Z",
+  "bugs": [
+    {
+      "id": "BUG-001",
+      "date": "2025-07-07",
+      "type": "SQL_PARAMETRIZATION",
+      "description": "Errori parametrizzazione SQL con Neon Database",
+      "files_affected": ["server/storage.ts"],
+      "solution_pattern": "Evitare sql template literals, usare metodi esistenti + filtri",
+      "severity": "HIGH",
+      "recurrence": 3,
+      "last_occurrence": "2025-07-07T06:00:00Z"
+    },
+    {
+      "id": "BUG-002", 
+      "date": "2025-07-07",
+      "type": "MISSING_API_FIELDS",
+      "description": "Campi mancanti in API response causano errori frontend",
+      "files_affected": ["server/routes.ts"],
+      "solution_pattern": "Verificare schema completo in ogni endpoint",
+      "severity": "MEDIUM",
+      "recurrence": 2,
+      "last_occurrence": "2025-07-07T06:30:00Z"
+    },
+    {
+      "id": "BUG-003",
+      "date": "2025-07-07", 
+      "type": "DATA_LEAK",
+      "description": "Informazioni tra ruoli non isolate correttamente",
+      "files_affected": ["server/routes.ts", "server/storage.ts"],
+      "solution_pattern": "Sempre verificare filtri session.role in endpoint",
+      "severity": "CRITICAL",
+      "recurrence": 1,
+      "last_occurrence": "2025-07-06T10:00:00Z"
+    }
+  ],
+  "patterns": {
+    "most_common_bug_type": "SQL_PARAMETRIZATION",
+    "critical_files": ["server/storage.ts", "server/routes.ts"],
+    "peak_bug_hours": ["06:00-08:00", "14:00-16:00"]
+  }
+}

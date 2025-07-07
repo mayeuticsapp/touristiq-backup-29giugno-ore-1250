@@ -6,6 +6,7 @@ import { nanoid } from "nanoid";
 import { chatWithTIQai } from "./openai";
 import { createIQCode } from "./createIQCode";
 import { z } from "zod";
+import { c23Monitor } from "./c23-monitor";
 // PDFKit import rimosso per problema ES modules
 
 // Middleware per controlli di sicurezza avanzati
