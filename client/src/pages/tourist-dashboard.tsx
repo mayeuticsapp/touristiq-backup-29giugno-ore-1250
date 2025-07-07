@@ -39,8 +39,14 @@ export default function TouristDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Query per user (DEVE essere definito prima degli useEffect)
+  const { data: user } = useQuery({
+    queryKey: ["/api/auth/me"],
+  });
+
   // Logica popup benvenuto
   useEffect(() => {
+    console.log('User stato:', user);
     const hasSeenWelcome = localStorage.getItem('touristiq-welcome-seen');
     if (!hasSeenWelcome && user?.iqCode) {
       setShowWelcomePopup(true);
@@ -53,10 +59,6 @@ export default function TouristDashboard() {
     }
     setShowWelcomePopup(false);
   };
-
-  const { data: user } = useQuery({
-    queryKey: ["/api/auth/me"],
-  });
 
   const { data: custodeStatus } = useQuery({
     queryKey: ["/api/check-custode-status"],
