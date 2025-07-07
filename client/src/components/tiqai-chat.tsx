@@ -87,7 +87,7 @@ export function TIQaiChat() {
   };
 
   return (
-    <Card className="h-96 flex flex-col relative overflow-hidden bg-gradient-to-br from-orange-50 via-amber-50 to-red-50 border-0 shadow-2xl">
+    <Card className="h-[500px] flex flex-col relative overflow-hidden bg-gradient-to-br from-orange-50 via-amber-50 to-red-50 border-0 shadow-2xl">
       {/* Sfondo calabrese animato */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-4 right-4 text-orange-300 animate-pulse">
@@ -115,8 +115,8 @@ export function TIQaiChat() {
         </p>
       </CardHeader>
       
-      <CardContent className="flex-1 flex flex-col p-0 relative z-10">
-        <ScrollArea className="flex-1 px-4 bg-gradient-to-b from-transparent to-orange-25 max-h-72 overflow-y-auto" ref={scrollAreaRef}>
+      <CardContent className="flex-1 flex flex-col p-0 relative z-10 min-h-0">
+        <ScrollArea className="flex-1 px-4 bg-gradient-to-b from-transparent to-orange-25" ref={scrollAreaRef}>
           <div className="space-y-4 pb-4">
             {messages.map((message) => (
               <div
