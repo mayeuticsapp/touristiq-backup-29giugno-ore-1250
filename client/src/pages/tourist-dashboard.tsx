@@ -56,7 +56,6 @@ export default function TouristDashboard() {
 
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
-    queryFn: getCurrentUser,
   });
 
   const { data: custodeStatus } = useQuery({
