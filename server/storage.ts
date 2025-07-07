@@ -755,7 +755,6 @@ export class MemStorage implements IStorage {
       amount: movement.amount,
       movementDate: movement.movementDate,
       paymentMethod: movement.paymentMethod,
-      ```text
       clientsServed: movement.clientsServed || null,
       iqcodesUsed: movement.iqcodesUsed || null,
       notes: movement.notes || null,

@@ -2583,6 +2583,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         discountPercentage: offer.discountPercentage,
         validUntil: offer.validUntil,
         
+        // CRITICO: partnerCode per raggruppamento frontend
+        partnerCode: offer.partnerCode,
+        
         // Dati partner REALI (NO IQCode mostrato per privacy)
         partnerName: offer.partnerName,
         businessType: offer.businessType,
