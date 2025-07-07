@@ -62,6 +62,14 @@
     color: white;
     font-weight: 600;
   }
+
+  /* Utilità per testo compatto */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
 @keyframes gentle-pulse {

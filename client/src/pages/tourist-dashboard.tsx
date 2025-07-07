@@ -488,32 +488,32 @@ export default function TouristDashboard() {
                           </div>
                         </div>
 
-                        {/* Lista offerte coinvolgenti */}
-                        <div className="space-y-3 mb-4">
+                        {/* Lista offerte compatte - click per espandere */}
+                        <div className="space-y-2 mb-4">
                           {offers.map((offer: any, offerIndex: number) => (
                             <div 
                               key={offerIndex} 
-                              className="relative overflow-hidden bg-gradient-to-r from-white to-orange-50 rounded-xl border border-orange-200 cursor-pointer hover-warm group"
+                              className="relative overflow-hidden bg-gradient-to-r from-white to-orange-50 rounded-lg border border-orange-200 cursor-pointer hover-warm group p-3"
                               onClick={() => handleOpenOfferDetail(offer)}
                             >
-                              <div className="absolute top-0 right-0 w-16 h-16 bg-calabria-sunset opacity-10 rounded-bl-full"></div>
-                              <div className="relative p-4">
+                              <div className="absolute top-0 right-0 w-12 h-12 bg-calabria-sunset opacity-10 rounded-bl-full"></div>
+                              <div className="relative">
                                 <div className="flex items-center justify-between">
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center mb-2">
-                                      <span className="text-lg mr-2">🎯</span>
-                                      <p className="font-semibold text-gray-900 text-base group-hover:text-orange-600 transition-colors">{offer.title}</p>
+                                  <div className="flex-1 min-w-0 pr-3">
+                                    <div className="flex items-center mb-1">
+                                      <span className="text-base mr-2">🎯</span>
+                                      <p className="font-semibold text-gray-900 text-sm group-hover:text-orange-600 transition-colors truncate">{offer.title}</p>
                                     </div>
-                                    <p className="text-sm text-gray-700 mb-2 leading-relaxed">{offer.description}</p>
+                                    <p className="text-xs text-gray-600 line-clamp-1 truncate">{offer.description}</p>
                                     {offer.validUntil && (
-                                      <div className="flex items-center text-xs text-gray-500">
+                                      <div className="flex items-center text-xs text-gray-500 mt-1">
                                         <span className="mr-1">⏰</span>
                                         Valido fino al {new Date(offer.validUntil).toLocaleDateString('it-IT')}
                                       </div>
                                     )}
                                   </div>
-                                  <div className="ml-4 flex flex-col items-center">
-                                    <Badge className="bg-calabria-nature text-white font-bold text-lg px-3 py-1 mb-1">
+                                  <div className="flex flex-col items-center flex-shrink-0">
+                                    <Badge className="bg-calabria-nature text-white font-bold text-sm px-2 py-1 mb-1">
                                       -{offer.discountPercentage}%
                                     </Badge>
                                     <span className="text-xs text-gray-500">ESCLUSIVO</span>
