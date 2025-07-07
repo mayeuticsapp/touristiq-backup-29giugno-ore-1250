@@ -285,9 +285,9 @@ export default function TouristDashboard() {
             <div className="bg-white/60 backdrop-blur-sm rounded-xl p-5 text-center border-2 border-white/70 hover:bg-white/65 transition-all duration-300 shadow-lg">
               <span className="text-3xl font-bold tracking-wider text-gray-800 drop-shadow-sm">{user.iqCode}</span>
             </div>
-            <div className="mt-4 flex items-center bg-white/35 rounded-lg p-3 backdrop-blur-sm">
+            <div className="mt-4 flex items-center bg-white/50 rounded-lg p-3 backdrop-blur-sm">
               <span className="mr-2">🎯</span>
-              <p className="text-white font-semibold drop-shadow-md" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.4)'}}>Il tuo codice esclusivo per scoperte uniche in Calabria!</p>
+              <p className="text-gray-800 font-semibold">Il tuo codice esclusivo per scoperte uniche in Calabria!</p>
             </div>
           </CardContent>
         </Card>
