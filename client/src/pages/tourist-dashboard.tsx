@@ -35,6 +35,7 @@ export default function TouristDashboard() {
 
   // Stato per popup di benvenuto
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+  const [welcomeMessage, setWelcomeMessage] = useState("");
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -44,12 +45,30 @@ export default function TouristDashboard() {
     queryKey: ["/api/auth/me"],
   });
 
+  // Messaggi dinamici evocativi
+  const welcomeMessages = [
+    "La tua porta d'accesso alle esperienze autentiche della Calabria",
+    "Dove ogni momento diventa una scoperta indimenticabile", 
+    "Il tuo passaporto per i tesori nascosti della terra del sole",
+    "Scopri la Calabria come mai prima d'ora",
+    "Benvenuto nel cuore pulsante dell'ospitalità calabrese",
+    "Ogni esperienza inizia con un IQ, ogni ricordo nasce qui",
+    "La chiave per aprire le porte dell'autentica Calabria"
+  ];
+
   // Logica popup benvenuto
   useEffect(() => {
     console.log('User stato:', user);
     const hasSeenWelcome = localStorage.getItem('touristiq-welcome-seen');
     if (!hasSeenWelcome && user?.iqCode) {
-      setShowWelcomePopup(true);
+      // Seleziona messaggio casuale
+      const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+      setWelcomeMessage(randomMessage);
+      
+      // Delay "sunrise" per dare respiro all'interfaccia
+      setTimeout(() => {
+        setShowWelcomePopup(true);
+      }, 800);
     }
   }, [user]);
 
@@ -889,9 +908,9 @@ export default function TouristDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Popup di Benvenuto Caldo e Istruttivo */}
+      {/* Popup di Benvenuto Caldo e Istruttivo con Effetto Sunrise */}
       <Dialog open={showWelcomePopup} onOpenChange={() => setShowWelcomePopup(false)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg animate-sunrise">
           <div className="relative overflow-hidden">
             {/* Background decorativo calabrese */}
             <div className="absolute inset-0 bg-calabria-sunset opacity-5"></div>
@@ -903,8 +922,8 @@ export default function TouristDashboard() {
                 <DialogTitle className="text-2xl font-bold text-gray-900">
                   Benvenuto in TouristIQ!
                 </DialogTitle>
-                <p className="text-gray-600 mt-2">
-                  La tua porta d'accesso alle esperienze autentiche della Calabria
+                <p className="text-gray-600 mt-2 animate-fade-in-delayed">
+                  {welcomeMessage || "La tua porta d'accesso alle esperienze autentiche della Calabria"}
                 </p>
               </DialogHeader>
               
