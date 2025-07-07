@@ -403,94 +403,112 @@ export default function TouristDashboard() {
                 </p>
               </div>
             ) : offersToShow?.length > 0 ? (
-              <div className="space-y-4">
-                {offersToShow.map((offer: any, index: number) => (
-                  <div key={index} className="p-4 border rounded-lg hover:bg-gray-50">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center cursor-pointer" onClick={() => handleOpenPartnerDetail(offer)}>
-                        <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
-                          <Utensils className="text-red-600" size={20} />
-                        </div>
-                        <div>
-                          <p className="font-bold text-gray-900 hover:text-blue-600 transition-colors">{offer.partnerName}</p>
-                          <p className="text-sm text-gray-600">{offer.businessType}</p>
-                          <p className="text-sm font-medium text-blue-600 mt-1">{offer.title}</p>
-                          <p className="text-xs text-gray-500">{offer.description}</p>
-                          <p className="text-xs text-blue-500 mt-1 font-medium">👆 Clicca per vedere i dettagli del partner</p>
-                        </div>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800 text-lg font-bold">
-                        -{offer.discountPercentage}%
-                      </Badge>
-                    </div>
-                    
-                    {/* Indirizzo e contatti */}
-                    {offer.address && (
-                      <div className="flex items-center text-sm text-gray-600 mb-2">
-                        <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                        <span>{offer.address}, {offer.city} ({offer.province})</span>
-                      </div>
-                    )}
-                    
-                    {/* Azioni rapide */}
-                    <div className="flex gap-2 flex-wrap">
-                      {offer.phone && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => window.open(`https://wa.me/${offer.phone.replace(/[^0-9]/g, '')}?text=Ciao! Ho visto la vostra offerta "${offer.title}" su TouristIQ. Vorrei avere maggiori informazioni.`, '_blank')}
-                          className="text-green-600 hover:bg-green-50"
-                        >
-                          <Phone className="w-4 h-4 mr-1" />
-                          WhatsApp
-                        </Button>
-                      )}
-                      
-                      {offer.address && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(offer.address + ', ' + offer.city)}`, '_blank')}
-                          className="text-blue-600 hover:bg-blue-50"
-                        >
-                          <Navigation className="w-4 h-4 mr-1" />
-                          Naviga
-                        </Button>
-                      )}
-                      
-                      {offer.website && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => window.open(offer.website, '_blank')}
-                          className="text-purple-600 hover:bg-purple-50"
-                        >
-                          <ExternalLink className="w-4 h-4 mr-1" />
-                          Sito Web
-                        </Button>
-                      )}
-                      
-                      {offer.email && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => window.open(`mailto:${offer.email}?subject=Informazioni offerta ${offer.title}`, '_blank')}
-                          className="text-gray-600 hover:bg-gray-50"
-                        >
-                          <Mail className="w-4 h-4 mr-1" />
-                          Email
-                        </Button>
-                      )}
-                    </div>
+              <div className="space-y-3">
+                {(() => {
+                  // Raggruppa offerte per partner
+                  const groupedOffers = offersToShow.reduce((acc: any, offer: any) => {
+                    if (!acc[offer.partnerCode]) {
+                      acc[offer.partnerCode] = {
+                        partner: offer,
+                        offers: []
+                      };
+                    }
+                    acc[offer.partnerCode].offers.push(offer);
+                    return acc;
+                  }, {});
 
-                    {/* Validità offerta */}
-                    {offer.validUntil && (
-                      <div className="text-xs text-gray-500 mt-2">
-                        Valido fino al {new Date(offer.validUntil).toLocaleDateString('it-IT')}
+                  return Object.values(groupedOffers).map((group: any, groupIndex: number) => {
+                    const partner = group.partner;
+                    const offers = group.offers;
+                    
+                    return (
+                      <div key={groupIndex} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                        {/* Header Partner - compatto */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center cursor-pointer flex-1" onClick={() => handleOpenPartnerDetail(partner)}>
+                            <div className="h-10 w-10 bg-red-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                              <Utensils className="text-red-600" size={16} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-bold text-gray-900 hover:text-blue-600 transition-colors truncate">{partner.partnerName}</p>
+                              <p className="text-sm text-gray-600">{partner.businessType}</p>
+                            </div>
+                          </div>
+                          
+                          {/* Conteggio offerte */}
+                          <div className="text-sm text-gray-500 ml-2">
+                            {offers.length} offert{offers.length === 1 ? 'a' : 'e'}
+                          </div>
+                        </div>
+
+                        {/* Lista offerte compatta */}
+                        <div className="space-y-2 mb-3">
+                          {offers.map((offer: any, offerIndex: number) => (
+                            <div key={offerIndex} className="flex items-center justify-between p-2 bg-gray-50 rounded border-l-4 border-l-blue-500">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-gray-900 text-sm truncate">{offer.title}</p>
+                                <p className="text-xs text-gray-600 truncate">{offer.description}</p>
+                                {offer.validUntil && (
+                                  <p className="text-xs text-gray-500">
+                                    Valido fino al {new Date(offer.validUntil).toLocaleDateString('it-IT')}
+                                  </p>
+                                )}
+                              </div>
+                              <Badge className="bg-green-100 text-green-800 font-bold ml-2 flex-shrink-0">
+                                -{offer.discountPercentage}%
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* Indirizzo compatto */}
+                        {partner.address && (
+                          <div className="flex items-center text-sm text-gray-600 mb-2">
+                            <MapPin className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                            <span className="truncate">{partner.address}, {partner.city} ({partner.province})</span>
+                          </div>
+                        )}
+                        
+                        {/* Azioni rapide compatte */}
+                        <div className="flex gap-1 flex-wrap">
+                          {partner.phone && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => window.open(`https://wa.me/${partner.phone.replace(/[^0-9]/g, '')}?text=Ciao! Ho visto le vostre offerte su TouristIQ. Vorrei avere maggiori informazioni.`, '_blank')}
+                              className="text-green-600 hover:bg-green-50 text-xs"
+                            >
+                              <Phone className="w-3 h-3 mr-1" />
+                              WhatsApp
+                            </Button>
+                          )}
+                          
+                          {partner.address && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(partner.address + ', ' + partner.city)}`, '_blank')}
+                              className="text-blue-600 hover:bg-blue-50 text-xs"
+                            >
+                              <Navigation className="w-3 h-3 mr-1" />
+                              Naviga
+                            </Button>
+                          )}
+                          
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleOpenPartnerDetail(partner)}
+                            className="text-purple-600 hover:bg-purple-50 text-xs"
+                          >
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            Dettagli
+                          </Button>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                ))}
+                    );
+                  });
+                })()}
               </div>
             ) : (
               <div className="text-center py-8">
