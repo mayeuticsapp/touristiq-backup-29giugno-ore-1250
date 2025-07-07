@@ -2178,43 +2178,17 @@ class ExtendedPostgreStorage extends PostgreStorage {
 
   async getPartnerOffersByCity(cityName: string): Promise<any[]> {
     try {
-      // Usa metodo diretto senza sql template per evitare errori parametrizzazione
-      const query = `
-        SELECT 
-          po.id,
-          po.title,
-          po.description,
-          po.discount as "discountPercentage",
-          po.valid_until as "validUntil",
-          po.partner_code as "partnerCode",
-          COALESCE(pd.business_name, ic.assigned_to, 'Partner') as "partnerName",
-          pd.business_type as "businessType",
-          pd.address,
-          pd.city,
-          pd.province,
-          pd.phone,
-          pd.email,
-          pd.website
-        FROM partner_offers po
-        LEFT JOIN iq_codes ic ON po.partner_code = ic.code
-        LEFT JOIN partner_details pd ON po.partner_code = pd.partner_code
-        WHERE po.is_active = true 
-          AND ic.role = 'partner' 
-          AND ic.is_active = true
-          AND LOWER(pd.city) = LOWER($1)
-        ORDER BY po.created_at DESC
-      `;
-      
-      // Usa getAllPartnersWithOffers() e filtra per città invece di query diretta
+      // Usa getAllPartnersWithOffers() e filtra per città - METODO SICURO
       const allOffers = await this.getAllPartnersWithOffers();
       const cityOffers = allOffers.filter(offer => 
         offer.city && offer.city.toLowerCase() === cityName.toLowerCase()
       );
       
-      console.log(`🔍 TIQai Debug: Città '${cityName}' → ${cityOffers.length} offerte trovate`);
+      console.log(`🔍 TIQai Debug: Città '${cityName}' → Totali: ${allOffers.length}, Filtrate per città: ${cityOffers.length}`);
+      if (cityOffers.length > 0) {
+        console.log(`🔍 TIQai Partner trovati:`, cityOffers.map(o => `${o.partnerName}: ${o.title}`));
+      }
       return cityOffers;
-
-
     } catch (error) {
       console.error('Errore getPartnerOffersByCity:', error);
       return [];
