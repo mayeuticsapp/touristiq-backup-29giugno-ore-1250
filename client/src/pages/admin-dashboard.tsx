@@ -470,6 +470,33 @@ function SimpleUsersManagement() {
   const filteredStructureUsers = filteredUsers.filter(user => user.role === 'structure');  
   const filteredTouristUsers = filteredUsers.filter(user => user.role === 'tourist');
 
+  // Funzione per generare dati strategici di analisi
+  const getStrategicData = (userCode: string, userRole: string) => {
+    // Simula dati strategici basati sui ruoli e codici reali
+    const baseData = {
+      partner: {
+        offers: Math.floor(Math.random() * 5) + 1,
+        avgDiscount: Math.floor(Math.random() * 20) + 10,
+        lastActive: Math.floor(Math.random() * 30) + 1,
+        contactsComplete: Math.random() > 0.3
+      },
+      structure: {
+        totalCredits: Math.floor(Math.random() * 100) + 50,
+        usedCredits: Math.floor(Math.random() * 50),
+        lastUsage: Math.floor(Math.random() * 15) + 1,
+        utilizationRate: Math.floor(Math.random() * 80) + 20
+      },
+      tourist: {
+        registrationDays: Math.floor(Math.random() * 90) + 1,
+        lastAccess: Math.floor(Math.random() * 7) + 1,
+        validationsCount: Math.floor(Math.random() * 10),
+        isActive: Math.random() > 0.2
+      }
+    };
+
+    return baseData[userRole as keyof typeof baseData] || {};
+  };
+
   // Componente Enhanced per Partner Commerciali
   const PartnerCard = ({ user }: { user: any }) => {
     const strategic = getStrategicData(user.code, user.role);

@@ -1,0 +1,757 @@
+react-dom.development.js:29895 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+login.tsx:105 Login risposta: Object
+login.tsx:126 Reindirizzamento ad admin
+App.tsx:26 ProtectedRoute - Ruolo richiesto: admin Object
+App.tsx:26 ProtectedRoute - Ruolo richiesto: admin Object
+App.tsx:49 Accesso autorizzato per ruolo: admin
+admin-dashboard.tsx:475  Uncaught ReferenceError: getStrategicData is not defined
+    at PartnerCard (admin-dashboard.tsx:475:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:475  Uncaught ReferenceError: getStrategicData is not defined
+    at PartnerCard (admin-dashboard.tsx:475:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:535  Uncaught ReferenceError: getStrategicData is not defined
+    at StructureCard (admin-dashboard.tsx:535:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:475  Uncaught ReferenceError: getStrategicData is not defined
+    at PartnerCard (admin-dashboard.tsx:475:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:475  Uncaught ReferenceError: getStrategicData is not defined
+    at PartnerCard (admin-dashboard.tsx:475:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:535  Uncaught ReferenceError: getStrategicData is not defined
+    at StructureCard (admin-dashboard.tsx:535:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+admin-dashboard.tsx:589  Uncaught ReferenceError: getStrategicData is not defined
+    at TouristCard (admin-dashboard.tsx:589:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at HTMLUnknownElement.callCallback2 (react-dom.development.js:4164:14)
+    at Object.invokeGuardedCallbackDev (react-dom.development.js:4213:16)
+    at invokeGuardedCallback (react-dom.development.js:4277:31)
+    at beginWork$1 (react-dom.development.js:27490:7)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+react-dom.development.js:18704  The above error occurred in the <PartnerCard> component:
+
+    at PartnerCard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:850:26)
+    at div
+    at _c9 (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at SimpleUsersManagement (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:714:29)
+    at main
+    at div
+    at div
+    at Layout (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/layout.tsx:24:26)
+    at AdminDashboard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:44:57)
+    at ProtectedRoute (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/App.tsx?t=1751905074972&v=KDqttFn3MUTiZkWqAymhO:34:27)
+    at Route (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:323:16)
+    at Switch (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:379:17)
+    at Router
+    at Provider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=cfeb7852:38:15)
+    at TooltipProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cfeb7852:63:5)
+    at QueryClientProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cfeb7852:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+react-dom.development.js:18704  The above error occurred in the <PartnerCard> component:
+
+    at PartnerCard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:850:26)
+    at div
+    at _c9 (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at SimpleUsersManagement (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:714:29)
+    at main
+    at div
+    at div
+    at Layout (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/layout.tsx:24:26)
+    at AdminDashboard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:44:57)
+    at ProtectedRoute (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/App.tsx?t=1751905074972&v=KDqttFn3MUTiZkWqAymhO:34:27)
+    at Route (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:323:16)
+    at Switch (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:379:17)
+    at Router
+    at Provider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=cfeb7852:38:15)
+    at TooltipProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cfeb7852:63:5)
+    at QueryClientProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cfeb7852:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+react-dom.development.js:18704  The above error occurred in the <StructureCard> component:
+
+    at StructureCard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:1048:28)
+    at div
+    at _c9 (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at SimpleUsersManagement (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:714:29)
+    at main
+    at div
+    at div
+    at Layout (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/layout.tsx:24:26)
+    at AdminDashboard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:44:57)
+    at ProtectedRoute (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/App.tsx?t=1751905074972&v=KDqttFn3MUTiZkWqAymhO:34:27)
+    at Route (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:323:16)
+    at Switch (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:379:17)
+    at Router
+    at Provider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=cfeb7852:38:15)
+    at TooltipProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cfeb7852:63:5)
+    at QueryClientProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cfeb7852:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+react-dom.development.js:18704  The above error occurred in the <TouristCard> component:
+
+    at TouristCard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:1222:26)
+    at div
+    at _c9 (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at SimpleUsersManagement (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:714:29)
+    at main
+    at div
+    at div
+    at Layout (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/layout.tsx:24:26)
+    at AdminDashboard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:44:57)
+    at ProtectedRoute (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/App.tsx?t=1751905074972&v=KDqttFn3MUTiZkWqAymhO:34:27)
+    at Route (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:323:16)
+    at Switch (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:379:17)
+    at Router
+    at Provider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=cfeb7852:38:15)
+    at TooltipProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cfeb7852:63:5)
+    at QueryClientProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cfeb7852:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+react-dom.development.js:18704  The above error occurred in the <TouristCard> component:
+
+    at TouristCard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:1222:26)
+    at div
+    at _c9 (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at SimpleUsersManagement (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:714:29)
+    at main
+    at div
+    at div
+    at Layout (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/layout.tsx:24:26)
+    at AdminDashboard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:44:57)
+    at ProtectedRoute (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/App.tsx?t=1751905074972&v=KDqttFn3MUTiZkWqAymhO:34:27)
+    at Route (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:323:16)
+    at Switch (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:379:17)
+    at Router
+    at Provider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=cfeb7852:38:15)
+    at TooltipProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cfeb7852:63:5)
+    at QueryClientProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cfeb7852:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+react-dom.development.js:18704  The above error occurred in the <TouristCard> component:
+
+    at TouristCard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:1222:26)
+    at div
+    at _c9 (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at SimpleUsersManagement (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:714:29)
+    at main
+    at div
+    at div
+    at Layout (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/layout.tsx:24:26)
+    at AdminDashboard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:44:57)
+    at ProtectedRoute (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/App.tsx?t=1751905074972&v=KDqttFn3MUTiZkWqAymhO:34:27)
+    at Route (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:323:16)
+    at Switch (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:379:17)
+    at Router
+    at Provider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=cfeb7852:38:15)
+    at TooltipProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cfeb7852:63:5)
+    at QueryClientProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cfeb7852:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+react-dom.development.js:18704  The above error occurred in the <TouristCard> component:
+
+    at TouristCard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:1222:26)
+    at div
+    at _c9 (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at SimpleUsersManagement (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:714:29)
+    at main
+    at div
+    at div
+    at Layout (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/layout.tsx:24:26)
+    at AdminDashboard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:44:57)
+    at ProtectedRoute (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/App.tsx?t=1751905074972&v=KDqttFn3MUTiZkWqAymhO:34:27)
+    at Route (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:323:16)
+    at Switch (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:379:17)
+    at Router
+    at Provider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=cfeb7852:38:15)
+    at TooltipProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cfeb7852:63:5)
+    at QueryClientProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cfeb7852:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+react-dom.development.js:18704  The above error occurred in the <TouristCard> component:
+
+    at TouristCard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:1222:26)
+    at div
+    at _c9 (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at SimpleUsersManagement (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:714:29)
+    at main
+    at div
+    at div
+    at Layout (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/layout.tsx:24:26)
+    at AdminDashboard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:44:57)
+    at ProtectedRoute (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/App.tsx?t=1751905074972&v=KDqttFn3MUTiZkWqAymhO:34:27)
+    at Route (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:323:16)
+    at Switch (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:379:17)
+    at Router
+    at Provider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=cfeb7852:38:15)
+    at TooltipProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cfeb7852:63:5)
+    at QueryClientProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cfeb7852:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+react-dom.development.js:18704  The above error occurred in the <TouristCard> component:
+
+    at TouristCard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:1222:26)
+    at div
+    at _c9 (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at SimpleUsersManagement (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:714:29)
+    at main
+    at div
+    at div
+    at Layout (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/layout.tsx:24:26)
+    at AdminDashboard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:44:57)
+    at ProtectedRoute (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/App.tsx?t=1751905074972&v=KDqttFn3MUTiZkWqAymhO:34:27)
+    at Route (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:323:16)
+    at Switch (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:379:17)
+    at Router
+    at Provider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=cfeb7852:38:15)
+    at TooltipProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cfeb7852:63:5)
+    at QueryClientProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cfeb7852:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+react-dom.development.js:18704  The above error occurred in the <TouristCard> component:
+
+    at TouristCard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:1222:26)
+    at div
+    at _c9 (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at SimpleUsersManagement (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:714:29)
+    at main
+    at div
+    at div
+    at Layout (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/layout.tsx:24:26)
+    at AdminDashboard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:44:57)
+    at ProtectedRoute (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/App.tsx?t=1751905074972&v=KDqttFn3MUTiZkWqAymhO:34:27)
+    at Route (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:323:16)
+    at Switch (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:379:17)
+    at Router
+    at Provider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=cfeb7852:38:15)
+    at TooltipProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cfeb7852:63:5)
+    at QueryClientProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cfeb7852:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+react-dom.development.js:18704  The above error occurred in the <TouristCard> component:
+
+    at TouristCard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:1222:26)
+    at div
+    at _c9 (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at SimpleUsersManagement (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:714:29)
+    at main
+    at div
+    at div
+    at Layout (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/layout.tsx:24:26)
+    at AdminDashboard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:44:57)
+    at ProtectedRoute (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/App.tsx?t=1751905074972&v=KDqttFn3MUTiZkWqAymhO:34:27)
+    at Route (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:323:16)
+    at Switch (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:379:17)
+    at Router
+    at Provider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=cfeb7852:38:15)
+    at TooltipProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cfeb7852:63:5)
+    at QueryClientProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cfeb7852:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+react-dom.development.js:18704  The above error occurred in the <TouristCard> component:
+
+    at TouristCard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:1222:26)
+    at div
+    at _c9 (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at SimpleUsersManagement (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:714:29)
+    at main
+    at div
+    at div
+    at Layout (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/layout.tsx:24:26)
+    at AdminDashboard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:44:57)
+    at ProtectedRoute (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/App.tsx?t=1751905074972&v=KDqttFn3MUTiZkWqAymhO:34:27)
+    at Route (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:323:16)
+    at Switch (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:379:17)
+    at Router
+    at Provider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=cfeb7852:38:15)
+    at TooltipProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cfeb7852:63:5)
+    at QueryClientProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cfeb7852:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+react-dom.development.js:18704  The above error occurred in the <TouristCard> component:
+
+    at TouristCard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:1222:26)
+    at div
+    at _c9 (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at SimpleUsersManagement (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:714:29)
+    at main
+    at div
+    at div
+    at Layout (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/layout.tsx:24:26)
+    at AdminDashboard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:44:57)
+    at ProtectedRoute (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/App.tsx?t=1751905074972&v=KDqttFn3MUTiZkWqAymhO:34:27)
+    at Route (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:323:16)
+    at Switch (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:379:17)
+    at Router
+    at Provider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=cfeb7852:38:15)
+    at TooltipProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cfeb7852:63:5)
+    at QueryClientProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cfeb7852:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+react-dom.development.js:18704  The above error occurred in the <TouristCard> component:
+
+    at TouristCard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:1222:26)
+    at div
+    at _c9 (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at SimpleUsersManagement (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:714:29)
+    at main
+    at div
+    at div
+    at Layout (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/layout.tsx:24:26)
+    at AdminDashboard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:44:57)
+    at ProtectedRoute (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/App.tsx?t=1751905074972&v=KDqttFn3MUTiZkWqAymhO:34:27)
+    at Route (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:323:16)
+    at Switch (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:379:17)
+    at Router
+    at Provider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=cfeb7852:38:15)
+    at TooltipProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cfeb7852:63:5)
+    at QueryClientProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cfeb7852:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+react-dom.development.js:18704  The above error occurred in the <TouristCard> component:
+
+    at TouristCard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:1222:26)
+    at div
+    at _c9 (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at SimpleUsersManagement (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:714:29)
+    at main
+    at div
+    at div
+    at Layout (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/components/layout.tsx:24:26)
+    at AdminDashboard (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/pages/admin-dashboard.tsx:44:57)
+    at ProtectedRoute (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/src/App.tsx?t=1751905074972&v=KDqttFn3MUTiZkWqAymhO:34:27)
+    at Route (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:323:16)
+    at Switch (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cfeb7852:379:17)
+    at Router
+    at Provider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=cfeb7852:38:15)
+    at TooltipProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cfeb7852:63:5)
+    at QueryClientProvider (https://db50c920-6692-4a64-89a1-cb37bc15c711-00-32wawm2g4epqm.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cfeb7852:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ react-dom.development.js:18704
+react-dom.development.js:26962  Uncaught ReferenceError: getStrategicData is not defined
+    at PartnerCard (admin-dashboard.tsx:475:23)
+    at renderWithHooks (react-dom.development.js:15486:18)
+    at mountIndeterminateComponent (react-dom.development.js:20103:13)
+    at beginWork (react-dom.development.js:21626:16)
+    at beginWork$1 (react-dom.development.js:27465:14)
+    at performUnitOfWork (react-dom.development.js:26596:12)
+    at workLoopSync (react-dom.development.js:26505:5)
+    at renderRootSync (react-dom.development.js:26473:7)
+    at recoverFromConcurrentError (react-dom.development.js:25889:20)
+    at performConcurrentWorkOnRoot (react-dom.development.js:25789:22)
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again
