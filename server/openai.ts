@@ -35,15 +35,13 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
       if (mentionedCity) {
         console.log(`TIQai: ricerca partner per ${mentionedCity}`);
         try {
-          const partners = await storage.getRealOffersByCity(mentionedCity);
-          const restaurants = partners.filter(p => 
-            p.category === 'ristorante' || p.category === 'restaurant'
-          );
+          const partners = await storage.getPartnerOffersByCity(mentionedCity);
+          console.log(`TIQai: trovate ${partners.length} offerte per ${mentionedCity}`);
           
-          if (restaurants.length > 0) {
+          if (partners.length > 0) {
             contextData = `\n\nIMPORTANTE: Nella zona di ${mentionedCity} abbiamo questi partner TouristIQ autentici:\n`;
-            restaurants.forEach(r => {
-              contextData += `- ${r.partnerName}: ${r.description} (${r.discountPercentage}% di sconto)\n`;
+            partners.forEach(p => {
+              contextData += `- ${p.partnerName}: ${p.title} - ${p.description} (${p.discountPercentage}% di sconto)\n`;
             });
             contextData += "\nSuggerisci SOLO questi partner reali, non inventare nomi.";
           } else {

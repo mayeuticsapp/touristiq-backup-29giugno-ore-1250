@@ -89,6 +89,7 @@ export interface IStorage {
   // Partner methods
   createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void>;
   getAllPartnersWithOffers(): Promise<any[]>;
+  getPartnerOffersByCity(cityName: string): Promise<any[]>;
 
   // Validazione IQCode methods
   createIqcodeValidation(data: {partnerCode: string, touristCode: string, requestedAt: Date, status: string, usesRemaining: number, usesTotal: number}): Promise<IqcodeValidation>;
@@ -854,6 +855,11 @@ export class MemStorage implements IStorage {
   }
 
   async getAllPartnersWithOffers(): Promise<any[]> {
+    return [];
+  }
+
+  async getPartnerOffersByCity(cityName: string): Promise<any[]> {
+    // MemStorage implementation - usa sempre array vuoto per dev
     return [];
   }
 
@@ -2166,6 +2172,59 @@ class ExtendedPostgreStorage extends PostgreStorage {
       }));
     } catch (error) {
       console.error('Errore getAllPartnersWithOffers:', error);
+      return [];
+    }
+  }
+
+  async getPartnerOffersByCity(cityName: string): Promise<any[]> {
+    const { sql } = await import('drizzle-orm');
+
+    try {
+      // Query per offerte partner per città specifica  
+      const result = await this.db.execute(sql`
+        SELECT 
+          po.id,
+          po.title,
+          po.description,
+          po.discount as "discountPercentage",
+          po.valid_until as "validUntil",
+          po.partner_code as "partnerCode",
+          COALESCE(pd.business_name, ic.assigned_to, 'Partner') as "partnerName",
+          pd.business_type as "businessType",
+          pd.address,
+          pd.city,
+          pd.province,
+          pd.phone,
+          pd.email,
+          pd.website
+        FROM partner_offers po
+        LEFT JOIN iq_codes ic ON po.partner_code = ic.code
+        LEFT JOIN partner_details pd ON po.partner_code = pd.partner_code
+        WHERE po.is_active = true 
+          AND ic.role = 'partner' 
+          AND ic.is_active = true
+          AND LOWER(pd.city) = LOWER($1)
+        ORDER BY po.created_at DESC
+      `, [cityName]);
+
+      return result.rows.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        discountPercentage: row.discountPercentage,
+        validUntil: row.validUntil,
+        partnerCode: row.partnerCode,
+        partnerName: row.partnerName || 'Partner',
+        businessType: row.businessType || 'Non specificato',
+        address: row.address,
+        city: row.city,
+        province: row.province,
+        phone: row.phone,
+        email: row.email,
+        website: row.website
+      }));
+    } catch (error) {
+      console.error('Errore getPartnerOffersByCity:', error);
       return [];
     }
   }
