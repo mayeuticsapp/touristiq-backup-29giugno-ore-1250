@@ -25,6 +25,7 @@ export default function TouristDashboard() {
   // Stati per scheda dettagliata partner
   const [showPartnerDetail, setShowPartnerDetail] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<any>(null);
+  const [selectedOffer, setSelectedOffer] = useState<any>(null);
 
   // Stati per "Custode del Codice"
   const [showCustodeForm, setShowCustodeForm] = useState(false);
@@ -106,9 +107,17 @@ export default function TouristDashboard() {
     },
   });
 
-  // Funzione per aprire scheda dettagliata partner
-  const handleOpenPartnerDetail = (offer: any) => {
+  // Funzione per aprire scheda dettagliata partner con offerta specifica
+  const handleOpenPartnerDetail = (partner: any, offer?: any) => {
+    setSelectedPartner(partner);
+    setSelectedOffer(offer || null);
+    setShowPartnerDetail(true);
+  };
+
+  // Funzione per aprire offerta specifica
+  const handleOpenOfferDetail = (offer: any) => {
     setSelectedPartner(offer);
+    setSelectedOffer(offer);
     setShowPartnerDetail(true);
   };
 
@@ -435,12 +444,12 @@ export default function TouristDashboard() {
                       <div key={groupIndex} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                         {/* Header Partner - compatto */}
                         <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center cursor-pointer flex-1" onClick={() => handleOpenPartnerDetail(partner)}>
+                          <div className="flex items-center flex-1">
                             <div className="h-10 w-10 bg-red-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
                               <Utensils className="text-red-600" size={16} />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="font-bold text-gray-900 hover:text-blue-600 transition-colors truncate">{partner.partnerName}</p>
+                              <p className="font-bold text-gray-900 truncate">{partner.partnerName}</p>
                               <p className="text-sm text-gray-600">{partner.businessType}</p>
                             </div>
                           </div>
@@ -454,9 +463,13 @@ export default function TouristDashboard() {
                         {/* Lista offerte compatta */}
                         <div className="space-y-2 mb-3">
                           {offers.map((offer: any, offerIndex: number) => (
-                            <div key={offerIndex} className="flex items-center justify-between p-2 bg-gray-50 rounded border-l-4 border-l-blue-500">
+                            <div 
+                              key={offerIndex} 
+                              className="flex items-center justify-between p-2 bg-gray-50 rounded border-l-4 border-l-blue-500 cursor-pointer hover:bg-blue-50 transition-colors"
+                              onClick={() => handleOpenOfferDetail(offer)}
+                            >
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-gray-900 text-sm truncate">{offer.title}</p>
+                                <p className="font-medium text-gray-900 text-sm truncate hover:text-blue-600">{offer.title}</p>
                                 <p className="text-xs text-gray-600 truncate">{offer.description}</p>
                                 {offer.validUntil && (
                                   <p className="text-xs text-gray-500">
@@ -678,16 +691,35 @@ export default function TouristDashboard() {
 
           {selectedPartner && (
             <div className="space-y-6">
-              {/* Offerta Principale */}
-              <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-green-800">{selectedPartner.title}</h3>
-                  <Badge className="bg-green-100 text-green-800 text-lg font-bold">
-                    -{selectedPartner.discountPercentage}%
-                  </Badge>
+              {/* Offerta Specifica o Generale */}
+              {selectedOffer ? (
+                // Mostra offerta specifica cliccata
+                <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-green-800">{selectedOffer.title}</h3>
+                    <Badge className="bg-green-100 text-green-800 text-lg font-bold">
+                      -{selectedOffer.discountPercentage}%
+                    </Badge>
+                  </div>
+                  <p className="text-green-700">{selectedOffer.description}</p>
+                  {selectedOffer.validUntil && (
+                    <p className="text-xs text-green-600 mt-2">
+                      Valido fino al {new Date(selectedOffer.validUntil).toLocaleDateString('it-IT')}
+                    </p>
+                  )}
                 </div>
-                <p className="text-green-700">{selectedPartner.description}</p>
-              </div>
+              ) : (
+                // Fallback per partner generico
+                <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-green-800">{selectedPartner.title}</h3>
+                    <Badge className="bg-green-100 text-green-800 text-lg font-bold">
+                      -{selectedPartner.discountPercentage}%
+                    </Badge>
+                  </div>
+                  <p className="text-green-700">{selectedPartner.description}</p>
+                </div>
+              )}
 
               {/* Informazioni di Base */}
               {selectedPartner.address && (
@@ -716,7 +748,7 @@ export default function TouristDashboard() {
                   {selectedPartner.phone && (
                     <Button 
                       variant="outline"
-                      onClick={() => window.open(`https://wa.me/${selectedPartner.phone.replace(/[^0-9]/g, '')}?text=Ciao! Ho visto la vostra offerta "${selectedPartner.title}" su TouristIQ. Vorrei avere maggiori informazioni.`, '_blank')}
+                      onClick={() => window.open(`https://wa.me/${selectedPartner.phone.replace(/[^0-9]/g, '')}?text=Ciao! Ho visto la vostra offerta "${selectedOffer?.title || selectedPartner.title}" su TouristIQ. Vorrei avere maggiori informazioni.`, '_blank')}
                       className="text-green-600 hover:bg-green-50 border-green-300"
                     >
                       <Phone className="w-4 h-4 mr-2" />
@@ -738,7 +770,7 @@ export default function TouristDashboard() {
                   {selectedPartner.email && (
                     <Button 
                       variant="outline"
-                      onClick={() => window.open(`mailto:${selectedPartner.email}?subject=Informazioni offerta ${selectedPartner.title}`, '_blank')}
+                      onClick={() => window.open(`mailto:${selectedPartner.email}?subject=Informazioni offerta ${selectedOffer?.title || selectedPartner.title}`, '_blank')}
                       className="text-blue-600 hover:bg-blue-50 border-blue-300"
                     >
                       <Mail className="w-4 h-4 mr-2" />
