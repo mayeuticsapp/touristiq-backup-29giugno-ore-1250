@@ -281,7 +281,7 @@ export default function StructureDashboard() {
         // Aggiorna la lista ospiti
         refetchGuests();
         
-        console.log(`✅ OSPITE ELIMINATO: ID ${selectedGuestForManagement.id} rimosso con successo`);
+
       } else {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Errore durante l\'eliminazione');
@@ -597,7 +597,7 @@ export default function StructureDashboard() {
       const assignedCodes = data.codes || [];
       setGuestCodes(assignedCodes);
 
-      console.log(`DEBUG: Caricati ${assignedCodes.length} codici per ospite ${guestId}:`, assignedCodes);
+
     } catch (error) {
       console.error("Errore caricamento codici ospite:", error);
       setGuestCodes([]);

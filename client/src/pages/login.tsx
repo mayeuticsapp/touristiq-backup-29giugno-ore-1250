@@ -102,7 +102,7 @@ export default function Login() {
 
     try {
       const response = await login(iqCode.trim().toUpperCase());
-      console.log("Login risposta:", response);
+
 
       // Salva codice IQ se richiesto
       if (rememberCode) {
@@ -123,28 +123,23 @@ export default function Login() {
       // Redirect based on role
       switch (response.role) {
         case "admin":
-          console.log("Reindirizzamento ad admin");
           setLocation("/admin");
           break;
         case "tourist":
-          console.log("Reindirizzamento a tourist");
           setLocation("/tourist");
           break;
         case "structure":
-          console.log("Reindirizzamento a structure");
           // Extract ID from structure code (e.g., TIQ-VV-STT-8311 -> 8311)
           const structureId = response.iqCode.split('-').pop();
           setLocation(`/structure/${structureId}`);
           break;
         case "partner":
-          console.log("Reindirizzamento a partner");
           setLocation("/partner");
           break;
         default:
           setError("Ruolo non riconosciuto");
       }
     } catch (error: any) {
-      console.error("Errore login:", error);
       setError(error.message || "Codice IQ non valido. Riprova.");
     } finally {
       setIsLoading(false);

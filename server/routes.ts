@@ -7,6 +7,13 @@ import { chatWithTIQai } from "./openai";
 import { createIQCode } from "./createIQCode";
 import { z } from "zod";
 import { c23Monitor } from "./c23-monitor";
+import { 
+  loginLimiter, 
+  apiLimiter, 
+  adminLimiter, 
+  setupSecurityHeaders, 
+  performanceMonitor 
+} from "./security";
 // PDFKit import rimosso per problema ES modules
 
 // Middleware per controlli di sicurezza avanzati
@@ -35,8 +42,12 @@ async function verifyRoleAccess(req: any, res: any, allowedRoles: string[]): Pro
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Authentication endpoint
-  app.post("/api/auth/login", async (req, res) => {
+  // Setup security enhancements
+  setupSecurityHeaders(app);
+  app.use(performanceMonitor);
+  
+  // Authentication endpoint with rate limiting
+  app.post("/api/auth/login", loginLimiter, async (req, res) => {
     try {
       const { iqCode } = loginSchema.parse(req.body);
       
@@ -582,7 +593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin User Management - Approve/Block/Delete
-  app.patch("/api/admin/users/:id", async (req, res) => {
+  app.patch("/api/admin/users/:id", adminLimiter, async (req, res) => {
     try {
       const sessionToken = req.cookies.session_token;
       if (!sessionToken) {
@@ -630,7 +641,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/users/:id", async (req, res) => {
+  app.delete("/api/admin/users/:id", adminLimiter, async (req, res) => {
     try {
       const sessionToken = req.cookies.session_token;
       if (!sessionToken) {
