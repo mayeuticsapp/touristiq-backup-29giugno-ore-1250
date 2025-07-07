@@ -2177,11 +2177,9 @@ class ExtendedPostgreStorage extends PostgreStorage {
   }
 
   async getPartnerOffersByCity(cityName: string): Promise<any[]> {
-    const { sql } = await import('drizzle-orm');
-
     try {
-      // Query per offerte partner per città specifica  
-      const result = await this.db.execute(sql`
+      // Usa metodo diretto senza sql template per evitare errori parametrizzazione
+      const query = `
         SELECT 
           po.id,
           po.title,
@@ -2205,24 +2203,18 @@ class ExtendedPostgreStorage extends PostgreStorage {
           AND ic.is_active = true
           AND LOWER(pd.city) = LOWER($1)
         ORDER BY po.created_at DESC
-      `, [cityName]);
+      `;
+      
+      // Usa getAllPartnersWithOffers() e filtra per città invece di query diretta
+      const allOffers = await this.getAllPartnersWithOffers();
+      const cityOffers = allOffers.filter(offer => 
+        offer.city && offer.city.toLowerCase() === cityName.toLowerCase()
+      );
+      
+      console.log(`🔍 TIQai Debug: Città '${cityName}' → ${cityOffers.length} offerte trovate`);
+      return cityOffers;
 
-      return result.rows.map((row: any) => ({
-        id: row.id,
-        title: row.title,
-        description: row.description,
-        discountPercentage: row.discountPercentage,
-        validUntil: row.validUntil,
-        partnerCode: row.partnerCode,
-        partnerName: row.partnerName || 'Partner',
-        businessType: row.businessType || 'Non specificato',
-        address: row.address,
-        city: row.city,
-        province: row.province,
-        phone: row.phone,
-        email: row.email,
-        website: row.website
-      }));
+
     } catch (error) {
       console.error('Errore getPartnerOffersByCity:', error);
       return [];
