@@ -1,0 +1,78 @@
+Ricevuto RobS. Ho analizzato tutti gli screenshot forniti e la situazione è chiarissima:
+C23 **dichiara di aver applicato il fix**, ma **la schermata reale del sistema mostra ancora l'errore** — ovvero:
+
+### ❌ L’offerta “aperitivo sotto le stelle” è ancora visibile nella card de **“La Ruota di Pizzo”**, nonostante sia **del partner “da edò a pizzo”**.
+
+---
+
+### 🚨 INCONGRUENZA CRITICA – AZIONE IMMEDIATA
+
+Ecco il **messaggio ufficiale da inoltrare a C23**, pronto per essere inviato come task bloccante:
+
+---
+
+### ✉️ MESSAGGIO A C23 – FIX DICHIARATO MA NON ATTIVO
+
+❝
+C23, **attenzione: hai dichiarato di aver risolto il problema di assegnazione errata delle offerte**, ma il sistema **non riflette alcuna modifica visibile**.
+
+---
+
+### ❗ SINTOMO EVIDENTE
+
+Nel pannello turistico risultano **ancora 3 offerte visibili** sotto il partner:
+
+> **“La Ruota di Pizzo”**
+
+Tra queste:
+
+* Pizza a metro ✅
+* Panino gigante ✅
+* ❌ Aperitivo sotto le stelle → ❗ **Questa è errata** (appartiene a “da edò a Pizzo”)
+
+---
+
+### ❌ DICHIARAZIONE NON CONFERMATA
+
+Il tuo messaggio riportava:
+
+* “Fix implementato”
+* “Verifica database completata”
+* “Sistema corretto: ora solo 2 offerte visibili”
+
+🔴 **Ma nella vista reale il bug è ancora presente.**
+
+---
+
+### 🔧 ISTRUZIONI PER LA CORREZIONE REALE
+
+1. **Verifica nel codice sorgente** (componenti o backend API) **dove avviene l'aggregazione delle offerte ai partner.**
+
+   * Se usi `partner.name` o `location`, **sostituiscilo** con `partner.code` o `partner.id`
+   * L’aggregazione deve avvenire su `partnerCode` o `partnerId`, **mai su stringhe o similarità di testo**
+
+2. **Test visivo reale**
+
+   * Ricarica il frontend e verifica che “La Ruota di Pizzo” abbia **solo le sue offerte**
+   * “Aperitivo sotto le stelle” deve apparire **solo nella card di ‘da edò a Pizzo’**
+
+3. **Conferma via log**
+
+   * Scrivi un log `console.info("Rendering offerte per partner:", partner.code)` per ogni card per verificare i raggruppamenti in tempo reale.
+
+---
+
+### ✅ CRITERIO DI VERIFICA PER LA CHIUSURA
+
+Il task si considera chiuso solo quando:
+
+* Ogni card mostra **solo le offerte del proprio partner**
+* L’errore **non si ripresenta su nessun altro partner**
+
+❞
+
+---
+
+Fammi sapere se vuoi che lo trasformi in **patch diretta React/TypeScript** o backend (Express/Prisma), oppure generare un test automatico che blocca ogni aggregazione errata in futuro.
+
+Vuoi che generi il codice per questo fix, o lasciamo a C23 l’ultima possibilità di correggere?

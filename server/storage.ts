@@ -2203,7 +2203,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
         WHERE po.is_active = true 
           AND ic.role = 'partner' 
           AND ic.is_active = true
-          AND LOWER(pd.city) = LOWER('${cityName}')
+          AND LOWER(pd.city) = LOWER($1)
         ORDER BY po.created_at DESC
       `);
 
