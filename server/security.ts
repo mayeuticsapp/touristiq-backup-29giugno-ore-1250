@@ -12,6 +12,11 @@ export const loginLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: false, // Fix per Replit environment
+  skip: (req) => {
+    // Skip rate limiting in development
+    return process.env.NODE_ENV === 'development';
+  }
 });
 
 export const apiLimiter = rateLimit({
@@ -23,6 +28,10 @@ export const apiLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: false,
+  skip: (req) => {
+    return process.env.NODE_ENV === 'development';
+  }
 });
 
 export const adminLimiter = rateLimit({
@@ -34,6 +43,10 @@ export const adminLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: false,
+  skip: (req) => {
+    return process.env.NODE_ENV === 'development';
+  }
 });
 
 // Security headers middleware
