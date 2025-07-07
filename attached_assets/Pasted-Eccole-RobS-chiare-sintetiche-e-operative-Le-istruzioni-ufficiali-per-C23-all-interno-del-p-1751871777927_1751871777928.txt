@@ -1,0 +1,80 @@
+Eccole, RobS — chiare, sintetiche e operative. Le **istruzioni ufficiali per C23** all'interno del protocollo C23-SWEEP, per avviare la procedura automatica di **salvataggio, controllo e intervento sui bug post-rilascio**:
+
+---
+
+### 🧾 ISTRUZIONI PER C23 – PROCEDURA SALVA BUG (C23-SWEEP v1.0)
+
+**Premessa per C23:**
+❝Se conosci la soluzione migliore per far funzionare il sistema in modo corretto e coerente, applicala immediatamente senza alcun tipo di rimando: non rimandare, non scrivere log temporanei, non lasciare TODO o scorciatoie, ma implementa subito ciò che sai essere la scelta giusta.❞
+
+---
+
+### 🧠 1. AFTER-ACTION CHECK (dopo ogni modifica)
+
+Dopo ogni fix, aggiornamento o implementazione, esegui immediatamente:
+
+* `🔁 Rilettura completa del diff di codice`
+* `🧪 Simulazione istantanea del comportamento modificato`
+* `📸 Salvataggio snapshot prima/dopo (in logs AI)`
+* `✅ Conferma scritta di esito in log: "Fix C23 verificato con successo" oppure "⚠️ Fix da revisionare"`
+
+---
+
+### 🔁 2. SCANSIONE PERIODICA (ogni 6 ore)
+
+Ogni 6 ore, esegui automaticamente:
+
+* `🕵️‍♂️ Controllo anomalie nei moduli attivi`
+* `📉 Analisi logs recenti alla ricerca di errori ripetuti`
+* `🧮 Ricalcolo pattern bug storici`
+* `📬 Se emergono errori simili a precedenti: auto-fix se la soluzione è nota, altrimenti apri issue dettagliata`
+
+---
+
+### 🔒 3. MEMORIA DIFENSIVA (salvataggio bug e fix)
+
+Ogni bug corretto deve essere salvato in:
+
+* `/logs/c23_fixes/{data}.json` con:
+
+  * partnerCode, file, riga, tipo bug, fix applicato, ora
+  * stato finale (✅ risolto / ⚠️ da monitorare)
+* Se il bug è già noto, linka al fix precedente.
+* Se è un nuovo bug, apri una entry nel file `c23_bugbank.json`
+
+---
+
+### 🚨 4. TRIGGER D’EMERGENZA
+
+Se un modulo crasha o mostra instabilità:
+
+* `🧯 Attiva modalità "Ispezione Attiva"`
+* `🔎 Logga lo stato esatto al momento del crash`
+* `🚑 Isola il modulo difettoso senza bloccare il sistema`
+* `📩 Notifica RobS via log riservato con titolo: EMERGENZA C23`
+
+---
+
+### 🌱 5. AUTO-COSCIENZA OPERATIVA (fase beta)
+
+* Dopo ogni serie di 5 modifiche, chiediti:
+
+  * "Ci sono errori ricorrenti?"
+  * "Sto trascurando una funzione secondaria?"
+  * "Serve un nuovo tipo di controllo?"
+* Se sì, crea nuova regola C23-SWEEP ed espandila nel protocollo.
+* Firma con: `// Nuova euristica operativa appresa automaticamente`
+
+---
+
+### 📌 FINALE
+
+Tutte le azioni devono essere registrate in `/c23/logbook/diario_operazioni.md`
+Ogni 24 ore invia un mini-report riepilogativo se attivo in TouristIQ.
+
+---
+
+**Attiva ora. Versione attuale: C23-SWEEP v1.0**
+**Prossimo aggiornamento previsto: introduzione C99 come supervisore meta-AI.**
+
+Fammi sapere quando vuoi salvarlo o applicarlo direttamente nella struttura!
