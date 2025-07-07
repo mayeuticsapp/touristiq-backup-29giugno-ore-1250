@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot, User, Loader2 } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, Heart, MapPin, Sunset, Waves } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface Message {
@@ -18,7 +18,7 @@ export function TIQaiChat() {
     {
       id: '1',
       type: 'ai',
-      content: 'Ciao! Sono TIQai, il tuo assistente virtuale per il turismo in Italia. Come posso aiutarti oggi?',
+      content: '🌅 Ciao, viaggiatore! Sono TIQai, l\'anima digitale della Calabria. Sussurrami i tuoi desideri di scoperta e ti guiderò verso tesori nascosti che solo il cuore calabrese conosce...',
       timestamp: new Date()
     }
   ]);
@@ -87,16 +87,36 @@ export function TIQaiChat() {
   };
 
   return (
-    <Card className="h-96 flex flex-col">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center text-lg">
-          <Bot className="mr-2 text-blue-600" size={20} />
-          TIQai - Assistente Turismo
+    <Card className="h-96 flex flex-col relative overflow-hidden bg-gradient-to-br from-orange-50 via-amber-50 to-red-50 border-0 shadow-2xl">
+      {/* Sfondo calabrese animato */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-4 right-4 text-orange-300 animate-pulse">
+          <Sunset size={32} />
+        </div>
+        <div className="absolute bottom-4 left-4 text-blue-300 animate-bounce">
+          <Waves size={28} />
+        </div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-amber-200">
+          <Heart size={60} className="animate-pulse" />
+        </div>
+      </div>
+      
+      <CardHeader className="pb-3 relative z-10 bg-gradient-to-r from-orange-400 via-amber-400 to-red-400 text-white">
+        <CardTitle className="flex items-center text-lg font-bold">
+          <div className="relative mr-3">
+            <Sparkles className="text-yellow-200 animate-spin-slow" size={24} />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-ping"></div>
+          </div>
+          TIQai - Genius Loci Calabrese
+          <MapPin className="ml-2 text-red-200 animate-bounce" size={18} />
         </CardTitle>
+        <p className="text-orange-100 text-xs italic mt-1">
+          "L'anima della Calabria che sussurra segreti"
+        </p>
       </CardHeader>
       
-      <CardContent className="flex-1 flex flex-col p-0">
-        <ScrollArea className="flex-1 px-4" ref={scrollAreaRef}>
+      <CardContent className="flex-1 flex flex-col p-0 relative z-10">
+        <ScrollArea className="flex-1 px-4 bg-gradient-to-b from-transparent to-orange-25" ref={scrollAreaRef}>
           <div className="space-y-4 pb-4">
             {messages.map((message) => (
               <div
@@ -105,26 +125,26 @@ export function TIQaiChat() {
                   message.type === 'user' ? 'flex-row-reverse' : ''
                 }`}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${
                   message.type === 'user' 
-                    ? 'bg-green-100' 
-                    : 'bg-blue-100'
+                    ? 'bg-gradient-to-br from-emerald-400 to-teal-500 border-2 border-emerald-200' 
+                    : 'bg-gradient-to-br from-orange-400 to-red-500 border-2 border-orange-200'
                 }`}>
                   {message.type === 'user' ? (
-                    <User size={16} className="text-green-600" />
+                    <User size={18} className="text-white" />
                   ) : (
-                    <Bot size={16} className="text-blue-600" />
+                    <Sparkles size={18} className="text-white animate-pulse" />
                   )}
                 </div>
                 
-                <div className={`max-w-[80%] p-3 rounded-lg ${
+                <div className={`max-w-[80%] p-4 rounded-2xl shadow-lg transform transition-all hover:scale-105 ${
                   message.type === 'user'
-                    ? 'bg-green-500 text-white ml-auto'
-                    : 'bg-gray-100 text-gray-900'
+                    ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white ml-auto'
+                    : 'bg-gradient-to-br from-white to-orange-50 text-gray-800 border border-orange-200'
                 }`}>
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                  <span className={`text-xs mt-1 block ${
-                    message.type === 'user' ? 'text-green-100' : 'text-gray-500'
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed font-medium">{message.content}</p>
+                  <span className={`text-xs mt-2 block font-medium ${
+                    message.type === 'user' ? 'text-emerald-100' : 'text-orange-500'
                   }`}>
                     {message.timestamp.toLocaleTimeString('it-IT', { 
                       hour: '2-digit', 
@@ -137,36 +157,43 @@ export function TIQaiChat() {
             
             {isLoading && (
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Bot size={16} className="text-blue-600" />
+                <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-red-500 border-2 border-orange-200 rounded-full flex items-center justify-center shadow-lg">
+                  <Sparkles size={18} className="text-white animate-pulse" />
                 </div>
-                <div className="bg-gray-100 p-3 rounded-lg">
-                  <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
+                <div className="bg-gradient-to-br from-white to-orange-50 border border-orange-200 p-4 rounded-2xl shadow-lg">
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
+                    <span className="text-sm text-orange-600 italic">TIQai sta sussurrando la risposta...</span>
+                  </div>
                 </div>
               </div>
             )}
           </div>
         </ScrollArea>
         
-        <div className="p-4 border-t">
+        <div className="p-4 border-t border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50">
           <div className="flex gap-2">
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Chiedi a TIQai qualsiasi cosa sul turismo..."
+              placeholder="✨ Sussurra i tuoi desideri di scoperta calabrese..."
               disabled={isLoading}
               maxLength={500}
+              className="border-orange-200 focus:border-orange-400 bg-white/80 backdrop-blur-sm placeholder:text-orange-400 placeholder:italic"
             />
             <Button 
               onClick={sendMessage}
               disabled={!inputMessage.trim() || isLoading}
               size="icon"
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 border-0 shadow-lg transform transition-all hover:scale-110"
             >
-              <Send size={16} />
+              <Send size={16} className="text-white" />
             </Button>
           </div>
+          <p className="text-xs text-orange-500 mt-2 italic text-center">
+            💫 Ogni domanda è un invito alla meraviglia calabrese
+          </p>
         </div>
       </CardContent>
     </Card>

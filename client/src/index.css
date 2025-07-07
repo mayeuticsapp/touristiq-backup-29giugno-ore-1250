@@ -77,6 +77,15 @@
   50% { opacity: 0.8; }
 }
 
+@keyframes animate-spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: animate-spin-slow 3s linear infinite;
+}
+
 @keyframes warm-glow {
   0%, 100% { box-shadow: 0 0 20px rgba(255, 171, 64, 0.3); }
   50% { box-shadow: 0 0 30px rgba(255, 107, 107, 0.4); }
