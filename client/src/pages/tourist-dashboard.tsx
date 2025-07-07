@@ -33,8 +33,26 @@ export default function TouristDashboard() {
   const [secretWord, setSecretWord] = useState("");
   const [birthDate, setBirthDate] = useState("");
 
+  // Stato per popup di benvenuto
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Logica popup benvenuto
+  useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem('touristiq-welcome-seen');
+    if (!hasSeenWelcome && user?.iqCode) {
+      setShowWelcomePopup(true);
+    }
+  }, [user]);
+
+  const handleCloseWelcome = (dontShowAgain: boolean = false) => {
+    if (dontShowAgain) {
+      localStorage.setItem('touristiq-welcome-seen', 'true');
+    }
+    setShowWelcomePopup(false);
+  };
 
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
@@ -867,6 +885,91 @@ export default function TouristDashboard() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Popup di Benvenuto Caldo e Istruttivo */}
+      <Dialog open={showWelcomePopup} onOpenChange={() => setShowWelcomePopup(false)}>
+        <DialogContent className="sm:max-w-lg">
+          <div className="relative overflow-hidden">
+            {/* Background decorativo calabrese */}
+            <div className="absolute inset-0 bg-calabria-sunset opacity-5"></div>
+            <div className="relative">
+              <DialogHeader className="text-center pb-4">
+                <div className="mx-auto mb-4 w-20 h-20 bg-calabria-warm rounded-full flex items-center justify-center animate-gentle-pulse">
+                  <span className="text-3xl">🌅</span>
+                </div>
+                <DialogTitle className="text-2xl font-bold text-gray-900">
+                  Benvenuto in TouristIQ!
+                </DialogTitle>
+                <p className="text-gray-600 mt-2">
+                  La tua porta d'accesso alle esperienze autentiche della Calabria
+                </p>
+              </DialogHeader>
+              
+              <div className="space-y-6 py-4">
+                {/* Benefici principali */}
+                <div className="grid gap-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-8 h-8 bg-calabria-nature rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-sm">🎯</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Sconti Esclusivi</h4>
+                      <p className="text-sm text-gray-600">Partner selezionati offrono vantaggi riservati solo a te</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3">
+                    <div className="w-8 h-8 bg-calabria-sea rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-sm">🤖</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">TIQai, la tua Guida AI</h4>
+                      <p className="text-sm text-gray-600">Consigli personalizzati per scoprire luoghi autentici</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3">
+                    <div className="w-8 h-8 bg-calabria-sunset rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-sm">🔐</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Privacy Totale</h4>
+                      <p className="text-sm text-gray-600">Il tuo codice IQ protegge la tua identità</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Call to action */}
+                <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+                  <div className="flex items-center justify-center mb-2">
+                    <span className="text-lg mr-2">✨</span>
+                    <span className="font-semibold text-gray-900">Inizia la tua esplorazione</span>
+                  </div>
+                  <p className="text-sm text-gray-600 text-center">
+                    Usa il tuo codice IQ per sconti immediati o chiedi a TIQai consigli per la zona
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleCloseWelcome(false)}
+                  className="flex-1"
+                >
+                  Chiudi per ora
+                </Button>
+                <Button 
+                  onClick={() => handleCloseWelcome(true)}
+                  className="flex-1 bg-calabria-sunset text-white hover:bg-orange-600"
+                >
+                  Perfetto, non mostrare più
+                </Button>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </Layout>
