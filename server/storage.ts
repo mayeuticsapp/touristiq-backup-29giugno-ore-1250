@@ -2114,16 +2114,16 @@ class ExtendedPostgreStorage extends PostgreStorage {
     const { sql } = await import('drizzle-orm');
 
     try {
-      // Query SQL diretta per evitare problemi dell'ORM Drizzle
+      // Query SQL diretta per prendere offerte dalla tabella partner_offers
       const result = await this.db.execute(sql`
         SELECT 
-          ro.id,
-          ro.title,
-          ro.description,
-          ro.discount_percentage as "discountPercentage",
-          ro.valid_until as "validUntil",
-          ro.category,
-          ro.partner_code as "partnerCode",
+          po.id,
+          po.title,
+          po.description,
+          po.discount as "discountPercentage",
+          po.valid_until as "validUntil",
+          'general' as category,
+          po.partner_code as "partnerCode",
           COALESCE(pd.business_name, ic.assigned_to, 'Partner') as "partnerName",
           pd.business_type as "businessType",
           pd.address,
@@ -2135,13 +2135,13 @@ class ExtendedPostgreStorage extends PostgreStorage {
           COALESCE(pd.wheelchair_accessible, false) as "wheelchairAccessible",
           COALESCE(pd.child_friendly, false) as "childFriendly",
           COALESCE(pd.gluten_free, false) as "glutenFree"
-        FROM real_offers ro
-        LEFT JOIN iq_codes ic ON ro.partner_code = ic.code
-        LEFT JOIN partner_details pd ON ro.partner_code = pd.partner_code
-        WHERE ro.is_active = true 
+        FROM partner_offers po
+        LEFT JOIN iq_codes ic ON po.partner_code = ic.code
+        LEFT JOIN partner_details pd ON po.partner_code = pd.partner_code
+        WHERE po.is_active = true 
           AND ic.role = 'partner' 
           AND ic.is_active = true
-        ORDER BY ro.created_at DESC
+        ORDER BY po.created_at DESC
       `);
 
       return result.rows.map((row: any) => ({
