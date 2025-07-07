@@ -405,15 +405,21 @@ export default function TouristDashboard() {
             ) : offersToShow?.length > 0 ? (
               <div className="space-y-3">
                 {(() => {
-                  // Raggruppa offerte per partner
+                  // Raggruppa offerte per partner - CONTROLLO CRITICO PARTNERCODE
                   const groupedOffers = offersToShow.reduce((acc: any, offer: any) => {
-                    if (!acc[offer.partnerCode]) {
-                      acc[offer.partnerCode] = {
+                    const partnerKey = offer.partnerCode; // Usa solo partnerCode come chiave univoca
+                    
+                    if (!acc[partnerKey]) {
+                      acc[partnerKey] = {
                         partner: offer,
                         offers: []
                       };
                     }
-                    acc[offer.partnerCode].offers.push(offer);
+                    
+                    // VERIFICA CRITICA: aggiungi SOLO se partnerCode corrisponde esattamente
+                    if (offer.partnerCode === partnerKey) {
+                      acc[partnerKey].offers.push(offer);
+                    }
                     return acc;
                   }, {});
 
