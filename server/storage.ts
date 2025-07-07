@@ -131,7 +131,7 @@ export interface IStorage {
   getRecoveryKeyByIqCode(iqCode: string): Promise<any>;
   verifyRecoveryData(hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string): Promise<any>;
   updateRecoveryKey(id: number, data: {hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string, updatedAt: Date}): Promise<any>;
-  
+
   // **SISTEMA RECUPERO IQCODE - Metodi addizionali**
   getRecoveryByCredentials(hashedSecretWord: string, hashedBirthDate: string): Promise<any>;
   getIqCodeByHashedCode(hashedIqCode: string): Promise<string | null>;
@@ -714,7 +714,7 @@ export class MemStorage implements IStorage {
   async getPurchasedPackagesByStructure(): Promise<PurchasedPackage[]> { return []; }
   async getTotalIQCodesRemaining(): Promise<number> { return 0; }
   async useIQCodeFromPackage(): Promise<boolean> { return false; }
-  
+
   // Validazione metodi placeholder
   async createIqcodeValidation(): Promise<any> { throw new Error("Not implemented"); }
   async getValidationsByTourist(): Promise<any[]> { return []; }
@@ -755,6 +755,7 @@ export class MemStorage implements IStorage {
       amount: movement.amount,
       movementDate: movement.movementDate,
       paymentMethod: movement.paymentMethod,
+      ```text
       clientsServed: movement.clientsServed || null,
       iqcodesUsed: movement.iqcodesUsed || null,
       notes: movement.notes || null,
@@ -1719,9 +1720,9 @@ class ExtendedPostgreStorage extends PostgreStorage {
   async getPartnerOffers(partnerCode: string): Promise<any[]> {
     const { partnerOffers } = await import('@shared/schema');
     const { eq, and } = await import('drizzle-orm');
-    
+
     console.log(`🔍 STORAGE DEBUG: Cercando offerte per partner: ${partnerCode}`);
-    
+
     const result = await this.db
       .select()
       .from(partnerOffers)
@@ -1729,12 +1730,12 @@ class ExtendedPostgreStorage extends PostgreStorage {
         eq(partnerOffers.partnerCode, partnerCode),
         eq(partnerOffers.isActive, true)
       ));
-    
+
     console.log(`📊 STORAGE RESULT: Trovate ${result.length} offerte per ${partnerCode}`);
     result.forEach((offer: any, index: number) => {
       console.log(`   ${index + 1}. "${offer.title}" (ID: ${offer.id}, Partner: ${offer.partnerCode})`);
     });
-    
+
     return result;
   }
 
@@ -2102,7 +2103,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
 
     // Ricerca case-insensitive con matching parziale per città
     const searchPattern = `%${cityName.toLowerCase()}%`;
-    
+
     const result = await this.db
       .select()
       .from(realOffers)
@@ -2205,7 +2206,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
           AND ic.is_active = true
           AND LOWER(pd.city) = LOWER($1)
         ORDER BY po.created_at DESC
-      `);
+      `, [cityName]);
 
       return result.rows.map((row: any) => ({
         id: row.id,
@@ -2481,12 +2482,12 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .where(eq(iqcodeValidations.touristIqCode, touristCode))
       .orderBy(desc(iqcodeValidations.id))
       .limit(1);
-    
+
     if (result.length === 0) {
       // Prima validazione del turista, inizia con 10 utilizzi
       return { usesRemaining: 10, usesTotal: 10 };
     }
-    
+
     // Validazioni successive, mantiene il conteggio attuale
     return { 
       usesRemaining: result[0].usesRemaining,
@@ -2540,7 +2541,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
         hashedBirthDate: data.hashedBirthDate
       })
       .returning();
-    
+
     return recoveryKey;
   }
 
@@ -2548,13 +2549,13 @@ class ExtendedPostgreStorage extends PostgreStorage {
     // Hash del codice per confronto sicuro
     const crypto = await import('crypto');
     const hashedIqCode = crypto.createHash('sha256').update(iqCode).digest('hex');
-    
+
     const [recoveryKey] = await this.db
       .select()
       .from(iqcodeRecoveryKeys)
       .where(eq(iqcodeRecoveryKeys.hashedIqCode, hashedIqCode))
       .limit(1);
-    
+
     return recoveryKey;
   }
 
@@ -2570,7 +2571,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
         )
       )
       .limit(1);
-    
+
     return recoveryKey;
   }
 
@@ -2586,7 +2587,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
         )
       )
       .limit(1);
-    
+
     return recoveryKey;
   }
 
@@ -2624,7 +2625,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
       })
       .where(eq(iqcodeRecoveryKeys.id, id))
       .returning();
-    
+
     return updatedKey;
   }
 
@@ -2697,7 +2698,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
           contactsFilled: parseInt(row.contactsFilled) || 0,
           lastProfileUpdate: row.lastProfileUpdate || null
         })),
-        
+
         structures: structuresInfo.rows.map((row: any) => ({
           code: row.code,
           structureName: row.structureName || 'Struttura',
@@ -2706,7 +2707,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
           usagePercentage: parseFloat(row.usagePercentage) || 0,
           lastPackageAssigned: row.lastPackageAssigned || null
         })),
-        
+
         tourists: touristsInfo.rows.map((row: any) => ({
           code: row.code,
           touristName: row.touristName || 'Turista',
@@ -2734,12 +2735,12 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .where(eq(iqcodeValidations.touristIqCode, touristCode))
       .orderBy(desc(iqcodeValidations.id))
       .limit(1);
-    
+
     if (result.length === 0) {
       // Prima validazione del turista, inizia con 10 utilizzi
       return { usesRemaining: 10, usesTotal: 10 };
     }
-    
+
     // Validazioni successive, mantiene il conteggio attuale
     return { 
       usesRemaining: result[0].usesRemaining,
@@ -2994,7 +2995,7 @@ class ExtendedMemStorage extends MemStorage {
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    
+
     this.recoveryKeys.set(data.hashedIqCode, recoveryKey);
     return recoveryKey;
   }
@@ -3002,19 +3003,19 @@ class ExtendedMemStorage extends MemStorage {
   async getRecoveryKeyByIqCode(iqCode: string): Promise<any> {
     const crypto = await import('crypto');
     const hashedIqCode = crypto.createHash('sha256').update(iqCode).digest('hex');
-    
+
     return this.recoveryKeys.get(hashedIqCode);
   }
 
   async verifyRecoveryData(hashedIqCode: string, hashedSecretWord: string, hashedBirthDate: string): Promise<any> {
     const recoveryKey = this.recoveryKeys.get(hashedIqCode);
-    
+
     if (recoveryKey && 
         recoveryKey.hashedSecretWord === hashedSecretWord && 
         recoveryKey.hashedBirthDate === hashedBirthDate) {
       return recoveryKey;
     }
-    
+
     return undefined;
   }
 

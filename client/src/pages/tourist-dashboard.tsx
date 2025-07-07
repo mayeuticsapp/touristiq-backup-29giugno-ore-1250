@@ -21,20 +21,20 @@ export default function TouristDashboard() {
   const [locationOffers, setLocationOffers] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchMode, setSearchMode] = useState<"default" | "city" | "geolocation">("default");
-  
+
   // Stati per scheda dettagliata partner
   const [showPartnerDetail, setShowPartnerDetail] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<any>(null);
-  
+
   // Stati per "Custode del Codice"
   const [showCustodeForm, setShowCustodeForm] = useState(false);
   const [showUpdateCustodeForm, setShowUpdateCustodeForm] = useState(false);
   const [secretWord, setSecretWord] = useState("");
   const [birthDate, setBirthDate] = useState("");
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
     queryFn: getCurrentUser,
@@ -161,12 +161,12 @@ export default function TouristDashboard() {
   // Funzione per cercare offerte per città
   const handleCitySearch = async () => {
     if (!searchCity.trim()) return;
-    
+
     setIsSearching(true);
     try {
       const response = await fetch(`/api/tourist/offers-by-city?city=${encodeURIComponent(searchCity.trim())}`);
       const data = await response.json();
-      
+
       if (response.ok) {
         setLocationOffers(data.offers || []);
         setSearchMode("city");
@@ -192,11 +192,11 @@ export default function TouristDashboard() {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        
+
         try {
           const response = await fetch(`/api/tourist/offers-nearby?lat=${latitude}&lng=${longitude}&radius=2`);
           const data = await response.json();
-          
+
           if (response.ok) {
             setLocationOffers(data.offers || []);
             setSearchMode("geolocation");
@@ -220,7 +220,7 @@ export default function TouristDashboard() {
 
   // Determina quali offerte mostrare
   const offersToShow = searchMode === "default" ? (realOffers as any)?.discounts || [] : locationOffers;
-  
+
   const navigation = [
     { icon: <Tags size={16} />, label: "I Miei Sconti", href: "#" },
     { icon: <MessageCircle size={16} />, label: "TIQai Chat", href: "#" },
@@ -321,7 +321,7 @@ export default function TouristDashboard() {
           </CardContent>
         </Card>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <Card>
           <CardContent className="p-6">
@@ -336,7 +336,7 @@ export default function TouristDashboard() {
                 Cerca per località
               </Button>
             </div>
-            
+
             {showLocationSearch && (
               <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -407,22 +407,22 @@ export default function TouristDashboard() {
                 {(() => {
                   // RAGGRUPPAMENTO CORRETTO PER PARTNERCODE - FIX CRITICO
                   console.info("🔍 DEBUG: Offerte da raggruppare:", offersToShow.map(o => `${o.title} (${o.partnerCode})`));
-                  
+
                   const groupedOffers = offersToShow.reduce((acc: any, offer: any) => {
                     const partnerKey = offer.partnerCode;
-                    
+
                     if (!acc[partnerKey]) {
                       acc[partnerKey] = {
                         partner: offer, // Primo partner per le info di base
                         offers: []
                       };
                     }
-                    
+
                     // Aggiungi offerta SOLO al partner giusto
                     acc[partnerKey].offers.push(offer);
                     return acc;
                   }, {});
-                  
+
                   console.info("🔍 DEBUG: Raggruppamento finale:", Object.keys(groupedOffers).map(key => 
                     `${key}: ${groupedOffers[key].offers.length} offerte (${groupedOffers[key].offers.map(o => o.title).join(', ')})`
                   ));
@@ -430,7 +430,7 @@ export default function TouristDashboard() {
                   return Object.values(groupedOffers).map((group: any, groupIndex: number) => {
                     const partner = group.partner;
                     const offers = group.offers;
-                    
+
                     return (
                       <div key={groupIndex} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                         {/* Header Partner - compatto */}
@@ -444,7 +444,7 @@ export default function TouristDashboard() {
                               <p className="text-sm text-gray-600">{partner.businessType}</p>
                             </div>
                           </div>
-                          
+
                           {/* Conteggio offerte */}
                           <div className="text-sm text-gray-500 ml-2">
                             {offers.length} offert{offers.length === 1 ? 'a' : 'e'}
@@ -470,7 +470,7 @@ export default function TouristDashboard() {
                             </div>
                           ))}
                         </div>
-                        
+
                         {/* Indirizzo compatto */}
                         {partner.address && (
                           <div className="flex items-center text-sm text-gray-600 mb-2">
@@ -478,7 +478,7 @@ export default function TouristDashboard() {
                             <span className="truncate">{partner.address}, {partner.city} ({partner.province})</span>
                           </div>
                         )}
-                        
+
                         {/* Azioni rapide compatte */}
                         <div className="flex gap-1 flex-wrap">
                           {partner.phone && (
@@ -492,7 +492,7 @@ export default function TouristDashboard() {
                               WhatsApp
                             </Button>
                           )}
-                          
+
                           {partner.address && (
                             <Button 
                               variant="outline" 
@@ -504,7 +504,7 @@ export default function TouristDashboard() {
                               Naviga
                             </Button>
                           )}
-                          
+
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -529,7 +529,7 @@ export default function TouristDashboard() {
             )}
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Attività Recenti</h3>
@@ -555,7 +555,7 @@ export default function TouristDashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <TIQaiChat />
@@ -675,7 +675,7 @@ export default function TouristDashboard() {
               </div>
             </DialogTitle>
           </DialogHeader>
-          
+
           {selectedPartner && (
             <div className="space-y-6">
               {/* Offerta Principale */}
@@ -688,7 +688,7 @@ export default function TouristDashboard() {
                 </div>
                 <p className="text-green-700">{selectedPartner.description}</p>
               </div>
-              
+
               {/* Informazioni di Base */}
               {selectedPartner.address && (
                 <div>
@@ -708,7 +708,7 @@ export default function TouristDashboard() {
                   </Button>
                 </div>
               )}
-              
+
               {/* Contatti */}
               <div>
                 <h4 className="font-semibold text-gray-900 mb-3">Contatti</h4>
@@ -723,7 +723,7 @@ export default function TouristDashboard() {
                       Contatta su WhatsApp
                     </Button>
                   )}
-                  
+
                   {selectedPartner.website && (
                     <Button 
                       variant="outline"
@@ -734,7 +734,7 @@ export default function TouristDashboard() {
                       Visita il sito web
                     </Button>
                   )}
-                  
+
                   {selectedPartner.email && (
                     <Button 
                       variant="outline"
@@ -747,7 +747,7 @@ export default function TouristDashboard() {
                   )}
                 </div>
               </div>
-              
+
               {/* Accessibilità e Servizi */}
               {(selectedPartner.wheelchairAccessible || selectedPartner.childFriendly || selectedPartner.glutenFree) && (
                 <div>
@@ -771,7 +771,7 @@ export default function TouristDashboard() {
                   </div>
                 </div>
               )}
-              
+
               {/* Note di validazione */}
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-semibold text-gray-900 mb-2">Come utilizzare lo sconto</h4>
