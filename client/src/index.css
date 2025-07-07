@@ -49,6 +49,19 @@
     border: 1px solid rgba(255, 171, 64, 0.2);
     box-shadow: 0 4px 15px rgba(255, 107, 107, 0.1);
   }
+
+  /* Testo con contrasto ottimale per leggibilità */
+  .text-luminous {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+    color: white;
+    font-weight: 700;
+  }
+  
+  .text-luminous-subtle {
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    color: white;
+    font-weight: 600;
+  }
 }
 
 @keyframes gentle-pulse {

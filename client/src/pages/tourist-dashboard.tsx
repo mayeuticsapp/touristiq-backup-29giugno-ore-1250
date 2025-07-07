@@ -282,12 +282,12 @@ export default function TouristDashboard() {
               <div className="animate-gentle-pulse mr-3 text-2xl">✨</div>
               <h2 className="text-xl font-semibold text-white">Il tuo Passepartout Magico</h2>
             </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-5 text-center border-2 border-white/30 hover:bg-white/25 transition-all duration-300">
-              <span className="text-3xl font-bold tracking-wider text-white drop-shadow-lg">{user.iqCode}</span>
+            <div className="bg-white/40 backdrop-blur-sm rounded-xl p-5 text-center border-2 border-white/50 hover:bg-white/45 transition-all duration-300 shadow-lg">
+              <span className="text-3xl font-bold tracking-wider text-white drop-shadow-xl" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.5)'}}>{user.iqCode}</span>
             </div>
-            <div className="mt-4 flex items-center">
+            <div className="mt-4 flex items-center bg-white/20 rounded-lg p-3 backdrop-blur-sm">
               <span className="mr-2">🎯</span>
-              <p className="text-white/95 font-medium">Il tuo codice esclusivo per scoperte uniche in Calabria!</p>
+              <p className="text-white font-semibold drop-shadow-md" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.4)'}}>Il tuo codice esclusivo per scoperte uniche in Calabria!</p>
             </div>
           </CardContent>
         </Card>
