@@ -260,23 +260,35 @@ export default function TouristDashboard() {
       navigation={navigation}
       sidebarColor="bg-tourist-green"
     >
-      {/* Saluto personalizzato */}
-      <div className="bg-white border-b border-gray-100 px-6 py-3 mb-6">
+      {/* Saluto personalizzato con calore calabrese */}
+      <div className="bg-calabria-warm px-6 py-4 mb-6 animate-discover">
         <div className="flex items-center">
-          <h2 className="text-lg font-medium text-gray-800">
-            👋 Benvenuto{entityInfo?.name ? `, ${entityInfo.name}` : ' nel tuo spazio turistico'}!
+          <div className="animate-gentle-pulse mr-3">
+            🌅
+          </div>
+          <h2 className="text-xl font-semibold text-white drop-shadow-sm">
+            Benvenuto{entityInfo?.name ? `, ${entityInfo.name}` : ''}! 
+            <span className="block text-sm font-normal mt-1 text-white/90">
+              La Calabria ti aspetta con le sue meraviglie esclusive
+            </span>
           </h2>
         </div>
       </div>
 
       <div className="mb-8">
-        <Card className="bg-gradient-to-r from-tourist-green to-green-400 text-white">
+        <Card className="bg-calabria-sunset text-white card-premium animate-warm-glow hover-warm cursor-pointer">
           <CardContent className="p-6">
-            <h2 className="text-xl font-semibold mb-2 text-white">Il tuo Codice IQ</h2>
-            <div className="bg-white/30 rounded-lg p-4 text-center border-2 border-white/20">
-              <span className="text-2xl font-bold tracking-wider text-gray-900">{user.iqCode}</span>
+            <div className="flex items-center mb-3">
+              <div className="animate-gentle-pulse mr-3 text-2xl">✨</div>
+              <h2 className="text-xl font-semibold text-white">Il tuo Passepartout Magico</h2>
             </div>
-            <p className="mt-3 text-white font-medium">Mostra questo codice ai partner per ottenere sconti esclusivi!</p>
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-5 text-center border-2 border-white/30 hover:bg-white/25 transition-all duration-300">
+              <span className="text-3xl font-bold tracking-wider text-white drop-shadow-lg">{user.iqCode}</span>
+            </div>
+            <div className="mt-4 flex items-center">
+              <span className="mr-2">🎯</span>
+              <p className="text-white/95 font-medium">Il tuo codice esclusivo per scoperte uniche in Calabria!</p>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -332,51 +344,64 @@ export default function TouristDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <Card>
+        <Card className="card-premium">
           <CardContent className="p-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Sconti Disponibili</h3>
+              <div className="flex items-center">
+                <div className="animate-gentle-pulse mr-3 text-xl">🎁</div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Le Tue Scoperte Esclusive</h3>
+                  <p className="text-sm text-gray-600">Offerte uniche selezionate per te</p>
+                </div>
+              </div>
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={() => setShowLocationSearch(!showLocationSearch)}
+                className="bg-calabria-sea text-white border-none hover:bg-calabria-nature transition-all duration-300 hover-warm"
               >
                 <MapPin className="w-4 h-4 mr-2" />
-                Cerca per località
+                Esplora Dintorni
               </Button>
             </div>
 
             {showLocationSearch && (
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="mb-6 p-4 bg-calabria-warm/10 rounded-xl border border-orange-200 animate-discover">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cerca partner in un comune
+                    <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                      <span className="mr-2">🏛️</span>
+                      Scopri tesori nascosti in...
                     </label>
                     <div className="flex gap-2">
                       <input
                         type="text"
-                        placeholder="es. Pizzo, Tropea, Briatico..."
+                        placeholder="Pizzo, Tropea, Briatico..."
                         value={searchCity}
                         onChange={(e) => setSearchCity(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 px-4 py-3 border border-orange-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white/80 backdrop-blur-sm"
                       />
-                      <Button onClick={handleCitySearch} disabled={!searchCity.trim()}>
-                        Cerca
+                      <Button 
+                        onClick={handleCitySearch} 
+                        disabled={!searchCity.trim()}
+                        className="bg-calabria-sunset text-white border-none hover-warm px-6"
+                      >
+                        Scopri
                       </Button>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Offerte vicino a te
+                    <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                      <span className="mr-2">📍</span>
+                      Tesori vicino a te
                     </label>
                     <Button 
                       onClick={handleGeolocationSearch}
                       variant="outline"
-                      className="w-full"
+                      className="w-full bg-calabria-nature text-white border-none hover:bg-calabria-sea transition-all duration-300 py-3"
                     >
                       <MapPin className="w-4 h-4 mr-2" />
-                      Usa la mia posizione (2km)
+                      Cerca nel raggio di 2km
                     </Button>
                   </div>
                 </div>
@@ -441,68 +466,83 @@ export default function TouristDashboard() {
                     const offers = group.offers;
 
                     return (
-                      <div key={groupIndex} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                        {/* Header Partner - compatto */}
-                        <div className="flex items-center justify-between mb-3">
+                      <div key={groupIndex} className="card-premium p-6 rounded-xl hover-warm cursor-pointer animate-discover border-l-4 border-l-orange-400">
+                        {/* Header Partner - coinvolgente */}
+                        <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center flex-1">
-                            <div className="h-10 w-10 bg-red-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                              <Utensils className="text-red-600" size={16} />
+                            <div className="h-12 w-12 bg-calabria-warm rounded-full flex items-center justify-center mr-4 flex-shrink-0 animate-gentle-pulse">
+                              <Utensils className="text-white" size={20} />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="font-bold text-gray-900 truncate">{partner.partnerName}</p>
-                              <p className="text-sm text-gray-600">{partner.businessType}</p>
+                              <p className="font-bold text-gray-900 truncate text-lg">{partner.partnerName}</p>
+                              <p className="text-sm text-gray-600 flex items-center">
+                                <span className="mr-1">✨</span>
+                                {partner.businessType}
+                              </p>
                             </div>
                           </div>
 
-                          {/* Conteggio offerte */}
-                          <div className="text-sm text-gray-500 ml-2">
-                            {offers.length} offert{offers.length === 1 ? 'a' : 'e'}
+                          {/* Badge esclusivo offerte */}
+                          <div className="bg-calabria-sunset text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            {offers.length} {offers.length === 1 ? 'scoperta' : 'scoperte'}
                           </div>
                         </div>
 
-                        {/* Lista offerte compatta */}
-                        <div className="space-y-2 mb-3">
+                        {/* Lista offerte coinvolgenti */}
+                        <div className="space-y-3 mb-4">
                           {offers.map((offer: any, offerIndex: number) => (
                             <div 
                               key={offerIndex} 
-                              className="flex items-center justify-between p-2 bg-gray-50 rounded border-l-4 border-l-blue-500 cursor-pointer hover:bg-blue-50 transition-colors"
+                              className="relative overflow-hidden bg-gradient-to-r from-white to-orange-50 rounded-xl border border-orange-200 cursor-pointer hover-warm group"
                               onClick={() => handleOpenOfferDetail(offer)}
                             >
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-gray-900 text-sm truncate hover:text-blue-600">{offer.title}</p>
-                                <p className="text-xs text-gray-600 truncate">{offer.description}</p>
-                                {offer.validUntil && (
-                                  <p className="text-xs text-gray-500">
-                                    Valido fino al {new Date(offer.validUntil).toLocaleDateString('it-IT')}
-                                  </p>
-                                )}
+                              <div className="absolute top-0 right-0 w-16 h-16 bg-calabria-sunset opacity-10 rounded-bl-full"></div>
+                              <div className="relative p-4">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center mb-2">
+                                      <span className="text-lg mr-2">🎯</span>
+                                      <p className="font-semibold text-gray-900 text-base group-hover:text-orange-600 transition-colors">{offer.title}</p>
+                                    </div>
+                                    <p className="text-sm text-gray-700 mb-2 leading-relaxed">{offer.description}</p>
+                                    {offer.validUntil && (
+                                      <div className="flex items-center text-xs text-gray-500">
+                                        <span className="mr-1">⏰</span>
+                                        Valido fino al {new Date(offer.validUntil).toLocaleDateString('it-IT')}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="ml-4 flex flex-col items-center">
+                                    <Badge className="bg-calabria-nature text-white font-bold text-lg px-3 py-1 mb-1">
+                                      -{offer.discountPercentage}%
+                                    </Badge>
+                                    <span className="text-xs text-gray-500">ESCLUSIVO</span>
+                                  </div>
+                                </div>
                               </div>
-                              <Badge className="bg-green-100 text-green-800 font-bold ml-2 flex-shrink-0">
-                                -{offer.discountPercentage}%
-                              </Badge>
                             </div>
                           ))}
                         </div>
 
-                        {/* Indirizzo compatto */}
+                        {/* Informazioni coinvolgenti */}
                         {partner.address && (
-                          <div className="flex items-center text-sm text-gray-600 mb-2">
-                            <MapPin className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
-                            <span className="truncate">{partner.address}, {partner.city} ({partner.province})</span>
+                          <div className="flex items-center text-sm text-gray-600 mb-4 bg-white/60 p-2 rounded-lg">
+                            <MapPin className="w-4 h-4 mr-2 text-orange-500 flex-shrink-0" />
+                            <span className="truncate font-medium">{partner.address}, {partner.city} ({partner.province})</span>
                           </div>
                         )}
 
-                        {/* Azioni rapide compatte */}
-                        <div className="flex gap-1 flex-wrap">
+                        {/* Azioni rapide coinvolgenti */}
+                        <div className="flex gap-2 flex-wrap">
                           {partner.phone && (
                             <Button 
                               variant="outline" 
                               size="sm"
                               onClick={() => window.open(`https://wa.me/${partner.phone.replace(/[^0-9]/g, '')}?text=Ciao! Ho visto le vostre offerte su TouristIQ. Vorrei avere maggiori informazioni.`, '_blank')}
-                              className="text-green-600 hover:bg-green-50 text-xs"
+                              className="bg-green-500 text-white border-none hover:bg-green-600 text-xs hover-warm"
                             >
                               <Phone className="w-3 h-3 mr-1" />
-                              WhatsApp
+                              Contatta
                             </Button>
                           )}
 
@@ -511,10 +551,10 @@ export default function TouristDashboard() {
                               variant="outline" 
                               size="sm"
                               onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(partner.address + ', ' + partner.city)}`, '_blank')}
-                              className="text-blue-600 hover:bg-blue-50 text-xs"
+                              className="bg-calabria-sea text-white border-none hover:bg-blue-600 text-xs hover-warm"
                             >
                               <Navigation className="w-3 h-3 mr-1" />
-                              Naviga
+                              Raggiungi
                             </Button>
                           )}
 
@@ -522,10 +562,10 @@ export default function TouristDashboard() {
                             variant="outline" 
                             size="sm"
                             onClick={() => handleOpenPartnerDetail(partner)}
-                            className="text-purple-600 hover:bg-purple-50 text-xs"
+                            className="bg-calabria-sunset text-white border-none hover:bg-orange-600 text-xs hover-warm"
                           >
                             <ExternalLink className="w-3 h-3 mr-1" />
-                            Dettagli
+                            Scopri Tutto
                           </Button>
                         </div>
                       </div>
@@ -534,10 +574,23 @@ export default function TouristDashboard() {
                 })()}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <Tags className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <p className="text-gray-500 mb-2">Nessuna offerta disponibile</p>
-                <p className="text-sm text-gray-400">Valida alcuni partner per vedere le offerte!</p>
+              <div className="text-center py-12 animate-discover">
+                <div className="animate-gentle-pulse mb-6">
+                  <div className="mx-auto h-20 w-20 bg-calabria-warm rounded-full flex items-center justify-center">
+                    <Tags className="h-10 w-10 text-white" />
+                  </div>
+                </div>
+                <h4 className="text-xl font-semibold text-gray-900 mb-2">Le tue scoperte ti aspettano!</h4>
+                <p className="text-gray-600 mb-4">Esplora i dintorni o chiedi a TIQai per trovare esperienze uniche</p>
+                <div className="flex justify-center gap-3">
+                  <Button 
+                    onClick={() => setShowLocationSearch(true)}
+                    className="bg-calabria-sunset text-white hover-warm"
+                  >
+                    <MapPin className="w-4 h-4 mr-2" />
+                    Esplora Zona
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
