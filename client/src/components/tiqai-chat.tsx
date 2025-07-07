@@ -18,7 +18,7 @@ export function TIQaiChat() {
     {
       id: '1',
       type: 'ai',
-      content: '🌅 Ciao, viaggiatore! Sono TIQai, l\'anima digitale della Calabria. Sussurrami i tuoi desideri di scoperta e ti guiderò verso tesori nascosti che solo il cuore calabrese conosce...',
+      content: '🌅 Ciao, viaggiatore! Sono TIQai, il tuo genius loci digitale. Sussurrami i tuoi desideri di scoperta e ti guiderò verso tesori nascosti che solo il cuore autentico dell\'Italia conosce...',
       timestamp: new Date()
     }
   ]);
@@ -107,16 +107,16 @@ export function TIQaiChat() {
             <Sparkles className="text-yellow-200 animate-spin-slow" size={24} />
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-ping"></div>
           </div>
-          TIQai - Genius Loci Calabrese
+          TIQai - Genius Loci d'Italia
           <MapPin className="ml-2 text-red-200 animate-bounce" size={18} />
         </CardTitle>
         <p className="text-orange-100 text-xs italic mt-1">
-          "L'anima della Calabria che sussurra segreti"
+          "L'anima autentica d'Italia che sussurra segreti"
         </p>
       </CardHeader>
       
       <CardContent className="flex-1 flex flex-col p-0 relative z-10">
-        <ScrollArea className="flex-1 px-4 bg-gradient-to-b from-transparent to-orange-25" ref={scrollAreaRef}>
+        <ScrollArea className="flex-1 px-4 bg-gradient-to-b from-transparent to-orange-25 max-h-72 overflow-y-auto" ref={scrollAreaRef}>
           <div className="space-y-4 pb-4">
             {messages.map((message) => (
               <div
@@ -177,7 +177,7 @@ export function TIQaiChat() {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="✨ Sussurra i tuoi desideri di scoperta calabrese..."
+              placeholder="✨ Sussurra i tuoi desideri di scoperta italiana..."
               disabled={isLoading}
               maxLength={500}
               className="border-orange-200 focus:border-orange-400 bg-white/80 backdrop-blur-sm placeholder:text-orange-400 placeholder:italic"
@@ -192,7 +192,7 @@ export function TIQaiChat() {
             </Button>
           </div>
           <p className="text-xs text-orange-500 mt-2 italic text-center">
-            💫 Ogni domanda è un invito alla meraviglia calabrese
+            💫 Ogni domanda è un invito alla meraviglia italiana
           </p>
         </div>
       </CardContent>
