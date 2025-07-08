@@ -702,7 +702,7 @@ export default function StructureDashboard() {
         setGeneratedTempCode(result.tempCode);
         toast({
           title: "Codice temporaneo generato",
-          description: "Il codice è valido per 15 minuti. Condividilo immediatamente con l'ospite.",
+          description: "Il codice è valido SENZA SCADENZA. L'ospite può usarlo quando vuole per il primo accesso.",
         });
       } else {
         const error = await response.json();
@@ -779,7 +779,7 @@ export default function StructureDashboard() {
             Sistema Privacy-First: Codici Temporanei
           </CardTitle>
           <p className="text-sm text-gray-600">
-            🔒 Genera codici temporanei single-use per i tuoi ospiti. Nessun IQCode reale viene mai esposto.
+            🔒 Genera codici temporanei SENZA SCADENZA per i tuoi ospiti. Nessun IQCode reale viene mai esposto.
           </p>
         </CardHeader>
         <CardContent>

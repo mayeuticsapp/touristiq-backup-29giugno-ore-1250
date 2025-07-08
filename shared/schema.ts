@@ -304,14 +304,14 @@ export const partnerDetails = pgTable("partner_details", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-// Tabella per i codici temporanei single-use
+// Tabella per i codici temporanei single-use (SENZA SCADENZA)
 export const temporaryCodes = pgTable("temporary_codes", {
   id: serial("id").primaryKey(),
-  tempCode: varchar("temp_code", { length: 35 }).unique().notNull(), // Esteso per "iqcode-primoaccesso-12345"
+  tempCode: varchar("temp_code", { length: 35 }).unique().notNull(), // Esteso per "IQCODE-PRIMOACCESSO-12345"
   structureCode: varchar("structure_code", { length: 20 }).notNull(),
   guestName: varchar("guest_name", { length: 100 }),
   guestPhone: varchar("guest_phone", { length: 20 }),
-  expiresAt: timestamp("expires_at").notNull(),
+  // expiresAt: timestamp("expires_at").notNull(), // RIMOSSO: Codici senza scadenza
   usedAt: timestamp("used_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

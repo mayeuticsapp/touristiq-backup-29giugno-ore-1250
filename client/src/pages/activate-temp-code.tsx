@@ -223,7 +223,7 @@ export default function ActivateTempCode() {
                     id="tempCode"
                     value={tempCode}
                     onChange={(e) => setTempCode(e.target.value)}
-                    placeholder="Es: iqcode-primoaccesso-67421"
+                    placeholder="Es: IQCODE-PRIMOACCESSO-67421"
                     className="flex-1 text-lg font-mono"
                     maxLength={30}
                   />

@@ -46,27 +46,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupSecurityHeaders(app);
   app.use(performanceMonitor);
   
-  // Setup automatic cleanup for expired temporary codes
-  setInterval(async () => {
-    try {
-      await storage.cleanupExpiredTempCodes();
-      console.log('🧹 Cleanup codici temporanei scaduti completato');
-    } catch (error) {
-      console.error('❌ Errore cleanup codici temporanei:', error);
-    }
-  }, 60000); // ogni minuto
+  // Cleanup automatico rimosso: i codici temporanei non scadono più
+  // I codici restano validi finché non vengono utilizzati
   
   // Authentication endpoint with rate limiting
   app.post("/api/auth/login", loginLimiter, async (req, res) => {
     try {
       const { iqCode } = loginSchema.parse(req.body);
       
-      // 🔍 CONTROLLO PRIORITARIO: Intercetta codici temporanei
-      if (iqCode.toLowerCase().startsWith('iqcode-primoaccesso-')) {
+      // 🔍 CONTROLLO PRIORITARIO: Intercetta codici temporanei (formato maiuscolo)
+      if (iqCode.toUpperCase().startsWith('IQCODE-PRIMOACCESSO-')) {
         console.log(`🔍 TEMP CODE DETECTED: ${iqCode}`);
         return res.status(307).json({ 
           redirect: '/activate-temp-code',
-          tempCode: iqCode // Mantiene formato originale
+          tempCode: iqCode.toUpperCase() // Formato maiuscolo standardizzato
         });
       }
       

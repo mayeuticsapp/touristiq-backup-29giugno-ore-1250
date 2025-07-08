@@ -2720,17 +2720,16 @@ class ExtendedPostgreStorage extends PostgreStorage {
     };
   }
 
-  // **SISTEMA CODICI TEMPORANEI (Privacy-First)**
+  // **SISTEMA CODICI TEMPORANEI (Privacy-First) - SENZA SCADENZA**
   async generateTempCode(structureCode: string, guestName?: string, guestPhone?: string): Promise<string> {
-    const tempCode = `iqcode-primoaccesso-${Math.floor(10000 + Math.random() * 90000)}`;
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minuti
+    const tempCode = `IQCODE-PRIMOACCESSO-${Math.floor(10000 + Math.random() * 90000)}`;
 
     await this.db.insert(temporaryCodes).values({
       tempCode,
       structureCode,
       guestName: guestName || null,
       guestPhone: guestPhone || null,
-      expiresAt,
+      // Nessun expiresAt: codici senza scadenza
     });
 
     return tempCode;
@@ -2738,7 +2737,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
 
   async activateTempCode(tempCode: string): Promise<{ success: boolean; tempCodeData?: TemporaryCode }> {
     const now = new Date();
-    const { isNull, gt } = await import('drizzle-orm');
+    const { isNull } = await import('drizzle-orm');
     
     const [tempCodeData] = await this.db
       .select()
@@ -2746,7 +2745,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .where(
         and(
           eq(temporaryCodes.tempCode, tempCode),
-          gt(temporaryCodes.expiresAt, now),
+          // Rimosso controllo scadenza: gt(temporaryCodes.expiresAt, now),
           isNull(temporaryCodes.usedAt)
         )
       );
@@ -2764,8 +2763,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
   }
 
   async isTempCodeValid(tempCode: string): Promise<boolean> {
-    const now = new Date();
-    const { isNull, gt } = await import('drizzle-orm');
+    const { isNull } = await import('drizzle-orm');
     
     const [tempCodeData] = await this.db
       .select()
@@ -2773,7 +2771,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .where(
         and(
           eq(temporaryCodes.tempCode, tempCode),
-          gt(temporaryCodes.expiresAt, now),
+          // Rimosso controllo scadenza: gt(temporaryCodes.expiresAt, now),
           isNull(temporaryCodes.usedAt)
         )
       );
@@ -2804,13 +2802,10 @@ class ExtendedPostgreStorage extends PostgreStorage {
     return { iqCode: iqCode.code, success: true };
   }
 
+  // Cleanup automatico rimosso: i codici temporanei non scadono più
   async cleanupExpiredTempCodes(): Promise<void> {
-    const now = new Date();
-    const { lt } = await import('drizzle-orm');
-    
-    await this.db
-      .delete(temporaryCodes)
-      .where(lt(temporaryCodes.expiresAt, now));
+    // Metodo mantenuto per compatibilità ma non fa nulla
+    return;
   }
 }
 

@@ -3,12 +3,12 @@
  */
 
 export function isTemporaryCode(iqCode: string): boolean {
-  // Riconosce formato semantico: iqcode-primoaccesso-XXXXX
-  return iqCode.startsWith('iqcode-primoaccesso-');
+  // Riconosce formato maiuscolo: IQCODE-PRIMOACCESSO-XXXXX
+  return iqCode.toUpperCase().startsWith('IQCODE-PRIMOACCESSO-');
 }
 
 export function isValidTempCodeFormat(iqCode: string): boolean {
-  const tempCodeRegex = /^iqcode-primoaccesso-\d{5}$/;
+  const tempCodeRegex = /^IQCODE-PRIMOACCESSO-\d{5}$/i; // case-insensitive
   return tempCodeRegex.test(iqCode);
 }
 
