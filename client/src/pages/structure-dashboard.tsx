@@ -1014,14 +1014,7 @@ export default function StructureDashboard() {
                 ✅ Ospite creato: {justCreatedGuest.firstName} {justCreatedGuest.lastName} - Camera {justCreatedGuest.roomNumber}
               </h4>
               <div className="flex gap-3 flex-wrap">
-                <Button 
-                  onClick={handleAssignCodeToNewGuest}
-                  className="bg-blue-600 hover:bg-blue-700"
-                  size="sm"
-                >
-                  <Gift size={16} className="mr-2" />
-                  Assegna IQCode
-                </Button>
+                {/* BOTTONE RIMOSSO - Ora esiste solo sistema Codici Temporanei */}
 
                 <Button 
                   onClick={handleSendWhatsAppToNewGuest}
@@ -1631,29 +1624,7 @@ export default function StructureDashboard() {
                     </div>
                   )}
 
-                  {/* Assegna Nuovo Codice */}
-                  <div className="border-t pt-4">
-                    <h3 className="font-semibold mb-3">Assegna Nuovo Codice IQ</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {packagesData?.packages?.map((pkg: any) => (
-                        <div key={pkg.id} className="border rounded-lg p-3">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="font-medium">Pacchetto {pkg.packageSize}</span>
-                            <Badge variant="outline">{pkg.availableCodes || 0} disponibili</Badge>
-                          </div>
-                          <Button
-                            size="sm"
-                            onClick={() => handleAssignCodeToGuest(selectedGuestForManagement.id, pkg.id)}
-                            disabled={(pkg.availableCodes || 0) <= 0}
-                            className="w-full"
-                          >
-                            <Plus size={14} className="mr-1" />
-                            Assegna
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  {/* SISTEMA DUPLICATO RIMOSSO - Ora esiste solo "Codici Temporanei" */}
                 </div>
               )}
 

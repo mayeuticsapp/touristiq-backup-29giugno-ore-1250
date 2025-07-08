@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tags, Utensils, Check, MessageCircle, QrCode, MapPin, Heart, Phone, Navigation, ExternalLink, Mail, Shield, Info } from "lucide-react";
+import { Tags, Utensils, Check, MessageCircle, QrCode, MapPin, Heart, Phone, Navigation, ExternalLink, Mail, Shield, Info, Copy } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/auth";
 import { useState, useEffect } from "react";
@@ -342,6 +342,35 @@ export default function TouristDashboard() {
             <div className="mt-4 flex items-center bg-white/50 rounded-lg p-3 backdrop-blur-sm">
               <span className="mr-2">🎯</span>
               <p className="text-gray-800 font-semibold">Il tuo codice esclusivo per scoperte uniche in Calabria!</p>
+            </div>
+            
+            {/* Strumento Copia Codice Definitivo */}
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <Button
+                onClick={() => {
+                  navigator.clipboard.writeText(user.iqCode);
+                  toast({
+                    title: "Codice copiato!",
+                    description: "Il tuo IQCode definitivo è stato copiato negli appunti",
+                  });
+                }}
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+              >
+                <Copy className="w-4 h-4" />
+                Copia il Tuo IQCode
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const message = `Il mio codice IQ TouristIQ: ${user.iqCode} 🎯 Scopri sconti esclusivi in Calabria!`;
+                  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+                  window.open(whatsappUrl, '_blank');
+                }}
+                className="border-2 border-green-500 text-green-600 hover:bg-green-50 px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Condividi
+              </Button>
             </div>
           </CardContent>
         </Card>

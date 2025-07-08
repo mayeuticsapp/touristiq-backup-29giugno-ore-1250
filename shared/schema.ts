@@ -307,7 +307,7 @@ export const partnerDetails = pgTable("partner_details", {
 // Tabella per i codici temporanei single-use
 export const temporaryCodes = pgTable("temporary_codes", {
   id: serial("id").primaryKey(),
-  tempCode: varchar("temp_code", { length: 12 }).unique().notNull(),
+  tempCode: varchar("temp_code", { length: 35 }).unique().notNull(), // Esteso per "iqcode-primoaccesso-12345"
   structureCode: varchar("structure_code", { length: 20 }).notNull(),
   guestName: varchar("guest_name", { length: 100 }),
   guestPhone: varchar("guest_phone", { length: 20 }),
