@@ -13,6 +13,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { isTemporaryCode } from "@/lib/temp-code-utils";
+import { useLocation } from "wouter";
 
 export default function TouristDashboard() {
   const [showValidationDialog, setShowValidationDialog] = useState(false);
@@ -21,6 +23,7 @@ export default function TouristDashboard() {
   const [locationOffers, setLocationOffers] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchMode, setSearchMode] = useState<"default" | "city" | "geolocation">("default");
+  const [, setLocation] = useLocation();
 
   // Stati per scheda dettagliata partner
   const [showPartnerDetail, setShowPartnerDetail] = useState(false);
@@ -44,6 +47,19 @@ export default function TouristDashboard() {
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
   });
+
+  // 🚨 CONTROLLO SICUREZZA DASHBOARD: Impedisce accesso con codici temporanei
+  useEffect(() => {
+    if (user && user.iqCode && isTemporaryCode(user.iqCode)) {
+      toast({
+        title: "Accesso non autorizzato",
+        description: "I codici temporanei devono essere attivati prima dell'uso",
+        variant: "destructive",
+      });
+      // Reindirizza immediatamente alla pagina di attivazione
+      setLocation("/activate-temp-code");
+    }
+  }, [user]);
 
   // Messaggi dinamici evocativi
   const welcomeMessages = [

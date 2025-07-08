@@ -14,6 +14,7 @@ import { login } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
+import { isTemporaryCode } from "@/lib/temp-code-utils";
 
 const STORAGE_KEY = "touristiq_last_code";
 
@@ -96,12 +97,29 @@ export default function Login() {
     if (isLoading || isSubmitting) return;
     if (!iqCode.trim()) return;
 
+    const trimmedCode = iqCode.trim();
+
+    // 🔍 CONTROLLO CRITICO: Intercetta codici temporanei
+    if (isTemporaryCode(trimmedCode)) {
+      toast({
+        title: "Codice temporaneo rilevato",
+        description: "Ti stiamo reindirizzando alla pagina di attivazione...",
+      });
+      
+      // Reindirizza immediatamente alla pagina di attivazione
+      setLocation(`/activate-temp-code`);
+      
+      // Imposta il codice temporaneo nel localStorage per la pagina di attivazione
+      localStorage.setItem('temp_code_for_activation', trimmedCode);
+      return;
+    }
+
     setIsLoading(true);
     setIsSubmitting(true);
     setError("");
 
     try {
-      const response = await login(iqCode.trim().toUpperCase());
+      const response = await login(trimmedCode.toUpperCase());
 
 
       // Salva codice IQ se richiesto

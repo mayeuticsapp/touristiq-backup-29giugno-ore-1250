@@ -2722,8 +2722,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
 
   // **SISTEMA CODICI TEMPORANEI (Privacy-First)**
   async generateTempCode(structureCode: string, guestName?: string, guestPhone?: string): Promise<string> {
-    const { randomBytes } = await import('crypto');
-    const tempCode = randomBytes(6).toString('hex').toUpperCase();
+    const tempCode = `iqcode-primoaccesso-${Math.floor(10000 + Math.random() * 90000)}`;
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minuti
 
     await this.db.insert(temporaryCodes).values({

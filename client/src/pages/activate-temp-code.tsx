@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,61 @@ export default function ActivateTempCode() {
   const [structureCode, setStructureCode] = useState("");
   const [, navigate] = useLocation();
   const { toast } = useToast();
+
+  // Auto-popolamento codice dal localStorage se disponibile
+  useEffect(() => {
+    const savedTempCode = localStorage.getItem('temp_code_for_activation');
+    if (savedTempCode) {
+      setTempCode(savedTempCode);
+      localStorage.removeItem('temp_code_for_activation'); // Rimuovi dopo l'uso
+      
+      // Auto-verifica il codice
+      setTimeout(() => {
+        checkTempCodeWithValue(savedTempCode);
+      }, 500);
+    }
+  }, []);
+
+  // Verifica validità codice temporaneo con valore specifico
+  const checkTempCodeWithValue = async (codeToCheck: string) => {
+    setIsChecking(true);
+    setTempCodeValid(null);
+
+    try {
+      const response = await fetch("/api/check-temp-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tempCode: codeToCheck.trim() })
+      });
+
+      const result = await response.json();
+      
+      if (response.ok && result.valid) {
+        setTempCodeValid(true);
+        toast({
+          title: "Codice valido!",
+          description: "Il codice temporaneo è valido. Procedi con la creazione del tuo profilo.",
+        });
+      } else {
+        setTempCodeValid(false);
+        toast({
+          title: "Codice non valido",
+          description: result.message || "Il codice è scaduto o già utilizzato",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Errore verifica codice:", error);
+      setTempCodeValid(false);
+      toast({
+        title: "Errore",
+        description: "Impossibile verificare il codice",
+        variant: "destructive",
+      });
+    } finally {
+      setIsChecking(false);
+    }
+  };
 
   // Verifica validità codice temporaneo
   const checkTempCode = async () => {
@@ -167,10 +222,10 @@ export default function ActivateTempCode() {
                   <Input
                     id="tempCode"
                     value={tempCode}
-                    onChange={(e) => setTempCode(e.target.value.toUpperCase())}
-                    placeholder="Es: TEMP-ABC123"
+                    onChange={(e) => setTempCode(e.target.value)}
+                    placeholder="Es: iqcode-primoaccesso-67421"
                     className="flex-1 text-lg font-mono"
-                    maxLength={20}
+                    maxLength={30}
                   />
                   <Button
                     onClick={checkTempCode}
