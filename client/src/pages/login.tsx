@@ -15,6 +15,8 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { isTemporaryCode } from "@/lib/temp-code-utils";
+import { useTranslation } from "@/lib/translations";
+import { LanguageSelector } from "@/components/language-selector";
 
 const STORAGE_KEY = "touristiq_last_code";
 
@@ -31,6 +33,7 @@ export default function Login() {
   const [secretWord, setSecretWord] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   // Mutation per recupero IQCode
   const recoveryMutation = useMutation({
@@ -170,6 +173,10 @@ export default function Login() {
   return (
     <TooltipProvider>
       <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Language Selector - Top Right */}
+        <div className="absolute top-4 right-4 z-50">
+          <LanguageSelector />
+        </div>
       {/* Sfondo Naturale Mediterraneo */}
       <div className="absolute inset-0 bg-gradient-to-b from-sky-400 via-blue-500 to-cyan-600">
         {/* Sole splendente */}
@@ -254,7 +261,7 @@ export default function Login() {
             Ogni esperienza inizia con un IQ
           </p>
           <p className="text-white/90 text-lg drop-shadow-lg font-medium mt-3">
-            Inserisci il tuo codice IQ per accedere
+            {t('loginSubtitle')}
           </p>
         </div>
 
@@ -267,7 +274,7 @@ export default function Login() {
                   htmlFor="iqCode"
                   className="block text-lg font-semibold text-gray-800 mb-3"
                 >
-                  Codice IQ
+                  {t('iqCodeLabel')}
                 </label>
                 <Input
                   id="iqCode"
@@ -275,7 +282,7 @@ export default function Login() {
                   required
                   value={iqCode}
                   onChange={(e) => setIqCode(e.target.value.toUpperCase())}
-                  placeholder="es. TIQ-IT-LEONARDO"
+                  placeholder={t('iqCodePlaceholder')}
                   maxLength={100}
                   className="text-center text-xl font-bold tracking-wider uppercase w-full h-14 bg-orange-50 border-2 border-orange-200 text-gray-800 placeholder:text-gray-500 focus:bg-orange-100 focus:border-orange-400 transition-all duration-300"
                   disabled={isLoading || isSubmitting}
@@ -284,14 +291,14 @@ export default function Login() {
 
               {/* Frase di supporto per recupero IQCode */}
               <div className="text-center text-sm text-gray-600 space-y-2">
-                <p>Hai dimenticato il tuo IQCode? Tranquillo, è tutto sotto controllo.</p>
+                <p>{t('forgotCode')}</p>
                 <div className="flex items-center justify-center gap-2">
                   <button
                     type="button"
                     onClick={() => setShowRecoveryModal(true)}
                     className="text-blue-600 hover:text-blue-800 font-medium underline transition-colors"
                   >
-                    👉 Recuperalo con il Custode del Codice
+                    👉 {t('recoverWithCustode')}
                   </button>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -338,12 +345,12 @@ export default function Login() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-3 h-6 w-6 animate-spin" />
-                    Verifica in corso...
+                    {t('loading')}...
                   </>
                 ) : (
                   <>
                     <LogIn className="mr-3" size={24} />
-                    🌊 Accedi alla Vacanza 🏖️
+                    {t('loginButton')}
                   </>
                 )}
               </Button>
@@ -391,12 +398,12 @@ export default function Login() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <KeyRound className="w-5 h-5 text-blue-600" />
-                Recupera il tuo IQCode
+                {t('custodeTitle')}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <p className="text-sm text-gray-600">
-                Inserisci i dati che hai salvato con il Custode del Codice per recuperare il tuo IQCode.
+                {t('custodeDescription')}
               </p>
               
               <div>
@@ -430,7 +437,7 @@ export default function Login() {
                 {recoveryMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Recuperando...
+                    {t('loading')}...
                   </>
                 ) : (
                   <>
