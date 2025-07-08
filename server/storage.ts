@@ -91,6 +91,10 @@ export interface IStorage {
   getAllPartnersWithOffers(): Promise<any[]>;
   getPartnerOffersByCity(cityName: string): Promise<any[]>;
 
+  // Temporary codes methods
+  createTempCode(code: string, createdBy: string): Promise<any>;
+  createIqCode(iqCodeData: any): Promise<any>;
+
   // Validazione IQCode methods
   createIqcodeValidation(data: {partnerCode: string, touristCode: string, requestedAt: Date, status: string, usesRemaining: number, usesTotal: number}): Promise<IqcodeValidation>;
   getValidationsByTourist(touristCode: string): Promise<IqcodeValidation[]>;
@@ -1847,6 +1851,20 @@ class ExtendedPostgreStorage extends PostgreStorage {
     return created;
   }
 
+  async createTempCode(code: string, createdBy: string): Promise<any> {
+    // Crea nella tabella temporaryCodes per compatibilità
+    const [created] = await this.db
+      .insert(temporaryCodes)
+      .values({
+        code,
+        createdBy,
+        createdAt: new Date(),
+        isActive: true
+      })
+      .returning();
+    return created;
+  }
+
   async createIqcodeRecharge(recharge: any): Promise<any> {
     const [created] = await this.db
       .insert(iqcodeRecharges)
@@ -2836,6 +2854,20 @@ class ExtendedPostgreStorage extends PostgreStorage {
     // Metodo mantenuto per compatibilità ma non fa nulla
     return;
   }
+
+  // Metodi per compatibilità con interfaccia IStorage
+  async createTempCode(code: string, createdBy: string): Promise<any> {
+    // Implementazione per MemStorage - crea un oggetto temporaneo
+    return {
+      id: Date.now(),
+      code,
+      createdBy,
+      createdAt: new Date(),
+      isActive: true
+    };
+  }
+
+
 }
 
 // Extend MemStorage con metodi impostazioni
