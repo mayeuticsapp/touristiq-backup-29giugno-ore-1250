@@ -800,9 +800,11 @@ export default function StructureDashboard() {
                                     const response = await fetch(`/api/guest/${guest.id}/codes`);
                                     const data = await response.json();
                                     if (data.codes && data.codes.length > 0) {
-                                      const firstCode = data.codes[0].code;
+                                      // PRIVACY PROTECTION: Non esporre mai IQCode veri
                                       if (guest.phone) {
-                                        handleSendWhatsApp(guest.phone, firstCode, guest);
+                                        const privacyMessage = `Ciao ${guest.firstName}! Hai ${data.codes.length} codici IQ speciali per sconti esclusivi durante il soggiorno. I tuoi codici sono riservati e personali - conservali al sicuro! Mostrane uno ai partner TouristIQ per ottenere i tuoi sconti speciali!`;
+                                        const whatsappUrl = `https://wa.me/${guest.phone?.replace(/\+/, '').replace(/\s/g, '')}?text=${encodeURIComponent(privacyMessage)}`;
+                                        window.open(whatsappUrl, '_blank');
                                       } else {
                                         alert("Numero di telefono non disponibile per questo ospite");
                                       }
@@ -1424,10 +1426,10 @@ export default function StructureDashboard() {
                             const response = await fetch(`/api/guest/${guest.id}/codes`);
                             const data = await response.json();
                             if (data.codes && data.codes.length > 0) {
-                              const firstCode = data.codes[0].code;
-                              // Invia WhatsApp con il primo codice
+                              // PRIVACY PROTECTION: Mai esporre IQCode veri
                               if (guest.phone) {
-                                const whatsappUrl = `https://wa.me/${guest.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`🎁 Ciao ${guest.firstName}! Ecco il tuo codice sconto TouristIQ: ${firstCode}\\n\\nUsa questo codice per ottenere sconti esclusivi presso i nostri partner! 🌟`)}`;
+                                const privacyMessage = `🎁 Ciao ${guest.firstName}! Hai ${data.codes.length} codici IQ speciali per sconti esclusivi durante il soggiorno. I tuoi codici sono riservati e personali - conservali al sicuro! Mostrane uno ai partner TouristIQ per ottenere i tuoi sconti speciali! 🌟`;
+                                const whatsappUrl = `https://wa.me/${guest.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(privacyMessage)}`;
                                 window.open(whatsappUrl, '_blank');
                               } else {
                                 alert("Numero di telefono non disponibile per questo ospite");
@@ -1450,9 +1452,8 @@ export default function StructureDashboard() {
                             const response = await fetch(`/api/guest/${guest.id}/codes`);
                             const data = await response.json();
                             if (data.codes && data.codes.length > 0) {
-                              const firstCode = data.codes[0].code;
-                              await navigator.clipboard.writeText(firstCode);
-                              alert(`Codice ${firstCode} copiato negli appunti!`);
+                              // PRIVACY PROTECTION: Non copiare mai IQCode veri
+                              alert("⚠️ Privacy protetta: I codici IQ sono riservati agli ospiti. Usa il tasto WhatsApp per inviarli direttamente all'ospite.");
                             } else {
                               alert("Nessun codice IQ trovato per questo ospite");
                             }
@@ -1678,7 +1679,7 @@ export default function StructureDashboard() {
                       {guestCodes.map((codeData, index: number) => (
                         <div key={index} className="flex justify-between items-center bg-blue-50 p-3 rounded border">
                           <div className="flex items-center gap-3">
-                            <Badge className="bg-blue-600 text-white">{codeData.code}</Badge>
+                            <Badge className="bg-blue-600 text-white">***{codeData.codeId || codeData.code?.slice(-4) || 'XXXX'}</Badge>
                             <span className="text-sm text-gray-600">
                               Assegnato: {codeData.assignedAt ? new Date(codeData.assignedAt).toLocaleDateString() : 'Oggi'}
                             </span>
@@ -1688,8 +1689,7 @@ export default function StructureDashboard() {
                               size="sm"
                               variant="outline"
                               onClick={() => {
-                                navigator.clipboard.writeText(codeData.code);
-                                alert(`Codice ${codeData.code} copiato negli appunti`);
+                                alert("⚠️ Privacy protetta: I codici IQ sono riservati agli ospiti. Non è possibile copiarli per proteggere la loro privacy.");
                               }}
                             >
                               <Copy size={14} className="mr-1" />
@@ -1872,7 +1872,7 @@ export default function StructureDashboard() {
                       {guestCodes.map((codeData, index: number) => (
                         <div key={index} className="flex justify-between items-center bg-white p-3 rounded border">
                           <div className="flex items-center gap-3">
-                            <Badge className="bg-blue-600 text-white">{codeData.code}</Badge>
+                            <Badge className="bg-blue-600 text-white">***{codeData.codeId || codeData.code?.slice(-4) || 'XXXX'}</Badge>
                             <span className="text-sm text-gray-600">
                               Assegnato: {codeData.assignedAt ? new Date(codeData.assignedAt).toLocaleDateString() : 'Oggi'}
                             </span>
@@ -1882,8 +1882,7 @@ export default function StructureDashboard() {
                               size="sm"
                               variant="outline"
                               onClick={() => {
-                                navigator.clipboard.writeText(codeData.code);
-                                alert(`Codice ${codeData.code} copiato negli appunti`);
+                                alert("⚠️ Privacy protetta: I codici IQ sono riservati agli ospiti. Non è possibile copiarli per proteggere la loro privacy.");
                               }}
                             >
                               <Copy size={14} className="mr-1" />

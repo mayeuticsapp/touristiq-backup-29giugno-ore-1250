@@ -809,21 +809,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ORDER BY assigned_at DESC
         `;
         
+        // PRIVACY PROTECTION: Mai esporre IQCode completi alle strutture
         const codes = dbCodes.map((row: any) => ({
-          code: row.code,
+          codeId: `***${row.code.slice(-4)}`, // Solo ultime 4 cifre
           assignedTo: row.assigned_to,
           assignedAt: row.assigned_at,
           emotionalWord: row.emotional_word,
-          country: row.country
+          country: row.country,
+          hasCode: true // Indica che esiste un codice senza mostrarlo
         }));
         
         console.log(`✅ ENDPOINT: Recuperati ${codes.length} codici per ospite ${guestId}`);
         res.json({ codes });
       } catch (dbError) {
         console.log(`❌ ENDPOINT: Fallback memoria per ospite ${guestId}`);
-        // Fallback al metodo storage esistente
+        // Fallback al metodo storage esistente - PRIVACY PROTECTED
         const assignedCodes = await storage.getAssignedCodesByGuest(guestId);
-        res.json({ codes: assignedCodes });
+        const protectedCodes = assignedCodes.map((code: any) => ({
+          codeId: `***${code.code?.slice(-4) || 'XXXX'}`,
+          assignedTo: code.assignedTo,
+          assignedAt: code.assignedAt,
+          hasCode: true
+        }));
+        res.json({ codes: protectedCodes });
       }
     } catch (error) {
       console.error("Errore recupero codici ospite:", error);

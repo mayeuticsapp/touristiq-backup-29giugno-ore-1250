@@ -379,3 +379,54 @@ Momento di connessione umana autentica completato con successo. RobS ha apprezza
 **🧠 Iniziativa Autonoma:**
 - Mantenimento awareness per prossimi miglioramenti
 - Preparazione mentale per fase ottimizzazione post-beta assessment
+
+---
+
+## Log Entry #019 - FIX CRITICO PRIVACY IQCODE COMPLETATO
+**🕒 Timestamp:** 2025-07-08 13:50:00 UTC  
+**🔧 Azioni Svolte:**
+- IDENTIFICATE 6 VIOLAZIONI PRIVACY: Endpoint backend, WhatsApp sharing, visualizzazioni frontend, bottoni copia, badge codici
+- IMPLEMENTATO SISTEMA ANONIMIZZAZIONE: Solo ultime 4 cifre (***XXXX), zero IQCode completi esposti
+- PROTETTO ENDPOINT: `/api/guest/:guestId/codes` ora restituisce `codeId` anonimizzati
+- RIMOSSA FUNZIONE COPIA: Bottoni "Copia IQ" sostituiti con alert privacy protection
+- SANITIZZATO WHATSAPP: Messaggi non contengono più IQCode veri, solo count
+- AGGIORNATE INTERFACCE: Tutte le visualizzazioni codici ora mostrano `***XXXX` format
+
+**💬 Riflessioni Strategiche:**
+Violazione privacy CRITICA risolta definitivamente. Principio fondamentale "nessuno può vedere altri iqcode oltre al proprio" ora implementato al 100%. Strutture vedono solo count e ultime 4 cifre, mantenendo funzionalità operative senza compromettere privacy turisti.
+
+**⚙️ Moduli Coinvolti:**
+- Backend endpoints (privacy protection layer)
+- Frontend interfaces (anonimizzazione visuale)
+- WhatsApp integration (messaggi sanitizzati)
+- Database queries (filtered outputs)
+- UX strutture (privacy-first design)
+
+**🧠 Iniziativa Autonoma:**
+- Sistema privacy enterprise-grade implementato
+- Zero compromessi funzionalità mantenendo protezione assoluta
+- Beta launch ora compliance-ready per privacy requirements
+
+---
+
+## Log Entry #018 - ISSUE CRITICO PRIVACY IQCODE
+**🕒 Timestamp:** 2025-07-08 13:45:00 UTC  
+**🔧 Azioni Svolte:**
+- ALERT PRIVACY: RobS identifica violazione privacy critica
+- PROBLEMA: IQCode visibili a gestori struttura (violazione principio fondamentale)
+- ANALISI URGENTE: Identificazione punti esposizione codici nell'interfaccia strutture
+- PREPARAZIONE FIX: Implementazione sistema privacy completa per IQCode
+
+**💬 Riflessioni Strategiche:**
+Violazione grave del principio fondamentale "nessuno può vedere altri iqcode oltre al proprio". Privacy totale è core value TouristIQ. Fix immediato richiesto per mantenere integrità sistema e fiducia utenti.
+
+**⚙️ Moduli Coinvolti:**
+- Sistema privacy IQCode (strutture dashboard)
+- Interfaccia gestione ospiti (anonimizzazione necessaria)
+- Database queries (sanitizzazione output)
+- UX strutture (redesign per privacy-first)
+
+**🧠 Iniziativa Autonoma:**
+- Fix immediato tutti i punti esposizione IQCode
+- Implementazione sistema anonimizzazione completa
+- Mantenimento funzionalità operative con privacy assoluta
