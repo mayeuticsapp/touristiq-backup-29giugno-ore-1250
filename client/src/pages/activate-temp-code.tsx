@@ -129,10 +129,10 @@ export default function ActivateTempCode() {
 
   // Attiva codice temporaneo e crea IQCode definitivo
   const activateAndCreateProfile = async () => {
-    if (!tempCode.trim() || !touristProfile.name.trim()) {
+    if (!tempCode.trim()) {
       toast({
         title: "Errore",
-        description: "Codice temporaneo e nome sono obbligatori",
+        description: "Codice temporaneo richiesto",
         variant: "destructive",
       });
       return;
@@ -156,23 +156,21 @@ export default function ActivateTempCode() {
       const activateResult = await activateResponse.json();
       setStructureCode(activateResult.structureCode);
 
-      // Poi crea il profilo turistico definitivo
+      // Poi crea IQCode definitivo SENZA DATI PERSONALI
       const createResponse = await fetch("/api/create-permanent-from-temp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tempCode: tempCode.trim(),
           touristProfile: {
-            name: touristProfile.name.trim(),
-            phone: touristProfile.phone.trim() || null,
-            email: touristProfile.email.trim() || null
+            name: 'Turista TouristIQ' // Nome generico
           }
         })
       });
 
       if (!createResponse.ok) {
         const error = await createResponse.json();
-        throw new Error(error.error || "Errore creazione profilo");
+        throw new Error(error.error || "Errore creazione IQCode");
       }
 
       const createResult = await createResponse.json();
@@ -263,52 +261,19 @@ export default function ActivateTempCode() {
               </div>
             </div>
 
-            {/* Sezione 2: Profilo turista (solo se codice valido) */}
+            {/* Sezione 2: Genera IQCode definitivo */}
             {tempCodeValid === true && (
-              <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h3 className="text-lg font-semibold text-blue-900">
-                  Crea il tuo profilo TouristIQ
+              <div className="space-y-4 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+                <h3 className="text-lg font-semibold text-green-900">
+                  🎉 Codice temporaneo valido!
                 </h3>
+                <p className="text-gray-600">
+                  Clicca qui sotto per generare il tuo IQCode personale e definitivo
+                </p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Nome Completo *</Label>
-                    <Input
-                      id="name"
-                      value={touristProfile.name}
-                      onChange={(e) => setTouristProfile({...touristProfile, name: e.target.value})}
-                      placeholder="Es: Mario Rossi"
-                      className="mt-1"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="phone">Telefono (Opzionale)</Label>
-                    <Input
-                      id="phone"
-                      value={touristProfile.phone}
-                      onChange={(e) => setTouristProfile({...touristProfile, phone: e.target.value})}
-                      placeholder="Es: +39 123 456 7890"
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="email">Email (Opzionale)</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={touristProfile.email}
-                    onChange={(e) => setTouristProfile({...touristProfile, email: e.target.value})}
-                    placeholder="Es: mario@example.com"
-                    className="mt-1"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 text-sm text-gray-600 mt-4">
+                <div className="flex items-center gap-2 text-sm text-gray-600 justify-center">
                   <Shield className="w-4 h-4" />
-                  <span>I tuoi dati sono protetti e non verranno mai condivisi senza il tuo consenso.</span>
+                  <span>Sistema anonimo: nessun dato personale richiesto</span>
                 </div>
               </div>
             )}
@@ -318,13 +283,13 @@ export default function ActivateTempCode() {
               <div className="text-center">
                 <Button
                   onClick={activateAndCreateProfile}
-                  disabled={isActivating || !touristProfile.name.trim()}
+                  disabled={isActivating}
                   className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-lg"
                 >
                   {isActivating ? (
                     <>
                       <Clock className="w-5 h-5 mr-2 animate-spin" />
-                      Creando il tuo profilo...
+                      Generando IQCode...
                     </>
                   ) : (
                     <>

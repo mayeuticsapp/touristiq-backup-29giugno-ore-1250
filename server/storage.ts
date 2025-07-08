@@ -2796,10 +2796,30 @@ class ExtendedPostgreStorage extends PostgreStorage {
       return { iqCode: '', success: false };
     }
 
-    // Genera IQCode emozionale definitivo
-    const iqCode = await this.generateEmotionalIQCode(tempCodeData.structureCode, 0, touristProfile.name || 'Turista');
+    // GENERA IQCODE DIRETTAMENTE SENZA PACCHETTI
+    const uniqueCode = this.generateDirectEmotionalCode();
+    const guestName = touristProfile.name || 'Turista';
     
-    return { iqCode: iqCode.code, success: true };
+    // Crea IQCode direttamente nella tabella principale
+    await this.db.insert(iqCodes).values({
+      code: uniqueCode,
+      role: 'tourist',
+      isActive: true,
+      status: 'approved',
+      assignedTo: guestName,
+      location: 'IT',
+      codeType: 'emotional',
+      createdAt: new Date(),
+    });
+    
+    return { iqCode: uniqueCode, success: true };
+  }
+
+  // GENERA CODICE EMOZIONALE DIRETTO
+  private generateDirectEmotionalCode(): string {
+    const emotions = ['MARE', 'SOLE', 'LUNA', 'STELLA', 'AURORA', 'VERDE', 'AZZURRO', 'DORATO', 'ROSSO', 'BIANCO', 'NERO', 'VIOLA', 'ROSA', 'GIALLO', 'BLU'];
+    const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
+    return `TIQ-IT-${randomEmotion}`;
   }
 
   // Cleanup automatico rimosso: i codici temporanei non scadono più

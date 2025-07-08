@@ -53,8 +53,8 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
     { icon: <Settings size={20} />, label: "Gestione Utenti", href: "/admin/user-management", external: true },
     { icon: <Trash2 size={20} />, label: "Cestino", href: "/admin/trash", onClick: () => setActiveView("trash") },
     { icon: <QrCode size={20} />, label: "Codici Generati", href: "/admin/iqcodes", onClick: () => setActiveView("iqcodes") },
-    { icon: <Package size={20} />, label: "Genera Diretto", href: "/admin/generate-direct", onClick: () => setActiveView("generate-direct") },
-    { icon: <Package size={20} />, label: "Assegna Pacchetti", href: "/admin/assign-iqcodes", onClick: () => setActiveView("assign-iqcodes") },
+
+    { icon: <Package size={20} />, label: "Assegna Codici Temporanei", href: "/admin/assign-iqcodes", onClick: () => setActiveView("assign-iqcodes") },
     { icon: <CreditCard size={20} />, label: "Gestione Ricariche", href: "/admin/recharges", onClick: () => setActiveView("recharges") },
     { icon: <TrendingUp size={20} />, label: "Report", href: "/admin/reports", onClick: () => setActiveView("reports") },
     { icon: <BarChart3 size={20} />, label: "Statistiche", href: "/admin/stats", onClick: () => setActiveView("stats") },
@@ -166,11 +166,10 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
                   size="sm" 
                   variant="outline" 
                   className="text-blue-600 border-blue-600 hover:bg-blue-100"
-                  onClick={() => setActiveView("generate-direct")}
-                  disabled={adminCredits.creditsRemaining <= 0}
+                  onClick={() => setActiveView("assign-iqcodes")}
                 >
                   <Package size={16} className="mr-1" />
-                  Genera IQCode Diretto
+                  Assegna Codici Temporanei
                 </Button>
                 <Button 
                   size="sm" 
@@ -284,12 +283,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
       {activeView === "users" && <SimpleUsersManagement />}
       {activeView === "trash" && <TrashManagement />}
       {activeView === "iqcodes" && <CodesManagement />}
-      {activeView === "generate-direct" && (
-        <DirectGenerationView 
-          adminCredits={adminCredits}
-          onRefreshCredits={fetchAdminCredits}
-        />
-      )}
+
       {activeView === "assign-iqcodes" && (
         <AssignPackagesView 
           targetType={targetType}
@@ -1205,7 +1199,7 @@ function AssignPackagesView({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Assegna Pacchetti IQCode</CardTitle>
+        <CardTitle>Assegna Pacchetti Codici Temporanei</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1252,10 +1246,10 @@ function AssignPackagesView({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="25">25 crediti</SelectItem>
-                <SelectItem value="50">50 crediti</SelectItem>
-                <SelectItem value="75">75 crediti</SelectItem>
-                <SelectItem value="100">100 crediti</SelectItem>
+                <SelectItem value="25">25 codici temporanei</SelectItem>
+                <SelectItem value="50">50 codici temporanei</SelectItem>
+                <SelectItem value="75">75 codici temporanei</SelectItem>
+                <SelectItem value="100">100 codici temporanei</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -1266,7 +1260,7 @@ function AssignPackagesView({
           disabled={isAssigning || !targetId}
           className="w-full"
         >
-          {isAssigning ? 'Assegnazione in corso...' : 'Assegna Pacchetto'}
+          {isAssigning ? 'Assegnazione in corso...' : 'Assegna Pacchetto Codici Temporanei'}
         </Button>
       </CardContent>
     </Card>
@@ -1274,202 +1268,7 @@ function AssignPackagesView({
 }
 
 // Componente per generazione diretta IQCode dal Pacchetto RobS
-function DirectGenerationView({ adminCredits, onRefreshCredits }: { adminCredits: any; onRefreshCredits: () => void }) {
-  const [codeType, setCodeType] = useState<'emotional' | 'professional'>('emotional');
-  const [role, setRole] = useState<'tourist' | 'structure' | 'partner'>('tourist');
-  const [country, setCountry] = useState('IT');
-  const [province, setProvince] = useState('VV');
-  const [assignedTo, setAssignedTo] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [lastGenerated, setLastGenerated] = useState<string | null>(null);
-
-  const handleGenerate = async () => {
-    if (!assignedTo.trim()) {
-      alert('Inserisci il nome del destinatario');
-      return;
-    }
-
-    if (codeType === 'emotional' && adminCredits?.creditsRemaining <= 0) {
-      alert('Pacchetto RobS esaurito. Non puoi generare codici emozionali.');
-      return;
-    }
-
-    setIsGenerating(true);
-    try {
-      const response = await fetch('/api/genera-iqcode', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          codeType,
-          role,
-          country: codeType === 'emotional' ? country : undefined,
-          province: codeType === 'professional' ? province : undefined,
-          assignedTo: assignedTo.trim()
-        })
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setLastGenerated(result.code);
-        alert(`IQCode generato con successo: ${result.code}`);
-        onRefreshCredits(); // Aggiorna il saldo
-        setAssignedTo('');
-      } else {
-        const error = await response.json();
-        alert(`Errore: ${error.message}`);
-      }
-    } catch (error) {
-      alert('Errore nella generazione del codice');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Package size={20} />
-          Generazione Diretta IQCode - Pacchetto RobS
-          <Badge variant="outline" className="bg-blue-50 text-blue-700">
-            Uso Interno Admin
-          </Badge>
-        </CardTitle>
-        <p className="text-sm text-gray-600">
-          Genera IQCode direttamente dal tuo pacchetto personale da 1000 crediti
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Saldo visibile */}
-        {adminCredits && (
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Crediti rimanenti:</span>
-              <span className="text-xl font-bold text-green-600">
-                {adminCredits.creditsRemaining} / 1000
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-              <div 
-                className="bg-green-500 h-2 rounded-full" 
-                style={{ width: `${(adminCredits.creditsRemaining / 1000) * 100}%` }}
-              ></div>
-            </div>
-          </div>
-        )}
-
-        {/* Form di generazione */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="codeType">Tipo Codice</Label>
-            <Select value={codeType} onValueChange={(val: 'emotional' | 'professional') => setCodeType(val)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="emotional">Emozionale (scala crediti)</SelectItem>
-                <SelectItem value="professional">Professionale (illimitato)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="role">Ruolo Utente</Label>
-            <Select value={role} onValueChange={(val: 'tourist' | 'structure' | 'partner') => setRole(val)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="tourist">Turista</SelectItem>
-                <SelectItem value="structure">Struttura</SelectItem>
-                <SelectItem value="partner">Partner</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {codeType === 'emotional' ? (
-            <div>
-              <Label htmlFor="country">Paese</Label>
-              <Select value={country} onValueChange={setCountry}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="IT">🇮🇹 Italia</SelectItem>
-                  <SelectItem value="FR">🇫🇷 Francia</SelectItem>
-                  <SelectItem value="ES">🇪🇸 Spagna</SelectItem>
-                  <SelectItem value="DE">🇩🇪 Germania</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          ) : (
-            <div>
-              <Label htmlFor="province">Provincia</Label>
-              <Select value={province} onValueChange={setProvince}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="VV">Vibo Valentia</SelectItem>
-                  <SelectItem value="RC">Reggio Calabria</SelectItem>
-                  <SelectItem value="CS">Cosenza</SelectItem>
-                  <SelectItem value="CZ">Catanzaro</SelectItem>
-                  <SelectItem value="KR">Crotone</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="md:col-span-2">
-            <Label htmlFor="assignedTo">Assegnato a</Label>
-            <Input
-              value={assignedTo}
-              onChange={(e) => setAssignedTo(e.target.value)}
-              placeholder="Nome destinatario del codice IQ"
-            />
-          </div>
-        </div>
-
-        {/* Avvisi */}
-        {codeType === 'emotional' && (
-          <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg">
-            <p className="text-sm text-orange-700">
-              ⚠️ I codici emozionali scalano dal tuo Pacchetto RobS ({adminCredits?.creditsRemaining || 0} rimanenti)
-            </p>
-          </div>
-        )}
-
-        {codeType === 'professional' && (
-          <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
-            <p className="text-sm text-green-700">
-              ✅ I codici professionali sono illimitati e non scalano crediti
-            </p>
-          </div>
-        )}
-
-        {/* Ultimo codice generato */}
-        {lastGenerated && (
-          <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
-            <p className="text-sm text-blue-700">
-              🎯 Ultimo codice generato: <span className="font-mono font-bold">{lastGenerated}</span>
-            </p>
-          </div>
-        )}
-
-        {/* Pulsante generazione */}
-        <Button 
-          onClick={handleGenerate}
-          disabled={isGenerating || (codeType === 'emotional' && adminCredits?.creditsRemaining <= 0)}
-          className="w-full"
-          size="lg"
-        >
-          {isGenerating ? 'Generazione in corso...' : 'Genera IQCode'}
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
+// COMPONENTE RIMOSSO: Admin ora assegna solo pacchetti di codici temporanei
 
 function SettingsView() {
   return (
