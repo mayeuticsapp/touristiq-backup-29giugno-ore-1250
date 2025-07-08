@@ -475,7 +475,7 @@ export default function StructureDashboard() {
       return;
     }
 
-    const message = `🏨 Benvenuto!\nIl tuo codice TouristIQ è: *${assignedCode}*\n\nScoprilo nei migliori locali della zona per sconti esclusivi!`;
+    const message = `🏨 Benvenuto!\nTi è stato assegnato un codice TouristIQ speciale riservato e personale!\n\nConservalo al sicuro e usalo presso i nostri partner per ottenere sconti esclusivi durante il tuo soggiorno! 🌟`;
     const whatsappUrl = `https://wa.me/${justCreatedGuest.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
 
     // Apri WhatsApp
@@ -578,7 +578,7 @@ export default function StructureDashboard() {
       return;
     }
 
-    const message = `🏨 ${structureData?.name || 'Hotel'}\n\n✨ Il tuo codice sconto personale: *${code}*\n\n🎉 Ciao ${guest.firstName}! Ecco il tuo codice IQ per scoprire sconti esclusivi nei migliori locali della zona.\n\n📱 Usa questo codice per ottenere vantaggi speciali durante il tuo soggiorno!\n\n🌟 Buon divertimento!`;
+    const message = `🏨 ${structureData?.name || 'Hotel'}\n\n✨ Il tuo codice sconto personale è stato assegnato!\n\n🎉 Ciao ${guest.firstName}! Ti abbiamo riservato un codice IQ speciale per scoprire sconti esclusivi nei migliori locali della zona.\n\n📱 Il codice è riservato e personale - conservalo al sicuro e mostralo direttamente ai partner per ottenere i tuoi vantaggi!\n\n🌟 Buon divertimento!`;
 
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
@@ -1175,7 +1175,7 @@ export default function StructureDashboard() {
 
               {assignedCode && (
                 <div className="mt-3 p-2 bg-white border rounded font-mono text-sm">
-                  Codice assegnato: <strong>{assignedCode}</strong>
+                  Codice assegnato: <strong>***{assignedCode.slice(-4)}</strong> (privacy protetta)
                 </div>
               )}
             </div>
