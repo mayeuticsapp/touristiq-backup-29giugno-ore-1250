@@ -1839,6 +1839,14 @@ class ExtendedPostgreStorage extends PostgreStorage {
   }
 
   // Metodi per sistema ricarica IQCode
+  async createIqCode(iqCodeData: any): Promise<any> {
+    const [created] = await this.db
+      .insert(iqCodes)
+      .values(iqCodeData)
+      .returning();
+    return created;
+  }
+
   async createIqcodeRecharge(recharge: any): Promise<any> {
     const [created] = await this.db
       .insert(iqcodeRecharges)

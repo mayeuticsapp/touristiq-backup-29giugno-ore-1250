@@ -322,8 +322,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase();
         const tempCode = `IQCODE-PRIMOACCESSO-${randomSuffix}`;
         
-        // Crea direttamente nella tabella temporaryCodes
+        // Crea sia nella tabella temporaryCodes che in iqCodes per compatibilità
         await storage.createTempCode(tempCode, session.iqCode);
+        
+        // Crea anche nella tabella principale per visibilità admin
+        await storage.createIqCode({
+          code: tempCode,
+          role: role,
+          isActive: true,
+          status: 'approved',
+          assignedTo: assignedTo || `Codice temporaneo generato da ${session.iqCode}`,
+          location: 'IT',
+          codeType: 'temporary',
+          createdAt: new Date(),
+        });
         
         res.json({ 
           success: true, 

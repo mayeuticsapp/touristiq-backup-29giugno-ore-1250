@@ -163,7 +163,12 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
                   className="w-5 h-5 text-blue-600 cursor-help" 
                   aria-label="Cos'è il Custode del Codice?"
                 />
-                <div className="absolute right-0 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                {/* Tooltip per desktop */}
+                <div className="absolute right-0 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 hidden md:block">
+                  {tooltipText}
+                </div>
+                {/* Tooltip per mobile - tap/click */}
+                <div className="absolute right-0 bottom-full mb-2 w-64 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-0 group-active:opacity-100 transition-opacity duration-200 pointer-events-none z-10 md:hidden">
                   {tooltipText}
                 </div>
               </div>
