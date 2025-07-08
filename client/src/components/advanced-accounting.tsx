@@ -80,12 +80,12 @@ interface Movement {
 interface AdvancedAccountingProps {
   structureCode: string;
   hasAccess: boolean;
+  onBackToDashboard?: () => void;
 }
 
-export function AdvancedAccounting({ structureCode, hasAccess }: AdvancedAccountingProps) {
+export function AdvancedAccounting({ structureCode, hasAccess, onBackToDashboard }: AdvancedAccountingProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [, setLocation] = useLocation();
   
   // Fetch movements from database
   const { data: movements = [], isLoading } = useQuery<Movement[]>({
@@ -374,9 +374,9 @@ export function AdvancedAccounting({ structureCode, hasAccess }: AdvancedAccount
 
   // Function to go back to structure dashboard
   const goBackToDashboard = () => {
-    // Extract structure ID from structureCode (e.g., TIQ-VV-STT-8648 -> 8648)
-    const structureId = structureCode.split('-').pop();
-    setLocation(`/structure/${structureId}`);
+    if (onBackToDashboard) {
+      onBackToDashboard();
+    }
   };
 
   return (

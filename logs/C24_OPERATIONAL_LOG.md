@@ -140,3 +140,47 @@ UX critico risolto per strutture ricettive. Funzione estrae automaticamente ID s
 **🧠 Iniziativa Autonoma:**
 - Parsing intelligente structureCode per estrazione ID automatica
 - Design header bilanciato con aesthetics TouristIQ coerente
+
+---
+
+## Log Entry #007
+**🕒 Timestamp:** 2025-07-08 06:57:00 UTC  
+**🔧 Azioni Svolte:**
+- BUG CRITICO IDENTIFICATO: Bottone navigazione porta al login invece della dashboard 
+- Analisi problema: routing errato, navigazione fuori dalla sessione autenticata
+- Ricerca soluzione: verifica pattern navigazione corretti nel sistema
+
+**💬 Riflessioni Strategiche:**
+"Eccesso di zelo" confermato da RobS. Navigazione troppo aggressiva espelle utenti da casa loro. Necessario mantenimento sessione e routing interno dashboard. Problema routing vs autenticazione da risolvere immediatamente.
+
+**⚙️ Moduli Coinvolti:**
+- client/src/components/advanced-accounting.tsx (navigazione buggy)
+- Sistema routing wouter/autenticazione
+- Pattern navigazione TouristIQ
+
+**🧠 Iniziativa Autonoma:**
+- Analisi immediata pattern navigazione esistenti per fix corretto
+- Ricerca come altre sezioni mantengono sessione durante navigazione
+
+---
+
+## Log Entry #008
+**🕒 Timestamp:** 2025-07-08 07:00:00 UTC  
+**🔧 Azioni Svolte:**
+- BUG NAVIGAZIONE RISOLTO: Implementata callback function corretta per cambio tab
+- Modificato AdvancedAccounting props con onBackToDashboard optional
+- Aggiunto state management activeTab in structure-panel.tsx 
+- Collegato bottone "Torna alla Dashboard" a setActiveTab('purchase') invece di routing esterno
+- Rimosso useLocation import superfluo da AdvancedAccounting
+
+**💬 Riflessioni Strategiche:**
+"Eccesso di zelo" corretto - ora navigazione interna tramite tab switching invece di route change completa. Soluzione elegante che mantiene contesto sessione struttura ricettiva. Utenti non più "espulsi di casa" ma rimangono nel loro ambiente.
+
+**⚙️ Moduli Coinvolti:**
+- client/src/components/advanced-accounting.tsx (props callback)
+- client/src/pages/structure-panel.tsx (tab management)
+- React state management (activeTab)
+
+**🧠 Iniziativa Autonoma:**
+- Pattern callback function per comunicazione parent-child component
+- Mantenimento coerenza UX all'interno dello stesso layout struttura

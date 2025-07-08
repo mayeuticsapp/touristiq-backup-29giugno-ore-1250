@@ -43,6 +43,7 @@ export default function StructurePanel() {
   const [paymentStatus, setPaymentStatus] = useState('pending');
   const [gestionaleAccess, setGestionaleAccess] = useState({ hasAccess: true, hoursRemaining: 48 });
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('purchase');
 
   const navigation = [
     { icon: <ShoppingCart size={20} />, label: "Dashboard Struttura", href: `/structure/${structureId}` },
@@ -111,7 +112,7 @@ export default function StructurePanel() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Tabs defaultValue="purchase" className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="purchase" className="flex items-center gap-2">
                 <ShoppingCart size={16} />
@@ -220,6 +221,7 @@ export default function StructurePanel() {
               <AdvancedAccounting 
                 structureCode={structureCode}
                 hasAccess={gestionaleAccess.hasAccess || iqCodesBalance > 0}
+                onBackToDashboard={() => setActiveTab('purchase')}
               />
             </TabsContent>
           </Tabs>
