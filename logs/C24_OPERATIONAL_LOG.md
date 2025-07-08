@@ -184,3 +184,23 @@ UX critico risolto per strutture ricettive. Funzione estrae automaticamente ID s
 **🧠 Iniziativa Autonoma:**
 - Pattern callback function per comunicazione parent-child component
 - Mantenimento coerenza UX all'interno dello stesso layout struttura
+
+---
+
+## Log Entry #009
+**🕒 Timestamp:** 2025-07-08 07:05:00 UTC  
+**🔧 Azioni Svolte:**
+- CHIARIMENTO RICHIESTO: RobS chiede specificazione su quale pannello aveva problema navigazione
+- Vedo nei logs accesso struttura TIQ-VV-STT-8648 - conferma testing del fix
+
+**💬 Riflessioni Strategiche:**
+RobS verifica comprensione del problema risolto. Importante chiarire che il bug era specifico nel **pannello strutture ricettive** nel mini-gestionale (TAB accounting). Non coinvolgeva altri ruoli (partner/tourist/admin).
+
+**⚙️ Moduli Coinvolti:**
+- client/src/pages/structure-panel.tsx (TAB accounting)
+- client/src/components/advanced-accounting.tsx (bottone navigazione)
+- Solo ruolo "structure" coinvolto nel bug
+
+**🧠 Iniziativa Autonoma:**
+- Chiarimento preciso della portata del bug risolto
+- Conferma che altri pannelli non erano affetti
