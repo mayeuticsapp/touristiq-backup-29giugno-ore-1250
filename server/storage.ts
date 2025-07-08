@@ -2789,16 +2789,15 @@ class ExtendedPostgreStorage extends PostgreStorage {
   }
 
   async isTempCodeValid(tempCode: string): Promise<boolean> {
-    const { isNull } = await import('drizzle-orm');
-    
+    // I codici temporanei sono salvati nella tabella principale iq_codes con codeType='temporary'
     const [tempCodeData] = await this.db
       .select()
-      .from(temporaryCodes)
+      .from(iqCodes)
       .where(
         and(
-          eq(temporaryCodes.tempCode, tempCode),
-          // Rimosso controllo scadenza: gt(temporaryCodes.expiresAt, now),
-          isNull(temporaryCodes.usedAt)
+          eq(iqCodes.code, tempCode),
+          eq(iqCodes.codeType, 'temporary'),
+          eq(iqCodes.isActive, true)
         )
       );
 
