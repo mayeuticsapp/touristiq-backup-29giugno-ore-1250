@@ -14,6 +14,13 @@ export interface LoginResponse {
 
 export async function login(iqCode: string): Promise<LoginResponse> {
   const response = await apiRequest("POST", "/api/auth/login", { iqCode });
+  
+  // Gestione redirect per codici temporanei
+  if (response.status === 307) {
+    const redirectData = await response.json();
+    throw new Error(JSON.stringify(redirectData));
+  }
+  
   return response.json();
 }
 

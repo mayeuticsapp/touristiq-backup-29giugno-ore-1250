@@ -61,6 +61,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { iqCode } = loginSchema.parse(req.body);
       
+      // 🔍 CONTROLLO PRIORITARIO: Intercetta codici temporanei
+      if (iqCode.toLowerCase().startsWith('iqcode-primoaccesso-')) {
+        console.log(`🔍 TEMP CODE DETECTED: ${iqCode}`);
+        return res.status(307).json({ 
+          redirect: '/activate-temp-code',
+          tempCode: iqCode // Mantiene formato originale
+        });
+      }
+      
       const iqCodeRecord = await storage.getIqCodeByCode(iqCode.toUpperCase());
       
       if (!iqCodeRecord) {

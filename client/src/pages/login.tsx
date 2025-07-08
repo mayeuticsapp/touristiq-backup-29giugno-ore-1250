@@ -119,7 +119,9 @@ export default function Login() {
     setError("");
 
     try {
-      const response = await login(trimmedCode.toUpperCase());
+      // Non trasformare in maiuscolo i codici temporanei
+      const codeToSend = isTemporaryCode(trimmedCode) ? trimmedCode : trimmedCode.toUpperCase();
+      const response = await login(codeToSend);
 
 
       // Salva codice IQ se richiesto
