@@ -2761,18 +2761,16 @@ class ExtendedPostgreStorage extends PostgreStorage {
     return tempCode;
   }
 
-  async activateTempCode(tempCode: string): Promise<{ success: boolean; tempCodeData?: TemporaryCode }> {
-    const now = new Date();
-    const { isNull } = await import('drizzle-orm');
-    
+  async activateTempCode(tempCode: string): Promise<{ success: boolean; tempCodeData?: any }> {
+    // I codici temporanei sono ora nella tabella principale iq_codes
     const [tempCodeData] = await this.db
       .select()
-      .from(temporaryCodes)
+      .from(iqCodes)
       .where(
         and(
-          eq(temporaryCodes.tempCode, tempCode),
-          // Rimosso controllo scadenza: gt(temporaryCodes.expiresAt, now),
-          isNull(temporaryCodes.usedAt)
+          eq(iqCodes.code, tempCode),
+          eq(iqCodes.codeType, 'temporary'),
+          eq(iqCodes.isActive, true)
         )
       );
 
@@ -2780,12 +2778,13 @@ class ExtendedPostgreStorage extends PostgreStorage {
       return { success: false };
     }
 
+    // Segna il codice come utilizzato disattivandolo
     await this.db
-      .update(temporaryCodes)
-      .set({ usedAt: now })
-      .where(eq(temporaryCodes.tempCode, tempCode));
+      .update(iqCodes)
+      .set({ isActive: false })
+      .where(eq(iqCodes.code, tempCode));
 
-    return { success: true, tempCodeData };
+    return { success: true, tempCodeData: { structureCode: tempCodeData.assignedTo } };
   }
 
   async isTempCodeValid(tempCode: string): Promise<boolean> {
@@ -2805,15 +2804,15 @@ class ExtendedPostgreStorage extends PostgreStorage {
   }
 
   async createPermanentFromTemp(tempCode: string, touristProfile: any): Promise<{ iqCode: string; success: boolean }> {
-    const { isNotNull } = await import('drizzle-orm');
-    
+    // Cerca il codice temporaneo nella tabella principale (deve essere già disattivato)
     const [tempCodeData] = await this.db
       .select()
-      .from(temporaryCodes)
+      .from(iqCodes)
       .where(
         and(
-          eq(temporaryCodes.tempCode, tempCode),
-          isNotNull(temporaryCodes.usedAt)
+          eq(iqCodes.code, tempCode),
+          eq(iqCodes.codeType, 'temporary'),
+          eq(iqCodes.isActive, false) // Già attivato/disattivato
         )
       );
 

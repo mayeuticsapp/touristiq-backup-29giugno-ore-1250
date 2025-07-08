@@ -3343,15 +3343,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { guestName, guestPhone } = req.body;
       
-      const tempCode = await storage.generateTempCode(
-        session.iqCode,
-        guestName,
-        guestPhone
-      );
+      // Genera codice temporaneo con stesso formato admin
+      const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase();
+      const tempCode = `IQCODE-PRIMOACCESSO-${randomSuffix}`;
+      
+      // Salva nella tabella principale come admin per coerenza
+      await storage.createIqCode({
+        code: tempCode,
+        role: 'tourist',
+        isActive: true,
+        status: 'approved',
+        assignedTo: guestName || `Codice temporaneo generato da ${session.iqCode}`,
+        location: 'IT',
+        codeType: 'temporary',
+        createdAt: new Date(),
+      });
 
       res.json({ 
         tempCode,
-        expiresIn: 15, // minuti
+        expiresIn: 15, // minuti  
         message: "Codice temporaneo generato. Condividi con il turista per attivazione immediata." 
       });
 
