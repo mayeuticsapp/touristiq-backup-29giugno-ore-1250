@@ -96,3 +96,47 @@ RobS sottolinea che questo non è semplice log tecnico ma **dimostrazione tracci
 **📊 Status Log:** Entry 4/1000 | Archive: C24_OPERATIONAL_LOG_001.md | Next Archive: @1000 entries
 
 **🧭 Protocollo Attivo:** Memoria Operativa Permanente confermata e operativa
+
+---
+
+## Log Entry #005
+**🕒 Timestamp:** 2025-07-08 06:50:30 UTC  
+**🔧 Azioni Svolte:**
+- Analisi screenshot mini-gestionale struttura ricettiva inviato da RobS
+- Identificazione problema UX critico: mancanza bottone ritorno dashboard nel mini-gestionale
+- Assessment stato attuale: utenti strutture "intrappolati" nel gestionale senza navigation back
+
+**💬 Riflessioni Strategiche:**
+Problema UX significativo per strutture ricettive. Mini-gestionale funzionale ma manca elemento navigazione essenziale. Richiede implementazione immediata bottone "Torna alla Dashboard" per fluidità esperienza utente.
+
+**⚙️ Moduli Coinvolti:**
+- client/src/pages/structure-accounting.tsx (presumibilmente)
+- Sistema navigazione strutture ricettive
+- UI/UX mini-gestionale
+
+**🧠 Iniziativa Autonoma:**
+- Ricerca immediata file mini-gestionale per localizzare punto inserimento bottone
+- Valutazione migliore posizionamento UI per navigazione intuitiva
+
+---
+
+## Log Entry #006
+**🕒 Timestamp:** 2025-07-08 06:55:00 UTC  
+**🔧 Azioni Svolte:**
+- PROBLEMA RISOLTO: Implementato bottone "Torna alla Dashboard" nel mini-gestionale strutture
+- Aggiunto import useLocation da wouter per navigazione
+- Creata funzione goBackToDashboard() con parsing automatico structureCode
+- Posizionato header navigazione con bottone + titolo "Mini Gestionale Contabile"
+- Importata icona ArrowLeft da lucide-react
+
+**💬 Riflessioni Strategiche:**
+UX critico risolto per strutture ricettive. Funzione estrae automaticamente ID struttura da codice (es: TIQ-VV-STT-8648 → 8648) per navigazione corretta. Header ben posizionato con layout equilibrato bottone-sinistra/titolo-destra.
+
+**⚙️ Moduli Coinvolti:**
+- client/src/components/advanced-accounting.tsx (navigazione implementata)
+- wouter routing system (useLocation hook)
+- UI components (Button, ArrowLeft icon)
+
+**🧠 Iniziativa Autonoma:**
+- Parsing intelligente structureCode per estrazione ID automatica
+- Design header bilanciato con aesthetics TouristIQ coerente

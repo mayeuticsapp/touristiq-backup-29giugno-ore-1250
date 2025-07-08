@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +25,8 @@ import {
   FileText,
   CreditCard,
   Edit,
-  Trash2
+  Trash2,
+  ArrowLeft
 } from 'lucide-react';
 
 // Categorie predefinite settore turistico
@@ -83,6 +85,7 @@ interface AdvancedAccountingProps {
 export function AdvancedAccounting({ structureCode, hasAccess }: AdvancedAccountingProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   
   // Fetch movements from database
   const { data: movements = [], isLoading } = useQuery<Movement[]>({
@@ -369,8 +372,28 @@ export function AdvancedAccounting({ structureCode, hasAccess }: AdvancedAccount
 
   const currentCategories = formData.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
+  // Function to go back to structure dashboard
+  const goBackToDashboard = () => {
+    // Extract structure ID from structureCode (e.g., TIQ-VV-STT-8648 -> 8648)
+    const structureId = structureCode.split('-').pop();
+    setLocation(`/structure/${structureId}`);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Navigation Header */}
+      <div className="flex items-center justify-between">
+        <Button
+          variant="outline"
+          onClick={goBackToDashboard}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Torna alla Dashboard
+        </Button>
+        <h2 className="text-xl font-semibold text-gray-800">Mini Gestionale Contabile</h2>
+      </div>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
