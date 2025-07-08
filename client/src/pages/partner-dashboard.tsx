@@ -369,7 +369,11 @@ export default function PartnerDashboard() {
   }
 
   if (showMiniGestionale) {
-    return <AdvancedAccounting structureCode="partner" hasAccess={true} />;
+    return <AdvancedAccounting 
+      structureCode="partner" 
+      hasAccess={true} 
+      onBackToDashboard={() => setShowMiniGestionale(false)}
+    />;
   }
 
   return (

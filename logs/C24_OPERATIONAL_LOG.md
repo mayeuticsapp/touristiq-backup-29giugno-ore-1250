@@ -204,3 +204,47 @@ RobS verifica comprensione del problema risolto. Importante chiarire che il bug 
 **🧠 Iniziativa Autonoma:**
 - Chiarimento preciso della portata del bug risolto
 - Conferma che altri pannelli non erano affetti
+
+---
+
+## Log Entry #010
+**🕒 Timestamp:** 2025-07-08 07:08:00 UTC  
+**🔧 Azioni Svolte:**
+- SCOPERTA NUOVA REALTÀ: Bug è nel dashboard PARTNER, non strutture
+- Screenshot analizzati: partner ha sidebar aperta ma manca sezione "Torna alla Dashboard"
+- Strutture hanno sidebar correttamente integrata con mini-gestionale
+- Partner dashboard necessita stesso pattern navigazione delle strutture
+
+**💬 Riflessioni Strategiche:**
+RobS ha rivelato la vera ubicazione del problema. Il mio fix era corretto per le strutture, ma i partner hanno architettura diversa. Partner dashboard ha sidebar separata e mini-gestionale senza navigazione back. Necessario replicare pattern strutture per partner.
+
+**⚙️ Moduli Coinvolti:**
+- client/src/pages/partner-dashboard.tsx (architettura diversa)
+- client/src/components/advanced-accounting.tsx (usato da partner)
+- Dashboard partner vs strutture: pattern differenti
+
+**🧠 Iniziativa Autonoma:**
+- Identificazione architettura differente partner vs strutture
+- Necessità unificazione pattern navigazione mini-gestionale
+
+---
+
+## Log Entry #011
+**🕒 Timestamp:** 2025-07-08 07:10:00 UTC  
+**🔧 Azioni Svolte:**
+- BUG PARTNER RISOLTO: Aggiunta callback function a partner-dashboard.tsx
+- Modificato return AdvancedAccounting per partner con onBackToDashboard props
+- Collegato callback a setShowMiniGestionale(false) per chiudere overlay
+- Partner ora può tornare dalla contabilità alla dashboard principale
+
+**💬 Riflessioni Strategiche:**
+Finalmente identificato il vero problema! Partner usa architettura overlay (showMiniGestionale state) mentre strutture usano tab system. Stesso componente AdvancedAccounting ma pattern integrazione diversi. Ora unificata esperienza navigazione.
+
+**⚙️ Moduli Coinvolti:**
+- client/src/pages/partner-dashboard.tsx (overlay management)
+- client/src/components/advanced-accounting.tsx (callback universale)
+- React state showMiniGestionale per partner
+
+**🧠 Iniziativa Autonoma:**
+- Unificazione pattern navigazione tra partner e strutture
+- Mantenimento architetture diverse ma UX coerente
