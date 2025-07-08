@@ -253,7 +253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Generate IQ Code (Admin only)
   const generateCodeSchema = z.object({
-    codeType: z.enum(["emotional", "professional"]),
+    codeType: z.enum(["emotional", "professional", "temporary"]),
     role: z.enum(["admin", "tourist", "structure", "partner"]),
     country: z.string().optional(),
     province: z.string().optional(),
@@ -280,9 +280,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate request
       const { codeType, role, country, province, assignedTo } = generateCodeSchema.parse(req.body);
       
-      // Determine location based on code type
-      const location = codeType === "emotional" ? country : province;
-      if (!location) {
+      // Determine location based on code type (not needed for temporary codes)
+      const location = codeType === "emotional" ? country : (codeType === "professional" ? province : null);
+      if (!location && codeType !== "temporary") {
         return res.status(400).json({ 
           message: codeType === "emotional" ? "Paese richiesto per codici emozionali" : "Provincia richiesta per codici professionali" 
         });
@@ -314,6 +314,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.decrementAdminCredits(session.iqCode);
         
         res.json(result);
+        return;
+      }
+
+      if (codeType === "temporary") {
+        // CODICI TEMPORANEI - SEMPRE DISPONIBILI (FORMATO IQCODE-PRIMOACCESSO-XXXXX)
+        const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase();
+        const tempCode = `IQCODE-PRIMOACCESSO-${randomSuffix}`;
+        
+        // Crea direttamente nella tabella temporaryCodes
+        await storage.createTempCode(tempCode, session.iqCode);
+        
+        res.json({ 
+          success: true, 
+          code: tempCode,
+          message: "Codice temporaneo generato con successo" 
+        });
         return;
       }
 

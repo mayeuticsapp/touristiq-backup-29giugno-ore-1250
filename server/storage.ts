@@ -2815,11 +2815,12 @@ class ExtendedPostgreStorage extends PostgreStorage {
     return { iqCode: uniqueCode, success: true };
   }
 
-  // GENERA CODICE EMOZIONALE DIRETTO
+  // GENERA CODICE EMOZIONALE DIRETTO CON FORMATO TERRITORIALE
   private generateDirectEmotionalCode(): string {
-    const emotions = ['MARE', 'SOLE', 'LUNA', 'STELLA', 'AURORA', 'VERDE', 'AZZURRO', 'DORATO', 'ROSSO', 'BIANCO', 'NERO', 'VIOLA', 'ROSA', 'GIALLO', 'BLU'];
-    const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
-    return `TIQ-IT-${randomEmotion}`;
+    const territories = ['COLOSSEO', 'PANTHEON', 'FONTANA', 'VATICANO', 'PIAZZA', 'TORRE', 'CASTELLO', 'DUOMO', 'PONTE', 'VILLA', 'PARCO', 'MUSEO', 'TEATRO', 'PALAZZO', 'CHIESA'];
+    const randomTerritory = territories[Math.floor(Math.random() * territories.length)];
+    const randomDigits = Math.floor(Math.random() * 9000) + 1000; // Genera 4 cifre (1000-9999)
+    return `IQ-IT-${randomDigits}-${randomTerritory}`;
   }
 
   // Cleanup automatico rimosso: i codici temporanei non scadono più
