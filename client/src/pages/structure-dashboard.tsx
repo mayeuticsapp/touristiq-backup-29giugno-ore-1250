@@ -88,6 +88,12 @@ export default function StructureDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFilter, setSearchFilter] = useState("all");
   const [filteredGuests, setFilteredGuests] = useState<Guest[]>([]);
+  
+  // Stati per sistema codici temporanei privacy-first
+  const [tempGuestName, setTempGuestName] = useState("");
+  const [tempGuestPhone, setTempGuestPhone] = useState("");
+  const [generatedTempCode, setGeneratedTempCode] = useState("");
+  const [isGeneratingTempCode, setIsGeneratingTempCode] = useState(false);
 
   // Recupera dati specifici della struttura
   const { data: structureData, isLoading } = useQuery({
@@ -670,6 +676,55 @@ export default function StructureDashboard() {
     return <div className="p-8">Caricamento dati struttura...</div>;
   }
 
+  // Funzione per generare codice temporaneo privacy-first
+  const handleGenerateTempCode = async () => {
+    if (!tempGuestName.trim()) {
+      alert("Il nome dell'ospite è obbligatorio");
+      return;
+    }
+
+    setIsGeneratingTempCode(true);
+    setGeneratedTempCode("");
+
+    try {
+      const response = await fetch("/api/structure/generate-temp-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          guestName: tempGuestName.trim(),
+          guestPhone: tempGuestPhone.trim() || null
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setGeneratedTempCode(result.tempCode);
+        toast({
+          title: "Codice temporaneo generato",
+          description: "Il codice è valido per 15 minuti. Condividilo immediatamente con l'ospite.",
+        });
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || "Errore generazione codice");
+      }
+    } catch (error) {
+      console.error("Errore generazione codice temporaneo:", error);
+      alert("Errore durante la generazione del codice temporaneo");
+    } finally {
+      setIsGeneratingTempCode(false);
+    }
+  };
+
+  // Funzione per copiare negli appunti
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      alert(`Copiato: ${text}`);
+    }).catch(() => {
+      alert("Errore durante la copia");
+    });
+  };
+
   // Renderizza la sezione gestione IQCode
   const renderIQCodeManagement = () => (
     <div className="space-y-6">
@@ -716,253 +771,78 @@ export default function StructureDashboard() {
         </Card>
       </div>
 
-      {/* Assegnazione Rapida IQCode */}
-      <Card className="warm-panel">
+      {/* Sistema Codici Temporanei Privacy-First */}
+      <Card className="warm-panel border-2 border-green-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserPlus size={20} />
-            Assegna IQCode a Ospite
+            Sistema Privacy-First: Codici Temporanei
           </CardTitle>
+          <p className="text-sm text-gray-600">
+            🔒 Genera codici temporanei single-use per i tuoi ospiti. Nessun IQCode reale viene mai esposto.
+          </p>
         </CardHeader>
         <CardContent>
-          {packagesData?.packages && packagesData.packages.length > 0 ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="selectGuest">Seleziona Ospite Registrato</Label>
-                  <select
-                    id="selectGuest"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    value={selectedGuestId}
-                    onChange={async (e) => {
-                      const guestId = Number(e.target.value);
-                      setSelectedGuestId(guestId);
-                      
-                      // Auto-espansione: apri automaticamente il pannello di gestione dettagliata
-                      if (guestId > 0) {
-                        const guest = guestsData?.guests?.find((g: any) => g.id === guestId);
-                        if (guest) {
-                          setSelectedGuestForManagement(guest);
-                          await loadGuestCodes(guest.id);
-                        }
-                      }
-                    }}
-                  >
-                    <option value={0}>Seleziona un ospite...</option>
-                    {guestsData?.guests?.map((guest: Guest) => (
-                      <option key={guest.id} value={guest.id}>
-                        {guest.firstName} {guest.lastName} - Camera {guest.roomNumber || 'N/A'}
-                      </option>
-                    ))}
-                  </select>
-                  {(!guestsData?.guests || guestsData.guests.length === 0) && (
-                    <p className="text-sm text-orange-600 mt-1">
-                      Nessun ospite registrato. Vai su "Ospiti" per registrarne uno.
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label>Pannello Gestione Ospite</Label>
-                  {selectedGuestId > 0 && guestsData?.guests ? (
-                    (() => {
-                      const guest = guestsData.guests.find((g: any) => g.id === selectedGuestId);
-                      return guest ? (
-                        <div className="border rounded-lg overflow-hidden">
-                          {/* Header Ospite */}
-                          <div className="bg-blue-50 p-3 border-b">
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <h3 className="font-semibold text-blue-900">
-                                  {guest.firstName} {guest.lastName}
-                                </h3>
-                                <p className="text-sm text-blue-600">
-                                  Camera {guest.roomNumber || 'N/A'} • {guest.assignedCodes || 0} codici IQ
-                                </p>
-                              </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={async () => {
-                                    setSelectedGuestForManagement(guest);
-                                    await loadGuestCodes(guest.id);
-                                  }}
-                                  className="text-xs"
-                                >
-                                  <Edit size={14} className="mr-1" />
-                                  Gestisci
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={async () => {
-                                    // Carica i codici dell'ospite per WhatsApp
-                                    const response = await fetch(`/api/guest/${guest.id}/codes`);
-                                    const data = await response.json();
-                                    if (data.codes && data.codes.length > 0) {
-                                      // PRIVACY PROTECTION: Non esporre mai IQCode veri
-                                      if (guest.phone) {
-                                        const privacyMessage = `Ciao ${guest.firstName}! Hai ${data.codes.length} codici IQ speciali per sconti esclusivi durante il soggiorno. I tuoi codici sono riservati e personali - conservali al sicuro! Mostrane uno ai partner TouristIQ per ottenere i tuoi sconti speciali!`;
-                                        const whatsappUrl = `https://wa.me/${guest.phone?.replace(/\+/, '').replace(/\s/g, '')}?text=${encodeURIComponent(privacyMessage)}`;
-                                        window.open(whatsappUrl, '_blank');
-                                      } else {
-                                        alert("Numero di telefono non disponibile per questo ospite");
-                                      }
-                                    } else {
-                                      alert("Nessun codice IQ trovato per questo ospite");
-                                    }
-                                  }}
-                                  className="text-xs bg-green-50 hover:bg-green-100 text-green-700"
-                                  disabled={!guest.phone}
-                                >
-                                  <MessageCircle size={14} className="mr-1" />
-                                  WhatsApp
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Informazioni Dettagliate */}
-                          <div className="p-3 bg-white">
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <span className="font-medium text-gray-700">Telefono:</span>
-                                <p className="text-gray-900">{guest.phone || 'Non fornito'}</p>
-                              </div>
-                              <div>
-                                <span className="font-medium text-gray-700">Email:</span>
-                                <p className="text-gray-900">{guest.email || 'Non fornita'}</p>
-                              </div>
-                              <div>
-                                <span className="font-medium text-gray-700">Check-in:</span>
-                                <p className="text-gray-900">{guest.checkIn || 'Non specificato'}</p>
-                              </div>
-                              <div>
-                                <span className="font-medium text-gray-700">Check-out:</span>
-                                <p className="text-gray-900">{guest.checkOut || 'Non specificato'}</p>
-                              </div>
-                            </div>
-                            
-                            {guest.notes && (
-                              <div className="mt-3 pt-3 border-t">
-                                <span className="font-medium text-gray-700">Note:</span>
-                                <p className="text-sm text-gray-600 mt-1">{guest.notes}</p>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Azioni Rapide */}
-                          <div className="bg-gray-50 p-3 border-t">
-                            <div className="grid grid-cols-3 gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={async () => {
-                                  const response = await fetch(`/api/guest/${guest.id}/codes`);
-                                  const data = await response.json();
-                                  if (data.codes && data.codes.length > 0) {
-                                    const firstCode = data.codes[0].code;
-                                    await navigator.clipboard.writeText(firstCode);
-                                    alert(`Codice ${firstCode} copiato negli appunti!`);
-                                  } else {
-                                    alert("Nessun codice IQ trovato per questo ospite");
-                                  }
-                                }}
-                                className="text-xs"
-                              >
-                                <Copy size={12} className="mr-1" />
-                                Copia IQ
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  if (guest.phone) {
-                                    const whatsappUrl = `https://wa.me/${guest.phone.replace(/[^0-9]/g, '')}`;
-                                    window.open(whatsappUrl, '_blank');
-                                  } else {
-                                    alert("Numero di telefono non disponibile");
-                                  }
-                                }}
-                                className="text-xs"
-                                disabled={!guest.phone}
-                              >
-                                <Phone size={12} className="mr-1" />
-                                Chiama
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  if (guest.email) {
-                                    window.location.href = `mailto:${guest.email}`;
-                                  } else {
-                                    alert("Email non disponibile per questo ospite");
-                                  }
-                                }}
-                                className="text-xs"
-                                disabled={!guest.email}
-                              >
-                                <Mail size={12} className="mr-1" />
-                                Email
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ) : null;
-                    })()
-                  ) : (
-                    <div className="p-4 bg-gray-50 rounded-md text-center">
-                      <User className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">
-                        Seleziona un ospite per vedere i dettagli e le azioni disponibili
-                      </p>
-                    </div>
-                  )}
-                </div>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="tempGuestName">Nome Ospite</Label>
+                <Input
+                  id="tempGuestName"
+                  value={tempGuestName}
+                  onChange={(e) => setTempGuestName(e.target.value)}
+                  placeholder="Es: Mario Rossi"
+                  className="w-full"
+                />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {packagesData?.packages?.map((pkg: Package) => (
-                  <Card key={pkg.id} className="border border-purple-200">
-                    <CardContent className="p-4">
-                      <div className="text-center mb-3">
-                        <h4 className="font-semibold">Pacchetto {pkg.packageSize}</h4>
-                        <Badge className="bg-purple-100 text-purple-800">
-                          {pkg.availableCodes || pkg.codesGenerated?.length || 0} disponibili
-                        </Badge>
-                      </div>
-
-                      <Button 
-                        onClick={() => handleGenerateTouristCode(pkg.id)}
-                        disabled={(pkg.availableCodes || 0) <= 0 || selectedGuestId === 0}
-                        className="w-full bg-purple-600 hover:bg-purple-700"
-                      >
-                        <Plus size={16} className="mr-2" />
-                        Assegna Codice
-                      </Button>
-
-                      {(pkg.availableCodes || 0) <= 0 && (
-                        <p className="text-xs text-red-600 text-center mt-2">Pacchetto esaurito</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+              <div>
+                <Label htmlFor="tempGuestPhone">Telefono (Opzionale)</Label>
+                <Input
+                  id="tempGuestPhone"
+                  value={tempGuestPhone}
+                  onChange={(e) => setTempGuestPhone(e.target.value)}
+                  placeholder="Es: +39 123 456 7890"
+                  className="w-full"
+                />
               </div>
-
-              {!assignGuestName.trim() && (
-                <p className="text-sm text-amber-600 text-center">
-                  Inserisci il nome dell'ospite per assegnare un codice IQ
+            </div>
+            
+            <Button
+              onClick={handleGenerateTempCode}
+              className="w-full bg-green-600 hover:bg-green-700"
+              disabled={!tempGuestName.trim() || isGeneratingTempCode}
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              {isGeneratingTempCode ? "Generando..." : "Genera Codice Temporaneo"}
+            </Button>
+            
+            {generatedTempCode && (
+              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm font-medium text-green-800 mb-2">
+                  ✅ Codice temporaneo generato con successo!
                 </p>
-              )}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Package size={48} className="mx-auto mb-4 text-gray-300" />
-              <p>Nessun pacchetto IQCode disponibile</p>
-              <p className="text-sm">Contatta l'amministratore per acquistare pacchetti di codici sconto</p>
-            </div>
-          )}
+                <div className="flex items-center gap-2 mb-2">
+                  <code className="bg-white px-3 py-1 rounded text-lg font-mono border">
+                    {generatedTempCode}
+                  </code>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => copyToClipboard(generatedTempCode)}
+                    className="bg-blue-50 hover:bg-blue-100"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-green-700">
+                  ⏱️ Scade in 15 minuti. Condividi immediatamente con l'ospite per l'attivazione.
+                </p>
+                <p className="text-xs text-gray-600 mt-1">
+                  📱 L'ospite dovrà inserire questo codice nell'app per creare il suo IQCode personale.
+                </p>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 

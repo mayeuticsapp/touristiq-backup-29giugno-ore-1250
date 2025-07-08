@@ -304,6 +304,18 @@ export const partnerDetails = pgTable("partner_details", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// Tabella per i codici temporanei single-use
+export const temporaryCodes = pgTable("temporary_codes", {
+  id: serial("id").primaryKey(),
+  tempCode: varchar("temp_code", { length: 12 }).unique().notNull(),
+  structureCode: varchar("structure_code", { length: 20 }).notNull(),
+  guestName: varchar("guest_name", { length: 100 }),
+  guestPhone: varchar("guest_phone", { length: 20 }),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertIqCodeSchema = createInsertSchema(iqCodes).omit({
   id: true,
   createdAt: true,
@@ -405,6 +417,11 @@ export const insertIqcodeRecoveryKeySchema = createInsertSchema(iqcodeRecoveryKe
   updatedAt: true,
 });
 
+export const insertTemporaryCodeSchema = createInsertSchema(temporaryCodes).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const loginSchema = z.object({
   iqCode: z.string().min(1, "Codice IQ richiesto").max(100),
 });
@@ -442,6 +459,9 @@ export type InsertSettingsConfig = z.infer<typeof insertSettingsConfigSchema>;
 
 export type IqcodeRecoveryKey = typeof iqcodeRecoveryKeys.$inferSelect;
 export type InsertIqcodeRecoveryKey = z.infer<typeof insertIqcodeRecoveryKeySchema>;
+
+export type TemporaryCode = typeof temporaryCodes.$inferSelect;
+export type InsertTemporaryCode = z.infer<typeof insertTemporaryCodeSchema>;
 
 export type LoginRequest = z.infer<typeof loginSchema>;
 

@@ -1,4 +1,4 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeValidations, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeValidation, type InsertIqcodeValidation, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeValidations, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeValidation, type InsertIqcodeValidation, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt, desc, like, sql, inArray } from "drizzle-orm";
@@ -138,6 +138,13 @@ export interface IStorage {
 
   // **INFORMAZIONI STRATEGICHE ADMIN**
   getUsersStrategicInfo(): Promise<any>;
+
+  // **SISTEMA CODICI TEMPORANEI (Privacy-First)**
+  generateTempCode(structureCode: string, guestName?: string, guestPhone?: string): Promise<string>;
+  activateTempCode(tempCode: string): Promise<{ success: boolean; tempCodeData?: TemporaryCode }>;
+  isTempCodeValid(tempCode: string): Promise<boolean>;
+  createPermanentFromTemp(tempCode: string, touristProfile: any): Promise<{ iqCode: string; success: boolean }>;
+  cleanupExpiredTempCodes(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -2712,6 +2719,100 @@ class ExtendedPostgreStorage extends PostgreStorage {
       usesTotal: result[0].usesTotal 
     };
   }
+
+  // **SISTEMA CODICI TEMPORANEI (Privacy-First)**
+  async generateTempCode(structureCode: string, guestName?: string, guestPhone?: string): Promise<string> {
+    const { randomBytes } = await import('crypto');
+    const tempCode = randomBytes(6).toString('hex').toUpperCase();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minuti
+
+    await this.db.insert(temporaryCodes).values({
+      tempCode,
+      structureCode,
+      guestName: guestName || null,
+      guestPhone: guestPhone || null,
+      expiresAt,
+    });
+
+    return tempCode;
+  }
+
+  async activateTempCode(tempCode: string): Promise<{ success: boolean; tempCodeData?: TemporaryCode }> {
+    const now = new Date();
+    const { isNull, gt } = await import('drizzle-orm');
+    
+    const [tempCodeData] = await this.db
+      .select()
+      .from(temporaryCodes)
+      .where(
+        and(
+          eq(temporaryCodes.tempCode, tempCode),
+          gt(temporaryCodes.expiresAt, now),
+          isNull(temporaryCodes.usedAt)
+        )
+      );
+
+    if (!tempCodeData) {
+      return { success: false };
+    }
+
+    await this.db
+      .update(temporaryCodes)
+      .set({ usedAt: now })
+      .where(eq(temporaryCodes.tempCode, tempCode));
+
+    return { success: true, tempCodeData };
+  }
+
+  async isTempCodeValid(tempCode: string): Promise<boolean> {
+    const now = new Date();
+    const { isNull, gt } = await import('drizzle-orm');
+    
+    const [tempCodeData] = await this.db
+      .select()
+      .from(temporaryCodes)
+      .where(
+        and(
+          eq(temporaryCodes.tempCode, tempCode),
+          gt(temporaryCodes.expiresAt, now),
+          isNull(temporaryCodes.usedAt)
+        )
+      );
+
+    return !!tempCodeData;
+  }
+
+  async createPermanentFromTemp(tempCode: string, touristProfile: any): Promise<{ iqCode: string; success: boolean }> {
+    const { isNotNull } = await import('drizzle-orm');
+    
+    const [tempCodeData] = await this.db
+      .select()
+      .from(temporaryCodes)
+      .where(
+        and(
+          eq(temporaryCodes.tempCode, tempCode),
+          isNotNull(temporaryCodes.usedAt)
+        )
+      );
+
+    if (!tempCodeData) {
+      return { iqCode: '', success: false };
+    }
+
+    // Genera IQCode emozionale definitivo
+    const iqCode = await this.generateEmotionalIQCode(tempCodeData.structureCode, 0, touristProfile.name || 'Turista');
+    
+    return { iqCode: iqCode.code, success: true };
+  }
+
+  async cleanupExpiredTempCodes(): Promise<void> {
+    const now = new Date();
+    const { lt } = await import('drizzle-orm');
+    
+    await this.db
+      .delete(temporaryCodes)
+      .where(lt(temporaryCodes.expiresAt, now));
+  }
 }
 
 // Extend MemStorage con metodi impostazioni
@@ -3006,6 +3107,28 @@ class ExtendedMemStorage extends MemStorage {
       structures: [],
       tourists: []
     };
+  }
+
+  // **SISTEMA CODICI TEMPORANEI (Privacy-First) - Memory Implementation**
+  async generateTempCode(structureCode: string, guestName?: string, guestPhone?: string): Promise<string> {
+    const { randomBytes } = await import('crypto');
+    return randomBytes(6).toString('hex').toUpperCase();
+  }
+
+  async activateTempCode(tempCode: string): Promise<{ success: boolean; tempCodeData?: TemporaryCode }> {
+    return { success: true };
+  }
+
+  async isTempCodeValid(tempCode: string): Promise<boolean> {
+    return true;
+  }
+
+  async createPermanentFromTemp(tempCode: string, touristProfile: any): Promise<{ iqCode: string; success: boolean }> {
+    return { iqCode: 'TIQ-IT-TEMP-CODE', success: true };
+  }
+
+  async cleanupExpiredTempCodes(): Promise<void> {
+    // No-op per memoria
   }
 }
 

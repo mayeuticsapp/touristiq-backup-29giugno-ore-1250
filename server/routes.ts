@@ -46,6 +46,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupSecurityHeaders(app);
   app.use(performanceMonitor);
   
+  // Setup automatic cleanup for expired temporary codes
+  setInterval(async () => {
+    try {
+      await storage.cleanupExpiredTempCodes();
+      console.log('🧹 Cleanup codici temporanei scaduti completato');
+    } catch (error) {
+      console.error('❌ Errore cleanup codici temporanei:', error);
+    }
+  }, 60000); // ogni minuto
+  
   // Authentication endpoint with rate limiting
   app.post("/api/auth/login", loginLimiter, async (req, res) => {
     try {
@@ -3285,6 +3295,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Errore recupero informazioni strategiche utenti:", error);
       res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // **SISTEMA CODICI TEMPORANEI (Privacy-First) - ENDPOINTS**
+
+  // Endpoint per strutture: genera codice temporaneo 
+  app.post("/api/structure/generate-temp-code", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ error: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session || session.role !== 'structure') {
+        return res.status(403).json({ error: "Accesso negato - solo strutture" });
+      }
+
+      const { guestName, guestPhone } = req.body;
+      
+      const tempCode = await storage.generateTempCode(
+        session.iqCode,
+        guestName,
+        guestPhone
+      );
+
+      res.json({ 
+        tempCode,
+        expiresIn: 15, // minuti
+        message: "Codice temporaneo generato. Condividi con il turista per attivazione immediata." 
+      });
+
+    } catch (error) {
+      console.error("Errore generazione codice temporaneo:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  // Endpoint per turisti: attiva codice temporaneo
+  app.post("/api/activate-temp-code", async (req, res) => {
+    try {
+      const { tempCode } = req.body;
+      
+      if (!tempCode) {
+        return res.status(400).json({ error: "Codice temporaneo richiesto" });
+      }
+
+      const result = await storage.activateTempCode(tempCode);
+      
+      if (!result.success) {
+        return res.status(400).json({ error: "Codice temporaneo non valido o scaduto" });
+      }
+
+      res.json({ 
+        success: true,
+        message: "Codice temporaneo attivato. Procedi con la creazione del tuo IQCode personale.",
+        structureCode: result.tempCodeData?.structureCode
+      });
+
+    } catch (error) {
+      console.error("Errore attivazione codice temporaneo:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  // Endpoint per turisti: crea IQCode definitivo da codice temporaneo
+  app.post("/api/create-permanent-from-temp", async (req, res) => {
+    try {
+      const { tempCode, touristProfile } = req.body;
+      
+      if (!tempCode || !touristProfile) {
+        return res.status(400).json({ error: "Codice temporaneo e profilo turista richiesti" });
+      }
+
+      const result = await storage.createPermanentFromTemp(tempCode, touristProfile);
+      
+      if (!result.success) {
+        return res.status(400).json({ error: "Impossibile creare IQCode definitivo" });
+      }
+
+      // Crea sessione per il nuovo turista
+      const sessionToken = nanoid();
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 ore
+      
+      await storage.createSession({
+        iqCode: result.iqCode,
+        role: 'tourist',
+        sessionToken,
+        expiresAt,
+      });
+
+      res.cookie('session_token', sessionToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000 // 24 ore
+      });
+
+      res.json({ 
+        success: true,
+        iqCode: result.iqCode,
+        message: "IQCode personale creato con successo! Benvenuto in TouristIQ."
+      });
+
+    } catch (error) {
+      console.error("Errore creazione IQCode definitivo:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  // Endpoint per verifica validità codice temporaneo
+  app.post("/api/check-temp-code", async (req, res) => {
+    try {
+      const { tempCode } = req.body;
+      
+      if (!tempCode) {
+        return res.status(400).json({ error: "Codice temporaneo richiesto" });
+      }
+
+      const isValid = await storage.isTempCodeValid(tempCode);
+      
+      res.json({ 
+        valid: isValid,
+        message: isValid ? "Codice temporaneo valido" : "Codice temporaneo scaduto o utilizzato"
+      });
+
+    } catch (error) {
+      console.error("Errore verifica codice temporaneo:", error);
+      res.status(500).json({ error: "Errore interno del server" });
     }
   });
 

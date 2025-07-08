@@ -12,6 +12,7 @@ import StructureDashboard from "@/pages/structure-dashboard";
 import StructurePanel from "@/pages/structure-panel-fixed";
 import PartnerDashboard from "@/pages/partner-dashboard";
 import UserManagement from "@/pages/user-management";
+import ActivateTempCode from "@/pages/activate-temp-code";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 
@@ -54,6 +55,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Login} />
+      
+      <Route path="/activate-temp-code" component={ActivateTempCode} />
       
       <Route path="/admin/users">
         <ProtectedRoute requiredRole="admin">
