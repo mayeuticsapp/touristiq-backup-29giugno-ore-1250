@@ -465,7 +465,9 @@ export default function StructureDashboard() {
         const result = await response.json();
         setAssignedCode(result.touristCode);
         refetchPackages(); // Aggiorna i crediti rimanenti
-        alert(`Codice IQ assegnato: ${result.touristCode}\nCrediti rimanenti: ${result.remainingCredits}`);
+        // Privacy Protection: Non mostriamo mai il codice completo alle strutture
+        const anonymizedCode = `***${result.touristCode.slice(-4)}`;
+        alert(`Codice IQ assegnato: ${anonymizedCode}\nCrediti rimanenti: ${result.remainingCredits}`);
       } else {
         const error = await response.json();
         alert(`Errore: ${error.message}`);
@@ -545,9 +547,10 @@ export default function StructureDashboard() {
           });
         }
 
-        // Mostra dettagli assegnazione con opzione WhatsApp
+        // Mostra dettagli assegnazione con opzione WhatsApp - PRIVACY PROTECTED
         const guest = guestsData?.guests?.find((g: Guest) => g.id === guestId);
-        const message = `Codice IQ assegnato con successo!\n\nCodice: ${result.touristCode}\nOspite: ${guest?.firstName} ${guest?.lastName}\nCamera: ${guest?.roomNumber || 'N/A'}`;
+        const anonymizedCode = `***${result.touristCode.slice(-4)}`;
+        const message = `Codice IQ assegnato con successo!\n\nCodice: ${anonymizedCode}\nOspite: ${guest?.firstName} ${guest?.lastName}\nCamera: ${guest?.roomNumber || 'N/A'}`;
 
         if (guest?.phone && confirm(`${message}\n\nVuoi inviare il codice via WhatsApp al numero ${guest.phone}?`)) {
           handleSendWhatsApp(guest.phone, result.touristCode, guest);
