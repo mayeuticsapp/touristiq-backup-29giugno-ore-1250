@@ -628,7 +628,7 @@ export default function TouristDashboard() {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(partner.address + ', ' + partner.city)}`, '_blank')}
+                              onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(partner.address + ', ' + partner.city + ', ' + partner.province)}`, '_blank')}
                               className="bg-calabria-sea text-white border-none hover:bg-blue-600 text-xs hover-warm"
                             >
                               <Navigation className="w-3 h-3 mr-1" />
