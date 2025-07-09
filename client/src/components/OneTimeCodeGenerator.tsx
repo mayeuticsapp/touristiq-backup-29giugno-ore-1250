@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Copy, History, Plus } from "lucide-react";
+import { Shield, Copy, History, Plus, RefreshCw } from "lucide-react";
 
 interface OneTimeCode {
   id: number;
@@ -24,12 +24,17 @@ export function OneTimeCodeGenerator() {
   const [showHistory, setShowHistory] = useState(false);
 
   // Query per ottenere i codici monouso e gli utilizzi disponibili
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['/api/tourist/one-time-codes'],
-    queryFn: () => apiRequest('/api/tourist/one-time-codes') as Promise<{
-      codes: OneTimeCode[];
-      availableUses: number;
-    }>
+    queryFn: () => {
+      console.log('🔄 FRONTEND: Chiamando /api/tourist/one-time-codes');
+      return apiRequest('/api/tourist/one-time-codes') as Promise<{
+        codes: OneTimeCode[];
+        availableUses: number;
+      }>;
+    },
+    staleTime: 0,
+    gcTime: 0
   });
 
   // Mutation per generare nuovo codice monouso
@@ -107,14 +112,24 @@ export function OneTimeCodeGenerator() {
             <p className="text-sm font-medium">Codici disponibili</p>
             <p className="text-2xl font-bold text-emerald-600">{availableUses}</p>
           </div>
-          <Button
-            onClick={() => generateCodeMutation.mutate()}
-            disabled={generateCodeMutation.isPending || availableUses <= 0}
-            className="bg-emerald-600 hover:bg-emerald-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Genera Codice
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => refetch()}
+              disabled={isLoading}
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            <Button
+              onClick={() => generateCodeMutation.mutate()}
+              disabled={generateCodeMutation.isPending || availableUses <= 0}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Genera Codice
+            </Button>
+          </div>
         </div>
 
         {/* Codice attivo */}

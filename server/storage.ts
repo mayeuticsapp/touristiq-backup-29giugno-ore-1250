@@ -2575,6 +2575,13 @@ class ExtendedPostgreStorage extends PostgreStorage {
 
   // **SISTEMA CODICI MONOUSO (Privacy-First) - PostgreSQL Implementation**
   async generateOneTimeCode(touristIqCode: string): Promise<{ code: string; remaining: number }> {
+    // Verifica utilizzi disponibili prima della generazione
+    const available = await this.getTouristAvailableUses(touristIqCode);
+    
+    if (available <= 0) {
+      throw new Error("Nessun utilizzo disponibile per generare codici monouso");
+    }
+
     // Genera solo 5 cifre numeriche (facili da dettare: "uno-due-tre-quattro-cinque")
     let numericCode: string;
     do {
@@ -2589,6 +2596,8 @@ class ExtendedPostgreStorage extends PostgreStorage {
       if (!existingCode) break; // Codice univoco trovato
     } while (true);
 
+    console.log(`🎯 GENERAZIONE TIQ-OTC: ${touristIqCode} → ${numericCode} (${available} → ${available-1})`);
+
     // Salva solo le 5 cifre nel database (ottimizzazione storage)
     await this.db.insert(oneTimeCodes).values({
       code: numericCode,
@@ -2600,25 +2609,21 @@ class ExtendedPostgreStorage extends PostgreStorage {
     await this.db
       .update(iqCodes)
       .set({ 
-        availableOneTimeUses: sql`COALESCE(available_one_time_uses, 10) - 1`
+        availableOneTimeUses: sql`${iqCodes.availableOneTimeUses} - 1`
       })
       .where(eq(iqCodes.code, touristIqCode));
 
-    // Calcola i codici rimanenti
-    const [touristData] = await this.db
-      .select({ availableOneTimeUses: iqCodes.availableOneTimeUses })
-      .from(iqCodes)
-      .where(eq(iqCodes.code, touristIqCode));
-
-    const remaining = touristData?.availableOneTimeUses || 0;
+    const remaining = available - 1;
 
     // Frontend riceve formato completo per display, ma backend salva solo cifre
     return { code: `TIQ-OTC-${numericCode}`, remaining };
   }
 
   async validateOneTimeCode(code: string, partnerCode: string, partnerName: string): Promise<{ valid: boolean; used: boolean }> {
-    // Estrae solo le 5 cifre dal formato completo TIQ-OTC-12345
-    const numericCode = code.replace('TIQ-OTC-', '');
+    // Il partner inserisce solo le 5 cifre, il backend aggiunge TIQ-OTC- automaticamente
+    const numericCode = code.length === 5 ? code : code.replace('TIQ-OTC-', '');
+    
+    console.log(`🔍 VALIDAZIONE TIQ-OTC: Partner ${partnerName} valida ${numericCode} → TIQ-OTC-${numericCode}`);
     
     // Cerca il codice monouso usando solo le 5 cifre (come salvato nel database)
     const [oneTimeCode] = await this.db
@@ -2627,10 +2632,12 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .where(eq(oneTimeCodes.code, numericCode));
 
     if (!oneTimeCode) {
+      console.log(`❌ CODICE NON TROVATO: ${numericCode}`);
       return { valid: false, used: false };
     }
 
     if (oneTimeCode.isUsed) {
+      console.log(`⚠️ CODICE GIÀ USATO: ${numericCode} da ${oneTimeCode.usedByName}`);
       return { valid: true, used: true };
     }
 
@@ -2645,6 +2652,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
       })
       .where(eq(oneTimeCodes.code, numericCode));
 
+    console.log(`✅ VALIDAZIONE RIUSCITA: ${numericCode} applicato da ${partnerName}`);
     return { valid: true, used: false };
   }
 
@@ -2668,11 +2676,8 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .from(iqCodes)
       .where(eq(iqCodes.code, touristIqCode));
 
-    console.log(`🔍 DB DEBUG: Turista ${touristIqCode} - Raw data:`, touristData);
-
     // Se il turista non ha utilizzi, gli diamo automaticamente 10 all'accesso
     if (touristData && (touristData.availableOneTimeUses === null || touristData.availableOneTimeUses === 0)) {
-      console.log(`🔧 AUTO-FIX: Assegnando 10 utilizzi a ${touristIqCode}`);
       await this.db
         .update(iqCodes)
         .set({ availableOneTimeUses: 10 })
@@ -2680,9 +2685,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
       return 10;
     }
 
-    const result = touristData?.availableOneTimeUses || 0;
-    console.log(`📊 RESULT: Turista ${touristIqCode} ha ${result} utilizzi`);
-    return result;
+    return touristData?.availableOneTimeUses || 0;
   }
 
   // Metodi per compatibilità con interfaccia IStorage

@@ -95,10 +95,10 @@ export function OneTimeCodeValidator() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-blue-600" />
-          Validazione Codice Partner
+          Valida TIQ-OTC
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Valida i codici monouso dei turisti per applicare sconti senza esporre gli IQCode principali
+          Ricevi 5 cifre dal turista e applica lo sconto TouristIQ
         </p>
       </CardHeader>
       <CardContent className="space-y-4">

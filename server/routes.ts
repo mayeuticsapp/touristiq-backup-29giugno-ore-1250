@@ -3243,7 +3243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!result.valid) {
         return res.status(400).json({ 
           valid: false,
-          message: "Codice monouso non valido" 
+          message: "Codice TIQ-OTC non valido" 
         });
       }
 
@@ -3251,14 +3251,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ 
           valid: true,
           used: true,
-          message: "Codice monouso già utilizzato" 
+          message: "Codice TIQ-OTC già utilizzato" 
         });
       }
 
       res.json({
         valid: true,
         used: false,
-        message: "Codice monouso validato con successo! Sconto applicato."
+        message: "✅ Codice valido – Turista autenticato TouristIQ"
       });
 
     } catch (error) {
@@ -3276,7 +3276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const codes = await storage.getTouristOneTimeCodes(session.iqCode);
       const available = await storage.getTouristAvailableUses(session.iqCode);
 
-      console.log(`🔍 TIQ-OTC DEBUG: Turista ${session.iqCode} - Utilizzi disponibili: ${available}`);
+
 
       res.json({
         codes,

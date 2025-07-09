@@ -1,0 +1,88 @@
+Perfetto RobS, ho letto tutta la sequenza ed è chiaro cosa deve essere fatto.
+
+Ecco le istruzioni **completa e definitiva** da inviare a **C24**, in stile operativo, affinché il sistema TIQ-OTC funzioni **esattamente come da visione**, **senza errori** e con **tutti gli effetti collaterali gestiti correttamente**.
+
+---
+
+### 📜 **ISTRUZIONI UFFICIALI A C24 – IMPLEMENTAZIONE FINALE SISTEMA TIQ-OTC**
+
+#### ✅ 1. **Inizializzazione Turista con 10 TIQ-OTC**
+
+* Ogni volta che un **nuovo turista** attiva il proprio IQCode definitivo tramite codice primo accesso:
+
+  * Vanno **assegnati automaticamente 10 utilizzi** di TIQ-OTC
+  * Questi devono essere **visibili nel pannello turista**
+  * Non devono essere richiesti all’amministrazione o caricati manualmente
+
+#### ✅ 2. **Formato Codice**
+
+* Il codice visualizzato deve essere: `TIQ-OTC-12345`
+* Il **turista vede sempre il prefisso fisso** “TIQ-OTC-” sopra il codice
+* Il **partner chiede solo le 5 cifre**, che digita nel campo input dedicato
+
+#### ✅ 3. **Struttura dati (DB e storage)**
+
+* Nel database, salvare solo le 5 cifre numeriche (`10000–99999`)
+* Il sistema backend ricostruisce il prefisso completo `TIQ-OTC-xxxxx` **al momento della validazione**
+* In ogni record deve essere salvato:
+
+  * codice numerico
+  * data e ora di generazione
+  * stato (`attivo`, `usato`)
+  * se usato, **nome partner che lo ha convalidato**
+
+#### ✅ 4. **Pannello Turista – UI**
+
+* Il turista vede una lista **storica** dei TIQ-OTC generati e usati:
+
+  * Codici ancora utilizzabili → “Disponibili”
+  * Codici usati → “Validato da: \[Nome Partner]”
+* Deve esserci un **contatore** in alto (es: “3 di 10 utilizzati”)
+* Nessun refresh della pagina deve far perdere la visibilità dei codici
+
+#### ✅ 5. **Pannello Partner – UI**
+
+* Il partner apre la sezione **“Valida TIQ-OTC”** dal menu
+* Campo input che accetta **solo 5 cifre**
+* Al momento dell’invio:
+
+  * Il sistema aggiunge automaticamente il prefisso `TIQ-OTC-` lato backend
+  * Effettua la validazione
+  * Mostra conferma visiva: ✅ **Codice valido – Turista autenticato TouristIQ**
+
+#### ✅ 6. **Logica Backend**
+
+* Endpoint `/api/partner/validate-code`:
+
+  * Riceve 5 cifre → aggiunge `TIQ-OTC-` → valida
+  * Marca il codice come usato
+  * Associa il codice al partner che lo ha convalidato
+* Endpoint `/api/tourist/one-time-codes`:
+
+  * Deve restituire i codici con stato e partner associato
+  * Deve fornire conteggio esatto dei codici disponibili
+
+#### ✅ 7. **Problema bug “0 crediti disponibili”**
+
+* Verificare **definitivamente** che:
+
+  * Al momento della generazione IQCode definitivo (es. `IQ-IT-2325-PARCO`), vengano **inizializzati correttamente i 10 utilizzi**
+  * L’API `/api/tourist/one-time-codes` recuperi il numero giusto
+  * Il **caching frontend** sia disabilitato o sincronizzato correttamente
+  * Debug log attivi per confermare i valori in arrivo da storage.ts
+
+#### ✅ 8. **Effetti collaterali da evitare**
+
+* Nessun altro modulo (Admin, Struttura, Partner) deve poter modificare o rigenerare i TIQ-OTC del turista
+* Il sistema deve impedire la **duplicazione accidentale** di un codice già usato
+* I TIQ-OTC **scalano solo dopo validazione riuscita**
+
+---
+
+### 🎯 Conclusione
+
+Questo sistema chiude definitivamente la vulnerabilità **umana** del dettare IQCode. È veloce, anonimo, sicuro, e scalabile. La UX è naturale, l’identità TouristIQ è mantenuta e l’integrazione è fluida.
+
+Procedi ora, C24.
+Geppo vigila.
+RobS ha deciso.
