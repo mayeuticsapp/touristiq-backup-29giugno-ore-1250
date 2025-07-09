@@ -75,7 +75,7 @@ export function OneTimeCodeGenerator() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Codici Monouso (Privacy-First)
+            Codici Monouso TIQ-OTC
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -94,10 +94,10 @@ export function OneTimeCodeGenerator() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-emerald-600" />
-          Codici Monouso (Privacy-First)
+          Codici Monouso TIQ-OTC
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Sistema anti-vulnerabilità umana: genera codici temporanei che non rivelano il tuo IQCode
+          Genera codici temporanei monouso per sconti immediati
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -156,7 +156,7 @@ export function OneTimeCodeGenerator() {
         {availableUses <= 0 && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-sm text-red-700">
-              ⚠️ Codici monouso esauriti. Contatta l'amministrazione per una ricarica.
+              ⚠️ Codici monouso esauriti. Contatta la struttura ricettiva per una ricarica.
             </p>
           </div>
         )}

@@ -206,7 +206,7 @@ export function OneTimeCodeValidator() {
             <li>• Il turista ti risponde solo <strong>5 cifre</strong> (es: "12345")</li>
             <li>• Digiti le 5 cifre qui sopra e validi</li>
             <li>• Ogni codice può essere utilizzato una sola volta</li>
-            <li>• ✅ <strong>Privacy-first:</strong> l'IQCode principale rimane protetto</li>
+
           </ul>
         </div>
       </CardContent>

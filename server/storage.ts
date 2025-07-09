@@ -2667,6 +2667,15 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .from(iqCodes)
       .where(eq(iqCodes.code, touristIqCode));
 
+    // Se il turista non ha utilizzi, gli diamo automaticamente 10 all'accesso
+    if (touristData && (touristData.availableOneTimeUses === null || touristData.availableOneTimeUses === 0)) {
+      await this.db
+        .update(iqCodes)
+        .set({ availableOneTimeUses: 10 })
+        .where(eq(iqCodes.code, touristIqCode));
+      return 10;
+    }
+
     return touristData?.availableOneTimeUses || 0;
   }
 
