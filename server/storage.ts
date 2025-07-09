@@ -2543,7 +2543,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
     const uniqueCode = this.generateDirectEmotionalCode();
     const guestName = touristProfile.name || 'Turista';
     
-    // Crea IQCode direttamente nella tabella principale
+    // Crea IQCode direttamente nella tabella principale con 10 utilizzi TIQ-OTC
     await this.db.insert(iqCodes).values({
       code: uniqueCode,
       role: 'tourist',
@@ -2553,6 +2553,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
       location: 'IT',
       codeType: 'emotional',
       createdAt: new Date(),
+      availableOneTimeUses: 10, // Assegna automaticamente 10 codici TIQ-OTC
     });
     
     return { iqCode: uniqueCode, success: true };
