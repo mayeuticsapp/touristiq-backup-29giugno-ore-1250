@@ -18,17 +18,26 @@ import {
 
 // Middleware per controlli di sicurezza avanzati
 async function verifyRoleAccess(req: any, res: any, allowedRoles: string[]): Promise<boolean> {
+  console.log(`🔍 VERIFY_ROLE_ACCESS: Controllo accesso per endpoint con ruoli ${allowedRoles.join(', ')}`);
+  console.log(`🔍 COOKIES: ${JSON.stringify(req.cookies)}`);
+  
   const sessionToken = req.cookies.session_token;
   if (!sessionToken) {
+    console.log(`❌ VERIFY_ROLE_ACCESS: Nessun session_token trovato`);
     res.status(401).json({ message: "Non autenticato" });
     return false;
   }
 
+  console.log(`🔍 VERIFY_ROLE_ACCESS: Token trovato: ${sessionToken.substring(0, 10)}...`);
+  
   const session = await storage.getSessionByToken(sessionToken);
   if (!session) {
+    console.log(`❌ VERIFY_ROLE_ACCESS: Sessione non trovata per token ${sessionToken.substring(0, 10)}...`);
     res.status(401).json({ message: "Sessione non valida" });
     return false;
   }
+
+  console.log(`🔍 VERIFY_ROLE_ACCESS: Sessione trovata - Utente: ${session.iqCode}, Ruolo: ${session.role}`);
 
   if (!allowedRoles.includes(session.role)) {
     console.log(`🚨 TENTATIVO ACCESSO NON AUTORIZZATO: ${session.iqCode} (${session.role}) ha provato ad accedere a endpoint riservato a ${allowedRoles.join(', ')}`);
@@ -36,6 +45,7 @@ async function verifyRoleAccess(req: any, res: any, allowedRoles: string[]): Pro
     return false;
   }
 
+  console.log(`✅ VERIFY_ROLE_ACCESS: Accesso autorizzato per ${session.iqCode} (${session.role})`);
   req.userSession = session;
   return true;
 }
