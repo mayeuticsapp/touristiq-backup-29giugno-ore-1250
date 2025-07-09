@@ -11,7 +11,7 @@ import { Layout } from "@/components/layout";
 import { 
   Users, BarChart3, Plus, TrendingUp, Package, Heart, Star, 
   Download, Camera, Tags, Trophy, Calendar, Settings,
-  Trash2, Calculator, Edit, QrCode
+  Trash2, Calculator, Edit, Hash
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { apiRequest } from "@/lib/queryClient";
@@ -290,8 +290,8 @@ export default function PartnerDashboard() {
         <div class="header">🎯 TouristIQ Partner</div>
         <h2>Scopri Sconti Esclusivi!</h2>
         <p>Presenta il tuo IQCode e ottieni vantaggi speciali</p>
-        <div class="qr-placeholder">QR CODE</div>
-        <p>Scansiona per accedere agli sconti</p>
+        <div class="qr-placeholder">IQCODE PARTNER</div>
+        <p>Presenta il tuo IQCode per accedere agli sconti</p>
       </body>
       </html>
     `;
@@ -305,7 +305,7 @@ export default function PartnerDashboard() {
     URL.revokeObjectURL(url);
   };
 
-  const downloadQR = () => {
+  const downloadPartnerCode = () => {
     const svgContent = `
       <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
         <rect width="200" height="200" fill="white"/>
@@ -323,7 +323,7 @@ export default function PartnerDashboard() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'touristiq-qr-code.svg';
+    a.download = 'touristiq-partner-code.svg';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -650,14 +650,14 @@ export default function PartnerDashboard() {
                   </Button>
 
                   <Button 
-                    onClick={downloadQR}
+                    onClick={downloadPartnerCode}
                     variant="outline" 
                     className="justify-start h-auto p-3 border-blue-200 hover:bg-blue-50"
                   >
-                    <QrCode className="w-4 h-4 mr-3" />
+                    <Hash className="w-4 h-4 mr-3" />
                     <div className="text-left">
-                      <div className="font-medium">QR Code</div>
-                      <div className="text-xs text-gray-600">Codice QR per accesso rapido agli sconti</div>
+                      <div className="font-medium">Codice Partner</div>
+                      <div className="text-xs text-gray-600">Il tuo IQCode partner per identificazione</div>
                     </div>
                   </Button>
 
