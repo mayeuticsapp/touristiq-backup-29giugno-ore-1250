@@ -26,20 +26,6 @@ export function OneTimeCodeGenerator() {
   // Query per ottenere i codici monouso e gli utilizzi disponibili
   const { data, isLoading, refetch, error } = useQuery({
     queryKey: ['/api/tourist/one-time-codes'],
-    queryFn: async () => {
-      console.log('🔄 FRONTEND: Chiamando /api/tourist/one-time-codes');
-      try {
-        const result = await apiRequest('/api/tourist/one-time-codes') as {
-          codes: OneTimeCode[];
-          availableUses: number;
-        };
-        console.log('✅ FRONTEND: Risposta ricevuta:', result);
-        return result;
-      } catch (error) {
-        console.error('❌ FRONTEND: Errore chiamata API:', error);
-        throw error;
-      }
-    },
     staleTime: 0,
     gcTime: 0,
     retry: 3,
