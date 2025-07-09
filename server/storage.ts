@@ -920,9 +920,9 @@ export class PostgreStorage implements IStorage {
           await this.db.insert(assignedPackages).values({
             recipientIqCode: pkg.recipientIqCode,
             packageSize: pkg.packageSize,
-            availableCodes: pkg.availableCodes,
+            creditsRemaining: pkg.packageSize,
             assignedBy: pkg.assignedBy,
-            codesUsed: 0,
+            creditsUsed: 0,
             assignedAt: new Date()
           });
         }
