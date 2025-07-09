@@ -3077,7 +3077,9 @@ class ExtendedMemStorage extends MemStorage {
   }
 
   async createPermanentFromTemp(tempCode: string, touristProfile: any): Promise<{ iqCode: string; success: boolean }> {
-    return { iqCode: 'TIQ-IT-TEMP-CODE', success: true };
+    // MemStorage fallback - crea codice di esempio senza database
+    const uniqueCode = `TIQ-IT-${Math.floor(1000 + Math.random() * 9000)}-DEMO`;
+    return { iqCode: uniqueCode, success: true };
   }
 
   async cleanupExpiredTempCodes(): Promise<void> {
