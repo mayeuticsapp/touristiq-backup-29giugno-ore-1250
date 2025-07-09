@@ -176,6 +176,15 @@ export function OneTimeCodeGenerator() {
           </div>
         )}
 
+        {/* Messaggio informativo se non ci sono codici generati ma ci sono utilizzi disponibili */}
+        {availableUses > 0 && codes.length === 0 && (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-700">
+              💡 Hai <strong>{availableUses} codici disponibili</strong>. Clicca "Genera Codice" per creare il tuo primo TIQ-OTC.
+            </p>
+          </div>
+        )}
+
         <Separator />
 
         {/* Toggle cronologia */}

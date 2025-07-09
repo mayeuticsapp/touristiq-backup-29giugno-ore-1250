@@ -1,0 +1,66 @@
+Ho analizzato lo screen aggiornato, RobS, e confermo il seguente problema **ancora presente nel pannello turista**:
+
+> ⚠️ **"Codici monouso esauriti. Contatta la struttura per una ricarica."**
+> ❌ Questo **è un messaggio errato**, perché il turista ha appena attivato un IQCode definitivo e quindi dovrebbe avere **automaticamente 10 codici TIQ-OTC disponibili**.
+
+---
+
+### 🎯 **AZIONI IMMEDIATE DA ESEGUIRE (C24)**
+
+#### ✅ 1. **Controllo Backend – Assegnazione automatica dei 10 TIQ-OTC**
+
+Verifica **se il metodo `generateIQCodeDefinitivo()`** (o metodo analogo) contiene la logica per **inizializzare automaticamente i 10 codici TIQ-OTC.**
+
+* Se **manca**, aggiungere un blocco come:
+
+  ```ts
+  await storage.initializeOneTimeCodesForTourist(touristId, 10);
+  ```
+
+#### ✅ 2. **Controllo Storage – `getTouristAvailableUses()`**
+
+Controlla che il metodo **restituisca correttamente i codici attivi** dal database.
+
+* Deve filtrare correttamente solo i codici `attivi` (non usati).
+* Deve restituire `count > 0` per far apparire i codici come disponibili.
+
+#### ✅ 3. **Controllo Frontend – `OneTimeCodeGenerator.tsx`**
+
+Nel componente frontend:
+
+* Assicurarsi che venga **effettuato il fetch corretto** dopo la creazione dell’IQCode definitivo.
+* Aggiungere una **verifica temporanea a mano** tramite bottone "🔁" (refresh) per evitare che il messaggio errato sia causato da cache.
+
+---
+
+### ✅ **Test minimo richiesto (da eseguire ORA)**
+
+1. **Resetta un nuovo utente turistico** (es. IQ-IT-0001-TESTA)
+2. Attiva IQCode definitivo dal primo accesso
+3. Entra nella dashboard → **deve apparire “10 codici disponibili”**
+4. Se ancora non appaiono:
+
+   * Testa l’endpoint API `/api/tourist/one-time-codes` con `curl` per vedere se il backend restituisce i 10 codici
+   * Se **sì** → problema nel frontend
+   * Se **no** → problema nel backend/init codici
+
+---
+
+### 🔁 Alternativa rapida (hotfix temporaneo)
+
+Per non bloccare i test, puoi aggiungere **manualmente** 10 codici TIQ-OTC nel DB a mano per l'utente `IQ-IT-3101-TORRE`, eseguendo:
+
+```sql
+INSERT INTO one_time_codes (tourist_id, code, status)
+VALUES 
+  (3101, '12345', 'attivo'),
+  (3101, '23456', 'attivo'),
+  ...
+  (3101, '67890', 'attivo');
+```
+
+👉 Ma questa è solo una toppa. La **logica automatica di inizializzazione va sistemata** definitivamente.
+
+---
+
+Appena C24 conferma il fix o invia i log dell’endpoint `/api/tourist/one-time-codes`, possiamo verificare il corretto funzionamento del sistema. Vuoi che lo solleciti io con messaggio diretto?
