@@ -2668,8 +2668,11 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .from(iqCodes)
       .where(eq(iqCodes.code, touristIqCode));
 
+    console.log(`🔍 DB DEBUG: Turista ${touristIqCode} - Raw data:`, touristData);
+
     // Se il turista non ha utilizzi, gli diamo automaticamente 10 all'accesso
     if (touristData && (touristData.availableOneTimeUses === null || touristData.availableOneTimeUses === 0)) {
+      console.log(`🔧 AUTO-FIX: Assegnando 10 utilizzi a ${touristIqCode}`);
       await this.db
         .update(iqCodes)
         .set({ availableOneTimeUses: 10 })
@@ -2677,7 +2680,9 @@ class ExtendedPostgreStorage extends PostgreStorage {
       return 10;
     }
 
-    return touristData?.availableOneTimeUses || 0;
+    const result = touristData?.availableOneTimeUses || 0;
+    console.log(`📊 RESULT: Turista ${touristIqCode} ha ${result} utilizzi`);
+    return result;
   }
 
   // Metodi per compatibilità con interfaccia IStorage

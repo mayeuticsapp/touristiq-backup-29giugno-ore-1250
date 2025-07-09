@@ -3276,6 +3276,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const codes = await storage.getTouristOneTimeCodes(session.iqCode);
       const available = await storage.getTouristAvailableUses(session.iqCode);
 
+      console.log(`🔍 TIQ-OTC DEBUG: Turista ${session.iqCode} - Utilizzi disponibili: ${available}`);
+
       res.json({
         codes,
         availableUses: available
