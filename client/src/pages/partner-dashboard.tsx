@@ -11,7 +11,7 @@ import { Layout } from "@/components/layout";
 import { 
   Users, BarChart3, Plus, TrendingUp, Package, Heart, Star, 
   Download, Camera, Tags, Trophy, Calendar, Settings,
-  Trash2, Calculator, Edit
+  Trash2, Calculator, Edit, QrCode
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { apiRequest } from "@/lib/queryClient";
