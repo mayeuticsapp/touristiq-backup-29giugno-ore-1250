@@ -2,7 +2,7 @@ import { Layout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TIQaiChat } from "@/components/tiqai-chat";
-import { IQCodeValidation } from "@/components/iqcode-validation";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ import { isTemporaryCode } from "@/lib/temp-code-utils";
 import { useLocation } from "wouter";
 
 export default function TouristDashboard() {
-  const [showValidationDialog, setShowValidationDialog] = useState(false);
+
   const [showLocationSearch, setShowLocationSearch] = useState(false);
   const [searchCity, setSearchCity] = useState("");
   const [locationOffers, setLocationOffers] = useState<any[]>([]);
@@ -287,12 +287,6 @@ export default function TouristDashboard() {
   const navigation = [
     { icon: <Tags size={16} />, label: "I Miei Sconti", href: "#" },
     { icon: <MessageCircle size={16} />, label: "TIQai Chat", href: "#" },
-    { 
-      icon: <QrCode size={16} />, 
-      label: "Validazione IQCode", 
-      href: "#",
-      onClick: () => setShowValidationDialog(true)
-    },
   ];
 
   if (!user) {
@@ -711,20 +705,6 @@ export default function TouristDashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Dialog Validazione IQCode */}
-      <Dialog open={showValidationDialog} onOpenChange={setShowValidationDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <QrCode className="w-5 h-5" />
-              Richieste di Validazione IQCode
-            </DialogTitle>
-          </DialogHeader>
-          <IQCodeValidation userRole="tourist" />
-        </DialogContent>
-      </Dialog>
-
 
 
       {/* Dialog Custode del Codice - Form */}

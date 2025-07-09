@@ -10,14 +10,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/layout";
 import { 
   Users, BarChart3, Plus, TrendingUp, Package, Heart, Star, 
-  Download, QrCode, Camera, Tags, Trophy, Calendar, Settings,
+  Download, Camera, Tags, Trophy, Calendar, Settings,
   Trash2, Calculator, Edit
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { AdvancedAccounting } from "@/components/advanced-accounting";
 import { PartnerOnboarding } from "@/components/partner-onboarding";
-import { IQCodeValidation } from "@/components/iqcode-validation";
+
 import { CustodeCodiceDashboard } from "@/components/custode-codice";
 
 interface TouristLinkRequest {
@@ -66,7 +66,7 @@ export default function PartnerDashboard() {
   const [showSpecialClientDialog, setShowSpecialClientDialog] = useState(false);
   const [showAccountDeleteDialog, setShowAccountDeleteDialog] = useState(false);
   const [showMiniGestionale, setShowMiniGestionale] = useState(false);
-  const [showValidationSection, setShowValidationSection] = useState(false);
+
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   
   // Ref per focus automatico check-in → check-out
@@ -85,7 +85,6 @@ export default function PartnerDashboard() {
   });
 
   // Stati per i form
-  const [touristCode, setTouristCode] = useState("");
   const [newOffer, setNewOffer] = useState({
     title: "",
     description: "",
@@ -111,27 +110,6 @@ export default function PartnerDashboard() {
   const specialClients: SpecialClient[] = [];
 
   // Mutations
-  const linkTouristMutation = useMutation({
-    mutationFn: async (code: string) => {
-      const response = await apiRequest("POST", `/api/partner/link-tourist`, { touristCode: code });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      toast({ 
-        title: "Successo!", 
-        description: data.message || "Richiesta collegamento inviata!"
-      });
-      setTouristCode("");
-    },
-    onError: (error: any) => {
-      const errorMessage = error?.response?.data?.message || error?.message || "Impossibile inviare la richiesta";
-      toast({ 
-        title: "Errore", 
-        description: errorMessage,
-        variant: "destructive"
-      });
-    }
-  });
 
   const createOfferMutation = useMutation({
     mutationFn: async (offer: typeof newOffer) => {
@@ -254,11 +232,6 @@ export default function PartnerDashboard() {
   });
 
   // Handlers
-  const handleLinkTourist = () => {
-    if (touristCode.trim()) {
-      linkTouristMutation.mutate(touristCode.trim());
-    }
-  };
 
   const handleCreateOffer = () => {
     if (newOffer.title && newOffer.description && newOffer.discount) {
@@ -393,12 +366,7 @@ export default function PartnerDashboard() {
           href: "#",
           onClick: () => setShowMiniGestionale(true)
         },
-        {
-          label: "Validazione IQCode",
-          icon: <QrCode className="h-4 w-4" />,
-          href: "#",
-          onClick: () => setShowValidationSection(true)
-        }
+
       ]}
       sidebarColor="bg-orange-600"
     >
@@ -1058,18 +1026,7 @@ export default function PartnerDashboard() {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog Validazione IQCode */}
-        <Dialog open={showValidationSection} onOpenChange={setShowValidationSection}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <QrCode className="w-5 h-5" />
-                Sistema Validazione IQCode
-              </DialogTitle>
-            </DialogHeader>
-            <IQCodeValidation userRole="partner" />
-          </DialogContent>
-        </Dialog>
+
       </div>
     </Layout>
   );

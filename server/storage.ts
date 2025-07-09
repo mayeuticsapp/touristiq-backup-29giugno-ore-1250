@@ -1,4 +1,4 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeValidations, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeValidation, type InsertIqcodeValidation, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt, desc, like, sql, inArray } from "drizzle-orm";
@@ -50,12 +50,7 @@ export interface IStorage {
   assignAvailableCodeToGuest(code: string, guestId: number, guestName: string): Promise<void>;
 
   // IQCode validation methods - Sistema validazione Partner-Turista
-  createIqcodeValidation(validation: any): Promise<any>;
-  getValidationsByTourist(touristCode: string): Promise<any[]>;
-  getValidationsByPartner(partnerCode: string): Promise<any[]>;
-  updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<any>;
-  getValidationById(id: number): Promise<any | undefined>;
-  decrementValidationUses(id: number): Promise<any>;
+
 
   // Admin credits methods - Pacchetto RobS
   getAdminCredits(adminCode: string): Promise<AdminCredits | undefined>;
@@ -95,15 +90,7 @@ export interface IStorage {
   createTempCode(code: string, createdBy: string): Promise<any>;
   createIqCode(iqCodeData: any): Promise<any>;
 
-  // Validazione IQCode methods
-  createIqcodeValidation(data: {partnerCode: string, touristCode: string, requestedAt: Date, status: string, usesRemaining: number, usesTotal: number}): Promise<IqcodeValidation>;
-  getValidationsByTourist(touristCode: string): Promise<IqcodeValidation[]>;
-  getValidationsByPartner(partnerCode: string): Promise<IqcodeValidation[]>;
-  getValidationById(id: number): Promise<IqcodeValidation | null>;
-  updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<IqcodeValidation>;
-  decrementValidationUses(validationId: number): Promise<IqcodeValidation>;
-  markValidationAsUsed(validationId: number): Promise<IqcodeValidation>;
-  getCurrentUsesForTourist(touristCode: string): Promise<{usesRemaining: number, usesTotal: number}>;
+
 
   // Ricariche IQCode methods
   createIqcodeRecharge(data: {touristCode: string, amount: number, status: string, requestedAt: Date}): Promise<IqcodeRecharge>;
@@ -727,14 +714,7 @@ export class MemStorage implements IStorage {
   async useIQCodeFromPackage(): Promise<boolean> { return false; }
 
   // Validazione metodi placeholder
-  async createIqcodeValidation(): Promise<any> { throw new Error("Not implemented"); }
-  async getValidationsByTourist(): Promise<any[]> { return []; }
-  async getValidationsByPartner(): Promise<any[]> { return []; }
-  async getValidationById(): Promise<any> { return null; }
-  async updateValidationStatus(): Promise<any> { throw new Error("Not implemented"); }
-  async decrementValidationUses(): Promise<any> { throw new Error("Not implemented"); }
-  async markValidationAsUsed(): Promise<any> { throw new Error("Not implemented"); }
-  async getCurrentUsesForTourist(): Promise<any> { throw new Error("Not implemented"); }
+
   async createIqcodeRecharge(): Promise<any> { throw new Error("Not implemented"); }
   async getRechargesWithFilters(): Promise<any> { throw new Error("Not implemented"); }
   async activateRecharge(): Promise<any> { throw new Error("Not implemented"); }
@@ -873,45 +853,6 @@ export class MemStorage implements IStorage {
     // MemStorage implementation - usa sempre array vuoto per dev
     return [];
   }
-
-  // Metodi validazione IQCode mancanti
-
-  async getValidationsByTourist(touristCode: string): Promise<IqcodeValidation[]> {
-    const validations = globalValidationsData.get('validations') || [];
-    return validations.filter((v: any) => v.touristIqCode === touristCode);
-  }
-
-  async getValidationsByPartner(partnerCode: string): Promise<IqcodeValidation[]> {
-    const validations = globalValidationsData.get('validations') || [];
-    return validations.filter((v: any) => v.partnerIqCode === partnerCode);
-  }
-
-  async getValidationById(id: number): Promise<IqcodeValidation | null> {
-    const validations = globalValidationsData.get('validations') || [];
-    return validations.find((v: any) => v.id === id) || null;
-  }
-
-  async updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<IqcodeValidation> {
-    const validations = globalValidationsData.get('validations') || [];
-    const validation = validations.find((v: any) => v.id === id);
-    if (!validation) throw new Error('Validazione non trovata');
-
-    validation.status = status;
-    if (respondedAt) validation.respondedAt = respondedAt;
-    validation.updatedAt = new Date();
-
-    return validation;
-  }
-
-  async decrementValidationUses(validationId: number): Promise<IqcodeValidation> {
-    const validation = await this.getValidationById(validationId);
-    if (!validation) throw new Error('Validazione non trovata');
-
-    validation.usesRemaining = Math.max(0, validation.usesRemaining - 1);
-    validation.updatedAt = new Date();
-
-    return validation;
-  }
 }
 
 // PostgreSQL Storage Class
@@ -920,7 +861,7 @@ export class PostgreStorage implements IStorage {
 
   constructor() {
     const sql = neon(process.env.DATABASE_URL!);
-    this.db = drizzle(sql, { schema: { iqCodes, sessions, assignedPackages, guests, partnerOffers, iqcodeValidations, iqcodeRecoveryKeys } });
+    this.db = drizzle(sql, { schema: { iqCodes, sessions, assignedPackages, guests, partnerOffers, iqcodeRecoveryKeys } });
     this.initializeDefaultCodes();
   }
 
@@ -1784,63 +1725,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
     return result;
   }
 
-  async getAllValidations(): Promise<any[]> {
-    const result = await this.db
-      .select()
-      .from(iqcodeValidations);
-    return result;
-  }
 
-  // REMOVED DUPLICATE - using typed version below
-
-  async getValidationsByTourist(touristCode: string): Promise<any[]> {
-    return await this.db
-      .select()
-      .from(iqcodeValidations)
-      .where(eq(iqcodeValidations.touristIqCode, touristCode))
-      .orderBy(desc(iqcodeValidations.requestedAt));
-  }
-
-  async getValidationsByPartner(partnerCode: string): Promise<any[]> {
-    return await this.db
-      .select()
-      .from(iqcodeValidations)
-      .where(eq(iqcodeValidations.partnerCode, partnerCode))
-      .orderBy(desc(iqcodeValidations.requestedAt));
-  }
-
-  async updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<any> {
-    const [updated] = await this.db
-      .update(iqcodeValidations)
-      .set({ 
-        status, 
-        respondedAt: respondedAt || new Date(),
-        updatedAt: new Date()
-      })
-      .where(eq(iqcodeValidations.id, id))
-      .returning();
-    return updated;
-  }
-
-  async getValidationById(id: number): Promise<any | undefined> {
-    const [validation] = await this.db
-      .select()
-      .from(iqcodeValidations)
-      .where(eq(iqcodeValidations.id, id));
-    return validation;
-  }
-
-  async decrementValidationUses(id: number): Promise<any> {
-    const [updated] = await this.db
-      .update(iqcodeValidations)
-      .set({ 
-        usesRemaining: sql`uses_remaining - 1`,
-        updatedAt: new Date()
-      })
-      .where(eq(iqcodeValidations.id, id))
-      .returning();
-    return updated;
-  }
 
   // Metodi per sistema ricarica IQCode
   async createIqCode(iqCodeData: any): Promise<any> {
@@ -2245,73 +2130,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
     return result;
   }
 
-  // Metodi validazione IQCode per PostgreSQL
-  async createIqcodeValidation(data: {partnerCode: string, partnerName: string, touristCode: string, requestedAt: Date, status: string, usesRemaining: number, usesTotal: number}): Promise<IqcodeValidation> {
-    const validationData = {
-      partnerCode: data.partnerCode,
-      partnerName: data.partnerName,
-      touristIqCode: data.touristCode,
-      requestedAt: data.requestedAt,
-      status: data.status,
-      usesRemaining: data.usesRemaining,
-      usesTotal: data.usesTotal
-    };
 
-    const result = await this.db.insert(iqcodeValidations).values(validationData).returning();
-    return result[0];
-  }
-
-  async getValidationsByTourist(touristCode: string): Promise<IqcodeValidation[]> {
-    const result = await this.db
-      .select()
-      .from(iqcodeValidations)
-      .where(eq(iqcodeValidations.touristIqCode, touristCode));
-    return result;
-  }
-
-  async getValidationsByPartner(partnerCode: string): Promise<IqcodeValidation[]> {
-    const result = await this.db
-      .select()
-      .from(iqcodeValidations)
-      .where(eq(iqcodeValidations.partnerIqCode, partnerCode));
-    return result;
-  }
-
-  async getValidationById(id: number): Promise<IqcodeValidation | null> {
-    const result = await this.db
-      .select()
-      .from(iqcodeValidations)
-      .where(eq(iqcodeValidations.id, id));
-    return result[0] || null;
-  }
-
-  async updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<IqcodeValidation> {
-    const updateData: any = { status };
-    if (respondedAt) {
-      updateData.respondedAt = respondedAt;
-    }
-
-    const result = await this.db
-      .update(iqcodeValidations)
-      .set(updateData)
-      .where(eq(iqcodeValidations.id, id))
-      .returning();
-    return result[0];
-  }
-
-  async decrementValidationUses(validationId: number): Promise<IqcodeValidation> {
-    const validation = await this.getValidationById(validationId);
-    if (!validation) throw new Error('Validazione non trovata');
-
-    const newUsesRemaining = Math.max(0, validation.usesRemaining - 1);
-
-    const result = await this.db
-      .update(iqcodeValidations)
-      .set({ usesRemaining: newUsesRemaining })
-      .where(eq(iqcodeValidations.id, validationId))
-      .returning();
-    return result[0];
-  }
 
   // Metodi onboarding partner per PostgreSQL
   async getPartnerOnboardingStatus(partnerCode: string): Promise<any> {
@@ -2410,93 +2229,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
     console.log(`Onboarding completato per partner ${partnerCode}`);
   }
 
-  // METODI MANCANTI PER VALIDAZIONE IQCODE - POSTGRESQL
-  async getValidationsByPartner(partnerCode: string): Promise<IqcodeValidation[]> {
-    const result = await this.db.select()
-      .from(iqcodeValidations)
-      .where(eq(iqcodeValidations.partnerCode, partnerCode))
-      .orderBy(desc(iqcodeValidations.requestedAt));
-    return result;
-  }
 
-  async getValidationsByTourist(touristCode: string): Promise<IqcodeValidation[]> {
-    const result = await this.db.select()
-      .from(iqcodeValidations)  
-      .where(eq(iqcodeValidations.touristIqCode, touristCode))
-      .orderBy(desc(iqcodeValidations.requestedAt));
-    return result;
-  }
-
-  async getValidationById(id: number): Promise<IqcodeValidation | null> {
-    const result = await this.db.select()
-      .from(iqcodeValidations)
-      .where(eq(iqcodeValidations.id, id));
-    return result[0] || null;
-  }
-
-  async updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<IqcodeValidation> {
-    const result = await this.db.update(iqcodeValidations)
-      .set({ 
-        status, 
-        respondedAt: respondedAt || new Date(),
-        updatedAt: new Date()
-      })
-      .where(eq(iqcodeValidations.id, id))
-      .returning();
-    return result[0];
-  }
-
-  async decrementValidationUses(validationId: number): Promise<IqcodeValidation> {
-    const validation = await this.getValidationById(validationId);
-    if (!validation) throw new Error('Validazione non trovata');
-
-    const result = await this.db.update(iqcodeValidations)
-      .set({ 
-        usesRemaining: Math.max(0, validation.usesRemaining - 1),
-        updatedAt: new Date()
-      })
-      .where(eq(iqcodeValidations.id, validationId))
-      .returning();
-    return result[0];
-  }
-
-  async markValidationAsUsed(validationId: number): Promise<IqcodeValidation> {
-    const result = await this.db.update(iqcodeValidations)
-      .set({ 
-        usedAt: new Date(),
-        updatedAt: new Date()
-      })
-      .where(eq(iqcodeValidations.id, validationId))
-      .returning();
-    return result[0];
-  }
-
-  // Ottieni gli utilizzi attuali di un turista
-  async getCurrentUsesForTourist(touristCode: string): Promise<{usesRemaining: number, usesTotal: number}> {
-    const { desc } = await import('drizzle-orm');
-    const result = await this.db
-      .select()
-      .from(iqcodeValidations)
-      .where(eq(iqcodeValidations.touristIqCode, touristCode))
-      .orderBy(desc(iqcodeValidations.id))
-      .limit(1);
-
-    if (result.length === 0) {
-      // Prima validazione del turista, inizia con 10 utilizzi
-      return { usesRemaining: 10, usesTotal: 10 };
-    }
-
-    // Validazioni successive, mantiene il conteggio attuale
-    return { 
-      usesRemaining: result[0].usesRemaining,
-      usesTotal: result[0].usesTotal 
-    };
-  }
-
-  async getAllValidations(): Promise<IqcodeValidation[]> {
-    const result = await this.db.select().from(iqcodeValidations);
-    return result;
-  }
 
   // METODI MANCANTI PER OFFERTE PARTNER - POSTGRESQL
   async createPartnerOffer(offer: {partnerCode: string, title: string, description?: string, discount: number, validUntil?: string}): Promise<PartnerOffer> {
@@ -2724,27 +2457,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
     }
   }
 
-  // Override del metodo per utilizzi attuali del turista
-  async getCurrentUsesForTourist(touristCode: string): Promise<{usesRemaining: number, usesTotal: number}> {
-    const { desc } = await import('drizzle-orm');
-    const result = await this.db
-      .select()
-      .from(iqcodeValidations)
-      .where(eq(iqcodeValidations.touristIqCode, touristCode))
-      .orderBy(desc(iqcodeValidations.id))
-      .limit(1);
 
-    if (result.length === 0) {
-      // Prima validazione del turista, inizia con 10 utilizzi
-      return { usesRemaining: 10, usesTotal: 10 };
-    }
-
-    // Validazioni successive, mantiene il conteggio attuale
-    return { 
-      usesRemaining: result[0].usesRemaining,
-      usesTotal: result[0].usesTotal 
-    };
-  }
 
   // **SISTEMA CODICI TEMPORANEI (Privacy-First) - SENZA SCADENZA**
   async generateTempCode(structureCode: string, guestName?: string, guestPhone?: string): Promise<string> {
@@ -3063,44 +2776,7 @@ class ExtendedMemStorage extends MemStorage {
     return [];
   }
 
-  // Metodi validazione IQCode mancanti
 
-  async getValidationsByTourist(touristCode: string): Promise<IqcodeValidation[]> {
-    const validations = globalValidationsData.get('validations') || [];
-    return validations.filter((v: any) => v.touristIqCode === touristCode);
-  }
-
-  async getValidationsByPartner(partnerCode: string): Promise<IqcodeValidation[]> {
-    const validations = globalValidationsData.get('validations') || [];
-    return validations.filter((v: any) => v.partnerIqCode === partnerCode);
-  }
-
-  async getValidationById(id: number): Promise<IqcodeValidation | null> {
-    const validations = globalValidationsData.get('validations') || [];
-    return validations.find((v: any) => v.id === id) || null;
-  }
-
-  async updateValidationStatus(id: number, status: string, respondedAt?: Date): Promise<IqcodeValidation> {
-    const validations = globalValidationsData.get('validations') || [];
-    const validation = validations.find((v: any) => v.id === id);
-    if (!validation) throw new Error('Validazione non trovata');
-
-    validation.status = status;
-    if (respondedAt) validation.respondedAt = respondedAt;
-    validation.updatedAt = new Date();
-
-    return validation;
-  }
-
-  async decrementValidationUses(validationId: number): Promise<IqcodeValidation> {
-    const validation = await this.getValidationById(validationId);
-    if (!validation) throw new Error('Validazione non trovata');
-
-    validation.usesRemaining = Math.max(0, validation.usesRemaining - 1);
-    validation.updatedAt = new Date();
-
-    return validation;
-  }
 
   // **CUSTODE DEL CODICE - Implementazione MemStorage**
   private recoveryKeys: Map<string, any> = new Map();
