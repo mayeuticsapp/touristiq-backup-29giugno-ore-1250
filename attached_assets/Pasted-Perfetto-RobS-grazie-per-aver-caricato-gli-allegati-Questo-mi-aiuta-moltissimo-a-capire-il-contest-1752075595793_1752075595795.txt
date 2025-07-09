@@ -1,0 +1,61 @@
+Perfetto RobS, grazie per aver caricato gli allegati! Questo mi aiuta moltissimo a capire il contesto. Ho il tuo schema del database SQL (`backup_touristiq_complete.sql`) e l'immagine (`image_9f1a7f.png`) del pannello turista che mostra "Codici disponibili 0" e l'avviso "Codici monouso esauriti".
+
+Il problema è chiaro: **il pannello del turista dovrebbe avere 10 utilizzi (OTC) automaticamente all'inizializzazione con un IQCode definitivo, ma questi rimangono a zero, nonostante la struttura acquisti i pacchetti.**
+
+Analizziamo il tuo database dump per capire come sono gestiti i crediti e gli IQCode, e poi cosa potrebbe andare storto nel flusso che hai descritto:
+
+### Analisi del Database (da `backup_touristiq_complete.sql`)
+
+Noto le seguenti tabelle rilevanti per la gestione degli IQCode e degli OTC:
+
+1.  **`iq_codes`**:
+    * Contiene gli IQCode con `role` (admin, structure, partner, tourist).
+    * Campo `available_one_time_uses` con `DEFAULT 10`. **Questo è cruciale!** Significa che ogni nuovo IQCode, per default, dovrebbe avere 10 utilizzi.
+    * Esempi di dati: `IQ-IT-3200-TORRE` con `role='tourist'` e `available_one_time_uses=10`. Sembra che questo sia impostato correttamente nel database per gli IQCode dei turisti.
+
+2.  **`one_time_codes`**:
+    * Contiene i codici monouso generati (`code`) e a quale `tourist_iq_code` sono associati.
+    * Campo `is_used` per tracciare l'utilizzo.
+    * Esempi di dati: Ci sono 10 OTC associati a `IQ-IT-3200-TORRE`, tutti `is_used=f` (false). Questo conferma che gli OTC *vengono* generati per il turista.
+
+3.  **`purchased_packages`**:
+    * Registra i pacchetti di IQCode acquistati dalla struttura (`structure_code`, `package_size`, `iq_codes_remaining`, `iq_codes_used`). Questo è il meccanismo di monetizzazione.
+
+4.  **`assigned_packages`**:
+    * Sembra collegare `recipient_iq_code` (presumo l'IQCode definitivo del turista) a un `package_size` e `credits_remaining`. **Questo è un altro punto chiave.** Questo campo `credits_remaining` sembra essere quello che dovrebbe riflettere gli utilizzi disponibili per il turista.
+
+5.  **`temporary_codes`**:
+    * Gestisce gli IQCode temporanei. Contiene `temp_code` e `structure_code`.
+
+### Il Problema e Possibili Cause
+
+Da quanto mi hai mostrato, **gli IQCode definitivi vengono creati con `available_one_time_uses = 10` nella tabella `iq_codes`**, e i **10 OTC vengono effettivamente generati e associati** a quell'IQCode nella tabella `one_time_codes`.
+
+L'immagine del pannello del turista però mostra "Codici disponibili 0". Questo mi fa pensare a un problema di **visualizzazione o sincronizzazione nel frontend** del pannello del turista, oppure un **errore nella logica che aggiorna/legge i crediti nella tabella `assigned_packages` o che verifica lo stato degli `one_time_codes`**.
+
+Ecco le domande e le cose che mi servirebbero per aiutarti a trovare il perché:
+
+1.  **L'IQCode del turista nel frontend:**
+    * **Qual è l'IQCode definitivo del turista** che sta visualizzando il pannello con "Codici disponibili 0"? Questo è fondamentale per tracciare i dati nel database.
+    * **Puoi verificare manualmente nel database (ad esempio, con una query SQL) la tabella `iq_codes` per questo specifico IQCode del turista?** Mi interessa vedere il valore di `available_one_time_uses` per quell'IQCode.
+    * **Puoi verificare manualmente la tabella `one_time_codes` per vedere quanti `code` sono associati a quell'IQCode e quanti hanno `is_used = true`?**
+
+2.  **Logica di Generazione/Assegnazione dei Crediti:**
+    * Quando un turista genera il suo IQCode definitivo (passaggio 3 del tuo processo), **quale logica sul backend è responsabile di popolare la tabella `assigned_packages` per quel turista?**
+    * **Controlla la tabella `assigned_packages` per l'IQCode definitivo del turista.** Qual è il valore di `credits_remaining` e `credits_used` per quell'IQCode?
+
+3.  **Logica di visualizzazione nel Frontend (il pannello del turista):**
+    * **Come il frontend del pannello del turista recupera il numero di "Codici disponibili"?** Qual è la query o la chiamata API che fa per ottenere quel numero?
+    * Potrebbe essere che il pannello stia leggendo un campo sbagliato, o che ci sia un ritardo nella sincronizzazione tra la generazione degli OTC e l'aggiornamento della visualizzazione.
+
+4.  **Flusso "primo accesso" e collegamento al pacchetto:**
+    * Quando la struttura "regala" il primo IQCode temporaneo (dopo aver comprato un pacchetto), **come viene collegato questo evento al decremento di `iq_codes_remaining` in `purchased_packages` e all'assegnazione di crediti in `assigned_packages`?**
+    * C'è una transazione che lega l'uso di un `temp_code` alla creazione di un `iq_code` definitivo e all'assegnazione di un "pacchetto" di crediti al `recipient_iq_code` nella tabella `assigned_packages`?
+
+**In sintesi, RobS, ho bisogno di capire:**
+
+* **Lo stato attuale nel tuo database (con query dirette) per l'IQCode specifico che mostra 0.**
+* **La logica (anche a grandi linee) del codice backend** che gestisce la generazione dell'IQCode definitivo e l'assegnazione dei crediti/utilizzi ad esso.
+* **La logica del codice frontend** che legge e visualizza i "Codici disponibili".
+
+Con queste informazioni, potremo sicuramente isolare la causa del problema!

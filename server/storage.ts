@@ -3174,7 +3174,9 @@ class ExtendedMemStorage extends MemStorage {
   }
 
   async getTouristAvailableUses(touristIqCode: string): Promise<number> {
-    return 10; // Mock implementation
+    // MemStorage non ha accesso al database, quindi ritorna 0
+    // Il sistema reale usa PostgreSQL
+    return 0;
   }
 
   async initializeOneTimeCodesForTourist(touristIqCode: string, quantity: number): Promise<void> {
