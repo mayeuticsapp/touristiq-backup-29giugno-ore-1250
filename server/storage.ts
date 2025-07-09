@@ -2683,17 +2683,24 @@ class ExtendedPostgreStorage extends PostgreStorage {
   }
 
   async getTouristOneTimeCodes(touristIqCode: string): Promise<OneTimeCode[]> {
+    console.log(`🔍 getTouristOneTimeCodes: cercando codici per turista ${touristIqCode}`);
+    
     const codes = await this.db
       .select()
       .from(oneTimeCodes)
       .where(eq(oneTimeCodes.touristIqCode, touristIqCode))
       .orderBy(desc(oneTimeCodes.createdAt));
 
+    console.log(`📊 getTouristOneTimeCodes: trovati ${codes.length} codici per ${touristIqCode}`);
+    
     // Aggiunge il prefisso TIQ-OTC- per il display frontend
-    return codes.map(code => ({
+    const formattedCodes = codes.map(code => ({
       ...code,
       code: `TIQ-OTC-${code.code}`
     }));
+    
+    console.log(`✅ getTouristOneTimeCodes: restituiti ${formattedCodes.length} codici formattati`);
+    return formattedCodes;
   }
 
   async getTouristAvailableUses(touristIqCode: string): Promise<number> {
