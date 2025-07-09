@@ -3289,6 +3289,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint per inizializzare i codici TIQ-OTC per tutti i turisti esistenti
+  app.post('/api/admin/initialize-existing-tourists', async (req, res) => {
+    try {
+      const session = await getSession(req, res);
+      if (!session || session.role !== 'admin') {
+        return res.status(401).json({ error: 'Accesso negato' });
+      }
+
+      // Trova tutti i turisti con availableUses > 0 ma senza codici TIQ-OTC
+      const touristsWithoutCodes = await storage.getTouristsWithoutOneTimeCodes();
+      
+      console.log(`🔄 INIZIALIZZAZIONE BATCH: ${touristsWithoutCodes.length} turisti senza codici TIQ-OTC`);
+      
+      let successCount = 0;
+      const results = [];
+      
+      for (const tourist of touristsWithoutCodes) {
+        try {
+          await storage.initializeOneTimeCodesForTourist(tourist.code, tourist.availableUses);
+          successCount++;
+          results.push({ code: tourist.code, status: 'success', quantity: tourist.availableUses });
+          console.log(`✅ ${tourist.code} → ${tourist.availableUses} codici TIQ-OTC inizializzati`);
+        } catch (error) {
+          results.push({ code: tourist.code, status: 'error', error: error.message });
+          console.error(`❌ ${tourist.code} → errore: ${error.message}`);
+        }
+      }
+      
+      res.json({
+        success: true,
+        message: `Inizializzazione completata: ${successCount}/${touristsWithoutCodes.length} turisti`,
+        results,
+        totalProcessed: touristsWithoutCodes.length,
+        successCount
+      });
+    } catch (error) {
+      console.error('Errore inizializzazione turisti esistenti:', error);
+      res.status(500).json({ error: 'Errore interno del server' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

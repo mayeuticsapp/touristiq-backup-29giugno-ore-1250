@@ -1,7 +1,7 @@
 import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, oneTimeCodes, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode, type OneTimeCode, type InsertOneTimeCode } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { eq, and, lt, desc, like, sql, inArray } from "drizzle-orm";
+import { eq, and, lt, desc, like, sql, inArray, gt, isNull } from "drizzle-orm";
 import { pool } from "./db";
 
 // Memoria globale condivisa per onboarding partner
@@ -142,6 +142,8 @@ export interface IStorage {
   validateOneTimeCode(code: string, partnerCode: string, partnerName: string): Promise<{ valid: boolean; used: boolean }>;
   getTouristOneTimeCodes(touristIqCode: string): Promise<OneTimeCode[]>;
   getTouristAvailableUses(touristIqCode: string): Promise<number>;
+  initializeOneTimeCodesForTourist(touristIqCode: string, quantity: number): Promise<void>;
+  getTouristsWithoutOneTimeCodes(): Promise<{ code: string; availableUses: number }[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -2790,6 +2792,69 @@ class ExtendedPostgreStorage extends PostgreStorage {
     return touristData?.availableOneTimeUses || 0;
   }
 
+  async initializeOneTimeCodesForTourist(touristIqCode: string, quantity: number): Promise<void> {
+    console.log(`🔄 INIZIALIZZAZIONE TIQ-OTC: ${touristIqCode} → ${quantity} codici`);
+
+    // Verifica che il turista esista
+    const [touristData] = await this.db
+      .select()
+      .from(iqCodes)
+      .where(eq(iqCodes.code, touristIqCode));
+
+    if (!touristData) {
+      console.error(`❌ ERRORE: Turista ${touristIqCode} non trovato`);
+      return;
+    }
+
+    // Crea i codici mancanti (batch insert ottimizzato)
+    const oneTimeCodesToInsert = [];
+    const usedCodes = new Set();
+    
+    for (let i = 0; i < quantity; i++) {
+      let numericCode: string;
+      do {
+        numericCode = Math.floor(10000 + Math.random() * 90000).toString(); // 5 cifre da 10000 a 99999
+      } while (usedCodes.has(numericCode));
+      
+      usedCodes.add(numericCode);
+      oneTimeCodesToInsert.push({
+        code: numericCode,
+        touristIqCode,
+        isUsed: false
+      });
+    }
+    
+    console.log(`🔧 INSERIMENTO BATCH: ${oneTimeCodesToInsert.length} codici per ${touristIqCode}`);
+    
+    // Inserimento batch per performance ottimali
+    await this.db.insert(oneTimeCodes).values(oneTimeCodesToInsert);
+    
+    console.log(`✅ INIZIALIZZAZIONE COMPLETATA: ${quantity} codici TIQ-OTC creati per ${touristIqCode}`);
+  }
+
+  async getTouristsWithoutOneTimeCodes(): Promise<{ code: string; availableUses: number }[]> {
+    // Query per trovare turisti con availableUses > 0 ma senza codici TIQ-OTC
+    const results = await this.db
+      .select({
+        code: iqCodes.code,
+        availableUses: iqCodes.availableOneTimeUses
+      })
+      .from(iqCodes)
+      .leftJoin(oneTimeCodes, eq(iqCodes.code, oneTimeCodes.touristIqCode))
+      .where(
+        and(
+          eq(iqCodes.role, 'tourist'),
+          eq(iqCodes.isActive, true),
+          gt(iqCodes.availableOneTimeUses, 0),
+          isNull(oneTimeCodes.id)
+        )
+      )
+      .groupBy(iqCodes.code, iqCodes.availableOneTimeUses);
+
+    console.log(`🔍 TURISTI SENZA CODICI TIQ-OTC: ${results.length} trovati`);
+    return results.map(r => ({ code: r.code, availableUses: r.availableUses || 0 }));
+  }
+
   // Metodi per compatibilità con interfaccia IStorage
   async createTempCode(code: string, createdBy: string): Promise<any> {
     // Implementazione per MemStorage - crea un oggetto temporaneo
@@ -3103,6 +3168,16 @@ class ExtendedMemStorage extends MemStorage {
 
   async getTouristAvailableUses(touristIqCode: string): Promise<number> {
     return 10; // Mock implementation
+  }
+
+  async initializeOneTimeCodesForTourist(touristIqCode: string, quantity: number): Promise<void> {
+    // Mock implementation per MemStorage
+    console.log(`🔄 INIZIALIZZAZIONE TIQ-OTC (MemStorage): ${touristIqCode} → ${quantity} codici`);
+  }
+
+  async getTouristsWithoutOneTimeCodes(): Promise<{ code: string; availableUses: number }[]> {
+    // Mock implementation per MemStorage
+    return [];
   }
 }
 
