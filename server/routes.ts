@@ -3273,10 +3273,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!await verifyRoleAccess(req, res, ['tourist'])) return;
 
       const session = req.userSession;
+      console.log(`🔍 API: /api/tourist/one-time-codes chiamata per turista: ${session.iqCode}`);
+      
       const codes = await storage.getTouristOneTimeCodes(session.iqCode);
       const available = await storage.getTouristAvailableUses(session.iqCode);
 
-
+      console.log(`📊 API Response: codes=${codes.length}, availableUses=${available}`);
 
       res.json({
         codes,
