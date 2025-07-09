@@ -1,4 +1,4 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, oneTimeCodes, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode, type OneTimeCode, type InsertOneTimeCode } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt, desc, like, sql, inArray } from "drizzle-orm";
@@ -136,6 +136,12 @@ export interface IStorage {
   isTempCodeValid(tempCode: string): Promise<boolean>;
   createPermanentFromTemp(tempCode: string, touristProfile: any): Promise<{ iqCode: string; success: boolean }>;
   cleanupExpiredTempCodes(): Promise<void>;
+
+  // **SISTEMA CODICI MONOUSO (Privacy-First)**
+  generateOneTimeCode(touristIqCode: string): Promise<{ code: string; remaining: number }>;
+  validateOneTimeCode(code: string, partnerCode: string, partnerName: string): Promise<{ valid: boolean; used: boolean }>;
+  getTouristOneTimeCodes(touristIqCode: string): Promise<OneTimeCode[]>;
+  getTouristAvailableUses(touristIqCode: string): Promise<number>;
 }
 
 export class MemStorage implements IStorage {
@@ -861,7 +867,7 @@ export class PostgreStorage implements IStorage {
 
   constructor() {
     const sql = neon(process.env.DATABASE_URL!);
-    this.db = drizzle(sql, { schema: { iqCodes, sessions, assignedPackages, guests, partnerOffers, iqcodeRecoveryKeys } });
+    this.db = drizzle(sql, { schema: { iqCodes, sessions, assignedPackages, guests, partnerOffers, iqcodeRecoveryKeys, oneTimeCodes } });
     this.initializeDefaultCodes();
   }
 
@@ -2566,6 +2572,86 @@ class ExtendedPostgreStorage extends PostgreStorage {
     return;
   }
 
+  // **SISTEMA CODICI MONOUSO (Privacy-First) - PostgreSQL Implementation**
+  async generateOneTimeCode(touristIqCode: string): Promise<{ code: string; remaining: number }> {
+    const { randomBytes } = await import('crypto');
+    const randomSuffix = randomBytes(3).toString('hex').toUpperCase().slice(0, 5);
+    const code = `TIQ-OTC-${randomSuffix}`;
+
+    // Salva il codice monouso nel database
+    await this.db.insert(oneTimeCodes).values({
+      code,
+      touristIqCode,
+      isUsed: false
+    });
+
+    // Decrementa i codici monouso disponibili
+    await this.db
+      .update(iqCodes)
+      .set({ 
+        availableOneTimeUses: sql`COALESCE(available_one_time_uses, 10) - 1`
+      })
+      .where(eq(iqCodes.code, touristIqCode));
+
+    // Calcola i codici rimanenti
+    const [touristData] = await this.db
+      .select({ availableOneTimeUses: iqCodes.availableOneTimeUses })
+      .from(iqCodes)
+      .where(eq(iqCodes.code, touristIqCode));
+
+    const remaining = touristData?.availableOneTimeUses || 0;
+
+    return { code, remaining };
+  }
+
+  async validateOneTimeCode(code: string, partnerCode: string, partnerName: string): Promise<{ valid: boolean; used: boolean }> {
+    // Cerca il codice monouso
+    const [oneTimeCode] = await this.db
+      .select()
+      .from(oneTimeCodes)
+      .where(eq(oneTimeCodes.code, code));
+
+    if (!oneTimeCode) {
+      return { valid: false, used: false };
+    }
+
+    if (oneTimeCode.isUsed) {
+      return { valid: true, used: true };
+    }
+
+    // Marca il codice come utilizzato
+    await this.db
+      .update(oneTimeCodes)
+      .set({
+        isUsed: true,
+        usedBy: partnerCode,
+        usedByName: partnerName,
+        usedAt: new Date()
+      })
+      .where(eq(oneTimeCodes.code, code));
+
+    return { valid: true, used: false };
+  }
+
+  async getTouristOneTimeCodes(touristIqCode: string): Promise<OneTimeCode[]> {
+    const codes = await this.db
+      .select()
+      .from(oneTimeCodes)
+      .where(eq(oneTimeCodes.touristIqCode, touristIqCode))
+      .orderBy(desc(oneTimeCodes.createdAt));
+
+    return codes;
+  }
+
+  async getTouristAvailableUses(touristIqCode: string): Promise<number> {
+    const [touristData] = await this.db
+      .select({ availableOneTimeUses: iqCodes.availableOneTimeUses })
+      .from(iqCodes)
+      .where(eq(iqCodes.code, touristIqCode));
+
+    return touristData?.availableOneTimeUses || 0;
+  }
+
   // Metodi per compatibilità con interfaccia IStorage
   async createTempCode(code: string, createdBy: string): Promise<any> {
     // Implementazione per MemStorage - crea un oggetto temporaneo
@@ -2858,6 +2944,26 @@ class ExtendedMemStorage extends MemStorage {
 
   async cleanupExpiredTempCodes(): Promise<void> {
     // No-op per memoria
+  }
+
+  // **SISTEMA CODICI MONOUSO (Privacy-First) - Memory Implementation**
+  async generateOneTimeCode(touristIqCode: string): Promise<{ code: string; remaining: number }> {
+    const { randomBytes } = await import('crypto');
+    const randomSuffix = randomBytes(3).toString('hex').toUpperCase().slice(0, 5);
+    const code = `TIQ-OTC-${randomSuffix}`;
+    return { code, remaining: 9 }; // Mock implementation
+  }
+
+  async validateOneTimeCode(code: string, partnerCode: string, partnerName: string): Promise<{ valid: boolean; used: boolean }> {
+    return { valid: true, used: false }; // Mock implementation
+  }
+
+  async getTouristOneTimeCodes(touristIqCode: string): Promise<OneTimeCode[]> {
+    return []; // Mock implementation
+  }
+
+  async getTouristAvailableUses(touristIqCode: string): Promise<number> {
+    return 10; // Mock implementation
   }
 }
 

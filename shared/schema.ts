@@ -18,6 +18,7 @@ export const iqCodes = pgTable("iq_codes", {
   internalNote: text("internal_note"), // Note private dell'admin
   isDeleted: boolean("is_deleted").notNull().default(false), // Cestino temporaneo
   deletedAt: timestamp("deleted_at"), // Data eliminazione per auto-cleanup
+  availableOneTimeUses: integer("available_one_time_uses").default(10), // Codici monouso disponibili per turisti
 });
 
 export const sessions = pgTable("sessions", {
@@ -97,6 +98,18 @@ export const adminCredits = pgTable("admin_credits", {
   lastGeneratedAt: timestamp("last_generated_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Tabella codici monouso per turisti
+export const oneTimeCodes = pgTable("one_time_codes", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(), // TIQ-OTC-XXXXX (5 cifre)
+  touristIqCode: text("tourist_iq_code").notNull(), // IQCode del turista che ha generato
+  isUsed: boolean("is_used").notNull().default(false),
+  usedBy: text("used_by"), // IQCode del partner che ha validato
+  usedByName: text("used_by_name"), // Nome del partner per cronologia turista
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  usedAt: timestamp("used_at"),
 });
 
 // Pacchetti IQCode acquistati dalle strutture
@@ -501,3 +514,11 @@ export type RealOffer = typeof realOffers.$inferSelect;
 export type InsertRealOffer = z.infer<typeof insertRealOfferSchema>;
 export type PartnerOffer = typeof partnerOffers.$inferSelect;
 export type InsertPartnerOffer = z.infer<typeof insertPartnerOfferSchema>;
+
+export const insertOneTimeCodeSchema = createInsertSchema(oneTimeCodes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type OneTimeCode = typeof oneTimeCodes.$inferSelect;
+export type InsertOneTimeCode = z.infer<typeof insertOneTimeCodeSchema>;

@@ -3201,6 +3201,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // **SISTEMA CODICI MONOUSO (Privacy-First) - ENDPOINTS**
+
+  // Endpoint per turisti: genera nuovo codice monouso
+  app.post("/api/tourist/generate-one-time-code", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['tourist'])) return;
+
+      const session = req.userSession;
+      const result = await storage.generateOneTimeCode(session.iqCode);
+
+      res.json({
+        success: true,
+        code: result.code,
+        remaining: result.remaining,
+        message: `Codice monouso generato. Ti rimangono ${result.remaining} codici.`
+      });
+
+    } catch (error) {
+      console.error("Errore generazione codice monouso:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  // Endpoint per partner: valida codice monouso
+  app.post("/api/partner/validate-one-time-code", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['partner'])) return;
+
+      const { code } = req.body;
+      if (!code) {
+        return res.status(400).json({ error: "Codice monouso richiesto" });
+      }
+
+      const session = req.userSession;
+      const partnerData = await storage.getIqCodeByCode(session.iqCode);
+      const partnerName = partnerData?.assignedTo || 'Partner';
+
+      const result = await storage.validateOneTimeCode(code, session.iqCode, partnerName);
+
+      if (!result.valid) {
+        return res.status(400).json({ 
+          valid: false,
+          message: "Codice monouso non valido" 
+        });
+      }
+
+      if (result.used) {
+        return res.status(400).json({ 
+          valid: true,
+          used: true,
+          message: "Codice monouso già utilizzato" 
+        });
+      }
+
+      res.json({
+        valid: true,
+        used: false,
+        message: "Codice monouso validato con successo! Sconto applicato."
+      });
+
+    } catch (error) {
+      console.error("Errore validazione codice monouso:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  // Endpoint per turisti: visualizza cronologia codici monouso
+  app.get("/api/tourist/one-time-codes", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['tourist'])) return;
+
+      const session = req.userSession;
+      const codes = await storage.getTouristOneTimeCodes(session.iqCode);
+      const available = await storage.getTouristAvailableUses(session.iqCode);
+
+      res.json({
+        codes,
+        availableUses: available
+      });
+
+    } catch (error) {
+      console.error("Errore recupero codici monouso:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

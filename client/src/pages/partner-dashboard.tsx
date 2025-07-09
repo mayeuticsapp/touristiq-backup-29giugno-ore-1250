@@ -19,6 +19,7 @@ import { AdvancedAccounting } from "@/components/advanced-accounting";
 import { PartnerOnboarding } from "@/components/partner-onboarding";
 
 import { CustodeCodiceDashboard } from "@/components/custode-codice";
+import { OneTimeCodeValidator } from "@/components/OneTimeCodeValidator";
 
 interface TouristLinkRequest {
   id: string;
@@ -474,6 +475,11 @@ export default function PartnerDashboard() {
             iqCode={entityInfo?.code}
             className="mb-6" 
           />
+
+          {/* Sistema Validazione Codici Monouso (Privacy-First) */}
+          <div className="mb-6">
+            <OneTimeCodeValidator />
+          </div>
 
           <div className="grid grid-cols-1 gap-6">
             {/* Tourist Link Request - NASCOSTA TEMPORANEAMENTE */}

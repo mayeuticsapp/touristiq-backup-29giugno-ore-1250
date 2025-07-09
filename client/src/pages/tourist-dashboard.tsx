@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TIQaiChat } from "@/components/tiqai-chat";
+import { OneTimeCodeGenerator } from "@/components/OneTimeCodeGenerator";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -704,6 +705,9 @@ export default function TouristDashboard() {
             <TIQaiChat />
           </CardContent>
         </Card>
+
+        {/* Sistema Codici Monouso (Privacy-First) */}
+        <OneTimeCodeGenerator />
       </div>
 
 
