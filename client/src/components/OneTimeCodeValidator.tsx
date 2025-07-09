@@ -22,10 +22,14 @@ export function OneTimeCodeValidator() {
 
   // Mutation per validare codice monouso
   const validateMutation = useMutation({
-    mutationFn: (codeToValidate: string) => apiRequest('/api/partner/validate-one-time-code', {
-      method: 'POST',
-      body: { code: codeToValidate }
-    }),
+    mutationFn: (codeToValidate: string) => {
+      // Aggiunge automaticamente TIQ-OTC- se il partner inserisce solo 5 cifre
+      const fullCode = codeToValidate.length === 5 ? `TIQ-OTC-${codeToValidate}` : codeToValidate;
+      return apiRequest('/api/partner/validate-one-time-code', {
+        method: 'POST',
+        body: { code: fullCode }
+      });
+    },
     onSuccess: (response: any) => {
       setLastValidation({
         code,
@@ -71,13 +75,13 @@ export function OneTimeCodeValidator() {
     if (!code.trim()) {
       toast({
         title: "Errore",
-        description: "Inserisci un codice monouso",
+        description: "Inserisci le 5 cifre del codice TIQ-OTC",
         variant: "destructive"
       });
       return;
     }
 
-    validateMutation.mutate(code.trim().toUpperCase());
+    validateMutation.mutate(code.trim());
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -101,25 +105,38 @@ export function OneTimeCodeValidator() {
         {/* Form di validazione */}
         <div className="space-y-3">
           <div>
-            <Label htmlFor="otc-input">Codice Monouso (formato: TIQ-OTC-XXXXX)</Label>
+            <Label htmlFor="otc-input">Chiedi al turista: "Mi dai il TIQ-OTC?"</Label>
             <div className="flex gap-2 mt-1">
-              <Input
-                id="otc-input"
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                onKeyPress={handleKeyPress}
-                placeholder="TIQ-OTC-A1B2C"
-                className="font-mono"
-                disabled={validateMutation.isPending}
-              />
+              <div className="flex items-center border rounded-md">
+                <span className="px-3 py-2 bg-gray-50 text-gray-700 border-r font-mono text-sm">
+                  TIQ-OTC-
+                </span>
+                <Input
+                  id="otc-input"
+                  value={code}
+                  onChange={(e) => {
+                    // Accetta solo cifre, massimo 5
+                    const numericValue = e.target.value.replace(/\D/g, '').slice(0, 5);
+                    setCode(numericValue);
+                  }}
+                  onKeyPress={handleKeyPress}
+                  placeholder="12345"
+                  className="font-mono text-lg border-0 focus:ring-0 rounded-l-none"
+                  disabled={validateMutation.isPending}
+                  maxLength={5}
+                />
+              </div>
               <Button
                 onClick={handleValidate}
-                disabled={validateMutation.isPending || !code.trim()}
+                disabled={validateMutation.isPending || code.length !== 5}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 {validateMutation.isPending ? "Verificando..." : "Valida"}
               </Button>
             </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Il turista ti dirà solo 5 cifre (es: "uno-due-tre-quattro-cinque")
+            </p>
           </div>
         </div>
 
@@ -185,10 +202,11 @@ export function OneTimeCodeValidator() {
         <div className="space-y-2 text-xs text-muted-foreground bg-gray-50 p-3 rounded-lg">
           <h4 className="font-semibold text-gray-700">ℹ️ Come funziona:</h4>
           <ul className="space-y-1">
-            <li>• I turisti generano codici monouso temporanei (TIQ-OTC-XXXXX)</li>
+            <li>• Chiedi al turista: <strong>"Mi dai il TIQ-OTC?"</strong></li>
+            <li>• Il turista ti risponde solo <strong>5 cifre</strong> (es: "12345")</li>
+            <li>• Digiti le 5 cifre qui sopra e validi</li>
             <li>• Ogni codice può essere utilizzato una sola volta</li>
-            <li>• Non rivela l'IQCode principale del turista (privacy-first)</li>
-            <li>• Elimina la vulnerabilità umana del "dettare il codice"</li>
+            <li>• ✅ <strong>Privacy-first:</strong> l'IQCode principale rimane protetto</li>
           </ul>
         </div>
       </CardContent>

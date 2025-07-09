@@ -123,25 +123,31 @@ export function OneTimeCodeGenerator() {
             <h4 className="font-semibold">Codice Attivo</h4>
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-mono text-lg font-bold text-amber-800">
-                    {latestCode.code}
-                  </p>
-                  <p className="text-xs text-amber-600 mt-1">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-medium text-amber-700 bg-amber-100 px-2 py-1 rounded">
+                      TIQ-OTC-
+                    </span>
+                    <span className="font-mono text-2xl font-bold text-amber-800 tracking-wider">
+                      {latestCode.code.replace('TIQ-OTC-', '')}
+                    </span>
+                  </div>
+                  <p className="text-xs text-amber-600">
                     Generato: {new Date(latestCode.createdAt).toLocaleString()}
                   </p>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => copyToClipboard(latestCode.code)}
+                  onClick={() => copyToClipboard(latestCode.code.replace('TIQ-OTC-', ''))}
                   className="border-amber-300 text-amber-700 hover:bg-amber-100"
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-xs text-amber-700 mt-2">
-                💡 Condividi questo codice con il partner per applicare lo sconto
+              <p className="text-xs text-amber-700 mt-2 bg-amber-100 p-2 rounded">
+                💡 <strong>Quando il partner chiede "mi dai il TIQ-OTC?"</strong><br/>
+                Rispondi solo: <span className="font-mono font-bold">{latestCode.code.replace('TIQ-OTC-', '')}</span>
               </p>
             </div>
           </div>
@@ -186,7 +192,12 @@ export function OneTimeCodeGenerator() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <p className="font-mono text-sm">{code.code}</p>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs text-gray-500">TIQ-OTC-</span>
+                          <span className="font-mono text-sm font-bold">
+                            {code.code.replace('TIQ-OTC-', '')}
+                          </span>
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           {new Date(code.createdAt).toLocaleString()}
                         </p>

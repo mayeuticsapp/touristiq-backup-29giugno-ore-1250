@@ -2574,13 +2574,23 @@ class ExtendedPostgreStorage extends PostgreStorage {
 
   // **SISTEMA CODICI MONOUSO (Privacy-First) - PostgreSQL Implementation**
   async generateOneTimeCode(touristIqCode: string): Promise<{ code: string; remaining: number }> {
-    const { randomBytes } = await import('crypto');
-    const randomSuffix = randomBytes(3).toString('hex').toUpperCase().slice(0, 5);
-    const code = `TIQ-OTC-${randomSuffix}`;
+    // Genera solo 5 cifre numeriche (facili da dettare: "uno-due-tre-quattro-cinque")
+    let numericCode: string;
+    do {
+      numericCode = Math.floor(10000 + Math.random() * 90000).toString(); // 5 cifre da 10000 a 99999
+      
+      // Verifica che il codice non esista già nel database
+      const [existingCode] = await this.db
+        .select()
+        .from(oneTimeCodes)
+        .where(eq(oneTimeCodes.code, numericCode));
+        
+      if (!existingCode) break; // Codice univoco trovato
+    } while (true);
 
-    // Salva il codice monouso nel database
+    // Salva solo le 5 cifre nel database (ottimizzazione storage)
     await this.db.insert(oneTimeCodes).values({
-      code,
+      code: numericCode,
       touristIqCode,
       isUsed: false
     });
@@ -2601,15 +2611,19 @@ class ExtendedPostgreStorage extends PostgreStorage {
 
     const remaining = touristData?.availableOneTimeUses || 0;
 
-    return { code, remaining };
+    // Frontend riceve formato completo per display, ma backend salva solo cifre
+    return { code: `TIQ-OTC-${numericCode}`, remaining };
   }
 
   async validateOneTimeCode(code: string, partnerCode: string, partnerName: string): Promise<{ valid: boolean; used: boolean }> {
-    // Cerca il codice monouso
+    // Estrae solo le 5 cifre dal formato completo TIQ-OTC-12345
+    const numericCode = code.replace('TIQ-OTC-', '');
+    
+    // Cerca il codice monouso usando solo le 5 cifre (come salvato nel database)
     const [oneTimeCode] = await this.db
       .select()
       .from(oneTimeCodes)
-      .where(eq(oneTimeCodes.code, code));
+      .where(eq(oneTimeCodes.code, numericCode));
 
     if (!oneTimeCode) {
       return { valid: false, used: false };
@@ -2628,7 +2642,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
         usedByName: partnerName,
         usedAt: new Date()
       })
-      .where(eq(oneTimeCodes.code, code));
+      .where(eq(oneTimeCodes.code, numericCode));
 
     return { valid: true, used: false };
   }
@@ -2640,7 +2654,11 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .where(eq(oneTimeCodes.touristIqCode, touristIqCode))
       .orderBy(desc(oneTimeCodes.createdAt));
 
-    return codes;
+    // Aggiunge il prefisso TIQ-OTC- per il display frontend
+    return codes.map(code => ({
+      ...code,
+      code: `TIQ-OTC-${code.code}`
+    }));
   }
 
   async getTouristAvailableUses(touristIqCode: string): Promise<number> {
@@ -2948,10 +2966,9 @@ class ExtendedMemStorage extends MemStorage {
 
   // **SISTEMA CODICI MONOUSO (Privacy-First) - Memory Implementation**
   async generateOneTimeCode(touristIqCode: string): Promise<{ code: string; remaining: number }> {
-    const { randomBytes } = await import('crypto');
-    const randomSuffix = randomBytes(3).toString('hex').toUpperCase().slice(0, 5);
-    const code = `TIQ-OTC-${randomSuffix}`;
-    return { code, remaining: 9 }; // Mock implementation
+    // Genera 5 cifre numeriche per consistency con PostgreSQL
+    const numericCode = Math.floor(10000 + Math.random() * 90000).toString();
+    return { code: `TIQ-OTC-${numericCode}`, remaining: 9 }; // Mock implementation
   }
 
   async validateOneTimeCode(code: string, partnerCode: string, partnerName: string): Promise<{ valid: boolean; used: boolean }> {
