@@ -3270,7 +3270,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint per turisti: visualizza cronologia codici monouso
   app.get("/api/tourist/one-time-codes", async (req, res) => {
     try {
-      if (!await verifyRoleAccess(req, res, ['tourist'])) return;
+      console.log("🔍 DEBUG: Inizio controllo endpoint /api/tourist/one-time-codes");
+      console.log("🔍 DEBUG: Cookie ricevuti:", req.cookies);
+      
+      if (!await verifyRoleAccess(req, res, ['tourist'])) {
+        console.log("❌ DEBUG: verifyRoleAccess fallito per /api/tourist/one-time-codes");
+        return;
+      }
 
       const session = req.userSession;
       console.log(`🔍 API: /api/tourist/one-time-codes chiamata per turista: ${session.iqCode}`);
