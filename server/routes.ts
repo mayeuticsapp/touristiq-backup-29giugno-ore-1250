@@ -3347,23 +3347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Errore interno del server' });
     }
   });
-  // ✅ REST API per ottenere i codici TIQ-OTC di un turista
-  app.get("/api/tourist/one-time-codes", async (req, res) => {
-    try {
-      const session = await getSession(req, res);
-      if (!session || session.role !== "tourist") {
-        return res.status(401).json({ error: "Accesso non autorizzato" });
-      }
-
-      const touristCode = session.code;
-
-      const codes = await storage.getAvailableOneTimeCodes(touristCode);
-      res.json({ codes });
-    } catch (error) {
-      console.error("Errore recupero codici monouso:", error);
-      res.status(500).json({ error: "Errore interno del server" });
-    }
-  });
+  // ENDPOINT DUPLICATO RIMOSSO - il funzionante è alla riga 3281
 
   const httpServer = createServer(app);
   return httpServer;
