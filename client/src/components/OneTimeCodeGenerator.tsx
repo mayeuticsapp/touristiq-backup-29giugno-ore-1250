@@ -24,17 +24,26 @@ export function OneTimeCodeGenerator() {
   const [showHistory, setShowHistory] = useState(false);
 
   // Query per ottenere i codici monouso e gli utilizzi disponibili
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, refetch, error } = useQuery({
     queryKey: ['/api/tourist/one-time-codes'],
-    queryFn: () => {
+    queryFn: async () => {
       console.log('🔄 FRONTEND: Chiamando /api/tourist/one-time-codes');
-      return apiRequest('/api/tourist/one-time-codes') as Promise<{
-        codes: OneTimeCode[];
-        availableUses: number;
-      }>;
+      try {
+        const result = await apiRequest('/api/tourist/one-time-codes') as {
+          codes: OneTimeCode[];
+          availableUses: number;
+        };
+        console.log('✅ FRONTEND: Risposta ricevuta:', result);
+        return result;
+      } catch (error) {
+        console.error('❌ FRONTEND: Errore chiamata API:', error);
+        throw error;
+      }
     },
     staleTime: 0,
-    gcTime: 0
+    gcTime: 0,
+    retry: 3,
+    retryDelay: 1000
   });
 
   // Mutation per generare nuovo codice monouso
@@ -90,9 +99,44 @@ export function OneTimeCodeGenerator() {
     );
   }
 
+  if (error) {
+    console.error('🔧 FRONTEND DEBUG: Errore query:', error);
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-red-600" />
+            Codici Monouso TIQ-OTC
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-700">
+              ⚠️ Errore caricamento dati. Prova a ricaricare la pagina.
+            </p>
+            <Button 
+              onClick={() => refetch()} 
+              variant="outline" 
+              size="sm" 
+              className="mt-2"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Riprova
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  console.log('🔧 FRONTEND DEBUG: Data ricevuta:', data);
+  console.log('🔧 FRONTEND DEBUG: Error stato:', error);
+  
   const codes = data?.codes || [];
   const availableUses = data?.availableUses || 0;
   const latestCode = codes.find(code => !code.isUsed);
+  
+  console.log(`📊 FRONTEND DEBUG: codes=${codes.length}, availableUses=${availableUses}`);
 
   return (
     <Card>
