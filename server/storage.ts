@@ -2561,12 +2561,29 @@ class ExtendedPostgreStorage extends PostgreStorage {
       availableOneTimeUses: 10, // Assegna automaticamente 10 codici TIQ-OTC
     });
     
-    // ❌ NON CREIAMO PIÙ CODICI AUTOMATICAMENTE DURANTE LA GENERAZIONE PERMANENTE
-    // I codici TIQ-OTC vengono creati solo su richiesta esplicita dell'utente tramite il pulsante "Genera Codice"
-    console.log(`✅ IQCode permanente creato: ${uniqueCode} con 10 utilizzi TIQ-OTC disponibili`);
-    console.log(`ℹ️ I codici reali verranno generati solo quando l'utente premerà "Genera Codice"`);
+    // 🎯 INIZIALIZZA 10 CODICI TIQ-OTC REALI NEL DATABASE (nascosti dalla cronologia fino all'utilizzo)
+    console.log(`🎯 Inizializzati 10 codici TIQ-OTC per il turista ${uniqueCode}`);
     
-    // Non creiamo più codici automaticamente - evita cronologie non richieste
+    // INSERIMENTO BATCH OTTIMIZZATO: Crea 10 codici numerici univoci
+    const oneTimeCodesToInsert = [];
+    const usedCodes = new Set();
+    
+    for (let i = 0; i < 10; i++) {
+      let numericCode: string;
+      do {
+        numericCode = Math.floor(10000 + Math.random() * 90000).toString(); // 5 cifre da 10000 a 99999
+      } while (usedCodes.has(numericCode));
+      
+      usedCodes.add(numericCode);
+      oneTimeCodesToInsert.push({
+        code: numericCode,
+        touristIqCode: uniqueCode,
+        isUsed: false
+      });
+    }
+    
+    // Inserimento batch per performance ottimali
+    await this.db.insert(oneTimeCodes).values(oneTimeCodesToInsert);
     
     return { iqCode: uniqueCode, success: true };
   }
@@ -2669,15 +2686,21 @@ class ExtendedPostgreStorage extends PostgreStorage {
   }
 
   async getTouristOneTimeCodes(touristIqCode: string): Promise<OneTimeCode[]> {
-    console.log(`🔍 getTouristOneTimeCodes: cercando codici per turista ${touristIqCode}`);
+    console.log(`🔍 getTouristOneTimeCodes: cercando codici UTILIZZATI per turista ${touristIqCode}`);
     
+    // CRONOLOGIA PRIVACY-FIRST: Mostra solo i codici già utilizzati da partner
     const codes = await this.db
       .select()
       .from(oneTimeCodes)
-      .where(eq(oneTimeCodes.touristIqCode, touristIqCode))
-      .orderBy(desc(oneTimeCodes.createdAt));
+      .where(
+        and(
+          eq(oneTimeCodes.touristIqCode, touristIqCode),
+          eq(oneTimeCodes.isUsed, true) // Solo codici già utilizzati
+        )
+      )
+      .orderBy(desc(oneTimeCodes.usedAt)); // Ordinati per data utilizzo
 
-    console.log(`📊 getTouristOneTimeCodes: trovati ${codes.length} codici per ${touristIqCode}`);
+    console.log(`📊 getTouristOneTimeCodes: trovati ${codes.length} codici UTILIZZATI per ${touristIqCode}`);
     
     // Aggiunge il prefisso TIQ-OTC- per il display frontend
     const formattedCodes = codes.map(code => ({
@@ -2685,7 +2708,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
       code: `TIQ-OTC-${code.code}`
     }));
     
-    console.log(`✅ getTouristOneTimeCodes: restituiti ${formattedCodes.length} codici formattati`);
+    console.log(`✅ CRONOLOGIA PRIVACY: restituiti ${formattedCodes.length} codici utilizzati (nascosti ${codes.length} non usati)`);
     return formattedCodes;
   }
 
@@ -2711,16 +2734,14 @@ class ExtendedPostgreStorage extends PostgreStorage {
 
     console.log(`🟠 getTouristAvailableUses (iqCode: ${touristIqCode}) → disponibilità: ${availableUses} codici, reali: ${actualCodes}`);
 
-    // ❌ INIZIALIZZAZIONE AUTOMATICA DISATTIVATA PER EVITARE CRONOLOGIE NON RICHIESTE
-    // I codici TIQ-OTC vengono creati solo su richiesta esplicita dell'utente tramite il pulsante "Genera Codice"
+    // ✅ INIZIALIZZAZIONE AUTOMATICA RIATTIVATA - I codici vengono creati automaticamente ma nascosti dalla cronologia fino all'utilizzo
     console.log(`ℹ️ Sistema TIQ-OTC: ${actualCodes} codici esistenti, ${availableUses} utilizzi disponibili`);
     
     if (availableUses > 0 && Number(actualCodes) === 0) {
-      console.log(`ℹ️ NOTA: Turista ${touristIqCode} ha ${availableUses} utilizzi disponibili ma nessun codice generato ancora`);
-      console.log(`ℹ️ I codici TIQ-OTC verranno creati solo su richiesta esplicita dell'utente tramite il pannello`);
+      console.log(`🎯 INIZIALIZZAZIONE AUTOMATICA: Creo ${availableUses} codici TIQ-OTC per ${touristIqCode}`);
+      console.log(`ℹ️ Codici creati ma nascosti dalla cronologia fino al primo utilizzo da partner`);
       
-      // Non creiamo più codici automaticamente - solo su richiesta
-      /*
+      try {
         // Crea i codici mancanti (batch insert ottimizzato)
         const oneTimeCodesToInsert = [];
         const usedCodes = new Set();
@@ -2743,19 +2764,41 @@ class ExtendedPostgreStorage extends PostgreStorage {
         
         // Inserimento batch per performance ottimali
         await this.db.insert(oneTimeCodes).values(oneTimeCodesToInsert);
-        console.log(`✅ INIZIALIZZAZIONE COMPLETATA: ${availableUses} codici TIQ-OTC creati per ${touristIqCode}`);
-        */
+        console.log(`✅ INIZIALIZZAZIONE AUTOMATICA COMPLETATA: ${availableUses} codici TIQ-OTC creati per ${touristIqCode}`);
+      } catch (error) {
+        console.error(`❌ ERRORE INIZIALIZZAZIONE AUTOMATICA PER ${touristIqCode}: ${error}`);
+      }
     }
 
-    // Se il turista non ha utilizzi disponibili, gli assegna automaticamente 10 utilizzi (senza creare codici reali)
+    // Se il turista non ha utilizzi, gli diamo automaticamente 10 all'accesso
     if (touristData && (touristData.availableOneTimeUses === null || touristData.availableOneTimeUses === 0)) {
       await this.db
         .update(iqCodes)
         .set({ availableOneTimeUses: 10 })
         .where(eq(iqCodes.code, touristIqCode));
       
-      console.log(`✅ CREDITI ASSEGNATI: ${touristIqCode} ora ha 10 utilizzi TIQ-OTC disponibili`);
-      console.log(`ℹ️ I codici reali verranno generati solo quando l'utente premerà "Genera Codice"`);
+      // E creiamo anche i 10 codici reali (nascosti dalla cronologia fino all'utilizzo)
+      console.log(`🎯 INIZIALIZZAZIONE NUOVA: Creo 10 codici TIQ-OTC per nuovo turista ${touristIqCode}`);
+      
+      const oneTimeCodesToInsert = [];
+      const usedCodes = new Set();
+      
+      for (let i = 0; i < 10; i++) {
+        let numericCode: string;
+        do {
+          numericCode = Math.floor(10000 + Math.random() * 90000).toString();
+        } while (usedCodes.has(numericCode));
+        
+        usedCodes.add(numericCode);
+        oneTimeCodesToInsert.push({
+          code: numericCode,
+          touristIqCode,
+          isUsed: false
+        });
+      }
+      
+      await this.db.insert(oneTimeCodes).values(oneTimeCodesToInsert);
+      console.log(`✅ NUOVA INIZIALIZZAZIONE COMPLETATA: 10 codici TIQ-OTC creati per ${touristIqCode}`);
       
       return 10;
     }
