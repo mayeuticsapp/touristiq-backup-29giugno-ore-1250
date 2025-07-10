@@ -1,0 +1,177 @@
+{
+  "auth": {
+    "title": "TouristIQ Access",
+    "subtitle": "Enter your IQ code to access",
+    "iqCodePlaceholder": "Enter your IQ code",
+    "iqCodeLabel": "IQ Code",
+    "loginButton": "Login",
+    "forgotCode": "Forgot your code?",
+    "recoverWith": "Recover it with Code Guardian",
+    "recoverWithCustode": "Recover it with Code Guardian",
+    "custodeTitle": "Code Guardian",
+    "custodeDescription": "Enter the secret word and birth date you set up to recover your IQCode.",
+    "tooltip": "Anonymous recovery system without email or phone. Set a secret word and birth date to recover your code securely.",
+    "tempCode": {
+      "detected": "Temporary code detected",
+      "redirecting": "We're redirecting you to the activation page..."
+    },
+    "recovery": {
+      "success": "IQCode recovered!",
+      "yourCode": "Your IQCode is",
+      "notFound": "No code found with these credentials",
+      "alreadyActive": "You already have an active code",
+      "error": "Error recovering the code",
+      "missingFields": "Enter both secret word and birth date"
+    },
+    "errors": {
+      "required": "IQ code is required",
+      "invalid": "Invalid IQ code. Please try again.",
+      "notFound": "IQ code not found",
+      "serverError": "Server error. Please try again.",
+      "unknownRole": "Unknown role"
+    }
+  },
+  "dashboard": {
+    "welcome": "Welcome",
+    "welcomeFallback": "to your tourist space"
+  },
+  "tourist": {
+    "title": "Tourist Dashboard",
+    "subtitle": "Every experience starts with an IQ",
+    "myDiscounts": "My Discounts",
+    "tiqaiChat": "TIQai Chat",
+    "codeValidation": "IQCode Validation",
+    "magicPassepartout": "Magic Passepartout",
+    "exclusiveDiscoveries": "Your Exclusive Discoveries",
+    "hiddenTreasures": "hidden treasures",
+    "generateCode": "Generate Code",
+    "noOffersAvailable": "No offers available at the moment",
+    "offersCount": "{{count}} offer",
+    "offersCount_plural": "{{count}} offers",
+    "security": {
+      "unauthorized": "Unauthorized access",
+      "tempCodeNotAllowed": "Temporary codes must be activated before use"
+    },
+    "welcome": {
+      "message1": "Your gateway to authentic Calabrian experiences",
+      "message2": "Where every moment becomes an unforgettable discovery",
+      "message3": "Your passport to the hidden treasures of the land of sun",
+      "message4": "Discover Calabria like never before",
+      "message5": "Welcome to the beating heart of Calabrian hospitality",
+      "message6": "Every experience begins with an IQ, every memory is born here",
+      "message7": "The key to open the doors of authentic Calabria"
+    },
+    "oneTimeCodes": {
+      "title": "TIQ-OTC Codes",
+      "subtitle": "Anti-vulnerability system for secure validations",
+      "generate": "Generate Code",
+      "availableUses": "Available uses: {{count}}",
+      "lastGenerated": "Last generated code:",
+      "copyCode": "Copy Code",
+      "copied": "Copied!",
+      "history": "Usage History",
+      "noHistory": "No usage recorded",
+      "usedAt": "Used on {{date}}",
+      "usedBy": "by {{partner}}",
+      "error": "Error generating code"
+    },
+    "waitingDiscoveries": "Your discoveries await!",
+    "exploreOrAsk": "Explore nearby or ask TIQai to find unique experiences",
+    "exploreArea": "Explore Area",
+    "recentActivity": "Recent Activity",
+    "discountUsed": "Discount used",
+    "discount": "discount",
+    "addedToFavorites": "Added to favorites"
+  },
+  "partner": {
+    "title": "Partner Dashboard",
+    "validateCode": "Validate IQCode",
+    "codeInput": "Enter tourist's code",
+    "validateButton": "Validate",
+    "validation": {
+      "success": "✅ Valid code – Tourist authenticated TouristIQ",
+      "invalid": "❌ Invalid code",
+      "error": "Error during validation"
+    },
+    "offers": {
+      "title": "My Offers",
+      "create": "Create New Offer",
+      "edit": "Edit",
+      "delete": "Delete",
+      "noOffers": "No offers created"
+    }
+  },
+  "structure": {
+    "title": "Structure Dashboard",
+    "guests": "Guest Management",
+    "credits": "Credits: {{remaining}}/{{total}}",
+    "miniManagement": "Mini-management"
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "users": "Users",
+    "userManagement": "User Management",
+    "stats": "Statistics",
+    "iqCodes": "IQ Codes",
+    "settings": "Settings",
+    "assignPackages": "Assign Packages"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "loading": "Loading",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "actions": "Actions",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "errors": {
+    "generic": "An error occurred. Please try again.",
+    "network": "Connection error. Check your internet connection.",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Operation not allowed",
+    "notFound": "Resource not found",
+    "validation": "Invalid data",
+    "server": "Server error"
+  },
+  "validation": {
+    "required": "Required field",
+    "email": "Invalid email",
+    "minLength": "Minimum {{min}} characters",
+    "maxLength": "Maximum {{max}} characters",
+    "numeric": "Numbers only",
+    "alphanumeric": "Letters and numbers only"
+  },
+  "tiqai": {
+    "title": "TIQai Chat",
+    "subtitle": "Your digital Genius Loci",
+    "placeholder": "Whisper your discovery desires...",
+    "send": "Send",
+    "welcome": "Hello! I'm TIQai, your AI assistant to discover the hidden treasures of Calabria. How can I help you?",
+    "thinking": "I'm thinking...",
+    "error": "Error communicating with TIQai"
+  },
+  "language": {
+    "selector": "Select Language",
+    "it": "Italiano",
+    "en": "English",
+    "es": "Español",
+    "de": "Deutsch"
+  }
+}

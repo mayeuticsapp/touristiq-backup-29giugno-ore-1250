@@ -15,8 +15,11 @@ import UserManagement from "@/pages/user-management";
 import ActivateTempCode from "@/pages/activate-temp-code";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import "./i18n";
 
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole: string }) {
+  const { t } = useTranslation();
   const { data: user, isLoading, error } = useQuery({
     queryKey: ["/api/auth/me"],
     queryFn: getCurrentUser,
@@ -31,7 +34,7 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Verifica autenticazione...</p>
+          <p className="text-gray-600">{t('common.loading')}...</p>
         </div>
       </div>
     );

@@ -16,8 +16,11 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isTemporaryCode } from "@/lib/temp-code-utils";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 export default function TouristDashboard() {
+  const { t } = useTranslation();
 
   const [showLocationSearch, setShowLocationSearch] = useState(false);
   const [searchCity, setSearchCity] = useState("");
@@ -53,8 +56,8 @@ export default function TouristDashboard() {
   useEffect(() => {
     if (user && user.iqCode && isTemporaryCode(user.iqCode)) {
       toast({
-        title: "Accesso non autorizzato",
-        description: "I codici temporanei devono essere attivati prima dell'uso",
+        title: t('tourist.security.unauthorized'),
+        description: t('tourist.security.tempCodeNotAllowed'),
         variant: "destructive",
       });
       // Reindirizza immediatamente alla pagina di attivazione
@@ -62,15 +65,15 @@ export default function TouristDashboard() {
     }
   }, [user]);
 
-  // Messaggi dinamici evocativi
+  // Messaggi dinamici evocativi tradotti
   const welcomeMessages = [
-    "La tua porta d'accesso alle esperienze autentiche della Calabria",
-    "Dove ogni momento diventa una scoperta indimenticabile", 
-    "Il tuo passaporto per i tesori nascosti della terra del sole",
-    "Scopri la Calabria come mai prima d'ora",
-    "Benvenuto nel cuore pulsante dell'ospitalità calabrese",
-    "Ogni esperienza inizia con un IQ, ogni ricordo nasce qui",
-    "La chiave per aprire le porte dell'autentica Calabria"
+    t('tourist.welcome.message1'),
+    t('tourist.welcome.message2'),
+    t('tourist.welcome.message3'),
+    t('tourist.welcome.message4'),
+    t('tourist.welcome.message5'),
+    t('tourist.welcome.message6'),
+    t('tourist.welcome.message7')
   ];
 
   // Logica popup benvenuto
@@ -286,16 +289,16 @@ export default function TouristDashboard() {
   const offersToShow = searchMode === "default" ? (realOffers as any)?.discounts || [] : locationOffers;
 
   const navigation = [
-    { icon: <Tags size={16} />, label: "I Miei Sconti", href: "#" },
-    { icon: <MessageCircle size={16} />, label: "TIQai Chat", href: "#" },
+    { icon: <Tags size={16} />, label: t('tourist.myDiscounts'), href: "#" },
+    { icon: <MessageCircle size={16} />, label: t('tourist.tiqaiChat'), href: "#" },
   ];
 
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Caricamento...</h2>
-          <p className="text-gray-600">Sto caricando il tuo dashboard turista</p>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">{t('common.loading')}...</h2>
+          <p className="text-gray-600">{t('tourist.title')}</p>
         </div>
       </div>
     );
@@ -303,12 +306,16 @@ export default function TouristDashboard() {
 
   return (
     <Layout
-      title="Benvenuto, Turista!"
-      role="Area Turista"
+      title={t('dashboard.welcome') + ", " + t('tourist.title').split(' ')[0] + "!"}
+      role={t('tourist.title')}
       iqCode={user.iqCode}
       navigation={navigation}
       sidebarColor="bg-tourist-green"
     >
+      {/* Selettore lingua - solo nel pannello turista */}
+      <div className="absolute top-4 right-4 z-10">
+        <LanguageSelector />
+      </div>
       {/* Saluto personalizzato con calore calabrese */}
       <div className="bg-calabria-warm px-6 py-4 mb-6 animate-discover">
         <div className="flex items-center">
@@ -316,9 +323,9 @@ export default function TouristDashboard() {
             🌅
           </div>
           <h2 className="text-xl font-semibold text-white drop-shadow-sm">
-            Benvenuto{entityInfo?.name ? `, ${entityInfo.name}` : ''}! 
+            {t('dashboard.welcome')}{entityInfo?.name ? `, ${entityInfo.name}` : t('dashboard.welcomeFallback')}! 
             <span className="block text-sm font-normal mt-1 text-white/90">
-              La Calabria ti aspetta con le sue meraviglie esclusive
+              {t('tourist.subtitle')}
             </span>
           </h2>
         </div>
@@ -329,7 +336,7 @@ export default function TouristDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center mb-3">
               <div className="animate-gentle-pulse mr-3 text-2xl">✨</div>
-              <h2 className="text-xl font-semibold text-white">Il tuo Passepartout Magico</h2>
+              <h2 className="text-xl font-semibold text-white">{t('tourist.magicPassepartout')}</h2>
             </div>
             <div className="bg-white/60 backdrop-blur-sm rounded-xl p-5 text-center border-2 border-white/70 hover:bg-white/65 transition-all duration-300 shadow-lg">
               <span className="text-3xl font-bold tracking-wider text-gray-800 drop-shadow-sm">{user.iqCode}</span>
@@ -428,8 +435,8 @@ export default function TouristDashboard() {
               <div className="flex items-center">
                 <div className="animate-gentle-pulse mr-3 text-xl">🎁</div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Le Tue Scoperte Esclusive</h3>
-                  <p className="text-sm text-gray-600">Offerte uniche selezionate per te</p>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('tourist.exclusiveDiscoveries')}</h3>
+                  <p className="text-sm text-gray-600">{t('tourist.noOffersAvailable')}</p>
                 </div>
               </div>
               <Button 
@@ -658,15 +665,15 @@ export default function TouristDashboard() {
                     <Tags className="h-10 w-10 text-white" />
                   </div>
                 </div>
-                <h4 className="text-xl font-semibold text-gray-900 mb-2">Le tue scoperte ti aspettano!</h4>
-                <p className="text-gray-600 mb-4">Esplora i dintorni o chiedi a TIQai per trovare esperienze uniche</p>
+                <h4 className="text-xl font-semibold text-gray-900 mb-2">{t('tourist.waitingDiscoveries')}</h4>
+                <p className="text-gray-600 mb-4">{t('tourist.exploreOrAsk')}</p>
                 <div className="flex justify-center gap-3">
                   <Button 
                     onClick={() => setShowLocationSearch(true)}
                     className="bg-calabria-sunset text-white hover-warm"
                   >
                     <MapPin className="w-4 h-4 mr-2" />
-                    Esplora Zona
+                    {t('tourist.exploreArea')}
                   </Button>
                 </div>
               </div>
@@ -676,15 +683,15 @@ export default function TouristDashboard() {
 
         <Card>
           <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Attività Recenti</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('tourist.recentActivity')}</h3>
             <div className="space-y-4">
               <div className="flex items-center">
                 <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
                   <Check className="text-green-600" size={12} />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Sconto utilizzato</p>
-                  <p className="text-xs text-gray-500">Pizzeria Da Mario - 15% di sconto</p>
+                  <p className="text-sm font-medium text-gray-900">{t('tourist.discountUsed')}</p>
+                  <p className="text-xs text-gray-500">Pizzeria Da Mario - 15% {t('tourist.discount')}</p>
                 </div>
               </div>
               <div className="flex items-center">
@@ -692,7 +699,7 @@ export default function TouristDashboard() {
                   <Heart className="text-blue-600" size={12} />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Aggiunto ai preferiti</p>
+                  <p className="text-sm font-medium text-gray-900">{t('tourist.addedToFavorites')}</p>
                   <p className="text-xs text-gray-500">Ristorante Il Borgo</p>
                 </div>
               </div>

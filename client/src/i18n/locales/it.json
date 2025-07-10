@@ -1,0 +1,177 @@
+{
+  "auth": {
+    "title": "Accesso TouristIQ",
+    "subtitle": "Inserisci il tuo codice IQ per accedere",
+    "iqCodePlaceholder": "Inserisci il tuo codice IQ",
+    "iqCodeLabel": "Codice IQ",
+    "loginButton": "Accedi",
+    "forgotCode": "Non ricordi il tuo codice?",
+    "recoverWith": "Recuperalo con il Custode del Codice",
+    "recoverWithCustode": "Recuperalo con il Custode del Codice",
+    "custodeTitle": "Custode del Codice",
+    "custodeDescription": "Inserisci la parola segreta e la data di nascita che hai impostato per recuperare il tuo IQCode.",
+    "tooltip": "Sistema di recupero anonimo senza email o telefono. Imposta una parola segreta e data di nascita per recuperare il tuo codice in sicurezza.",
+    "tempCode": {
+      "detected": "Codice temporaneo rilevato",
+      "redirecting": "Ti stiamo reindirizzando alla pagina di attivazione..."
+    },
+    "recovery": {
+      "success": "IQCode recuperato!",
+      "yourCode": "Il tuo IQCode è",
+      "notFound": "Nessun codice trovato con questi dati",
+      "alreadyActive": "Hai già un codice attivo",
+      "error": "Errore nel recupero del codice",
+      "missingFields": "Inserisci sia la parola segreta che la data di nascita"
+    },
+    "errors": {
+      "required": "Il codice IQ è obbligatorio",
+      "invalid": "Codice IQ non valido. Riprova.",
+      "notFound": "Codice IQ non trovato",
+      "serverError": "Errore del server. Riprova.",
+      "unknownRole": "Ruolo non riconosciuto"
+    }
+  },
+  "dashboard": {
+    "welcome": "Benvenuto",
+    "welcomeFallback": "nel tuo spazio turistico"
+  },
+  "tourist": {
+    "title": "Dashboard Turista",
+    "subtitle": "Ogni esperienza inizia con un IQ",
+    "myDiscounts": "I Miei Sconti",
+    "tiqaiChat": "TIQai Chat",
+    "codeValidation": "Validazione IQCode",
+    "magicPassepartout": "Passepartout Magico",
+    "exclusiveDiscoveries": "Le Tue Scoperte Esclusive",
+    "hiddenTreasures": "tesori nascosti",
+    "generateCode": "Genera Codice",
+    "noOffersAvailable": "Nessuna offerta disponibile al momento",
+    "offersCount": "{{count}} offerta",
+    "offersCount_plural": "{{count}} offerte",
+    "security": {
+      "unauthorized": "Accesso non autorizzato",
+      "tempCodeNotAllowed": "I codici temporanei devono essere attivati prima dell'uso"
+    },
+    "welcome": {
+      "message1": "La tua porta d'accesso alle esperienze autentiche della Calabria",
+      "message2": "Dove ogni momento diventa una scoperta indimenticabile",
+      "message3": "Il tuo passaporto per i tesori nascosti della terra del sole",
+      "message4": "Scopri la Calabria come mai prima d'ora",
+      "message5": "Benvenuto nel cuore pulsante dell'ospitalità calabrese",
+      "message6": "Ogni esperienza inizia con un IQ, ogni ricordo nasce qui",
+      "message7": "La chiave per aprire le porte dell'autentica Calabria"
+    },
+    "oneTimeCodes": {
+      "title": "Codici TIQ-OTC",
+      "subtitle": "Sistema anti-vulnerabilità per validazioni sicure",
+      "generate": "Genera Codice",
+      "availableUses": "Utilizzi disponibili: {{count}}",
+      "lastGenerated": "Ultimo codice generato:",
+      "copyCode": "Copia Codice",
+      "copied": "Copiato!",
+      "history": "Cronologia Utilizzi",
+      "noHistory": "Nessun utilizzo registrato",
+      "usedAt": "Utilizzato il {{date}}",
+      "usedBy": "da {{partner}}",
+      "error": "Errore nella generazione del codice"
+    },
+    "waitingDiscoveries": "Le tue scoperte ti aspettano!",
+    "exploreOrAsk": "Esplora i dintorni o chiedi a TIQai per trovare esperienze uniche",
+    "exploreArea": "Esplora Zona",
+    "recentActivity": "Attività Recenti",
+    "discountUsed": "Sconto utilizzato",
+    "discount": "di sconto",
+    "addedToFavorites": "Aggiunto ai preferiti"
+  },
+  "partner": {
+    "title": "Dashboard Partner",
+    "validateCode": "Valida Codice IQCode",
+    "codeInput": "Inserisci il codice del turista",
+    "validateButton": "Valida",
+    "validation": {
+      "success": "✅ Codice valido – Turista autenticato TouristIQ",
+      "invalid": "❌ Codice non valido",
+      "error": "Errore durante la validazione"
+    },
+    "offers": {
+      "title": "Le Mie Offerte",
+      "create": "Crea Nuova Offerta",
+      "edit": "Modifica",
+      "delete": "Elimina",
+      "noOffers": "Nessuna offerta creata"
+    }
+  },
+  "structure": {
+    "title": "Dashboard Struttura",
+    "guests": "Gestione Ospiti",
+    "credits": "Crediti: {{remaining}}/{{total}}",
+    "miniManagement": "Mini-gestionale"
+  },
+  "admin": {
+    "title": "Dashboard Admin",
+    "users": "Utenti",
+    "userManagement": "Gestione Utenti",
+    "stats": "Statistiche",
+    "iqCodes": "Codici IQ",
+    "settings": "Impostazioni",
+    "assignPackages": "Assegna Pacchetti"
+  },
+  "common": {
+    "save": "Salva",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "close": "Chiudi",
+    "back": "Indietro",
+    "next": "Avanti",
+    "loading": "Caricamento",
+    "error": "Errore",
+    "success": "Successo",
+    "confirm": "Conferma",
+    "yes": "Sì",
+    "no": "No",
+    "search": "Cerca",
+    "filter": "Filtra",
+    "sort": "Ordina",
+    "actions": "Azioni",
+    "status": "Stato",
+    "active": "Attivo",
+    "inactive": "Inattivo",
+    "pending": "In attesa",
+    "approved": "Approvato",
+    "rejected": "Rifiutato"
+  },
+  "errors": {
+    "generic": "Si è verificato un errore. Riprova.",
+    "network": "Errore di connessione. Controlla la tua connessione internet.",
+    "unauthorized": "Accesso non autorizzato",
+    "forbidden": "Operazione non consentita",
+    "notFound": "Risorsa non trovata",
+    "validation": "Dati non validi",
+    "server": "Errore del server"
+  },
+  "validation": {
+    "required": "Campo obbligatorio",
+    "email": "Email non valida",
+    "minLength": "Minimo {{min}} caratteri",
+    "maxLength": "Massimo {{max}} caratteri",
+    "numeric": "Solo numeri",
+    "alphanumeric": "Solo lettere e numeri"
+  },
+  "tiqai": {
+    "title": "TIQai Chat",
+    "subtitle": "Il tuo Genius Loci digitale",
+    "placeholder": "Sussurrami i tuoi desideri di scoperta...",
+    "send": "Invia",
+    "welcome": "Ciao! Sono TIQai, il tuo assistente AI per scoprire i tesori nascosti della Calabria. Come posso aiutarti?",
+    "thinking": "Sto pensando...",
+    "error": "Errore durante la comunicazione con TIQai"
+  },
+  "language": {
+    "selector": "Seleziona Lingua",
+    "it": "Italiano",
+    "en": "English",
+    "es": "Español",
+    "de": "Deutsch"
+  }
+}

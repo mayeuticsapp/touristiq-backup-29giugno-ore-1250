@@ -15,8 +15,8 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { isTemporaryCode } from "@/lib/temp-code-utils";
-import { useTranslation } from "@/lib/translations";
-import { LanguageSelector } from "@/components/language-selector";
+import { useTranslation } from "react-i18next";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 const STORAGE_KEY = "touristiq_last_code";
 
@@ -43,8 +43,8 @@ export default function Login() {
     },
     onSuccess: (data) => {
       toast({
-        title: "IQCode recuperato!",
-        description: `Il tuo IQCode è: ${data.iqCode}`,
+        title: t('auth.recovery.success'),
+        description: `${t('auth.recovery.yourCode')}: ${data.iqCode}`,
         duration: 8000,
       });
       setIqCode(data.iqCode);
@@ -54,13 +54,13 @@ export default function Login() {
     },
     onError: (error: any) => {
       const errorMessage = error.message.includes("404") 
-        ? "Nessun codice trovato con questi dati"
+        ? t('auth.recovery.notFound')
         : error.message.includes("409")
-        ? "Hai già un codice attivo"
-        : "Errore nel recupero del codice";
+        ? t('auth.recovery.alreadyActive')
+        : t('auth.recovery.error');
       
       toast({
-        title: "Errore",
+        title: t('common.error'),
         description: errorMessage,
         variant: "destructive",
       });
@@ -71,8 +71,8 @@ export default function Login() {
   const handleRecovery = () => {
     if (!secretWord.trim() || !birthDate.trim()) {
       toast({
-        title: "Campi obbligatori",
-        description: "Inserisci sia la parola segreta che la data di nascita",
+        title: t('validation.required'),
+        description: t('auth.recovery.missingFields'),
         variant: "destructive",
       });
       return;
@@ -105,8 +105,8 @@ export default function Login() {
     // 🔍 CONTROLLO CRITICO: Intercetta codici temporanei
     if (isTemporaryCode(trimmedCode)) {
       toast({
-        title: "Codice temporaneo rilevato",
-        description: "Ti stiamo reindirizzando alla pagina di attivazione...",
+        title: t('auth.tempCode.detected'),
+        description: t('auth.tempCode.redirecting'),
       });
       
       // Reindirizza immediatamente alla pagina di attivazione
@@ -160,10 +160,10 @@ export default function Login() {
           setLocation("/partner");
           break;
         default:
-          setError("Ruolo non riconosciuto");
+          setError(t('auth.errors.unknownRole'));
       }
     } catch (error: any) {
-      setError(error.message || "Codice IQ non valido. Riprova.");
+      setError(error.message || t('auth.errors.invalid'));
     } finally {
       setIsLoading(false);
       setIsSubmitting(false);
@@ -258,10 +258,10 @@ export default function Login() {
             TouristIQ
           </h1>
           <p className="text-white text-2xl drop-shadow-lg font-medium bg-black/20 px-6 py-2 rounded-full backdrop-blur-sm">
-            Ogni esperienza inizia con un IQ
+            {t('tourist.subtitle')}
           </p>
           <p className="text-white/90 text-lg drop-shadow-lg font-medium mt-3">
-            {t('loginSubtitle')}
+            {t('auth.subtitle')}
           </p>
         </div>
 
@@ -274,7 +274,7 @@ export default function Login() {
                   htmlFor="iqCode"
                   className="block text-lg font-semibold text-gray-800 mb-3"
                 >
-                  {t('iqCodeLabel')}
+                  {t('auth.iqCodeLabel')}
                 </label>
                 <Input
                   id="iqCode"
@@ -282,7 +282,7 @@ export default function Login() {
                   required
                   value={iqCode}
                   onChange={(e) => setIqCode(e.target.value.toUpperCase())}
-                  placeholder={t('iqCodePlaceholder')}
+                  placeholder={t('auth.iqCodePlaceholder')}
                   maxLength={100}
                   className="text-center text-xl font-bold tracking-wider uppercase w-full h-14 bg-orange-50 border-2 border-orange-200 text-gray-800 placeholder:text-gray-500 focus:bg-orange-100 focus:border-orange-400 transition-all duration-300"
                   disabled={isLoading || isSubmitting}
@@ -291,30 +291,30 @@ export default function Login() {
 
               {/* Frase di supporto per recupero IQCode */}
               <div className="text-center text-sm text-gray-600 space-y-2">
-                <p>{t('forgotCode')}</p>
+                <p>{t('auth.forgotCode')}</p>
                 <div className="flex items-center justify-center gap-2">
                   <button
                     type="button"
                     onClick={() => setShowRecoveryModal(true)}
                     className="text-blue-600 hover:text-blue-800 font-medium underline transition-colors"
                   >
-                    👉 {t('recoverWithCustode')}
+                    👉 {t('auth.recoverWithCustode')}
                   </button>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Info 
                         className="h-4 w-4 text-blue-500 hover:text-blue-700 cursor-help transition-colors"
-                        aria-label="Cos'è il Custode del Codice?"
+                        aria-label={t('auth.tooltip.custodeAria')}
                       />
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-xs p-3 text-sm bg-white border border-blue-200 shadow-lg">
                       <div className="space-y-2">
-                        <p className="font-semibold text-blue-800">Il Custode del Codice</p>
+                        <p className="font-semibold text-blue-800">{t('auth.tooltip.custodeTitle')}</p>
                         <p className="text-gray-700">
-                          è un sistema creato da TouristIQ per permetterti di recuperare il tuo IQCode <strong>senza mai fornire email o telefono</strong>.
+                          {t('auth.tooltip.custodeDescription')}
                         </p>
                         <p className="text-gray-700">
-                          Basta una parola segreta e la tua data di nascita: tutto <span className="font-medium">anonimo</span>, <span className="font-medium">sicuro</span> e sotto il tuo pieno controllo.
+                          {t('auth.tooltip.custodeSecure')}
                         </p>
                       </div>
                     </TooltipContent>
@@ -333,7 +333,7 @@ export default function Login() {
                   htmlFor="remember"
                   className="text-gray-700 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                  Ricorda questo codice IQ
+                  {t('auth.rememberCode')}
                 </label>
               </div>
 
@@ -345,12 +345,12 @@ export default function Login() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-3 h-6 w-6 animate-spin" />
-                    {t('loading')}...
+                    {t('common.loading')}...
                   </>
                 ) : (
                   <>
                     <LogIn className="mr-3" size={24} />
-                    {t('loginButton')}
+                    {t('auth.loginButton')}
                   </>
                 )}
               </Button>
@@ -381,12 +381,12 @@ export default function Login() {
               />
             </svg>
             <span>
-              Non funziona? Niente panico!{" "}
+              {t('auth.support.text')}{" "}
               <a
                 href="mailto:info@touristiq.it"
                 className="font-semibold underline text-blue-700"
               >
-                Scrivici a info@touristiq.it
+                {t('auth.support.email')}
               </a>
             </span>
           </div>
@@ -398,28 +398,28 @@ export default function Login() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <KeyRound className="w-5 h-5 text-blue-600" />
-                {t('custodeTitle')}
+                {t('auth.custode.title')}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <p className="text-sm text-gray-600">
-                {t('custodeDescription')}
+                {t('auth.custode.description')}
               </p>
               
               <div>
-                <Label htmlFor="recoverySecretWord">Parola segreta</Label>
+                <Label htmlFor="recoverySecretWord">{t('auth.custode.secretWord')}</Label>
                 <Input
                   id="recoverySecretWord"
                   type="text"
                   value={secretWord}
                   onChange={(e) => setSecretWord(e.target.value)}
-                  placeholder="La parola che hai salvato"
+                  placeholder={t('auth.custode.secretWordPlaceholder')}
                   disabled={recoveryMutation.isPending}
                 />
               </div>
               
               <div>
-                <Label htmlFor="recoveryBirthDate">Data di nascita</Label>
+                <Label htmlFor="recoveryBirthDate">{t('auth.custode.birthDate')}</Label>
                 <Input
                   id="recoveryBirthDate"
                   type="date"
@@ -437,12 +437,12 @@ export default function Login() {
                 {recoveryMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t('loading')}...
+                    {t('common.loading')}...
                   </>
                 ) : (
                   <>
                     <Shield className="mr-2 h-4 w-4" />
-                    Recupera il mio IQCode
+                    {t('auth.recovery.recoverCode')}
                   </>
                 )}
               </Button>
