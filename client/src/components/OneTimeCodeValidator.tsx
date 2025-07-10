@@ -22,13 +22,16 @@ export function OneTimeCodeValidator() {
 
   // Mutation per validare codice monouso
   const validateMutation = useMutation({
-    mutationFn: (codeToValidate: string) => {
+    mutationFn: async (codeToValidate: string) => {
       // Aggiunge automaticamente TIQ-OTC- se il partner inserisce solo 5 cifre
       const fullCode = codeToValidate.length === 5 ? `TIQ-OTC-${codeToValidate}` : codeToValidate;
-      return apiRequest('/api/partner/validate-one-time-code', {
-        method: 'POST',
-        body: { code: fullCode }
+      
+      console.log('🔄 VALIDAZIONE TIQ-OTC: Chiamando API con codice:', fullCode);
+      
+      const response = await apiRequest('POST', '/api/partner/validate-one-time-code', { 
+        code: fullCode 
       });
+      return await response.json();
     },
     onSuccess: (response: any) => {
       setLastValidation({
