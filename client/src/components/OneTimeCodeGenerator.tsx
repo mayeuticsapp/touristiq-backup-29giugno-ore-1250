@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,8 +53,6 @@ export function OneTimeCodeGenerator() {
         description: error.message || "Impossibile generare il codice monouso. Riprova.",
         variant: "destructive"
       });
-      // Retry automatico dopo errore
-      setTimeout(() => refetch(), 2000);
     }
   });
 
@@ -106,7 +104,10 @@ export function OneTimeCodeGenerator() {
               ⚠️ Errore caricamento dati. Prova a ricaricare la pagina.
             </p>
             <Button 
-              onClick={() => refetch()} 
+              onClick={() => {
+                console.log('🔄 MANUAL RETRY: Ricaricamento manuale...');
+                refetch();
+              }} 
               variant="outline" 
               size="sm" 
               className="mt-2"
@@ -128,19 +129,6 @@ export function OneTimeCodeGenerator() {
   console.log('🔧 FRONTEND DEBUG: Error stato:', error);
   console.log('🔧 FRONTEND DEBUG: isLoading:', isLoading);
   console.log(`📊 FRONTEND DEBUG: codes=${codes.length}, availableUses=${availableUses}`);
-
-  // Auto-recupero semplificato - solo per errori
-  useEffect(() => {
-    if (error) {
-      console.log('🛡️ WATCHDOG: Errore rilevato, pianificando auto-recupero...');
-      const recoveryTimer = setTimeout(() => {
-        console.log('🔄 WATCHDOG: Tentativo auto-recupero...');
-        refetch();
-      }, 3000);
-      
-      return () => clearTimeout(recoveryTimer);
-    }
-  }, [error, refetch]);
 
   return (
     <Card>
