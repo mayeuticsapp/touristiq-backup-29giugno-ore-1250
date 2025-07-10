@@ -22,6 +22,7 @@ export function OneTimeCodeGenerator() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showHistory, setShowHistory] = useState(false);
+  const [lastGeneratedCode, setLastGeneratedCode] = useState<string | null>(null);
 
   // Query per ottenere i codici monouso e gli utilizzi disponibili
   const { data, isLoading, refetch, error } = useQuery({
@@ -41,9 +42,16 @@ export function OneTimeCodeGenerator() {
       return await response.json();
     },
     onSuccess: (response: any) => {
+      console.log('🎯 CODICE GENERATO FRONTEND:', response);
+      
+      // Salva il codice appena generato per visualizzarlo
+      if (response.code) {
+        setLastGeneratedCode(response.code);
+      }
+      
       toast({
-        title: "Codice monouso generato!",
-        description: response.message || "Nuovo codice TIQ-OTC disponibile"
+        title: "✅ Codice monouso generato!",
+        description: `Codice ${response.code} pronto per l'uso`
       });
       queryClient.invalidateQueries({ queryKey: ['/api/tourist/one-time-codes'] });
     },
@@ -142,6 +150,30 @@ export function OneTimeCodeGenerator() {
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Ultimo codice generato */}
+        {lastGeneratedCode && (
+          <div className="p-4 bg-gradient-to-r from-emerald-100 to-blue-100 rounded-lg border-2 border-emerald-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-emerald-800">🎯 Ultimo codice generato</p>
+                <p className="text-2xl font-bold text-emerald-700 font-mono">{lastGeneratedCode}</p>
+                <p className="text-xs text-emerald-600 mt-1">Dillo al partner per ottenere lo sconto</p>
+              </div>
+              <Button
+                onClick={() => copyToClipboard(lastGeneratedCode)}
+                variant="outline"
+                size="sm"
+                className="bg-white hover:bg-emerald-50"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="mt-3 p-2 bg-emerald-50 rounded text-xs text-emerald-700">
+              💡 <strong>Come usare:</strong> Quando il partner chiede "mi dai il TIQ-OTC?" rispondi solo le 5 cifre: <span className="font-mono font-bold">{lastGeneratedCode.replace('TIQ-OTC-', '')}</span>
+            </div>
+          </div>
+        )}
+
         {/* Stato attuale */}
         <div className="flex items-center justify-between p-3 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border">
           <div>
@@ -168,41 +200,7 @@ export function OneTimeCodeGenerator() {
           </div>
         </div>
 
-        {/* Codice attivo */}
-        {latestCode && (
-          <div className="space-y-3">
-            <h4 className="font-semibold">Codice Attivo</h4>
-            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-amber-700 bg-amber-100 px-2 py-1 rounded">
-                      TIQ-OTC-
-                    </span>
-                    <span className="font-mono text-2xl font-bold text-amber-800 tracking-wider">
-                      {latestCode.code.replace('TIQ-OTC-', '')}
-                    </span>
-                  </div>
-                  <p className="text-xs text-amber-600">
-                    Generato: {new Date(latestCode.createdAt).toLocaleString()}
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => copyToClipboard(latestCode.code.replace('TIQ-OTC-', ''))}
-                  className="border-amber-300 text-amber-700 hover:bg-amber-100"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-xs text-amber-700 mt-2 bg-amber-100 p-2 rounded">
-                💡 <strong>Quando il partner chiede "mi dai il TIQ-OTC?"</strong><br/>
-                Rispondi solo: <span className="font-mono font-bold">{latestCode.code.replace('TIQ-OTC-', '')}</span>
-              </p>
-            </div>
-          </div>
-        )}
+
 
         {availableUses <= 0 && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -213,7 +211,7 @@ export function OneTimeCodeGenerator() {
         )}
 
         {/* Messaggio informativo se non ci sono codici generati ma ci sono utilizzi disponibili */}
-        {availableUses > 0 && codes.length === 0 && (
+        {availableUses > 0 && codes.length === 0 && !lastGeneratedCode && (
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-700">
               💡 Hai <strong>{availableUses} codici disponibili</strong>. Clicca "Genera Codice" per creare il tuo primo TIQ-OTC.
