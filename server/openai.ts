@@ -1,10 +1,14 @@
 import OpenAI from "openai";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
 export async function chatWithTIQai(message: string, storage?: any): Promise<string> {
   try {
+    if (!openai) {
+      return "Mi dispiace, il sistema TIQai non è attualmente disponibile. Per favore contatta l'amministratore per configurare il servizio.";
+    }
+    
     console.log("Invio richiesta a OpenAI per:", message);
     
     // Cerca informazioni sui partner nel database se richieste
