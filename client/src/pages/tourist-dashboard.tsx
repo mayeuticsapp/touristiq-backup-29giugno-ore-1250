@@ -251,7 +251,7 @@ export default function TouristDashboard() {
   // Funzione per geolocalizzazione
   const handleGeolocationSearch = () => {
     if (!navigator.geolocation) {
-      alert("Geolocalizzazione non supportata dal browser");
+      alert(t('geolocation.unsupported'));
       return;
     }
 
@@ -279,7 +279,7 @@ export default function TouristDashboard() {
       },
       (error) => {
         console.error("Errore geolocalizzazione:", error);
-        alert("Impossibile ottenere la posizione. Verifica le autorizzazioni del browser.");
+        alert(t('geolocation.permissionDenied'));
         setIsSearching(false);
       }
     );
@@ -343,7 +343,7 @@ export default function TouristDashboard() {
             </div>
             <div className="mt-4 flex items-center bg-white/50 rounded-lg p-3 backdrop-blur-sm">
               <span className="mr-2">🎯</span>
-              <p className="text-gray-800 font-semibold">Il tuo codice esclusivo per scoperte uniche in Calabria!</p>
+              <p className="text-gray-800 font-semibold">{t('tourist.codeActions.exclusiveDescription')}</p>
             </div>
             
             {/* Strumento Copia Codice Definitivo */}
@@ -352,26 +352,26 @@ export default function TouristDashboard() {
                 onClick={() => {
                   navigator.clipboard.writeText(user.iqCode);
                   toast({
-                    title: "Codice copiato!",
-                    description: "Il tuo IQCode definitivo è stato copiato negli appunti",
+                    title: t('tourist.codeActions.copySuccess'),
+                    description: t('tourist.codeActions.copyDescription'),
                   });
                 }}
                 className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
               >
                 <Copy className="w-4 h-4" />
-                Copia il Tuo IQCode
+                {t('tourist.codeActions.copyCode')}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => {
-                  const message = `Il mio codice IQ TouristIQ: ${user.iqCode} 🎯 Scopri sconti esclusivi in Calabria!`;
+                  const message = t('tourist.codeActions.shareMessage', { code: user.iqCode });
                   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
                   window.open(whatsappUrl, '_blank');
                 }}
                 className="border-2 border-green-500 text-green-600 hover:bg-green-50 px-4 py-2 rounded-lg flex items-center gap-2"
               >
                 <MessageCircle className="w-4 h-4" />
-                Condividi
+                {t('tourist.codeActions.shareCode')}
               </Button>
             </div>
           </CardContent>
@@ -386,8 +386,8 @@ export default function TouristDashboard() {
               <div className="flex items-center gap-3">
                 <Shield className="w-6 h-6 text-blue-600" />
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Custode del Codice</h3>
-                  <p className="text-sm text-gray-600">Proteggi il tuo accesso con un sistema di recupero sicuro</p>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('custode.title')}</h3>
+                  <p className="text-sm text-gray-600">{t('custode.securityDescription')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -395,15 +395,15 @@ export default function TouristDashboard() {
                   <Info className="w-5 h-5 text-blue-600 cursor-help" />
                   <div className="absolute right-0 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                     {custodeStatus?.hasRecoveryData 
-                      ? "Modifica la parola segreta e la data di nascita associate al tuo IQCode per un futuro recupero. I dati restano anonimi e non recuperabili dal nostro sistema."
-                      : "Il Custode del Codice ti aiuta a recuperare il tuo IQCode se lo dimentichi. Salva ora una parola segreta e una data speciale: saranno usate in sicurezza solo da te."}
+                      ? t('custode.modifyTooltip')
+                      : t('custode.activateTooltip')}
                   </div>
                 </div>
                 {custodeStatus?.hasRecoveryData ? (
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2 text-green-600">
                       <Check className="w-5 h-5" />
-                      <span className="font-medium">Custode già attivato</span>
+                      <span className="font-medium">{t('custode.alreadyActive')}</span>
                     </div>
                     <Button 
                       variant="outline"
@@ -411,7 +411,7 @@ export default function TouristDashboard() {
                       onClick={handleOpenUpdateCustodeForm}
                       className="text-blue-600 border-blue-300 hover:bg-blue-50"
                     >
-                      Gestisci Custode del Codice
+                      {t('custode.manageButton')}
                     </Button>
                   </div>
                 ) : (
@@ -419,7 +419,7 @@ export default function TouristDashboard() {
                     onClick={handleOpenCustodeForm}
                     className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
-                    Attiva il Custode del Codice
+                    {t('custode.activateButton')}
                   </Button>
                 )}
               </div>
@@ -446,7 +446,7 @@ export default function TouristDashboard() {
                 className="bg-calabria-sea text-white border-none hover:bg-calabria-nature transition-all duration-300 hover-warm"
               >
                 <MapPin className="w-4 h-4 mr-2" />
-                Esplora Dintorni
+                {t('tourist.exploreNearby')}
               </Button>
             </div>
 

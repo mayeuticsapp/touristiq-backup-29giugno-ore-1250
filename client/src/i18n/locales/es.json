@@ -73,15 +73,34 @@
       "noHistory": "No hay uso registrado",
       "usedAt": "Usado el {{date}}",
       "usedBy": "por {{partner}}",
-      "error": "Error al generar código"
+      "error": "Error al generar código",
+      "generationDescription": "Genera códigos temporales de un solo uso para descuentos inmediatos",
+      "loadingError": "⚠️ Error al cargar datos. Intenta recargar la página.",
+      "retryButton": "Reintentar",
+      "generatedSuccess": "✅ ¡Código de un solo uso generado!",
+      "generatedDescription": "Código {{code}} listo para usar",
+      "copySuccess": "¡Código copiado!",
+      "copyDescription": "El código de un solo uso ha sido copiado al portapapeles",
+      "copyError": "No se puede copiar el código",
+      "generationError": "Error al generar código",
+      "generationErrorDescription": "No se puede generar el código de un solo uso. Inténtalo de nuevo."
     },
     "waitingDiscoveries": "¡Tus descubrimientos te esperan!",
     "exploreOrAsk": "Explora los alrededores o pregunta a TIQai para encontrar experiencias únicas",
     "exploreArea": "Explorar Zona",
+    "exploreNearby": "Explorar Alrededores",
     "recentActivity": "Actividad Reciente",
     "discountUsed": "Descuento usado",
     "discount": "de descuento",
-    "addedToFavorites": "Añadido a favoritos"
+    "addedToFavorites": "Añadido a favoritos",
+    "codeActions": {
+      "copyCode": "Copiar Tu IQCode",
+      "shareCode": "Compartir",
+      "copySuccess": "¡Código copiado!",
+      "copyDescription": "Tu IQCode definitivo ha sido copiado al portapapeles",
+      "shareMessage": "Mi código IQ TouristIQ: {{code}} 🎯 ¡Descubre descuentos exclusivos en Calabria!",
+      "exclusiveDescription": "¡Tu código exclusivo para descubrimientos únicos en Calabria!"
+    }
   },
   "partner": {
     "title": "Panel Partner",
@@ -139,7 +158,11 @@
     "inactive": "Inactivo",
     "pending": "Pendiente",
     "approved": "Aprobado",
-    "rejected": "Rechazado"
+    "rejected": "Rechazado",
+    "noData": "No hay datos disponibles",
+    "tryAgain": "Intentar de nuevo",
+    "here": "aquí",
+    "orClick": "o haz clic"
   },
   "errors": {
     "generic": "Ocurrió un error. Inténtalo de nuevo.",
@@ -165,7 +188,11 @@
     "send": "Enviar",
     "welcome": "¡Hola! Soy TIQai, tu asistente AI para descubrir los tesoros ocultos de Calabria. ¿Cómo puedo ayudarte?",
     "thinking": "Estoy pensando...",
-    "error": "Error al comunicarse con TIQai"
+    "error": "Error al comunicarse con TIQai",
+    "initialMessage": "🌅 ¡Hola, viajero! Soy TIQai, tu genius loci digital. Susúrrame tus deseos de descubrimiento y te guiaré hacia tesoros ocultos que solo el corazón auténtico de Italia conoce...",
+    "errorMessage": "Lo siento, ocurrió un error. Por favor, inténtalo de nuevo más tarde.",
+    "fullTitle": "TIQai - Genius Loci de Italia",
+    "tagline": "El alma auténtica de Italia que susurra secretos"
   },
   "language": {
     "selector": "Seleccionar Idioma",
@@ -173,5 +200,19 @@
     "en": "English",
     "es": "Español",
     "de": "Deutsch"
+  },
+  "geolocation": {
+    "unsupported": "Geolocalización no soportada por el navegador",
+    "permissionDenied": "No se puede obtener la ubicación. Verifica los permisos del navegador.",
+    "error": "Error durante la geolocalización"
+  },
+  "custode": {
+    "title": "Guardián del Código",
+    "securityDescription": "Protege tu acceso con un sistema de recuperación seguro",
+    "activateButton": "Activar Guardián del Código",
+    "manageButton": "Gestionar Guardián del Código",
+    "alreadyActive": "Guardián ya activado",
+    "modifyTooltip": "Modifica la palabra secreta y fecha de nacimiento asociadas con tu IQCode para recuperación futura. Los datos permanecen anónimos e irrecuperables por nuestro sistema.",
+    "activateTooltip": "El Guardián del Código te ayuda a recuperar tu IQCode si lo olvidas. Guarda una palabra secreta y fecha especial ahora: serán usadas de forma segura solo por ti."
   }
 }

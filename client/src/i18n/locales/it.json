@@ -73,15 +73,34 @@
       "noHistory": "Nessun utilizzo registrato",
       "usedAt": "Utilizzato il {{date}}",
       "usedBy": "da {{partner}}",
-      "error": "Errore nella generazione del codice"
+      "error": "Errore nella generazione del codice",
+      "generationDescription": "Genera codici temporanei monouso per sconti immediati",
+      "loadingError": "⚠️ Errore caricamento dati. Prova a ricaricare la pagina.",
+      "retryButton": "Riprova",
+      "generatedSuccess": "✅ Codice monouso generato!",
+      "generatedDescription": "Codice {{code}} pronto per l'uso",
+      "copySuccess": "Codice copiato!",
+      "copyDescription": "Il codice monouso è stato copiato negli appunti",
+      "copyError": "Impossibile copiare il codice",
+      "generationError": "Errore generazione codice",
+      "generationErrorDescription": "Impossibile generare il codice monouso. Riprova."
     },
     "waitingDiscoveries": "Le tue scoperte ti aspettano!",
     "exploreOrAsk": "Esplora i dintorni o chiedi a TIQai per trovare esperienze uniche",
     "exploreArea": "Esplora Zona",
+    "exploreNearby": "Esplora Dintorni",
     "recentActivity": "Attività Recenti",
     "discountUsed": "Sconto utilizzato",
     "discount": "di sconto",
-    "addedToFavorites": "Aggiunto ai preferiti"
+    "addedToFavorites": "Aggiunto ai preferiti",
+    "codeActions": {
+      "copyCode": "Copia il Tuo IQCode",
+      "shareCode": "Condividi",
+      "copySuccess": "Codice copiato!",
+      "copyDescription": "Il tuo IQCode definitivo è stato copiato negli appunti",
+      "shareMessage": "Il mio codice IQ TouristIQ: {{code}} 🎯 Scopri sconti esclusivi in Calabria!",
+      "exclusiveDescription": "Il tuo codice esclusivo per scoperte uniche in Calabria!"
+    }
   },
   "partner": {
     "title": "Dashboard Partner",
@@ -139,7 +158,11 @@
     "inactive": "Inattivo",
     "pending": "In attesa",
     "approved": "Approvato",
-    "rejected": "Rifiutato"
+    "rejected": "Rifiutato",
+    "noData": "Nessun dato disponibile",
+    "tryAgain": "Riprova",
+    "here": "qui",
+    "orClick": "oppure clicca"
   },
   "errors": {
     "generic": "Si è verificato un errore. Riprova.",
@@ -165,7 +188,11 @@
     "send": "Invia",
     "welcome": "Ciao! Sono TIQai, il tuo assistente AI per scoprire i tesori nascosti della Calabria. Come posso aiutarti?",
     "thinking": "Sto pensando...",
-    "error": "Errore durante la comunicazione con TIQai"
+    "error": "Errore durante la comunicazione con TIQai",
+    "initialMessage": "🌅 Ciao, viaggiatore! Sono TIQai, il tuo genius loci digitale. Sussurrami i tuoi desideri di scoperta e ti guiderò verso tesori nascosti che solo il cuore autentico dell'Italia conosce...",
+    "errorMessage": "Mi dispiace, si è verificato un errore. Riprova più tardi.",
+    "fullTitle": "TIQai - Genius Loci d'Italia",
+    "tagline": "L'anima autentica d'Italia che sussurra segreti"
   },
   "language": {
     "selector": "Seleziona Lingua",
@@ -173,5 +200,19 @@
     "en": "English",
     "es": "Español",
     "de": "Deutsch"
+  },
+  "geolocation": {
+    "unsupported": "Geolocalizzazione non supportata dal browser",
+    "permissionDenied": "Impossibile ottenere la posizione. Verifica le autorizzazioni del browser.",
+    "error": "Errore durante la geolocalizzazione"
+  },
+  "custode": {
+    "title": "Custode del Codice",
+    "securityDescription": "Proteggi il tuo accesso con un sistema di recupero sicuro",
+    "activateButton": "Attiva il Custode del Codice",
+    "manageButton": "Gestisci Custode del Codice",
+    "alreadyActive": "Custode già attivato",
+    "modifyTooltip": "Modifica la parola segreta e la data di nascita associate al tuo IQCode per un futuro recupero. I dati restano anonimi e non recuperabili dal nostro sistema.",
+    "activateTooltip": "Il Custode del Codice ti aiuta a recuperare il tuo IQCode se lo dimentichi. Salva ora una parola segreta e una data speciale: saranno usate in sicurezza solo da te."
   }
 }

@@ -139,7 +139,11 @@
     "inactive": "Inaktiv",
     "pending": "Ausstehend",
     "approved": "Genehmigt",
-    "rejected": "Abgelehnt"
+    "rejected": "Abgelehnt",
+    "noData": "Keine Daten verfügbar",
+    "tryAgain": "Erneut versuchen",
+    "here": "hier",
+    "orClick": "oder klicken"
   },
   "errors": {
     "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
@@ -165,7 +169,11 @@
     "send": "Senden",
     "welcome": "Hallo! Ich bin TIQai, Ihr AI-Assistent, um die verborgenen Schätze Kalabriens zu entdecken. Wie kann ich Ihnen helfen?",
     "thinking": "Ich denke nach...",
-    "error": "Fehler bei der Kommunikation mit TIQai"
+    "error": "Fehler bei der Kommunikation mit TIQai",
+    "initialMessage": "🌅 Hallo, Reisender! Ich bin TIQai, Ihr digitaler Genius Loci. Flüstern Sie mir Ihre Entdeckungswünsche zu und ich führe Sie zu verborgenen Schätzen, die nur das authentische Herz Italiens kennt...",
+    "errorMessage": "Entschuldigung, ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
+    "fullTitle": "TIQai - Genius Loci Italiens",
+    "tagline": "Die authentische Seele Italiens, die Geheimnisse flüstert"
   },
   "language": {
     "selector": "Sprache Wählen",
@@ -173,5 +181,19 @@
     "en": "English",
     "es": "Español",
     "de": "Deutsch"
+  },
+  "geolocation": {
+    "unsupported": "Geolokalisierung vom Browser nicht unterstützt",
+    "permissionDenied": "Standort kann nicht ermittelt werden. Überprüfen Sie die Browser-Berechtigungen.",
+    "error": "Fehler bei der Geolokalisierung"
+  },
+  "custode": {
+    "title": "Code-Wächter",
+    "securityDescription": "Schützen Sie Ihren Zugang mit einem sicheren Wiederherstellungssystem",
+    "activateButton": "Code-Wächter aktivieren",
+    "manageButton": "Code-Wächter verwalten",
+    "alreadyActive": "Wächter bereits aktiviert",
+    "modifyTooltip": "Ändern Sie das Geheimwort und das Geburtsdatum, die mit Ihrem IQCode für zukünftige Wiederherstellung verknüpft sind. Die Daten bleiben anonym und sind von unserem System nicht wiederherstellbar.",
+    "activateTooltip": "Der Code-Wächter hilft Ihnen, Ihren IQCode wiederherzustellen, wenn Sie ihn vergessen. Speichern Sie jetzt ein Geheimwort und ein besonderes Datum: sie werden sicher nur von Ihnen verwendet."
   }
 }
