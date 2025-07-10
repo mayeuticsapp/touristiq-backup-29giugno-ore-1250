@@ -145,17 +145,16 @@ export function OneTimeCodeGenerator() {
     );
   }
 
-  console.log('🔧 FRONTEND DEBUG: Data ricevuta:', data);
-  console.log('🔧 FRONTEND DEBUG: Error stato:', error);
-  console.log('🔧 FRONTEND DEBUG: isLoading:', isLoading);
-  console.log('🔧 FRONTEND DEBUG: generateCodeMutation.isPending:', generateCodeMutation.isPending);
-  
   const codes = data?.codes || [];
   const availableUses = data?.availableUses || 0;
   const latestCode = codes.find(code => !code.isUsed);
   
+  console.log('🔧 FRONTEND DEBUG: Data ricevuta:', data);
+  console.log('🔧 FRONTEND DEBUG: Error stato:', error);
+  console.log('🔧 FRONTEND DEBUG: isLoading:', isLoading);
+  console.log('🔧 FRONTEND DEBUG: generateCodeMutation.isPending:', generateCodeMutation.isPending);
   console.log(`📊 FRONTEND DEBUG: codes=${codes.length}, availableUses=${availableUses}`);
-  
+
   // 🚨 FAIL-SAFE: Se i dati sembrano corrotti, forza un refresh
   useEffect(() => {
     if (!isLoading && !error && data && (!codes || codes.length === 0) && availableUses > 0) {
