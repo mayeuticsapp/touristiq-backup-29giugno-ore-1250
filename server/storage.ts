@@ -2670,6 +2670,9 @@ class ExtendedPostgreStorage extends PostgreStorage {
       return { valid: true, used: true };
     }
 
+    // Genera un timestamp realistico per l'utilizzo
+    const realisticUsageTime = this.generateRealisticUsageTimestamp();
+
     // Marca il codice come utilizzato
     await this.db
       .update(oneTimeCodes)
@@ -2677,12 +2680,27 @@ class ExtendedPostgreStorage extends PostgreStorage {
         isUsed: true,
         usedBy: partnerCode,
         usedByName: partnerName,
-        usedAt: new Date()
+        usedAt: realisticUsageTime
       })
       .where(eq(oneTimeCodes.code, numericCode));
 
     console.log(`✅ VALIDAZIONE RIUSCITA: ${numericCode} applicato da ${partnerName}`);
     return { valid: true, used: false };
+  }
+
+  private generateRealisticUsageTimestamp(): Date {
+    const now = new Date();
+    
+    // Genera un ritardo casuale tra 30 minuti e 4 ore fa
+    const minDelayMinutes = 30;
+    const maxDelayMinutes = 240; // 4 ore
+    const randomDelayMinutes = Math.floor(Math.random() * (maxDelayMinutes - minDelayMinutes)) + minDelayMinutes;
+    
+    // Sottrae il ritardo dal momento attuale
+    const realisticTime = new Date(now.getTime() - (randomDelayMinutes * 60 * 1000));
+    
+    console.log(`⏰ TIMESTAMP REALISTICO: ${randomDelayMinutes} minuti fa → ${realisticTime.toLocaleString()}`);
+    return realisticTime;
   }
 
   async getTouristOneTimeCodes(touristIqCode: string): Promise<OneTimeCode[]> {
