@@ -2413,7 +2413,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
         ORDER BY ic.assigned_to
       `);
 
-      // Informazioni strategiche Turisti
+      // Informazioni strategiche Turisti (esclusi codici primo accesso)
       const touristsInfo = await this.db.execute(sql`
         SELECT 
           ic.code,
@@ -2422,7 +2422,10 @@ class ExtendedPostgreStorage extends PostgreStorage {
           COUNT(iv.id) as "totalValidations"
         FROM iq_codes ic
         LEFT JOIN iqcode_validations iv ON ic.code = iv.tourist_iq_code
-        WHERE ic.role = 'tourist' AND ic.is_active = true AND ic.deleted_at IS NULL
+        WHERE ic.role = 'tourist' 
+          AND ic.is_active = true 
+          AND ic.deleted_at IS NULL
+          AND ic.code NOT LIKE 'IQCODE-PRIMOACCESSO-%'
         GROUP BY ic.code, ic.assigned_to, ic.created_at
         ORDER BY ic.created_at DESC
         LIMIT 50

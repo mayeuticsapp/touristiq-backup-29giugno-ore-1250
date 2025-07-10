@@ -477,6 +477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const users = allCodes
         .filter(code => !code.isDeleted) // Esclude utenti nel cestino
         .filter(code => code.role !== 'admin') // Esclude admin dalla lista
+        .filter(code => !code.code.startsWith('IQCODE-PRIMOACCESSO-')) // Esclude codici primo accesso
         .map(code => ({
           id: code.id,
           code: code.code,
@@ -542,7 +543,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const allCodes = await storage.getAllIqCodes();
-      const activeCodes = allCodes.filter(c => !c.isDeleted);
+      const activeCodes = allCodes
+        .filter(c => !c.isDeleted)
+        .filter(c => !c.code.startsWith('IQCODE-PRIMOACCESSO-')); // Esclude codici primo accesso dalle statistiche
       const structureCount = activeCodes.filter(c => c.role === 'structure').length;
       const partnerCount = activeCodes.filter(c => c.role === 'partner').length;
       
