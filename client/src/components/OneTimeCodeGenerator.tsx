@@ -22,64 +22,39 @@ export function OneTimeCodeGenerator() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showHistory, setShowHistory] = useState(false);
-  const [lastErrorTime, setLastErrorTime] = useState<number | null>(null);
 
   // Query per ottenere i codici monouso e gli utilizzi disponibili
   const { data, isLoading, refetch, error } = useQuery({
     queryKey: ['/api/tourist/one-time-codes'],
     staleTime: 0,
     gcTime: 0,
-    retry: 5,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retry: 3,
+    retryDelay: 1000,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    onError: (error) => {
-      console.error('💥 QUERY ERROR: Errore caricamento codici OTC:', error);
-    },
-    onSuccess: (data) => {
-      console.log('✅ QUERY SUCCESS: Dati codici OTC ricevuti:', data);
-    }
+    refetchOnReconnect: true
   });
 
   // Mutation per generare nuovo codice monouso
   const generateCodeMutation = useMutation({
     mutationFn: async () => {
-      console.log('🔄 FRONTEND MUTATION: Chiamando generate-one-time-code');
-      try {
-        const response = await apiRequest('POST', '/api/tourist/generate-one-time-code');
-        const data = await response.json();
-        console.log('✅ FRONTEND MUTATION: Successo generazione codice:', data);
-        return data;
-      } catch (error) {
-        console.error('❌ FRONTEND MUTATION: Errore generazione:', error);
-        throw error;
-      }
+      const response = await apiRequest('POST', '/api/tourist/generate-one-time-code');
+      return await response.json();
     },
     onSuccess: (response: any) => {
-      console.log('🎉 MUTATION SUCCESS: Codice generato, aggiornando cache...');
       toast({
         title: "Codice monouso generato!",
         description: response.message || "Nuovo codice TIQ-OTC disponibile"
       });
-      // Forza refresh immediato dei dati
       queryClient.invalidateQueries({ queryKey: ['/api/tourist/one-time-codes'] });
-      refetch();
     },
     onError: (error: any) => {
-      console.error('💥 MUTATION ERROR: Gestendo errore generazione:', error);
       toast({
         title: "Errore generazione codice",
         description: error.message || "Impossibile generare il codice monouso. Riprova.",
         variant: "destructive"
       });
-      // AUTO-RECUPERO: forza refresh anche in caso di errore per mantenere stato consistente
-      setTimeout(() => {
-        console.log('🔄 AUTO-RECUPERO: Refresh dopo errore...');
-        refetch();
-      }, 2000);
-    },
-    onSettled: () => {
-      console.log('🔄 MUTATION SETTLED: Operazione completata, stato pulito');
+      // Retry automatico dopo errore
+      setTimeout(() => refetch(), 2000);
     }
   });
 
@@ -152,22 +127,9 @@ export function OneTimeCodeGenerator() {
   console.log('🔧 FRONTEND DEBUG: Data ricevuta:', data);
   console.log('🔧 FRONTEND DEBUG: Error stato:', error);
   console.log('🔧 FRONTEND DEBUG: isLoading:', isLoading);
-  console.log('🔧 FRONTEND DEBUG: generateCodeMutation.isPending:', generateCodeMutation.isPending);
   console.log(`📊 FRONTEND DEBUG: codes=${codes.length}, availableUses=${availableUses}`);
 
-  // 🚨 FAIL-SAFE: Se i dati sembrano corrotti, forza un refresh
-  useEffect(() => {
-    if (!isLoading && !error && data && (!codes || codes.length === 0) && availableUses > 0) {
-      const now = Date.now();
-      if (!lastErrorTime || (now - lastErrorTime) > 5000) { // Max 1 retry ogni 5 secondi
-        console.log('🚨 FAIL-SAFE: Dati inconsistenti rilevati, forzando refresh...');
-        setLastErrorTime(now);
-        setTimeout(() => refetch(), 500);
-      }
-    }
-  }, [isLoading, error, data, codes.length, availableUses, lastErrorTime, refetch]);
-
-  // 🛡️ WATCHDOG: Monitora lo stato del componente e ripristina se necessario
+  // Auto-recupero semplificato - solo per errori
   useEffect(() => {
     if (error) {
       console.log('🛡️ WATCHDOG: Errore rilevato, pianificando auto-recupero...');
