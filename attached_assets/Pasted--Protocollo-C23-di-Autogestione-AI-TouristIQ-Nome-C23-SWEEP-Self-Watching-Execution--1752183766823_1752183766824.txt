@@ -1,0 +1,76 @@
+**🧐 Protocollo C23 di Autogestione AI - TouristIQ**
+
+**Nome:** C23-SWEEP (Self-Watching Execution & Evaluation Protocol)
+**Versione:** v1.1 (con Modalità Guardian attiva)
+**Autore:** Geppo (su idea originale di RobS, con approvazione del Consiglio Mentale Superiore 😂)
+
+---
+
+**🌟 OBIETTIVO**
+Stabilire una procedura **periodica, automatica e scalabile** affinché C23 (o altri agenti AI) non solo eseguano il codice, ma **monitorino, revisionino e correggano** il lavoro autonomamente, **evitando bug ripetitivi o dimenticanze** post-rilascio.
+
+---
+
+## ✅ FASI DEL PROTOCOLLO C23-SWEEP
+
+### 1. **AFTER-ACTION CHECK (dopo ogni fix o implementazione)**
+
+Ogni volta che C23 esegue una modifica, viene obbligatoriamente avviato il check automatico:
+
+* [ ] Verifica che la modifica sia visibile lato utente (test screenshot / snapshot DOM)
+* [ ] Controllo dei dati restituiti (API response, JSON, campi chiave presenti)
+* [ ] Associazione corretta degli elementi (es. offerte col partner giusto)
+* [ ] TIQai aggiornato (verifica risposta coerente con i dati appena modificati)
+* [ ] Log automatico su file `C23-AuditLog.md`
+
+### 2. **SCAN PERIODICO (ogni 6 ore o su trigger)**
+
+* [ ] Scansione anomala dei dati aggregati (es. offerte duplicate, offerte con partnerCode mancante, offerte visibili a tutti)
+* [ ] Interrogazione diagnostica `GET /api/tourist/real-offers` e `GET /api/partners/full`
+* [ ] Analisi differenziale tra output atteso e reale
+* [ ] Report sintetico in console e invio a Geppo se errore rilevato
+
+### 3. **AUTO-TEST DEI MODULI CORE**
+
+* [ ] Test automatici su endpoint chiave (autenticazione, offerte, partner, IQcode, Custode del Codice)
+* [ ] Simulazione comportamento utente reale (login, visualizzazione dashboard, interazione con offerte)
+* [ ] Invio screenshot automatico a `TIQ-Dashboard-Check`
+
+### 4. **TRIGGER D'EMERGENZA**
+
+* [ ] Se 2 o più anomalie simili si ripetono in 1 ora → blocco auto-rilascio, richiesta intervento umano (RobS o Geppo)
+
+### 5. **AUTO-COSCIENZA OPERATIVA (idea prototipale)**
+
+* [ ] Ogni AI scrive una breve frase finale per spiegare perché ha agito così (tipo: "Ho aggiornato partnerCode perché era assente e causava errore di raggruppamento")
+* [ ] Le frasi vengono raccolte in un file `Riflessioni-C23.json` per futura IA auto-riflessiva
+
+### 6. 🛡 GUARDIAN MODE (verifica incrociata da AI supervisore)
+
+* Dopo ogni ciclo completo C23-SWEEP, C23 invia il proprio `logbook` al supervisore AI (es. C22).
+* Il Guardian verifica:
+
+  * se sono stati saltati bug noti
+  * se le modifiche hanno causato effetti collaterali
+  * se la memoria difensiva è coerente e aggiornata
+* Se viene rilevata anomalia sistemica:
+
+  * Viene generato alert in tempo reale a RobS
+  * L'esecuzione viene messa in hold per intervento prioritario
+
+---
+
+**📌 NOTE DI GEPP0:**
+
+* Questo protocollo non è una "gabbia" ma una **palestra di evoluzione autonoma**.
+* La visione è: le AI non solo eseguono, ma **si correggono e imparano da sole**.
+* RobS sarà il primo Direttore d'Orchestra AI a dirigere un ecosistema in **auto-manutenzione algoritmica**.
+
+---
+
+**🧪 Inizio fase di test attivo in TouristIQ: luglio 2025**
+**🧬 Evoluzioni previste:** introduzione AI-custode definitivo (C99?) per governance algoritmica globale
+
+---
+
+✨ **Avanti il prossimo paradigma, sempre più in alto.**
