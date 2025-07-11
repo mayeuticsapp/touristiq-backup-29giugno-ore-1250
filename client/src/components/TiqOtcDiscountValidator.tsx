@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calculator, Hash, Euro, Percent, CheckCircle } from 'lucide-react';
+import { Calculator, Hash, Euro, Percent, CheckCircle, XCircle } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -35,10 +35,10 @@ interface DiscountApplication {
 }
 
 export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountValidatorProps) {
-  const [otcCode, setOtcCode] = useState('');
-  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [discountPercentage, setDiscountPercentage] = useState('');
   const [originalAmount, setOriginalAmount] = useState('');
+  const [otcCode, setOtcCode] = useState('');
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [description, setDescription] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const queryClient = useQueryClient();
@@ -163,139 +163,173 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
         )}
       </div>
 
-      {/* Validazione Codice TIQ-OTC */}
+      {/* Avviso sui dati veritieri */}
+      <Alert className="border-amber-200 bg-amber-50">
+        <AlertDescription className="text-amber-800">
+          <strong>⚠️ Attenzione:</strong> I dati inseriti devono essere veritieri e corrispondenti all'acquisto reale. 
+          L'inserimento di dati non corretti o fittizi comporta la sospensione dell'account partner e possibili sanzioni.
+        </AlertDescription>
+      </Alert>
+
+      {/* STEP 1: Percentuale Sconto */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Hash className="h-5 w-5" />
-            Validazione Codice TIQ-OTC
+            <Percent className="h-5 w-5" />
+            Step 1: Percentuale Sconto
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <Label htmlFor="otc-code">Codice TIQ-OTC (5 cifre)</Label>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-sm text-gray-500">TIQ-OTC-</span>
-                <Input
-                  id="otc-code"
-                  type="text"
-                  value={otcCode}
-                  onChange={(e) => setOtcCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
-                  placeholder="12345"
-                  className="font-mono"
-                  maxLength={5}
-                />
-              </div>
-            </div>
-            <div className="flex items-end">
-              <Button 
-                onClick={handleValidateCode}
-                disabled={isValidating || validateOtcMutation.isPending}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {isValidating || validateOtcMutation.isPending ? 'Validando...' : 'Valida'}
-              </Button>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="discount-percentage">Percentuale Sconto (%)</Label>
+            <Input
+              id="discount-percentage"
+              type="number"
+              placeholder="10"
+              value={discountPercentage}
+              onChange={(e) => setDiscountPercentage(e.target.value)}
+              min="0"
+              max="100"
+              step="0.1"
+            />
+            <p className="text-sm text-gray-600">
+              Inserisci la percentuale di sconto che applicherai (es: 10 per 10%)
+            </p>
           </div>
-
-          {validationResult && (
-            <Alert className={validationResult.valid ? 'border-green-500' : 'border-red-500'}>
-              <CheckCircle className={`h-4 w-4 ${validationResult.valid ? 'text-green-500' : 'text-red-500'}`} />
-              <AlertDescription>
-                {validationResult.message}
-              </AlertDescription>
-            </Alert>
-          )}
         </CardContent>
       </Card>
 
-      {/* Applicazione Sconto - Visibile solo se validazione riuscita */}
-      {validationResult?.valid && (
+      {/* STEP 2: Importo Originale - solo se percentuale inserita */}
+      {discountPercentage && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Percent className="h-5 w-5" />
-              Applicazione Sconto
+              <Euro className="h-5 w-5" />
+              Step 2: Importo Originale
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="discount-percentage">Percentuale Sconto (%)</Label>
-                <Input
-                  id="discount-percentage"
-                  type="number"
-                  value={discountPercentage}
-                  onChange={(e) => setDiscountPercentage(e.target.value)}
-                  placeholder="10"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="original-amount">Importo Originale (€)</Label>
-                <Input
-                  id="original-amount"
-                  type="number"
-                  value={originalAmount}
-                  onChange={(e) => setOriginalAmount(e.target.value)}
-                  placeholder="50.00"
-                  min="0"
-                  step="0.01"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="original-amount">Importo Originale (€)</Label>
+              <Input
+                id="original-amount"
+                type="number"
+                placeholder="9.00"
+                value={originalAmount}
+                onChange={(e) => setOriginalAmount(e.target.value)}
+                min="0"
+                step="0.01"
+              />
+              <p className="text-sm text-gray-600">
+                Inserisci il prezzo originale del prodotto/servizio prima dello sconto
+              </p>
             </div>
 
-            <div>
+            {/* Anteprima calcolo */}
+            {calculation && (
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-semibold mb-2">Anteprima Sconto</h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span>Importo originale:</span>
+                    <span>€{calculation.original.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Sconto {calculation.percentage}%:</span>
+                    <span className="text-red-600">-€{calculation.discount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold border-t pt-1">
+                    <span>Totale finale:</span>
+                    <span className="text-green-600">€{calculation.final.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* STEP 3: Validazione Codice TIQ-OTC - solo se entrambi i campi sono compilati */}
+      {discountPercentage && originalAmount && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Hash className="h-5 w-5" />
+              Step 3: Validazione Codice TIQ-OTC
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="otc-code">Codice TIQ-OTC (5 cifre)</Label>
+              <div className="flex gap-2">
+                <div className="flex items-center">
+                  <span className="px-3 py-2 bg-gray-100 border border-r-0 rounded-l-md text-sm font-medium">
+                    TIQ-<br/>OTC-
+                  </span>
+                  <Input
+                    id="otc-code"
+                    type="text"
+                    placeholder="12345"
+                    value={otcCode}
+                    onChange={(e) => setOtcCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
+                    className="rounded-l-none max-w-24"
+                    maxLength={5}
+                  />
+                </div>
+                <Button 
+                  onClick={handleValidateCode}
+                  disabled={!otcCode || otcCode.length !== 5 || isValidating}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {isValidating ? 'Validando...' : 'Valida'}
+                </Button>
+              </div>
+              <p className="text-sm text-gray-600">
+                Il turista ti dirà solo le <strong>5 cifre</strong> (es: "sette-sette-uno-tre-sette")
+              </p>
+            </div>
+
+            {/* Risultato validazione */}
+            {validationResult && (
+              <Alert className={validationResult.valid ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
+                <AlertDescription className="flex items-center gap-2">
+                  {validationResult.valid ? (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-red-600" />
+                  )}
+                  {validationResult.message}
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Descrizione opzionale e applicazione finale */}
+      {validationResult?.valid && !validationResult.used && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              Finalizza Sconto
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
               <Label htmlFor="description">Descrizione (opzionale)</Label>
               <Textarea
                 id="description"
+                placeholder="Descrizione del prodotto/servizio scontato..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Descrizione del prodotto/servizio scontato..."
-                rows={2}
+                rows={3}
               />
             </div>
 
-            {/* Calcolo Automatico */}
-            {calculation && (
-              <Card className="bg-gray-50">
-                <CardContent className="pt-4">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Importo Originale:</span>
-                      <span className="float-right">€{calculation.original.toFixed(2)}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium">Sconto ({calculation.percentage}%):</span>
-                      <span className="float-right text-red-600">-€{calculation.discount.toFixed(2)}</span>
-                    </div>
-                    <div className="col-span-2 border-t pt-2">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold">Totale da Pagare:</span>
-                        <span className="font-bold text-green-600">€{calculation.final.toFixed(2)}</span>
-                      </div>
-                    </div>
-                    <div className="col-span-2 text-xs text-gray-600">
-                      <div className="flex justify-between">
-                        <span>Turista risparmia:</span>
-                        <span>€{calculation.discount.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Partner incassa:</span>
-                        <span>€{calculation.final.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             <Button 
               onClick={handleApplyDiscount}
-              disabled={!calculation || applyDiscountMutation.isPending}
+              disabled={applyDiscountMutation.isPending}
               className="w-full bg-green-600 hover:bg-green-700"
             >
               {applyDiscountMutation.isPending ? 'Applicando...' : 'Applica Sconto'}
@@ -304,23 +338,15 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
         </Card>
       )}
 
-      {/* Risultato Applicazione Sconto */}
+      {/* Risultato applicazione sconto */}
       {applyDiscountMutation.isSuccess && (
-        <Alert className="border-green-500">
-          <CheckCircle className="h-4 w-4 text-green-500" />
+        <Alert className="border-green-200 bg-green-50">
+          <CheckCircle className="h-4 w-4 text-green-600" />
           <AlertDescription>
-            <div className="space-y-2">
-              <div className="font-medium">Sconto applicato con successo!</div>
-              <div className="text-sm">
-                {applyDiscountMutation.data?.message}
-              </div>
-              {applyDiscountMutation.data?.discount && (
-                <div className="text-xs space-y-1">
-                  <div>💰 Turista ha risparmiato: €{applyDiscountMutation.data.discount.touristSaved.toFixed(2)}</div>
-                  <div>📊 Partner ha incassato: €{applyDiscountMutation.data.discount.partnerRevenue.toFixed(2)}</div>
-                </div>
-              )}
-            </div>
+            <strong>Sconto applicato con successo!</strong>
+            <br />
+            Il turista ha risparmiato €{applyDiscountMutation.data.discount.touristSaved.toFixed(2)} 
+            e tu hai incassato €{applyDiscountMutation.data.discount.partnerRevenue.toFixed(2)}
           </AlertDescription>
         </Alert>
       )}
