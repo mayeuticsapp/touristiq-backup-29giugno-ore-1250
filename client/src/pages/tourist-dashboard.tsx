@@ -43,6 +43,10 @@ export default function TouristDashboard() {
   // Stato per popup di benvenuto
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState("");
+  
+  // Stati per modali menu laterale
+  const [showIQCodeModal, setShowIQCodeModal] = useState(false);
+  const [showCustodeModal, setShowCustodeModal] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -291,6 +295,8 @@ export default function TouristDashboard() {
   const navigation = [
     { icon: <Tags size={16} />, label: t('tourist.myDiscounts'), href: "#" },
     { icon: <MessageCircle size={16} />, label: t('tourist.tiqaiChat'), href: "#" },
+    { icon: <QrCode size={16} />, label: "Il Mio IQCode", href: "#", onClick: () => setShowIQCodeModal(true) },
+    { icon: <Shield size={16} />, label: "Custode del Codice", href: "#", onClick: () => setShowCustodeModal(true) },
   ];
 
   if (!user) {
@@ -331,104 +337,17 @@ export default function TouristDashboard() {
         </div>
       </div>
 
+      {/* 1. TIQai Chat - PRIMO POSTO */}
       <div className="mb-8">
-        <Card className="bg-calabria-sunset text-white card-premium animate-warm-glow hover-warm cursor-pointer">
+        <Card>
           <CardContent className="p-6">
-            <div className="flex items-center mb-3">
-              <div className="animate-gentle-pulse mr-3 text-2xl">✨</div>
-              <h2 className="text-xl font-semibold text-white">{t('tourist.magicPassepartout')}</h2>
-            </div>
-            <div className="bg-white/60 backdrop-blur-sm rounded-xl p-5 text-center border-2 border-white/70 hover:bg-white/65 transition-all duration-300 shadow-lg">
-              <span className="text-3xl font-bold tracking-wider text-gray-800 drop-shadow-sm">{user.iqCode}</span>
-            </div>
-            <div className="mt-4 flex items-center bg-white/50 rounded-lg p-3 backdrop-blur-sm">
-              <span className="mr-2">🎯</span>
-              <p className="text-gray-800 font-semibold">{t('tourist.codeActions.exclusiveDescription')}</p>
-            </div>
-            
-            {/* Strumento Copia Codice Definitivo */}
-            <div className="mt-4 flex items-center justify-center gap-3">
-              <Button
-                onClick={() => {
-                  navigator.clipboard.writeText(user.iqCode);
-                  toast({
-                    title: t('tourist.codeActions.copySuccess'),
-                    description: t('tourist.codeActions.copyDescription'),
-                  });
-                }}
-                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
-              >
-                <Copy className="w-4 h-4" />
-                {t('tourist.codeActions.copyCode')}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const message = t('tourist.codeActions.shareMessage', { code: user.iqCode });
-                  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-                  window.open(whatsappUrl, '_blank');
-                }}
-                className="border-2 border-green-500 text-green-600 hover:bg-green-50 px-4 py-2 rounded-lg flex items-center gap-2"
-              >
-                <MessageCircle className="w-4 h-4" />
-                {t('tourist.codeActions.shareCode')}
-              </Button>
-            </div>
+            <TIQaiChat />
           </CardContent>
         </Card>
       </div>
 
-      {/* Blocco "Custode del Codice" */}
+      {/* 2. Scoperte/Offerte - SECONDO POSTO */}
       <div className="mb-8">
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Shield className="w-6 h-6 text-blue-600" />
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{t('custode.title')}</h3>
-                  <p className="text-sm text-gray-600">{t('custode.securityDescription')}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="relative group">
-                  <Info className="w-5 h-5 text-blue-600 cursor-help" />
-                  <div className="absolute right-0 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-                    {custodeStatus?.hasRecoveryData 
-                      ? t('custode.modifyTooltip')
-                      : t('custode.activateTooltip')}
-                  </div>
-                </div>
-                {custodeStatus?.hasRecoveryData ? (
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 text-green-600">
-                      <Check className="w-5 h-5" />
-                      <span className="font-medium">{t('custode.alreadyActive')}</span>
-                    </div>
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                      onClick={handleOpenUpdateCustodeForm}
-                      className="text-blue-600 border-blue-300 hover:bg-blue-50"
-                    >
-                      {t('custode.manageButton')}
-                    </Button>
-                  </div>
-                ) : (
-                  <Button 
-                    onClick={handleOpenCustodeForm}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    {t('custode.activateButton')}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <Card className="card-premium">
           <CardContent className="p-6">
             <div className="flex justify-between items-center mb-4">
@@ -680,16 +599,10 @@ export default function TouristDashboard() {
             )}
           </CardContent>
         </Card>
+      </div>
 
-
-
-        <Card>
-          <CardContent className="p-6">
-            <TIQaiChat />
-          </CardContent>
-        </Card>
-
-        {/* Sistema Codici Monouso (Privacy-First) */}
+      {/* 3. Sistema Codici Monouso TIQ-OTC - TERZO POSTO */}
+      <div className="mb-8">
         <OneTimeCodeGenerator />
       </div>
 
@@ -917,6 +830,105 @@ export default function TouristDashboard() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog IQCode dal Menu Laterale */}
+      <Dialog open={showIQCodeModal} onOpenChange={setShowIQCodeModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="w-5 h-5 text-orange-600" />
+              Il Tuo IQCode
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-calabria-sunset text-white card-premium animate-warm-glow rounded-xl p-6">
+              <div className="text-center">
+                <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 mb-4">
+                  <span className="text-2xl font-bold tracking-wider text-gray-800">{user?.iqCode}</span>
+                </div>
+                <p className="text-sm text-white/90 mb-4">{t('tourist.codeActions.exclusiveDescription')}</p>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      navigator.clipboard.writeText(user?.iqCode || '');
+                      toast({
+                        title: t('tourist.codeActions.copySuccess'),
+                        description: t('tourist.codeActions.copyDescription'),
+                      });
+                    }}
+                    className="flex-1 bg-white/20 hover:bg-white/30 text-white border-white/30"
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    {t('tourist.codeActions.copyCode')}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const message = t('tourist.codeActions.shareMessage', { code: user?.iqCode });
+                      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+                      window.open(whatsappUrl, '_blank');
+                    }}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    {t('tourist.codeActions.shareCode')}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Custode del Codice dal Menu Laterale */}
+      <Dialog open={showCustodeModal} onOpenChange={setShowCustodeModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-blue-600" />
+              {t('custode.title')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">{t('custode.securityDescription')}</p>
+            
+            {custodeStatus?.hasRecoveryData ? (
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="flex items-center gap-2 text-green-700 mb-2">
+                  <Check className="w-5 h-5" />
+                  <span className="font-medium">{t('custode.alreadyActive')}</span>
+                </div>
+                <p className="text-sm text-green-600 mb-3">
+                  Il sistema di recupero è attivo e pronto all'uso.
+                </p>
+                <Button 
+                  onClick={() => {
+                    setShowCustodeModal(false);
+                    setShowUpdateCustodeForm(true);
+                  }}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {t('custode.manageButton')}
+                </Button>
+              </div>
+            ) : (
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-700 mb-3">
+                  Attiva il sistema di recupero per proteggere il tuo accesso.
+                </p>
+                <Button 
+                  onClick={() => {
+                    setShowCustodeModal(false);
+                    setShowCustodeForm(true);
+                  }}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {t('custode.activateButton')}
+                </Button>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
