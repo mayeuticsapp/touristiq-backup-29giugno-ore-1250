@@ -205,5 +205,26 @@
     "alreadyActive": "Wächter bereits aktiviert",
     "modifyTooltip": "Ändern Sie das Geheimwort und das Geburtsdatum, die mit Ihrem IQCode für zukünftige Wiederherstellung verknüpft sind. Die Daten bleiben anonym und sind von unserem System nicht wiederherstellbar.",
     "activateTooltip": "Der Code-Wächter hilft Ihnen, Ihren IQCode wiederherzustellen, wenn Sie ihn vergessen. Speichern Sie jetzt ein Geheimwort und ein besonderes Datum: sie werden sicher nur von Ihnen verwendet."
+  },
+  "savings": {
+    "title": "Meine Ersparnisse",
+    "totalSaved": "Gesamt Gespart",
+    "savingsCount": "Transaktionen",
+    "averageSaving": "Durchschnittliche Ersparnis",
+    "thisMonth": "Diesen Monat",
+    "topPartner": "Top-Partner",
+    "yourSavings": "Ihre Ersparnisse",
+    "wow": "Fantastisch!",
+    "keepSaving": "Weiter sparen!",
+    "noSavingsYet": "Noch keine Ersparnisse",
+    "startSaving": "Heute anfangen zu sparen!",
+    "recentSavings": "Aktuelle Ersparnisse",
+    "at": "bei",
+    "on": "am",
+    "earned": "Gespart",
+    "loading": "Wird geladen...",
+    "error": "Fehler beim Laden der Ersparnisse",
+    "noPartner": "Noch kein Partner",
+    "motivationalMessage": "Jeder Rabatt ist ein Schritt zu neuen Entdeckungen!"
   }
 }

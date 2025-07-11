@@ -224,5 +224,26 @@
     "alreadyActive": "Custode già attivato",
     "modifyTooltip": "Modifica la parola segreta e la data di nascita associate al tuo IQCode per un futuro recupero. I dati restano anonimi e non recuperabili dal nostro sistema.",
     "activateTooltip": "Il Custode del Codice ti aiuta a recuperare il tuo IQCode se lo dimentichi. Salva ora una parola segreta e una data speciale: saranno usate in sicurezza solo da te."
+  },
+  "savings": {
+    "title": "I Miei Risparmi",
+    "totalSaved": "Totale Risparmiato",
+    "savingsCount": "Transazioni",
+    "averageSaving": "Media Risparmio",
+    "thisMonth": "Questo Mese",
+    "topPartner": "Partner Preferito",
+    "yourSavings": "I Tuoi Risparmi",
+    "wow": "Fantastico!",
+    "keepSaving": "Continua a risparmiare!",
+    "noSavingsYet": "Nessun risparmio ancora",
+    "startSaving": "Inizia a risparmiare oggi!",
+    "recentSavings": "Risparmi Recenti",
+    "at": "presso",
+    "on": "il",
+    "earned": "Guadagnato",
+    "loading": "Caricamento...",
+    "error": "Errore nel caricamento dei risparmi",
+    "noPartner": "Nessun partner ancora",
+    "motivationalMessage": "Ogni sconto è un passo verso nuove scoperte!"
   }
 }

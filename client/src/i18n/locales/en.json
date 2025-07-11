@@ -224,5 +224,26 @@
     "alreadyActive": "Guardian already activated",
     "modifyTooltip": "Modify the secret word and birth date associated with your IQCode for future recovery. Data remains anonymous and unrecoverable by our system.",
     "activateTooltip": "Code Guardian helps you recover your IQCode if you forget it. Save a secret word and special date now: they will be used securely only by you."
+  },
+  "savings": {
+    "title": "My Savings",
+    "totalSaved": "Total Saved",
+    "savingsCount": "Transactions",
+    "averageSaving": "Average Savings",
+    "thisMonth": "This Month",
+    "topPartner": "Top Partner",
+    "yourSavings": "Your Savings",
+    "wow": "Fantastic!",
+    "keepSaving": "Keep saving!",
+    "noSavingsYet": "No savings yet",
+    "startSaving": "Start saving today!",
+    "recentSavings": "Recent Savings",
+    "at": "at",
+    "on": "on",
+    "earned": "Saved",
+    "loading": "Loading...",
+    "error": "Error loading savings",
+    "noPartner": "No partner yet",
+    "motivationalMessage": "Every discount is a step towards new discoveries!"
   }
 }

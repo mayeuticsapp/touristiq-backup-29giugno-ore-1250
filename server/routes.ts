@@ -3350,7 +3350,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Errore interno del server' });
     }
   });
+
+  // **SISTEMA RISPARMI TURISTI - ENDPOINTS**
+
+  // Endpoint per turisti: registra nuovo risparmio
+  app.post("/api/tourist/savings", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['tourist'])) return;
+
+      const session = req.userSession;
+      const { savedAmount, partnerCode, partnerName, discountDescription } = req.body;
+
+      if (!savedAmount || !partnerCode || !partnerName) {
+        return res.status(400).json({ error: "Dati insufficienti: importo, partner code e nome richiesti" });
+      }
+
+      const savingData = {
+        touristIqCode: session.iqCode,
+        savedAmount: parseFloat(savedAmount),
+        partnerCode,
+        partnerName,
+        discountDescription: discountDescription || "",
+        appliedAt: new Date()
+      };
+
+      const saving = await storage.createTouristSaving(savingData);
+      res.json({ success: true, saving });
+
+    } catch (error) {
+      console.error("Errore registrazione risparmio:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  // Endpoint per turisti: ottieni cronologia risparmi
+  app.get("/api/tourist/savings", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['tourist'])) return;
+
+      const session = req.userSession;
+      const savings = await storage.getTouristSavings(session.iqCode);
+      
+      res.json({ savings });
+
+    } catch (error) {
+      console.error("Errore recupero risparmi:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  // Endpoint per turisti: ottieni statistiche risparmi
+  app.get("/api/tourist/savings/stats", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['tourist'])) return;
+
+      const session = req.userSession;
+      const stats = await storage.getTouristSavingsStats(session.iqCode);
+      
+      res.json({ stats });
+
+    } catch (error) {
+      console.error("Errore statistiche risparmi:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  // Endpoint per turisti: ottieni totale risparmi
+  app.get("/api/tourist/savings/total", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['tourist'])) return;
+
+      const session = req.userSession;
+      const total = await storage.getTouristSavingsTotal(session.iqCode);
+      
+      res.json({ total });
+
+    } catch (error) {
+      console.error("Errore totale risparmi:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
   // ENDPOINT DUPLICATO RIMOSSO - il funzionante è alla riga 3281
+
+  // Endpoint per inizializzare dati di esempio per i risparmi turistici
+  app.post("/api/admin/init-sample-savings", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['admin'])) return;
+
+      // Trova un turista di esempio nel database
+      const allCodes = await storage.getAllIqCodes();
+      const sampleTourist = allCodes.find(code => code.role === 'tourist' && code.isActive);
+      
+      if (!sampleTourist) {
+        return res.status(404).json({ error: "Nessun turista trovato nel database" });
+      }
+
+      // Crea dati di esempio per i risparmi
+      const sampleSavings = [
+        {
+          touristIqCode: sampleTourist.code,
+          savedAmount: 15.50,
+          partnerCode: "TIQ-VV-PRT-7334",
+          partnerName: "La Ruota di Pizzo",
+          discountDescription: "Sconto 20% su menù degustazione",
+          appliedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // 7 giorni fa
+        },
+        {
+          touristIqCode: sampleTourist.code,
+          savedAmount: 25.00,
+          partnerCode: "TIQ-VV-PRT-7123",
+          partnerName: "da edò a pizzo",
+          discountDescription: "Sconto 30% su pizza marinara",
+          appliedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 giorni fa
+        },
+        {
+          touristIqCode: sampleTourist.code,
+          savedAmount: 12.75,
+          partnerCode: "TIQ-VV-PRT-7334",
+          partnerName: "La Ruota di Pizzo",
+          discountDescription: "Sconto 15% su aperitivo",
+          appliedAt: new Date(Date.now() - 24 * 60 * 60 * 1000) // 1 giorno fa
+        },
+        {
+          touristIqCode: sampleTourist.code,
+          savedAmount: 18.30,
+          partnerCode: "TIQ-VV-PRT-7123",
+          partnerName: "da edò a pizzo",
+          discountDescription: "Sconto 25% su gelato artigianale",
+          appliedAt: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 ore fa
+        }
+      ];
+
+      // Inserisci i dati nel database
+      const createdSavings = [];
+      for (const savingData of sampleSavings) {
+        const saving = await storage.createTouristSaving(savingData);
+        createdSavings.push(saving);
+      }
+
+      res.json({
+        success: true,
+        message: `Creati ${createdSavings.length} risparmi di esempio per il turista ${sampleTourist.code}`,
+        touristCode: sampleTourist.code,
+        savingsCount: createdSavings.length,
+        totalSaved: createdSavings.reduce((sum, s) => sum + s.savedAmount, 0)
+      });
+
+    } catch (error) {
+      console.error("Errore inizializzazione dati di esempio:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

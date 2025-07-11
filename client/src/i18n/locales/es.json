@@ -224,5 +224,26 @@
     "alreadyActive": "Guardián ya activado",
     "modifyTooltip": "Modifica la palabra secreta y fecha de nacimiento asociadas con tu IQCode para recuperación futura. Los datos permanecen anónimos e irrecuperables por nuestro sistema.",
     "activateTooltip": "El Guardián del Código te ayuda a recuperar tu IQCode si lo olvidas. Guarda una palabra secreta y fecha especial ahora: serán usadas de forma segura solo por ti."
+  },
+  "savings": {
+    "title": "Mis Ahorros",
+    "totalSaved": "Total Ahorrado",
+    "savingsCount": "Transacciones",
+    "averageSaving": "Ahorro Promedio",
+    "thisMonth": "Este Mes",
+    "topPartner": "Socio Principal",
+    "yourSavings": "Tus Ahorros",
+    "wow": "¡Fantástico!",
+    "keepSaving": "¡Sigue ahorrando!",
+    "noSavingsYet": "Aún no hay ahorros",
+    "startSaving": "¡Comienza a ahorrar hoy!",
+    "recentSavings": "Ahorros Recientes",
+    "at": "en",
+    "on": "el",
+    "earned": "Ahorrado",
+    "loading": "Cargando...",
+    "error": "Error cargando ahorros",
+    "noPartner": "Aún no hay socio",
+    "motivationalMessage": "¡Cada descuento es un paso hacia nuevos descubrimientos!"
   }
 }

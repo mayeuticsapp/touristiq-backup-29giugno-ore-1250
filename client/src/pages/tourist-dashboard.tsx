@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TIQaiChat } from "@/components/tiqai-chat";
 import { OneTimeCodeGenerator } from "@/components/OneTimeCodeGenerator";
+import TouristSavings from "@/components/TouristSavings";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ export default function TouristDashboard() {
   // Stati per modali menu laterale
   const [showIQCodeModal, setShowIQCodeModal] = useState(false);
   const [showCustodeModal, setShowCustodeModal] = useState(false);
+  const [showSavingsModal, setShowSavingsModal] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -295,6 +297,7 @@ export default function TouristDashboard() {
   const navigation = [
     { icon: <Tags size={16} />, label: t('tourist.myDiscounts'), href: "#" },
     { icon: <MessageCircle size={16} />, label: t('tourist.tiqaiChat'), href: "#" },
+    { icon: <Heart size={16} />, label: t('savings.title'), href: "#", onClick: () => setShowSavingsModal(true) },
     { icon: <QrCode size={16} />, label: "Il Mio IQCode", href: "#", onClick: () => setShowIQCodeModal(true) },
     { icon: <Shield size={16} />, label: "Custode del Codice", href: "#", onClick: () => setShowCustodeModal(true) },
   ];
@@ -928,6 +931,21 @@ export default function TouristDashboard() {
                 </Button>
               </div>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog I Miei Risparmi dal Menu Laterale */}
+      <Dialog open={showSavingsModal} onOpenChange={setShowSavingsModal}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Heart className="w-5 h-5 text-red-500" />
+              {t('savings.title')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <TouristSavings />
           </div>
         </DialogContent>
       </Dialog>

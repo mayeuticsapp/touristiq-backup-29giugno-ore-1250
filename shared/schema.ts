@@ -112,6 +112,20 @@ export const oneTimeCodes = pgTable("one_time_codes", {
   usedAt: timestamp("used_at"),
 });
 
+// Tabella per tracciare i risparmi effettivi ottenuti dai turisti
+export const touristSavings = pgTable("tourist_savings", {
+  id: serial("id").primaryKey(),
+  touristIqCode: text("tourist_iq_code").notNull(), // IQCode del turista
+  partnerCode: text("partner_code").notNull(), // IQCode del partner
+  partnerName: text("partner_name").notNull(), // Nome del partner per visualizzazione
+  discountDescription: text("discount_description").notNull(), // Descrizione sconto applicato
+  originalPrice: decimal("original_price", { precision: 10, scale: 2 }).notNull(), // Prezzo originale
+  discountedPrice: decimal("discounted_price", { precision: 10, scale: 2 }).notNull(), // Prezzo con sconto
+  savedAmount: decimal("saved_amount", { precision: 10, scale: 2 }).notNull(), // Importo risparmiato
+  appliedAt: timestamp("applied_at").notNull().defaultNow(), // Quando è stato applicato lo sconto
+  notes: text("notes"), // Note aggiuntive del turista
+});
+
 // Pacchetti IQCode acquistati dalle strutture
 export const purchasedPackages = pgTable("purchased_packages", {
   id: serial("id").primaryKey(),
@@ -510,6 +524,11 @@ export const insertPartnerOfferSchema = createInsertSchema(partnerOffers).omit({
   createdAt: true
 });
 
+export const insertTouristSavingsSchema = createInsertSchema(touristSavings).omit({
+  id: true,
+  appliedAt: true
+});
+
 export type RealOffer = typeof realOffers.$inferSelect;
 export type InsertRealOffer = z.infer<typeof insertRealOfferSchema>;
 export type PartnerOffer = typeof partnerOffers.$inferSelect;
@@ -522,3 +541,6 @@ export const insertOneTimeCodeSchema = createInsertSchema(oneTimeCodes).omit({
 
 export type OneTimeCode = typeof oneTimeCodes.$inferSelect;
 export type InsertOneTimeCode = z.infer<typeof insertOneTimeCodeSchema>;
+
+export type TouristSavings = typeof touristSavings.$inferSelect;
+export type InsertTouristSavings = z.infer<typeof insertTouristSavingsSchema>;

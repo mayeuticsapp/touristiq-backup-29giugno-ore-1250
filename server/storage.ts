@@ -1,4 +1,4 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, oneTimeCodes, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode, type OneTimeCode, type InsertOneTimeCode } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, oneTimeCodes, touristSavings, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode, type OneTimeCode, type InsertOneTimeCode, type TouristSavings, type InsertTouristSavings } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt, desc, like, sql, inArray, gt, isNull } from "drizzle-orm";
@@ -144,6 +144,18 @@ export interface IStorage {
   getTouristAvailableUses(touristIqCode: string): Promise<number>;
   initializeOneTimeCodesForTourist(touristIqCode: string, quantity: number): Promise<void>;
   getTouristsWithoutOneTimeCodes(): Promise<{ code: string; availableUses: number }[]>;
+
+  // **SISTEMA RISPARMI TURISTI**
+  createTouristSaving(savingData: InsertTouristSavings): Promise<TouristSavings>;
+  getTouristSavings(touristIqCode: string): Promise<TouristSavings[]>;
+  getTouristSavingsTotal(touristIqCode: string): Promise<number>;
+  getTouristSavingsStats(touristIqCode: string): Promise<{
+    totalSaved: number;
+    savingsCount: number;
+    averageSaving: number;
+    topPartner: string;
+    monthlyTotal: number;
+  }>;
 }
 
 export class MemStorage implements IStorage {
@@ -2899,6 +2911,95 @@ class ExtendedPostgreStorage extends PostgreStorage {
     };
   }
 
+  // **SISTEMA RISPARMI TURISTI - PostgreSQL Implementation**
+  async createTouristSaving(savingData: InsertTouristSavings): Promise<TouristSavings> {
+    const [saving] = await this.db
+      .insert(touristSavings)
+      .values(savingData)
+      .returning();
+    
+    console.log(`💰 RISPARMIO REGISTRATO: ${savingData.touristIqCode} ha risparmiato €${savingData.savedAmount} presso ${savingData.partnerName}`);
+    return saving;
+  }
+
+  async getTouristSavings(touristIqCode: string): Promise<TouristSavings[]> {
+    const savings = await this.db
+      .select()
+      .from(touristSavings)
+      .where(eq(touristSavings.touristIqCode, touristIqCode))
+      .orderBy(desc(touristSavings.appliedAt));
+    
+    console.log(`📊 CRONOLOGIA RISPARMI: ${savings.length} transazioni per ${touristIqCode}`);
+    return savings;
+  }
+
+  async getTouristSavingsTotal(touristIqCode: string): Promise<number> {
+    const [result] = await this.db
+      .select({
+        total: sql<number>`sum(${touristSavings.savedAmount})`
+      })
+      .from(touristSavings)
+      .where(eq(touristSavings.touristIqCode, touristIqCode));
+    
+    const total = result?.total ? Number(result.total) : 0;
+    console.log(`💎 TOTALE RISPARMI: €${total} per ${touristIqCode}`);
+    return total;
+  }
+
+  async getTouristSavingsStats(touristIqCode: string): Promise<{
+    totalSaved: number;
+    savingsCount: number;
+    averageSaving: number;
+    topPartner: string;
+    monthlyTotal: number;
+  }> {
+    // Statistiche generali
+    const [stats] = await this.db
+      .select({
+        totalSaved: sql<number>`sum(${touristSavings.savedAmount})`,
+        savingsCount: sql<number>`count(*)`,
+        averageSaving: sql<number>`avg(${touristSavings.savedAmount})`
+      })
+      .from(touristSavings)
+      .where(eq(touristSavings.touristIqCode, touristIqCode));
+
+    // Partner con più risparmi
+    const [topPartnerResult] = await this.db
+      .select({
+        partnerName: touristSavings.partnerName,
+        totalSaved: sql<number>`sum(${touristSavings.savedAmount})`
+      })
+      .from(touristSavings)
+      .where(eq(touristSavings.touristIqCode, touristIqCode))
+      .groupBy(touristSavings.partnerName)
+      .orderBy(desc(sql<number>`sum(${touristSavings.savedAmount})`))
+      .limit(1);
+
+    // Totale mensile corrente
+    const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
+    const [monthlyResult] = await this.db
+      .select({
+        monthlyTotal: sql<number>`sum(${touristSavings.savedAmount})`
+      })
+      .from(touristSavings)
+      .where(
+        and(
+          eq(touristSavings.touristIqCode, touristIqCode),
+          sql`date_trunc('month', ${touristSavings.appliedAt}) = ${currentMonth + '-01'}::date`
+        )
+      );
+
+    const result = {
+      totalSaved: stats?.totalSaved ? Number(stats.totalSaved) : 0,
+      savingsCount: stats?.savingsCount ? Number(stats.savingsCount) : 0,
+      averageSaving: stats?.averageSaving ? Number(stats.averageSaving) : 0,
+      topPartner: topPartnerResult?.partnerName || '',
+      monthlyTotal: monthlyResult?.monthlyTotal ? Number(monthlyResult.monthlyTotal) : 0
+    };
+
+    console.log(`📈 STATISTICHE RISPARMI per ${touristIqCode}:`, result);
+    return result;
+  }
 
 }
 
@@ -3212,6 +3313,44 @@ class ExtendedMemStorage extends MemStorage {
   async getTouristsWithoutOneTimeCodes(): Promise<{ code: string; availableUses: number }[]> {
     // Mock implementation per MemStorage
     return [];
+  }
+
+  // **SISTEMA RISPARMI TURISTI - Memory Implementation**
+  async createTouristSaving(savingData: InsertTouristSavings): Promise<TouristSavings> {
+    // Mock implementation per MemStorage
+    const saving = {
+      id: Math.floor(Math.random() * 1000),
+      ...savingData,
+      appliedAt: new Date()
+    };
+    return saving as TouristSavings;
+  }
+
+  async getTouristSavings(touristIqCode: string): Promise<TouristSavings[]> {
+    // Mock implementation per MemStorage
+    return [];
+  }
+
+  async getTouristSavingsTotal(touristIqCode: string): Promise<number> {
+    // Mock implementation per MemStorage
+    return 0;
+  }
+
+  async getTouristSavingsStats(touristIqCode: string): Promise<{
+    totalSaved: number;
+    savingsCount: number;
+    averageSaving: number;
+    topPartner: string;
+    monthlyTotal: number;
+  }> {
+    // Mock implementation per MemStorage
+    return {
+      totalSaved: 0,
+      savingsCount: 0,
+      averageSaving: 0,
+      topPartner: '',
+      monthlyTotal: 0
+    };
   }
 }
 
