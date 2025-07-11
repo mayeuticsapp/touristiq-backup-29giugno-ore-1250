@@ -3268,10 +3268,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Ottieni l'IQCode del turista che ha creato il codice
+      const codeDetails = await storage.getOneTimeCodeDetails(code);
+      
       res.json({
         valid: true,
         used: false,
-        message: "✅ Codice valido – Turista autenticato TouristIQ"
+        message: "✅ Codice valido – Turista autenticato TouristIQ",
+        touristIqCode: codeDetails?.touristIqCode || null
       });
 
     } catch (error) {
@@ -3432,6 +3436,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ENDPOINT DUPLICATO RIMOSSO - il funzionante è alla riga 3281
+
+// Endpoint per applicare sconto TIQ-OTC con tracking integrato
+app.post('/api/apply-otc-discount', async (req, res) => {
+  try {
+    const { session } = req;
+    if (!session || !session.userIqCode) {
+      return res.status(401).json({ error: 'Sessione non valida' });
+    }
+
+    const { 
+      otcCode, 
+      touristIqCode, 
+      discountPercentage, 
+      originalAmount, 
+      description 
+    } = req.body;
+
+    // Validazione parametri
+    if (!otcCode || !touristIqCode || !discountPercentage || !originalAmount) {
+      return res.status(400).json({ 
+        error: 'Parametri obbligatori: otcCode, touristIqCode, discountPercentage, originalAmount' 
+      });
+    }
+
+    // Calcolo automatico degli importi
+    const discountAmount = (Number(originalAmount) * Number(discountPercentage)) / 100;
+    const finalAmount = Number(originalAmount) - discountAmount;
+
+    // Ottieni info partner dalla sessione
+    const partnerData = await storage.getIqCodeByCode(session.userIqCode);
+    if (!partnerData) {
+      return res.status(404).json({ error: 'Dati partner non trovati' });
+    }
+
+    // Crea record sconto applicato per statistiche partner
+    const discountApplication = await storage.createPartnerDiscountApplication({
+      partnerCode: session.userIqCode,
+      partnerName: partnerData.name || 'Partner',
+      touristIqCode,
+      otcCode,
+      discountPercentage: discountPercentage.toString(),
+      originalAmount: originalAmount.toString(),
+      discountAmount: discountAmount.toString(),
+      finalAmount: finalAmount.toString(),
+      description: description || 'Sconto TIQ-OTC applicato'
+    });
+
+    // Crea record risparmio per turista
+    await storage.createTouristSaving({
+      touristIqCode,
+      partnerCode: session.userIqCode,
+      partnerName: partnerData.name || 'Partner',
+      discountDescription: description || 'Sconto TIQ-OTC applicato',
+      originalPrice: originalAmount.toString(),
+      discountedPrice: finalAmount.toString(),
+      savedAmount: discountAmount.toString(),
+      notes: `Sconto ${discountPercentage}% applicato via TIQ-OTC`
+    });
+
+    res.json({
+      success: true,
+      message: `✅ Sconto applicato: ${discountPercentage}% su €${originalAmount}`,
+      discount: {
+        percentage: discountPercentage,
+        originalAmount: Number(originalAmount),
+        discountAmount: Number(discountAmount),
+        finalAmount: Number(finalAmount),
+        touristSaved: Number(discountAmount),
+        partnerRevenue: Number(finalAmount)
+      }
+    });
+
+  } catch (error) {
+    console.error('Errore applicazione sconto TIQ-OTC:', error);
+    res.status(500).json({ error: 'Errore interno del server' });
+  }
+});
+
+// Endpoint per statistiche partner sui ricavi
+app.get('/api/partner/discount-stats', async (req, res) => {
+  try {
+    const { session } = req;
+    if (!session || !session.userIqCode) {
+      return res.status(401).json({ error: 'Sessione non valida' });
+    }
+
+    const stats = await storage.getPartnerDiscountStats(session.userIqCode);
+    res.json(stats);
+
+  } catch (error) {
+    console.error('Errore statistiche partner:', error);
+    res.status(500).json({ error: 'Errore interno del server' });
+  }
+});
 
   // Endpoint per inizializzare dati di esempio per i risparmi turistici
   app.post("/api/admin/init-sample-savings", async (req, res) => {

@@ -1,4 +1,4 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, oneTimeCodes, touristSavings, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode, type OneTimeCode, type InsertOneTimeCode, type TouristSavings, type InsertTouristSavings } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, oneTimeCodes, touristSavings, partnerDiscountApplications, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode, type OneTimeCode, type InsertOneTimeCode, type TouristSavings, type InsertTouristSavings, type PartnerDiscountApplication, type InsertPartnerDiscountApplication } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt, desc, like, sql, inArray, gt, isNull } from "drizzle-orm";
@@ -144,6 +144,7 @@ export interface IStorage {
   getTouristAvailableUses(touristIqCode: string): Promise<number>;
   initializeOneTimeCodesForTourist(touristIqCode: string, quantity: number): Promise<void>;
   getTouristsWithoutOneTimeCodes(): Promise<{ code: string; availableUses: number }[]>;
+  getOneTimeCodeDetails(code: string): Promise<{ touristIqCode: string } | null>;
 
   // **SISTEMA RISPARMI TURISTI**
   createTouristSaving(savingData: InsertTouristSavings): Promise<TouristSavings>;
@@ -155,6 +156,18 @@ export interface IStorage {
     averageSaving: number;
     topPartner: string;
     monthlyTotal: number;
+  }>;
+
+  // **SISTEMA SCONTI APPLICATI PARTNER**
+  createPartnerDiscountApplication(discountData: InsertPartnerDiscountApplication): Promise<PartnerDiscountApplication>;
+  getPartnerDiscountApplications(partnerCode: string): Promise<PartnerDiscountApplication[]>;
+  getPartnerDiscountStats(partnerCode: string): Promise<{
+    totalDiscountGiven: number;
+    totalRevenueGenerated: number;
+    averageDiscount: number;
+    clientsServed: number;
+    monthlyDiscounts: number;
+    monthlyRevenue: number;
   }>;
 }
 
@@ -2899,6 +2912,18 @@ class ExtendedPostgreStorage extends PostgreStorage {
     return results.map(r => ({ code: r.code, availableUses: r.availableUses || 0 }));
   }
 
+  async getOneTimeCodeDetails(code: string): Promise<{ touristIqCode: string } | null> {
+    const [codeDetails] = await this.db
+      .select({
+        touristIqCode: oneTimeCodes.touristIqCode
+      })
+      .from(oneTimeCodes)
+      .where(eq(oneTimeCodes.code, code))
+      .limit(1);
+
+    return codeDetails || null;
+  }
+
   // Metodi per compatibilità con interfaccia IStorage
   async createTempCode(code: string, createdBy: string): Promise<any> {
     // Implementazione per MemStorage - crea un oggetto temporaneo
@@ -2998,6 +3023,75 @@ class ExtendedPostgreStorage extends PostgreStorage {
     };
 
     console.log(`📈 STATISTICHE RISPARMI per ${touristIqCode}:`, result);
+    return result;
+  }
+
+  // **SISTEMA SCONTI APPLICATI PARTNER - PostgreSQL Implementation**
+  async createPartnerDiscountApplication(discountData: InsertPartnerDiscountApplication): Promise<PartnerDiscountApplication> {
+    const [application] = await this.db
+      .insert(partnerDiscountApplications)
+      .values(discountData)
+      .returning();
+    
+    console.log(`💰 SCONTO APPLICATO: ${discountData.partnerCode} ha applicato ${discountData.discountPercentage}% su €${discountData.originalAmount} (risparmio turista €${discountData.discountAmount}, ricavo partner €${discountData.finalAmount})`);
+    return application;
+  }
+
+  async getPartnerDiscountApplications(partnerCode: string): Promise<PartnerDiscountApplication[]> {
+    const applications = await this.db
+      .select()
+      .from(partnerDiscountApplications)
+      .where(eq(partnerDiscountApplications.partnerCode, partnerCode))
+      .orderBy(desc(partnerDiscountApplications.appliedAt));
+    
+    console.log(`📋 CRONOLOGIA SCONTI: ${applications.length} applicazioni per ${partnerCode}`);
+    return applications;
+  }
+
+  async getPartnerDiscountStats(partnerCode: string): Promise<{
+    totalDiscountGiven: number;
+    totalRevenueGenerated: number;
+    averageDiscount: number;
+    clientsServed: number;
+    monthlyDiscounts: number;
+    monthlyRevenue: number;
+  }> {
+    // Statistiche generali
+    const [stats] = await this.db
+      .select({
+        totalDiscountGiven: sql<number>`sum(${partnerDiscountApplications.discountAmount})`,
+        totalRevenueGenerated: sql<number>`sum(${partnerDiscountApplications.finalAmount})`,
+        averageDiscount: sql<number>`avg(${partnerDiscountApplications.discountPercentage})`,
+        clientsServed: sql<number>`count(distinct ${partnerDiscountApplications.touristIqCode})`
+      })
+      .from(partnerDiscountApplications)
+      .where(eq(partnerDiscountApplications.partnerCode, partnerCode));
+
+    // Statistiche mensili correnti
+    const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
+    const [monthlyStats] = await this.db
+      .select({
+        monthlyDiscounts: sql<number>`sum(${partnerDiscountApplications.discountAmount})`,
+        monthlyRevenue: sql<number>`sum(${partnerDiscountApplications.finalAmount})`
+      })
+      .from(partnerDiscountApplications)
+      .where(
+        and(
+          eq(partnerDiscountApplications.partnerCode, partnerCode),
+          sql`date_trunc('month', ${partnerDiscountApplications.appliedAt}) = ${currentMonth + '-01'}::date`
+        )
+      );
+
+    const result = {
+      totalDiscountGiven: stats?.totalDiscountGiven ? Number(stats.totalDiscountGiven) : 0,
+      totalRevenueGenerated: stats?.totalRevenueGenerated ? Number(stats.totalRevenueGenerated) : 0,
+      averageDiscount: stats?.averageDiscount ? Number(stats.averageDiscount) : 0,
+      clientsServed: stats?.clientsServed ? Number(stats.clientsServed) : 0,
+      monthlyDiscounts: monthlyStats?.monthlyDiscounts ? Number(monthlyStats.monthlyDiscounts) : 0,
+      monthlyRevenue: monthlyStats?.monthlyRevenue ? Number(monthlyStats.monthlyRevenue) : 0
+    };
+
+    console.log(`📊 STATISTICHE PARTNER ${partnerCode}:`, result);
     return result;
   }
 
@@ -3315,6 +3409,11 @@ class ExtendedMemStorage extends MemStorage {
     return [];
   }
 
+  async getOneTimeCodeDetails(code: string): Promise<{ touristIqCode: string } | null> {
+    // Mock implementation per MemStorage
+    return null;
+  }
+
   // **SISTEMA RISPARMI TURISTI - Memory Implementation**
   async createTouristSaving(savingData: InsertTouristSavings): Promise<TouristSavings> {
     // Mock implementation per MemStorage
@@ -3350,6 +3449,41 @@ class ExtendedMemStorage extends MemStorage {
       averageSaving: 0,
       topPartner: '',
       monthlyTotal: 0
+    };
+  }
+
+  // **SISTEMA SCONTI APPLICATI PARTNER - Memory Implementation**
+  async createPartnerDiscountApplication(discountData: InsertPartnerDiscountApplication): Promise<PartnerDiscountApplication> {
+    // Mock implementation per MemStorage
+    const application = {
+      id: Math.floor(Math.random() * 1000),
+      ...discountData,
+      appliedAt: new Date()
+    };
+    return application as PartnerDiscountApplication;
+  }
+
+  async getPartnerDiscountApplications(partnerCode: string): Promise<PartnerDiscountApplication[]> {
+    // Mock implementation per MemStorage
+    return [];
+  }
+
+  async getPartnerDiscountStats(partnerCode: string): Promise<{
+    totalDiscountGiven: number;
+    totalRevenueGenerated: number;
+    averageDiscount: number;
+    clientsServed: number;
+    monthlyDiscounts: number;
+    monthlyRevenue: number;
+  }> {
+    // Mock implementation per MemStorage
+    return {
+      totalDiscountGiven: 0,
+      totalRevenueGenerated: 0,
+      averageDiscount: 0,
+      clientsServed: 0,
+      monthlyDiscounts: 0,
+      monthlyRevenue: 0
     };
   }
 }

@@ -126,6 +126,21 @@ export const touristSavings = pgTable("tourist_savings", {
   notes: text("notes"), // Note aggiuntive del turista
 });
 
+// Tabella per tracciare gli sconti applicati dai partner (per statistiche ricavi)
+export const partnerDiscountApplications = pgTable("partner_discount_applications", {
+  id: serial("id").primaryKey(),
+  partnerCode: text("partner_code").notNull(), // IQCode del partner
+  partnerName: text("partner_name").notNull(), // Nome del partner
+  touristIqCode: text("tourist_iq_code").notNull(), // IQCode del turista
+  otcCode: text("otc_code").notNull(), // Codice TIQ-OTC utilizzato
+  discountPercentage: decimal("discount_percentage", { precision: 5, scale: 2 }).notNull(), // % sconto applicato
+  originalAmount: decimal("original_amount", { precision: 10, scale: 2 }).notNull(), // Importo originale
+  discountAmount: decimal("discount_amount", { precision: 10, scale: 2 }).notNull(), // Importo sconto
+  finalAmount: decimal("final_amount", { precision: 10, scale: 2 }).notNull(), // Importo finale pagato
+  description: text("description"), // Descrizione prodotto/servizio
+  appliedAt: timestamp("applied_at").notNull().defaultNow(), // Quando è stato applicato
+});
+
 // Pacchetti IQCode acquistati dalle strutture
 export const purchasedPackages = pgTable("purchased_packages", {
   id: serial("id").primaryKey(),
@@ -529,6 +544,11 @@ export const insertTouristSavingsSchema = createInsertSchema(touristSavings).omi
   appliedAt: true
 });
 
+export const insertPartnerDiscountApplicationSchema = createInsertSchema(partnerDiscountApplications).omit({
+  id: true,
+  appliedAt: true
+});
+
 export type RealOffer = typeof realOffers.$inferSelect;
 export type InsertRealOffer = z.infer<typeof insertRealOfferSchema>;
 export type PartnerOffer = typeof partnerOffers.$inferSelect;
@@ -544,3 +564,6 @@ export type InsertOneTimeCode = z.infer<typeof insertOneTimeCodeSchema>;
 
 export type TouristSavings = typeof touristSavings.$inferSelect;
 export type InsertTouristSavings = z.infer<typeof insertTouristSavingsSchema>;
+
+export type PartnerDiscountApplication = typeof partnerDiscountApplications.$inferSelect;
+export type InsertPartnerDiscountApplication = z.infer<typeof insertPartnerDiscountApplicationSchema>;
