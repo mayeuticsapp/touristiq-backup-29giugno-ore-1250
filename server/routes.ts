@@ -3440,10 +3440,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 // Endpoint per applicare sconto TIQ-OTC con tracking integrato
 app.post('/api/apply-otc-discount', async (req, res) => {
   try {
-    const { session } = req;
-    if (!session || !session.userIqCode) {
-      return res.status(401).json({ error: 'Sessione non valida' });
-    }
+    if (!await verifyRoleAccess(req, res, ['partner'])) return;
+    
+    const session = req.userSession;
 
     const { 
       otcCode, 
@@ -3465,14 +3464,14 @@ app.post('/api/apply-otc-discount', async (req, res) => {
     const finalAmount = Number(originalAmount) - discountAmount;
 
     // Ottieni info partner dalla sessione
-    const partnerData = await storage.getIqCodeByCode(session.userIqCode);
+    const partnerData = await storage.getIqCodeByCode(session.iqCode);
     if (!partnerData) {
       return res.status(404).json({ error: 'Dati partner non trovati' });
     }
 
     // Crea record sconto applicato per statistiche partner
     const discountApplication = await storage.createPartnerDiscountApplication({
-      partnerCode: session.userIqCode,
+      partnerCode: session.iqCode,
       partnerName: partnerData.name || 'Partner',
       touristIqCode,
       otcCode,
@@ -3486,7 +3485,7 @@ app.post('/api/apply-otc-discount', async (req, res) => {
     // Crea record risparmio per turista
     await storage.createTouristSaving({
       touristIqCode,
-      partnerCode: session.userIqCode,
+      partnerCode: session.iqCode,
       partnerName: partnerData.name || 'Partner',
       discountDescription: description || 'Sconto TIQ-OTC applicato',
       originalPrice: originalAmount.toString(),
@@ -3517,10 +3516,9 @@ app.post('/api/apply-otc-discount', async (req, res) => {
 // Endpoint per statistiche partner sui ricavi
 app.get('/api/partner/discount-stats', async (req, res) => {
   try {
-    const { session } = req;
-    if (!session || !session.userIqCode) {
-      return res.status(401).json({ error: 'Sessione non valida' });
-    }
+    if (!await verifyRoleAccess(req, res, ['partner'])) return;
+    
+    const session = req.userSession;
 
     const stats = await storage.getPartnerDiscountStats(session.userIqCode);
     res.json(stats);

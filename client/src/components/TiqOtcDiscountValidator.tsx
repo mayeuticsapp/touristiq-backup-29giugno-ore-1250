@@ -83,6 +83,11 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
       // Aggiorna le statistiche partner
       queryClient.invalidateQueries({ queryKey: ['/api/partner/discount-stats'] });
       
+      // Aggiorna cronologia turista
+      queryClient.invalidateQueries({ queryKey: ['/api/tourist/one-time-codes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tourist/savings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tourist/savings/stats'] });
+      
       // Reset form
       setOtcCode('');
       setDiscountPercentage('');
@@ -95,7 +100,7 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
     }
   });
 
-  const handleValidateCode = () => {
+  const handleValidateAndApply = async () => {
     if (!otcCode || otcCode.length !== 5) {
       setValidationResult({
         valid: false,
@@ -105,29 +110,44 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
       return;
     }
 
-    console.log('🔍 Validazione codice iniziata:', otcCode);
-    setIsValidating(true);
-    validateOtcMutation.mutate({ code: otcCode });
-    setIsValidating(false);
-  };
-
-  const handleApplyDiscount = () => {
-    if (!validationResult?.valid || !validationResult.touristIqCode) {
-      return;
-    }
-
     if (!discountPercentage || !originalAmount) {
       alert('Inserire percentuale di sconto e importo originale');
       return;
     }
 
-    applyDiscountMutation.mutate({
-      otcCode: `TIQ-OTC-${otcCode}`,
-      touristIqCode: validationResult.touristIqCode,
-      discountPercentage: parseFloat(discountPercentage),
-      originalAmount: parseFloat(originalAmount),
-      description
-    });
+    console.log('🔍 Validazione e applicazione iniziata:', otcCode);
+    setIsValidating(true);
+    
+    try {
+      // Prima valida il codice
+      const validationResponse = await apiRequest('POST', '/api/partner/validate-one-time-code', {
+        code: otcCode,
+        partnerName: 'Partner'
+      });
+      const validation = await validationResponse.json();
+      
+      setValidationResult(validation);
+      
+      if (validation.valid && !validation.used) {
+        // Poi applica subito lo sconto
+        applyDiscountMutation.mutate({
+          otcCode: `TIQ-OTC-${otcCode}`,
+          touristIqCode: validation.touristIqCode,
+          discountPercentage: parseFloat(discountPercentage),
+          originalAmount: parseFloat(originalAmount),
+          description
+        });
+      }
+    } catch (error) {
+      console.error('❌ Errore validazione:', error);
+      setValidationResult({
+        valid: false,
+        message: 'Errore durante la validazione del codice',
+        used: false
+      });
+    } finally {
+      setIsValidating(false);
+    }
   };
 
   const calculateDiscount = () => {
@@ -277,11 +297,11 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
                   />
                 </div>
                 <Button 
-                  onClick={handleValidateCode}
-                  disabled={!otcCode || otcCode.length !== 5 || isValidating}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={handleValidateAndApply}
+                  disabled={!otcCode || otcCode.length !== 5 || isValidating || applyDiscountMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700"
                 >
-                  {isValidating ? 'Validando...' : 'Valida'}
+                  {isValidating || applyDiscountMutation.isPending ? 'Elaborando...' : 'Valida e Applica'}
                 </Button>
               </div>
               <p className="text-sm text-gray-600">
@@ -306,13 +326,13 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
         </Card>
       )}
 
-      {/* Descrizione opzionale e applicazione finale */}
-      {validationResult?.valid && !validationResult.used && (
+      {/* Descrizione opzionale */}
+      {discountPercentage && originalAmount && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5" />
-              Finalizza Sconto
+              Descrizione Sconto
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -326,14 +346,6 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
                 rows={3}
               />
             </div>
-
-            <Button 
-              onClick={handleApplyDiscount}
-              disabled={applyDiscountMutation.isPending}
-              className="w-full bg-green-600 hover:bg-green-700"
-            >
-              {applyDiscountMutation.isPending ? 'Applicando...' : 'Applica Sconto'}
-            </Button>
           </CardContent>
         </Card>
       )}
