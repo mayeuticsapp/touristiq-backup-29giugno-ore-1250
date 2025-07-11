@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Bot, User, Loader2, Sparkles, Heart, MapPin, Sunset, Waves } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { useTranslation } from "react-i18next";
 
 interface Message {
   id: string;
@@ -14,11 +15,22 @@ interface Message {
 }
 
 export function TIQaiChat() {
+  const { i18n } = useTranslation();
+  
+  // Messaggi di benvenuto multilingue
+  const welcomeMessages = {
+    it: '🌅 Ciao, viaggiatore! Sono TIQai, il tuo genius loci digitale. Sussurrami i tuoi desideri di scoperta e ti guiderò verso tesori nascosti che solo il cuore autentico dell\'Italia conosce...',
+    en: '🌅 Hello, traveler! I am TIQai, your digital genius loci. Whisper your desires for discovery and I will guide you to hidden treasures that only the authentic heart of Italy knows...',
+    es: '🌅 ¡Hola, viajero! Soy TIQai, tu genius loci digital. Susúrrame tus deseos de descubrimiento y te guiaré hacia tesoros ocultos que solo el corazón auténtico de Italia conoce...',
+    de: '🌅 Hallo, Reisender! Ich bin TIQai, dein digitaler Genius Loci. Flüstere mir deine Entdeckungswünsche zu und ich führe dich zu verborgenen Schätzen, die nur das authentische Herz Italiens kennt...',
+    fr: '🌅 Bonjour, voyageur ! Je suis TIQai, votre genius loci numérique. Murmurez-moi vos désirs de découverte et je vous guiderai vers des trésors cachés que seul le cœur authentique de l\'Italie connaît...'
+  };
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       type: 'ai',
-      content: '🌅 Ciao, viaggiatore! Sono TIQai, il tuo genius loci digitale. Sussurrami i tuoi desideri di scoperta e ti guiderò verso tesori nascosti che solo il cuore autentico dell\'Italia conosce...',
+      content: welcomeMessages[i18n.language as keyof typeof welcomeMessages] || welcomeMessages.it,
       timestamp: new Date()
     }
   ]);
@@ -36,6 +48,20 @@ export function TIQaiChat() {
     scrollToBottom();
   }, [messages]);
 
+  // Aggiorna il messaggio di benvenuto quando cambia la lingua
+  useEffect(() => {
+    setMessages(prev => {
+      const updatedMessages = [...prev];
+      if (updatedMessages[0]?.id === '1') {
+        updatedMessages[0] = {
+          ...updatedMessages[0],
+          content: welcomeMessages[i18n.language as keyof typeof welcomeMessages] || welcomeMessages.it
+        };
+      }
+      return updatedMessages;
+    });
+  }, [i18n.language]);
+
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
@@ -52,7 +78,8 @@ export function TIQaiChat() {
 
     try {
       const response = await apiRequest("POST", "/api/chat/tiqai", {
-        message: inputMessage.trim()
+        message: inputMessage.trim(),
+        language: i18n.language
       });
       
       const data = await response.json();

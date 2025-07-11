@@ -3,7 +3,7 @@ import OpenAI from "openai";
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
-export async function chatWithTIQai(message: string, storage?: any): Promise<string> {
+export async function chatWithTIQai(message: string, storage?: any, language: string = "it"): Promise<string> {
   try {
     if (!openai) {
       return "Mi dispiace, il sistema TIQai non è attualmente disponibile. Per favore contatta l'amministratore per configurare il servizio.";
@@ -57,6 +57,17 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
       }
     }
     
+    // Definisce le lingue supportate e i prompt multilingue
+    const languageInstructions = {
+      it: "Rispondi sempre in italiano.",
+      en: "Always respond in English.",
+      es: "Siempre responde en español.",
+      de: "Antworte immer auf Deutsch.", 
+      fr: "Réponds toujours en français."
+    };
+
+    const languageInstruction = languageInstructions[language] || languageInstructions.it;
+    
     const response = await Promise.race([
       openai.chat.completions.create({
         model: "gpt-4o",
@@ -64,7 +75,9 @@ export async function chatWithTIQai(message: string, storage?: any): Promise<str
           {
             role: "system",
             content: `Sei TIQai, l'assistente virtuale di TouristIQ specializzato nel turismo autentico italiano. 
-            Rispondi sempre in italiano e fornisci informazioni utili su:
+            ${languageInstruction}
+            
+            Fornisci informazioni utili su:
             - Attrazioni turistiche e luoghi da visitare
             - Ristoranti e cucina locale
             - Eventi e attività

@@ -20,6 +20,7 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
   const queryClient = useQueryClient();
   const [showCustodeDialog, setShowCustodeDialog] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   const [secretWord, setSecretWord] = useState("");
   const [birthDate, setBirthDate] = useState("");
 
@@ -162,15 +163,30 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
                 <Info 
                   className="w-5 h-5 text-blue-600 cursor-help" 
                   aria-label="Cos'è il Custode del Codice?"
+                  onClick={() => setShowTooltip(!showTooltip)}
                 />
                 {/* Tooltip per desktop */}
                 <div className="absolute right-0 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 hidden md:block">
                   {tooltipText}
                 </div>
-                {/* Tooltip per mobile - tap/click */}
-                <div className="absolute right-0 bottom-full mb-2 w-64 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-0 group-active:opacity-100 transition-opacity duration-200 pointer-events-none z-10 md:hidden">
-                  {tooltipText}
-                </div>
+                {/* Tooltip per mobile - click */}
+                {showTooltip && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-[9] md:hidden"
+                      onClick={() => setShowTooltip(false)}
+                    />
+                    <div className="absolute right-0 bottom-full mb-2 w-64 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-100 transition-opacity duration-200 z-10 md:hidden">
+                      {tooltipText}
+                      <button 
+                        onClick={() => setShowTooltip(false)}
+                        className="absolute top-1 right-1 text-white hover:text-gray-300 text-xl leading-none"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
               {(custodeStatus as any)?.hasRecoveryData ? (
                 <div className="flex items-center gap-3">

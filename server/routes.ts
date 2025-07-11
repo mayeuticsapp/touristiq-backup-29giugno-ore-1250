@@ -230,6 +230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // TIQai chat endpoint
   const chatSchema = z.object({
     message: z.string().min(1, "Messaggio richiesto").max(500, "Messaggio troppo lungo"),
+    language: z.string().optional().default("it"),
   });
 
   app.post("/api/chat/tiqai", async (req, res) => {
@@ -246,10 +247,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Validate request
-      const { message } = chatSchema.parse(req.body);
+      const { message, language } = chatSchema.parse(req.body);
       
-      // Get AI response with database access
-      const response = await chatWithTIQai(message, storage);
+      // Get AI response with database access and language preference
+      const response = await chatWithTIQai(message, storage, language);
       
       res.json({ response });
     } catch (error) {
