@@ -68,7 +68,7 @@ export default function PartnerDashboard() {
   const [showSpecialClientDialog, setShowSpecialClientDialog] = useState(false);
   const [showAccountDeleteDialog, setShowAccountDeleteDialog] = useState(false);
   const [showMiniGestionale, setShowMiniGestionale] = useState(false);
-  const [showTiqOtcValidator, setShowTiqOtcValidator] = useState(false);
+
 
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   
@@ -352,24 +352,7 @@ export default function PartnerDashboard() {
     />;
   }
 
-  // Mostra il validatore TIQ-OTC con sconto se richiesto
-  if (showTiqOtcValidator) {
-    console.log('🟢 Rendering TiqOtcDiscountValidator');
-    return (
-      <Layout
-        title="Validatore TIQ-OTC con Sconto"
-        role="partner"
-        navigation={[]}
-        sidebarColor="bg-orange-600"
-      >
-        <div className="min-h-screen bg-gray-50">
-          <div className="p-6">
-            <TiqOtcDiscountValidator onBackToDashboard={() => setShowTiqOtcValidator(false)} />
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+
 
   return (
     <Layout
@@ -497,37 +480,10 @@ export default function PartnerDashboard() {
             className="mb-6" 
           />
 
-          {/* Sistema Validazione Codici Monouso (Privacy-First) */}
+          {/* Sistema Validazione TIQ-OTC con Sconto Integrato */}
           <div className="mb-6">
-            <OneTimeCodeValidator />
+            <TiqOtcDiscountValidator />
           </div>
-
-          {/* Pulsante per aprire il Validatore TIQ-OTC con Sconto */}
-          <Card className="mb-6 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
-                    <Calculator className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">TIQ-OTC con Sconto Integrato</h3>
-                    <p className="text-sm text-gray-600">Valida codici e applica sconti tracciando automaticamente ricavi e risparmi</p>
-                  </div>
-                </div>
-                <Button 
-                  onClick={() => {
-                    console.log('🔵 Bottone Apri Validatore cliccato');
-                    setShowTiqOtcValidator(true);
-                  }}
-                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
-                >
-                  <Calculator className="w-4 h-4 mr-2" />
-                  Apri Validatore
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
 
           <div className="grid grid-cols-1 gap-6">
             {/* Tourist Link Request - NASCOSTA TEMPORANEAMENTE */}
