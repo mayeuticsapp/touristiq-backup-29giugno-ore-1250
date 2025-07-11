@@ -47,13 +47,11 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
   const validateOtcMutation = useMutation({
     mutationFn: async (data: { code: string }) => {
       console.log('🔍 Tentativo validazione con codice:', data.code);
-      return await apiRequest('/api/partner/validate-one-time-code', {
-        method: 'POST',
-        body: JSON.stringify({
-          code: data.code, // Solo le 5 cifre
-          partnerName: 'Partner'
-        })
+      const response = await apiRequest('POST', '/api/partner/validate-one-time-code', {
+        code: data.code, // Solo le 5 cifre
+        partnerName: 'Partner'
       });
+      return await response.json();
     },
     onSuccess: (data) => {
       setValidationResult(data);
@@ -78,10 +76,8 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
       originalAmount: number;
       description: string;
     }) => {
-      return await apiRequest('/api/apply-otc-discount', {
-        method: 'POST',
-        body: JSON.stringify(data)
-      });
+      const response = await apiRequest('POST', '/api/apply-otc-discount', data);
+      return await response.json();
     },
     onSuccess: (data: DiscountApplication) => {
       // Aggiorna le statistiche partner
