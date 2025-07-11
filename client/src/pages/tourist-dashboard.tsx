@@ -293,20 +293,8 @@ export default function TouristDashboard() {
   const offersToShow = searchMode === "default" ? (realOffers as any)?.discounts || [] : locationOffers;
 
   const navigation = [
-    { icon: <Tags size={16} />, label: t('tourist.myDiscounts'), href: "#", onClick: () => {
-      // Scroll smooth alla sezione offerte
-      const offersSection = document.querySelector('[data-section="offers"]');
-      if (offersSection) {
-        offersSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }},
-    { icon: <MessageCircle size={16} />, label: t('tourist.tiqaiChat'), href: "#", onClick: () => {
-      // Scroll smooth alla sezione TIQai
-      const tiqaiSection = document.querySelector('[data-section="tiqai"]');
-      if (tiqaiSection) {
-        tiqaiSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }},
+    { icon: <Tags size={16} />, label: t('tourist.myDiscounts'), href: "#" },
+    { icon: <MessageCircle size={16} />, label: t('tourist.tiqaiChat'), href: "#" },
     { icon: <QrCode size={16} />, label: "Il Mio IQCode", href: "#", onClick: () => setShowIQCodeModal(true) },
     { icon: <Shield size={16} />, label: "Custode del Codice", href: "#", onClick: () => setShowCustodeModal(true) },
   ];
@@ -350,7 +338,7 @@ export default function TouristDashboard() {
       </div>
 
       {/* 1. TIQai Chat - PRIMO POSTO */}
-      <div className="mb-8" data-section="tiqai">
+      <div className="mb-8">
         <Card>
           <CardContent className="p-6">
             <TIQaiChat />
@@ -359,7 +347,7 @@ export default function TouristDashboard() {
       </div>
 
       {/* 2. Scoperte/Offerte - SECONDO POSTO */}
-      <div className="mb-8" data-section="offers">
+      <div className="mb-8">
         <Card className="card-premium">
           <CardContent className="p-6">
             <div className="flex justify-between items-center mb-4">
