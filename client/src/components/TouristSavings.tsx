@@ -1,10 +1,11 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Wallet, TrendingUp, Target, Award, Calendar, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Wallet, TrendingUp, Target, Award, Calendar, MapPin, RefreshCw } from 'lucide-react';
 
 interface TouristSaving {
   id: string;
@@ -25,21 +26,32 @@ interface SavingsStats {
 
 const TouristSavings: React.FC = () => {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
   // Query per ottenere le statistiche dei risparmi
   const { data: savingsStats, isLoading: isLoadingStats } = useQuery<{ stats: SavingsStats }>({
     queryKey: ['/api/tourist/savings/stats'],
     enabled: true,
+    refetchInterval: 30000, // Aggiorna ogni 30 secondi
+    refetchOnWindowFocus: true,
   });
 
   // Query per ottenere la cronologia dei risparmi
   const { data: savingsHistory, isLoading: isLoadingHistory } = useQuery<{ savings: TouristSaving[] }>({
     queryKey: ['/api/tourist/savings'],
     enabled: true,
+    refetchInterval: 30000, // Aggiorna ogni 30 secondi
+    refetchOnWindowFocus: true,
   });
 
   const stats = savingsStats?.stats;
   const savings = savingsHistory?.savings || [];
+
+  // Funzione per forzare l'aggiornamento dei dati
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['/api/tourist/savings/stats'] });
+    await queryClient.invalidateQueries({ queryKey: ['/api/tourist/savings'] });
+  };
 
   if (isLoadingStats || isLoadingHistory) {
     return (
@@ -86,7 +98,18 @@ const TouristSavings: React.FC = () => {
     <div className="space-y-6">
       {/* Header con titolo e messaggio motivazionale */}
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('savings.title')}</h2>
+        <div className="flex items-center justify-center gap-4 mb-2">
+          <h2 className="text-2xl font-bold text-gray-900">{t('savings.title')}</h2>
+          <Button 
+            onClick={handleRefresh} 
+            variant="outline" 
+            size="sm"
+            className="text-orange-600 border-orange-300 hover:bg-orange-50"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Aggiorna
+          </Button>
+        </div>
         <p className="text-orange-600 font-medium">{t('savings.yourSavings')}</p>
       </div>
 
