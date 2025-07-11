@@ -10,7 +10,12 @@
     "recoverWithCustode": "Recover it with Code Guardian",
     "custodeTitle": "Code Guardian",
     "custodeDescription": "Enter the secret word and birth date you set up to recover your IQCode.",
-    "tooltip": "Anonymous recovery system without email or phone. Set a secret word and birth date to recover your code securely.",
+    "tooltip": {
+      "custodeAria": "Code Guardian system information",
+      "custodeTitle": "Code Guardian",
+      "custodeDescription": "The Code Guardian helps you recover your IQCode if you forget it. Set a secret word and birth date for secure recovery.",
+      "custodeSecure": "Your data is hashed and stored anonymously. We cannot recover this information: keep it safe!"
+    },
     "tempCode": {
       "detected": "Temporary code detected",
       "redirecting": "We're redirecting you to the activation page..."
@@ -29,6 +34,14 @@
       "notFound": "IQ code not found",
       "serverError": "Server error. Please try again.",
       "unknownRole": "Unknown role"
+    },
+    "rememberCode": "Remember my code",
+    "custode": {
+      "title": "Code Guardian"
+    },
+    "support": {
+      "text": "Need help? Contact us:",
+      "email": "info@touristiq.it"
     }
   },
   "dashboard": {

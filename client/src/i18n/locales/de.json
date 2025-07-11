@@ -10,7 +10,12 @@
     "recoverWithCustode": "Mit Code-Wächter wiederherstellen",
     "custodeTitle": "Code-Wächter",
     "custodeDescription": "Geben Sie das Geheimwort und Geburtsdatum ein, das Sie für die Wiederherstellung Ihres IQCodes eingerichtet haben.",
-    "tooltip": "Anonymes Wiederherstellungssystem ohne E-Mail oder Telefon. Setzen Sie ein Geheimwort und Geburtsdatum, um Ihren Code sicher wiederherzustellen.",
+    "tooltip": {
+      "custodeAria": "Informationen zum Code-Wächter System",
+      "custodeTitle": "Code-Wächter",
+      "custodeDescription": "Der Code-Wächter hilft Ihnen, Ihren IQCode wiederherzustellen, wenn Sie ihn vergessen. Setzen Sie ein Geheimwort und Geburtsdatum für sichere Wiederherstellung.",
+      "custodeSecure": "Ihre Daten werden verschlüsselt und anonym gespeichert. Wir können diese Informationen nicht wiederherstellen: bewahren Sie sie gut auf!"
+    },
     "tempCode": {
       "detected": "Temporärer Code erkannt",
       "redirecting": "Wir leiten Sie zur Aktivierungsseite weiter..."
@@ -29,6 +34,14 @@
       "notFound": "IQ-Code nicht gefunden",
       "serverError": "Server-Fehler. Bitte versuchen Sie es erneut.",
       "unknownRole": "Unbekannte Rolle"
+    },
+    "rememberCode": "Meinen Code merken",
+    "custode": {
+      "title": "Code-Wächter"
+    },
+    "support": {
+      "text": "Benötigen Sie Hilfe? Kontaktieren Sie uns:",
+      "email": "info@touristiq.it"
     }
   },
   "dashboard": {

@@ -10,7 +10,12 @@
     "recoverWithCustode": "Recuperalo con il Custode del Codice",
     "custodeTitle": "Custode del Codice",
     "custodeDescription": "Inserisci la parola segreta e la data di nascita che hai impostato per recuperare il tuo IQCode.",
-    "tooltip": "Sistema di recupero anonimo senza email o telefono. Imposta una parola segreta e data di nascita per recuperare il tuo codice in sicurezza.",
+    "tooltip": {
+      "custodeAria": "Informazioni sul sistema Custode del Codice",
+      "custodeTitle": "Custode del Codice",
+      "custodeDescription": "Il Custode del Codice ti aiuta a recuperare il tuo IQCode se lo dimentichi. Imposta una parola segreta e una data di nascita per un recupero sicuro.",
+      "custodeSecure": "I tuoi dati vengono hashati e salvati in modo anonimo. Non possiamo recuperare queste informazioni: custodiscile bene!"
+    },
     "tempCode": {
       "detected": "Codice temporaneo rilevato",
       "redirecting": "Ti stiamo reindirizzando alla pagina di attivazione..."
@@ -29,6 +34,14 @@
       "notFound": "Codice IQ non trovato",
       "serverError": "Errore del server. Riprova.",
       "unknownRole": "Ruolo non riconosciuto"
+    },
+    "rememberCode": "Ricorda il mio codice",
+    "custode": {
+      "title": "Custode del Codice"
+    },
+    "support": {
+      "text": "Hai bisogno di aiuto? Contattaci:",
+      "email": "info@touristiq.it"
     }
   },
   "dashboard": {
