@@ -46,6 +46,7 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
   // Mutation per validare il codice TIQ-OTC
   const validateOtcMutation = useMutation({
     mutationFn: async (data: { code: string }) => {
+      console.log('🔍 Tentativo validazione con codice:', data.code);
       return await apiRequest('/api/partner/validate-one-time-code', {
         method: 'POST',
         body: JSON.stringify({
@@ -59,7 +60,7 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
       console.log('🎯 Risultato validazione:', data);
     },
     onError: (error) => {
-      console.error('Errore validazione:', error);
+      console.error('❌ Errore validazione:', error);
       setValidationResult({
         valid: false,
         message: 'Errore durante la validazione del codice',
@@ -77,7 +78,7 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
       originalAmount: number;
       description: string;
     }) => {
-      return await apiRequest('/api/apply-discount-otc', {
+      return await apiRequest('/api/apply-otc-discount', {
         method: 'POST',
         body: JSON.stringify(data)
       });
@@ -108,6 +109,7 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
       return;
     }
 
+    console.log('🔍 Validazione codice iniziata:', otcCode);
     setIsValidating(true);
     validateOtcMutation.mutate({ code: otcCode });
     setIsValidating(false);
