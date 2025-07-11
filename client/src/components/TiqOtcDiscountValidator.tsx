@@ -46,24 +46,17 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
   // Mutation per validare il codice TIQ-OTC
   const validateOtcMutation = useMutation({
     mutationFn: async (data: { code: string }) => {
-      return await apiRequest('/api/validate-otc', {
+      return await apiRequest('/api/partner/validate-one-time-code', {
         method: 'POST',
         body: JSON.stringify({
-          code: `TIQ-OTC-${data.code}`,
-          partnerCode: 'partner-session', // Viene gestito dal backend dalla sessione
-          partnerName: 'Partner' // Viene gestito dal backend
+          code: data.code, // Solo le 5 cifre
+          partnerName: 'Partner'
         })
       });
     },
     onSuccess: (data) => {
       setValidationResult(data);
-      if (data.valid) {
-        // Simula il recupero dell'IQCode del turista (normalmente verrebbe dal backend)
-        setValidationResult(prev => ({
-          ...prev!,
-          touristIqCode: 'TIQ-IT-SAMPLE' // Questo dovrebbe venire dal backend
-        }));
-      }
+      console.log('🎯 Risultato validazione:', data);
     },
     onError: (error) => {
       console.error('Errore validazione:', error);
@@ -84,7 +77,7 @@ export function TiqOtcDiscountValidator({ onBackToDashboard }: TiqOtcDiscountVal
       originalAmount: number;
       description: string;
     }) => {
-      return await apiRequest('/api/apply-otc-discount', {
+      return await apiRequest('/api/apply-discount-otc', {
         method: 'POST',
         body: JSON.stringify(data)
       });
