@@ -1,5 +1,5 @@
 {
-  "login": {
+  "auth": {
     "title": "Accès TouristIQ",
     "subtitle": "Saisissez votre code IQ pour vous connecter",
     "iqCodePlaceholder": "Saisissez votre code IQ",
@@ -8,25 +8,64 @@
     "forgotCode": "Vous ne vous souvenez pas de votre code ?",
     "recoverWith": "Récupérez-le avec le Gardien du Code",
     "recoverWithCustode": "Récupérez-le avec le Gardien du Code",
-    "custodeAria": "Informations sur le système Gardien du Code",
     "custodeTitle": "Gardien du Code",
-    "custodeDescription": "Le Gardien du Code vous aide à récupérer votre IQCode si vous l'oubliez. Définissez un mot secret et une date de naissance pour une récupération sécurisée.",
-    "custodeSecure": "Vos données sont hachées et sauvegardées de manière anonyme. Nous ne pouvons pas récupérer ces informations : gardez-les bien !",
-    "detected": "Code temporaire détecté",
-    "redirecting": "Nous vous redirigeons vers la page d'activation...",
-    "success": "IQCode récupéré !",
-    "yourCode": "Votre IQCode est",
-    "notFound": "Aucun code trouvé avec ces données",
-    "alreadyActive": "Vous avez déjà un code actif",
-    "error": "Erreur lors de la récupération du code",
-    "missingFields": "Saisissez le mot secret et la date de naissance",
-    "required": "Le code IQ est obligatoire",
-    "invalid": "Code IQ invalide. Réessayez.",
+    "custodeDescription": "Saisissez le mot secret et la date de naissance que vous avez configurés pour récupérer votre IQCode.",
+    "tooltip": {
+      "custodeAria": "Informations sur le système Gardien du Code",
+      "custodeTitle": "Gardien du Code",
+      "custodeDescription": "Le Gardien du Code vous aide à récupérer votre IQCode si vous l'oubliez. Définissez un mot secret et une date de naissance pour une récupération sécurisée.",
+      "custodeSecure": "Vos données sont hachées et sauvegardées de manière anonyme. Nous ne pouvons pas récupérer ces informations : gardez-les bien !"
+    },
+    "tempCode": {
+      "detected": "Code temporaire détecté",
+      "redirecting": "Nous vous redirigeons vers la page d'activation..."
+    },
+    "recovery": {
+      "success": "IQCode récupéré !",
+      "yourCode": "Votre IQCode est",
+      "notFound": "Aucun code trouvé avec ces données",
+      "alreadyActive": "Vous avez déjà un code actif",
+      "error": "Erreur lors de la récupération du code",
+      "missingFields": "Saisissez le mot secret et la date de naissance"
+    },
     "errors": {
       "required": "Le code IQ est obligatoire",
       "invalid": "Code IQ invalide. Réessayez.",
       "notFound": "Code IQ introuvable"
+    },
+    "rememberCode": "Se souvenir de mon code",
+    "support": {
+      "text": "Besoin d'aide ? Contactez-nous à",
+      "email": "info@touristiq.it"
+    },
+    "recovery": {
+      "recoverCode": "Récupérer le Code",
+      "secretWord": "Mot secret",
+      "birthDate": "Date de naissance",
+      "secretWordPlaceholder": "Votre mot secret",
+      "birthDatePlaceholder": "jj/mm/aaaa"
     }
+  },
+  "common": {
+    "loading": "Chargement",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "save": "Sauvegarder",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "refresh": "Actualiser"
+  },
+  "validation": {
+    "required": "Champ requis",
+    "invalid": "Valeur invalide",
+    "tooShort": "Trop court",
+    "tooLong": "Trop long"
   },
   "tourist": {
     "title": "Votre Espace Découverte",
