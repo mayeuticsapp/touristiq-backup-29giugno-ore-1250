@@ -1,0 +1,880 @@
+{
+  "timestamp": "2025-07-11T20:22:05.152Z",
+  "detectedStrings": [
+    "🔄 MANUAL RETRY: Ricaricamento manuale...",
+    "Mi dai il TIQ-OTC?",
+    "Descrizione del prodotto/servizio scontato...",
+    "Inserire percentuale di sconto e importo originale",
+    "Cerca per codice turista...",
+    "Filtra per stato",
+    "Ordina per data",
+    "Note admin (opzionale)",
+    "Seleziona categoria",
+    "Descrizione movimento",
+    "Numero clienti",
+    "Numero codici",
+    "Note aggiuntive...",
+    "Es: vacanze2024, famiglia, libertà...",
+    "Inserisci una nuova parola segreta",
+    "Es: Ristorante Da Mario",
+    "Seleziona tipo",
+    "Descrivi la tua attività, cosa offri di speciale...",
+    "Via Roma 123",
+    "+39 123 456 7890",
+    "info@example.com",
+    "Dettagli specifici, limitazioni, servizi particolari...",
+    "Procedure specifiche, limitazioni, precauzioni particolari...",
+    "Servizi speciali, attività per bambini, sconti famiglia...",
+    "Es: Laboratori di ceramica tradizionale calabrese, degustazioni di vini locali...",
+    "Es: Certificazione biologica, ISO 9001...",
+    "Es: Michelin, TripAdvisor Certificate of Excellence...",
+    "✨ Sussurra i tuoi desideri di scoperta italiana...",
+    "Go to previous page",
+    "Go to next page",
+    "Toggle Sidebar",
+    "Es: IQCODE-PRIMOACCESSO-67421",
+    "Bypass onboarding",
+    "🔍 Cerca per codice, nome, provincia...",
+    "Seleziona destinatario",
+    "Nome destinatario del codice IQ",
+    "Onboarding bypassato con successo! Partner abilitato per i test.",
+    "Spostare questo utente nel cestino? Potrà essere ripristinato entro 24 ore.",
+    "Utente spostato nel cestino",
+    "Errore nello spostamento nel cestino",
+    "Nota aggiornata con successo",
+    "Notifica simulata inviata. Integrazione WhatsApp/Email in fase di sviluppo con API Twilio/SendGrid.",
+    "Funzione esporta CSV in sviluppo",
+    "Ripristinare questo utente?",
+    "Utente ripristinato con successo",
+    "Errore nel ripristino",
+    "Utente eliminato definitivamente",
+    "Inserisci il nome del destinatario",
+    "Pacchetto RobS esaurito. Non puoi generare codici emozionali.",
+    "Inserisci IQCode (es: TIQ-IT-ROMA)",
+    "es: Sconto Aperitivo",
+    "Descrivi l",
+    "es: 20%",
+    "es: Marco R.",
+    "Preferenze, allergie, note particolari...",
+    "ELIMINA DEFINITIVAMENTE",
+    "Sei sicuro di voler eliminare questa offerta?",
+    "Es: Mario Rossi",
+    "Es: +39 123 456 7890",
+    "Note aggiuntive sull",
+    "Cerca ospiti per nome, luogo di provenienza, camera...",
+    "Digita la frase di conferma",
+    "Hotel Pazzo Calabria",
+    "Mario Rossi",
+    "info@hotel.com",
+    "+39 333 123 4567",
+    "Vibo Valentia",
+    "Benvenuto nella nostra struttura! Siamo felici di ospitarvi...",
+    "Seleziona un ospite registrato per assegnare il codice",
+    "Nome e cognome sono obbligatori",
+    "Nessun credito disponibile nei pacchetti assegnati.",
+    "Messaggio inviato! Il numero di telefono è stato rimosso per privacy GDPR.",
+    "Codice copiato negli appunti!",
+    "Errore durante la copia",
+    "Numero WhatsApp non valido. Deve essere un numero italiano che inizia con 3 (es. 391234567890)",
+    "Numero WhatsApp non valido. Formato corretto: +39 3xx xxx xxxx",
+    "Errore durante la rimozione del codice",
+    "Errore durante la generazione del codice temporaneo",
+    "Numero di telefono non disponibile per questo ospite",
+    "Nessun codice IQ trovato per questo ospite",
+    "⚠️ Privacy protetta: I codici IQ sono riservati agli ospiti. Non è possibile copiarli per proteggere la loro privacy.",
+    "Numero di telefono non disponibile",
+    "Date picker aperto con showPicker()",
+    "Date picker aperto con click()",
+    "Pizzo, Tropea, Briatico...",
+    "Inserisci una parola che ricorderai",
+    "Inserisci una nuova parola che ricorderai",
+    "Cerca per codice, nome o ruolo..."
+  ],
+  "existingKeys": [
+    [
+      "auth.title",
+      "Accesso TouristIQ"
+    ],
+    [
+      "auth.subtitle",
+      "Inserisci il tuo codice IQ per accedere"
+    ],
+    [
+      "auth.iqCodePlaceholder",
+      "Inserisci il tuo codice IQ"
+    ],
+    [
+      "auth.iqCodeLabel",
+      "Codice IQ"
+    ],
+    [
+      "auth.loginButton",
+      "Accedi"
+    ],
+    [
+      "auth.forgotCode",
+      "Non ricordi il tuo codice?"
+    ],
+    [
+      "auth.recoverWith",
+      "Recuperalo con il Custode del Codice"
+    ],
+    [
+      "auth.recoverWithCustode",
+      "Recuperalo con il Custode del Codice"
+    ],
+    [
+      "auth.custodeTitle",
+      "Custode del Codice"
+    ],
+    [
+      "auth.custodeDescription",
+      "Inserisci la parola segreta e la data di nascita che hai impostato per recuperare il tuo IQCode."
+    ],
+    [
+      "auth.tooltip.custodeAria",
+      "Informazioni sul sistema Custode del Codice"
+    ],
+    [
+      "auth.tooltip.custodeTitle",
+      "Custode del Codice"
+    ],
+    [
+      "auth.tooltip.custodeDescription",
+      "Il Custode del Codice ti aiuta a recuperare il tuo IQCode se lo dimentichi. Imposta una parola segreta e una data di nascita per un recupero sicuro."
+    ],
+    [
+      "auth.tooltip.custodeSecure",
+      "I tuoi dati vengono hashati e salvati in modo anonimo. Non possiamo recuperare queste informazioni: custodiscile bene!"
+    ],
+    [
+      "auth.tempCode.detected",
+      "Codice temporaneo rilevato"
+    ],
+    [
+      "auth.tempCode.redirecting",
+      "Ti stiamo reindirizzando alla pagina di attivazione..."
+    ],
+    [
+      "auth.recovery.success",
+      "IQCode recuperato!"
+    ],
+    [
+      "auth.recovery.yourCode",
+      "Il tuo IQCode è"
+    ],
+    [
+      "auth.recovery.notFound",
+      "Nessun codice trovato con questi dati"
+    ],
+    [
+      "auth.recovery.alreadyActive",
+      "Hai già un codice attivo"
+    ],
+    [
+      "auth.recovery.error",
+      "Errore nel recupero del codice"
+    ],
+    [
+      "auth.recovery.missingFields",
+      "Inserisci sia la parola segreta che la data di nascita"
+    ],
+    [
+      "auth.errors.required",
+      "Il codice IQ è obbligatorio"
+    ],
+    [
+      "auth.errors.invalid",
+      "Codice IQ non valido. Riprova."
+    ],
+    [
+      "auth.errors.notFound",
+      "Codice IQ non trovato"
+    ],
+    [
+      "auth.errors.serverError",
+      "Errore del server. Riprova."
+    ],
+    [
+      "auth.errors.unknownRole",
+      "Ruolo non riconosciuto"
+    ],
+    [
+      "auth.rememberCode",
+      "Ricorda il mio codice"
+    ],
+    [
+      "auth.custode.title",
+      "Custode del Codice"
+    ],
+    [
+      "auth.support.text",
+      "Hai bisogno di aiuto? Contattaci:"
+    ],
+    [
+      "auth.support.email",
+      "info@touristiq.it"
+    ],
+    [
+      "dashboard.welcome",
+      "Benvenuto"
+    ],
+    [
+      "dashboard.welcomeFallback",
+      "nel tuo spazio turistico"
+    ],
+    [
+      "tourist.title",
+      "Dashboard Turista"
+    ],
+    [
+      "tourist.subtitle",
+      "Ogni esperienza inizia con un IQ"
+    ],
+    [
+      "tourist.myDiscounts",
+      "I Miei Sconti"
+    ],
+    [
+      "tourist.tiqaiChat",
+      "TIQai Chat"
+    ],
+    [
+      "tourist.codeValidation",
+      "Validazione IQCode"
+    ],
+    [
+      "tourist.magicPassepartout",
+      "Passepartout Magico"
+    ],
+    [
+      "tourist.exclusiveDiscoveries",
+      "Le Tue Scoperte Esclusive"
+    ],
+    [
+      "tourist.hiddenTreasures",
+      "tesori nascosti"
+    ],
+    [
+      "tourist.generateCode",
+      "Genera Codice"
+    ],
+    [
+      "tourist.noOffersAvailable",
+      "Nessuna offerta disponibile al momento"
+    ],
+    [
+      "tourist.offersCount",
+      "{{count}} offerta"
+    ],
+    [
+      "tourist.offersCount_plural",
+      "{{count}} offerte"
+    ],
+    [
+      "tourist.security.unauthorized",
+      "Accesso non autorizzato"
+    ],
+    [
+      "tourist.security.tempCodeNotAllowed",
+      "I codici temporanei devono essere attivati prima dell'uso"
+    ],
+    [
+      "tourist.welcome.message1",
+      "La tua porta d'accesso alle esperienze autentiche della Calabria"
+    ],
+    [
+      "tourist.welcome.message2",
+      "Dove ogni momento diventa una scoperta indimenticabile"
+    ],
+    [
+      "tourist.welcome.message3",
+      "Il tuo passaporto per i tesori nascosti della terra del sole"
+    ],
+    [
+      "tourist.welcome.message4",
+      "Scopri la Calabria come mai prima d'ora"
+    ],
+    [
+      "tourist.welcome.message5",
+      "Benvenuto nel cuore pulsante dell'ospitalità calabrese"
+    ],
+    [
+      "tourist.welcome.message6",
+      "Ogni esperienza inizia con un IQ, ogni ricordo nasce qui"
+    ],
+    [
+      "tourist.welcome.message7",
+      "La chiave per aprire le porte dell'autentica Calabria"
+    ],
+    [
+      "tourist.oneTimeCodes.title",
+      "Codici TIQ-OTC"
+    ],
+    [
+      "tourist.oneTimeCodes.subtitle",
+      "Sistema anti-vulnerabilità per validazioni sicure"
+    ],
+    [
+      "tourist.oneTimeCodes.generate",
+      "Genera Codice"
+    ],
+    [
+      "tourist.oneTimeCodes.availableUses",
+      "Utilizzi disponibili: {{count}}"
+    ],
+    [
+      "tourist.oneTimeCodes.lastGenerated",
+      "Ultimo codice generato:"
+    ],
+    [
+      "tourist.oneTimeCodes.copyCode",
+      "Copia Codice"
+    ],
+    [
+      "tourist.oneTimeCodes.copied",
+      "Copiato!"
+    ],
+    [
+      "tourist.oneTimeCodes.history",
+      "Cronologia Utilizzi"
+    ],
+    [
+      "tourist.oneTimeCodes.noHistory",
+      "Nessun utilizzo registrato"
+    ],
+    [
+      "tourist.oneTimeCodes.usedAt",
+      "Utilizzato il {{date}}"
+    ],
+    [
+      "tourist.oneTimeCodes.usedBy",
+      "da {{partner}}"
+    ],
+    [
+      "tourist.oneTimeCodes.error",
+      "Errore nella generazione del codice"
+    ],
+    [
+      "tourist.oneTimeCodes.generationDescription",
+      "Genera codici temporanei monouso per sconti immediati"
+    ],
+    [
+      "tourist.oneTimeCodes.loadingError",
+      "⚠️ Errore caricamento dati. Prova a ricaricare la pagina."
+    ],
+    [
+      "tourist.oneTimeCodes.retryButton",
+      "Riprova"
+    ],
+    [
+      "tourist.oneTimeCodes.generatedSuccess",
+      "✅ Codice monouso generato!"
+    ],
+    [
+      "tourist.oneTimeCodes.generatedDescription",
+      "Codice {{code}} pronto per l'uso"
+    ],
+    [
+      "tourist.oneTimeCodes.copySuccess",
+      "Codice copiato!"
+    ],
+    [
+      "tourist.oneTimeCodes.copyDescription",
+      "Il codice monouso è stato copiato negli appunti"
+    ],
+    [
+      "tourist.oneTimeCodes.copyError",
+      "Impossibile copiare il codice"
+    ],
+    [
+      "tourist.oneTimeCodes.generationError",
+      "Errore generazione codice"
+    ],
+    [
+      "tourist.oneTimeCodes.generationErrorDescription",
+      "Impossibile generare il codice monouso. Riprova."
+    ],
+    [
+      "tourist.waitingDiscoveries",
+      "Le tue scoperte ti aspettano!"
+    ],
+    [
+      "tourist.exploreOrAsk",
+      "Esplora i dintorni o chiedi a TIQai per trovare esperienze uniche"
+    ],
+    [
+      "tourist.exploreArea",
+      "Esplora Zona"
+    ],
+    [
+      "tourist.exploreNearby",
+      "Esplora Dintorni"
+    ],
+    [
+      "tourist.discount",
+      "di sconto"
+    ],
+    [
+      "tourist.codeActions.copyCode",
+      "Copia il Tuo IQCode"
+    ],
+    [
+      "tourist.codeActions.shareCode",
+      "Condividi"
+    ],
+    [
+      "tourist.codeActions.copySuccess",
+      "Codice copiato!"
+    ],
+    [
+      "tourist.codeActions.copyDescription",
+      "Il tuo IQCode definitivo è stato copiato negli appunti"
+    ],
+    [
+      "tourist.codeActions.shareMessage",
+      "Il mio codice IQ TouristIQ: {{code}} 🎯 Scopri sconti esclusivi in Calabria!"
+    ],
+    [
+      "tourist.codeActions.exclusiveDescription",
+      "Il tuo codice esclusivo per scoperte uniche in Calabria!"
+    ],
+    [
+      "partner.title",
+      "Dashboard Partner"
+    ],
+    [
+      "partner.validateCode",
+      "Valida Codice IQCode"
+    ],
+    [
+      "partner.codeInput",
+      "Inserisci il codice del turista"
+    ],
+    [
+      "partner.validateButton",
+      "Valida"
+    ],
+    [
+      "partner.validation.success",
+      "✅ Codice valido – Turista autenticato TouristIQ"
+    ],
+    [
+      "partner.validation.invalid",
+      "❌ Codice non valido"
+    ],
+    [
+      "partner.validation.error",
+      "Errore durante la validazione"
+    ],
+    [
+      "partner.offers.title",
+      "Le Mie Offerte"
+    ],
+    [
+      "partner.offers.create",
+      "Crea Nuova Offerta"
+    ],
+    [
+      "partner.offers.edit",
+      "Modifica"
+    ],
+    [
+      "partner.offers.delete",
+      "Elimina"
+    ],
+    [
+      "partner.offers.noOffers",
+      "Nessuna offerta creata"
+    ],
+    [
+      "structure.title",
+      "Dashboard Struttura"
+    ],
+    [
+      "structure.guests",
+      "Gestione Ospiti"
+    ],
+    [
+      "structure.credits",
+      "Crediti: {{remaining}}/{{total}}"
+    ],
+    [
+      "structure.miniManagement",
+      "Mini-gestionale"
+    ],
+    [
+      "admin.title",
+      "Dashboard Admin"
+    ],
+    [
+      "admin.users",
+      "Utenti"
+    ],
+    [
+      "admin.userManagement",
+      "Gestione Utenti"
+    ],
+    [
+      "admin.stats",
+      "Statistiche"
+    ],
+    [
+      "admin.iqCodes",
+      "Codici IQ"
+    ],
+    [
+      "admin.settings",
+      "Impostazioni"
+    ],
+    [
+      "admin.assignPackages",
+      "Assegna Pacchetti"
+    ],
+    [
+      "common.save",
+      "Salva"
+    ],
+    [
+      "common.cancel",
+      "Annulla"
+    ],
+    [
+      "common.delete",
+      "Elimina"
+    ],
+    [
+      "common.edit",
+      "Modifica"
+    ],
+    [
+      "common.close",
+      "Chiudi"
+    ],
+    [
+      "common.back",
+      "Indietro"
+    ],
+    [
+      "common.next",
+      "Avanti"
+    ],
+    [
+      "common.loading",
+      "Caricamento"
+    ],
+    [
+      "common.error",
+      "Errore"
+    ],
+    [
+      "common.success",
+      "Successo"
+    ],
+    [
+      "common.confirm",
+      "Conferma"
+    ],
+    [
+      "common.yes",
+      "Sì"
+    ],
+    [
+      "common.no",
+      "No"
+    ],
+    [
+      "common.search",
+      "Cerca"
+    ],
+    [
+      "common.filter",
+      "Filtra"
+    ],
+    [
+      "common.sort",
+      "Ordina"
+    ],
+    [
+      "common.actions",
+      "Azioni"
+    ],
+    [
+      "common.status",
+      "Stato"
+    ],
+    [
+      "common.active",
+      "Attivo"
+    ],
+    [
+      "common.inactive",
+      "Inattivo"
+    ],
+    [
+      "common.pending",
+      "In attesa"
+    ],
+    [
+      "common.approved",
+      "Approvato"
+    ],
+    [
+      "common.rejected",
+      "Rifiutato"
+    ],
+    [
+      "common.noData",
+      "Nessun dato disponibile"
+    ],
+    [
+      "common.tryAgain",
+      "Riprova"
+    ],
+    [
+      "common.here",
+      "qui"
+    ],
+    [
+      "common.orClick",
+      "oppure clicca"
+    ],
+    [
+      "errors.generic",
+      "Si è verificato un errore. Riprova."
+    ],
+    [
+      "errors.network",
+      "Errore di connessione. Controlla la tua connessione internet."
+    ],
+    [
+      "errors.unauthorized",
+      "Accesso non autorizzato"
+    ],
+    [
+      "errors.forbidden",
+      "Operazione non consentita"
+    ],
+    [
+      "errors.notFound",
+      "Risorsa non trovata"
+    ],
+    [
+      "errors.validation",
+      "Dati non validi"
+    ],
+    [
+      "errors.server",
+      "Errore del server"
+    ],
+    [
+      "validation.required",
+      "Campo obbligatorio"
+    ],
+    [
+      "validation.email",
+      "Email non valida"
+    ],
+    [
+      "validation.minLength",
+      "Minimo {{min}} caratteri"
+    ],
+    [
+      "validation.maxLength",
+      "Massimo {{max}} caratteri"
+    ],
+    [
+      "validation.numeric",
+      "Solo numeri"
+    ],
+    [
+      "validation.alphanumeric",
+      "Solo lettere e numeri"
+    ],
+    [
+      "tiqai.title",
+      "TIQai Chat"
+    ],
+    [
+      "tiqai.subtitle",
+      "Il tuo Genius Loci digitale"
+    ],
+    [
+      "tiqai.placeholder",
+      "Sussurrami i tuoi desideri di scoperta..."
+    ],
+    [
+      "tiqai.send",
+      "Invia"
+    ],
+    [
+      "tiqai.welcome",
+      "Ciao! Sono TIQai, il tuo assistente AI per scoprire i tesori nascosti della Calabria. Come posso aiutarti?"
+    ],
+    [
+      "tiqai.thinking",
+      "Sto pensando..."
+    ],
+    [
+      "tiqai.error",
+      "Errore durante la comunicazione con TIQai"
+    ],
+    [
+      "tiqai.initialMessage",
+      "🌅 Ciao, viaggiatore! Sono TIQai, il tuo genius loci digitale. Sussurrami i tuoi desideri di scoperta e ti guiderò verso tesori nascosti che solo il cuore autentico dell'Italia conosce..."
+    ],
+    [
+      "tiqai.errorMessage",
+      "Mi dispiace, si è verificato un errore. Riprova più tardi."
+    ],
+    [
+      "tiqai.fullTitle",
+      "TIQai - Genius Loci d'Italia"
+    ],
+    [
+      "tiqai.tagline",
+      "L'anima autentica d'Italia che sussurra segreti"
+    ],
+    [
+      "language.selector",
+      "Seleziona Lingua"
+    ],
+    [
+      "language.it",
+      "Italiano"
+    ],
+    [
+      "language.en",
+      "English"
+    ],
+    [
+      "language.es",
+      "Español"
+    ],
+    [
+      "language.de",
+      "Deutsch"
+    ],
+    [
+      "geolocation.unsupported",
+      "Geolocalizzazione non supportata dal browser"
+    ],
+    [
+      "geolocation.permissionDenied",
+      "Impossibile ottenere la posizione. Verifica le autorizzazioni del browser."
+    ],
+    [
+      "geolocation.error",
+      "Errore durante la geolocalizzazione"
+    ],
+    [
+      "custode.title",
+      "Custode del Codice"
+    ],
+    [
+      "custode.securityDescription",
+      "Proteggi il tuo accesso con un sistema di recupero sicuro"
+    ],
+    [
+      "custode.activateButton",
+      "Attiva il Custode del Codice"
+    ],
+    [
+      "custode.manageButton",
+      "Gestisci Custode del Codice"
+    ],
+    [
+      "custode.alreadyActive",
+      "Custode già attivato"
+    ],
+    [
+      "custode.modifyTooltip",
+      "Modifica la parola segreta e la data di nascita associate al tuo IQCode per un futuro recupero. I dati restano anonimi e non recuperabili dal nostro sistema."
+    ],
+    [
+      "custode.activateTooltip",
+      "Il Custode del Codice ti aiuta a recuperare il tuo IQCode se lo dimentichi. Salva ora una parola segreta e una data speciale: saranno usate in sicurezza solo da te."
+    ],
+    [
+      "savings.title",
+      "I Miei Risparmi"
+    ],
+    [
+      "savings.totalSaved",
+      "Totale Risparmiato"
+    ],
+    [
+      "savings.savingsCount",
+      "Transazioni"
+    ],
+    [
+      "savings.averageSaving",
+      "Media Risparmio"
+    ],
+    [
+      "savings.thisMonth",
+      "Questo Mese"
+    ],
+    [
+      "savings.topPartner",
+      "Partner Preferito"
+    ],
+    [
+      "savings.yourSavings",
+      "I Tuoi Risparmi"
+    ],
+    [
+      "savings.wow",
+      "Fantastico!"
+    ],
+    [
+      "savings.keepSaving",
+      "Continua a risparmiare!"
+    ],
+    [
+      "savings.noSavingsYet",
+      "Nessun risparmio ancora"
+    ],
+    [
+      "savings.startSaving",
+      "Inizia a risparmiare oggi!"
+    ],
+    [
+      "savings.recentSavings",
+      "Risparmi Recenti"
+    ],
+    [
+      "savings.at",
+      "presso"
+    ],
+    [
+      "savings.on",
+      "il"
+    ],
+    [
+      "savings.earned",
+      "Guadagnato"
+    ],
+    [
+      "savings.loading",
+      "Caricamento..."
+    ],
+    [
+      "savings.error",
+      "Errore nel caricamento dei risparmi"
+    ],
+    [
+      "savings.noPartner",
+      "Nessun partner ancora"
+    ],
+    [
+      "savings.motivationalMessage",
+      "Ogni sconto è un passo verso nuove scoperte!"
+    ]
+  ],
+  "summary": {
+    "totalDetected": 88,
+    "totalExisting": 195,
+    "newStrings": 88
+  }
+}

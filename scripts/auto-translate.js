@@ -6,9 +6,13 @@
  * Supporta DeepL API con privacy garantita
  */
 
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
+import fs from 'fs';
+import path from 'path';
+import https from 'https';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Configurazione
 const CONFIG = {
@@ -332,9 +336,9 @@ class AutoTranslator {
 }
 
 // Esecuzione
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const translator = new AutoTranslator();
   translator.run();
 }
 
-module.exports = AutoTranslator;
+export default AutoTranslator;

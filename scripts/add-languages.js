@@ -5,9 +5,13 @@
  * Crea automaticamente file di traduzione e aggiorna configurazioni
  */
 
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
+import fs from 'fs';
+import path from 'path';
+import https from 'https';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Configurazione lingue disponibili
 const AVAILABLE_LANGUAGES = {
@@ -278,7 +282,8 @@ class LanguageManager {
     console.log('4. Aggiungi lingue europee');
     console.log('5. Esci\n');
     
-    const readline = require('readline').createInterface({
+    const { createInterface } = await import('readline');
+    const readline = createInterface({
       input: process.stdin,
       output: process.stdout
     });
@@ -317,7 +322,7 @@ class LanguageManager {
 }
 
 // Esecuzione
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const manager = new LanguageManager();
   
   // Controlla argomenti comando
@@ -336,4 +341,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = LanguageManager;
+export default LanguageManager;
