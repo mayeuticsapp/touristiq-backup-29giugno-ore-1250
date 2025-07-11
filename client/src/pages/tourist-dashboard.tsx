@@ -681,31 +681,7 @@ export default function TouristDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('tourist.recentActivity')}</h3>
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                  <Check className="text-green-600" size={12} />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{t('tourist.discountUsed')}</p>
-                  <p className="text-xs text-gray-500">Pizzeria Da Mario - 15% {t('tourist.discount')}</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                  <Heart className="text-blue-600" size={12} />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{t('tourist.addedToFavorites')}</p>
-                  <p className="text-xs text-gray-500">Ristorante Il Borgo</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+
 
         <Card>
           <CardContent className="p-6">

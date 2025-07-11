@@ -42,10 +42,33 @@ ipotesi → verifica → controverifica → solo poi intervento
 
 ---
 
+### ✅ **Regola di RobS n.2: Eliminazione spazio inutile**
+
+**Data:** 11 Luglio 2025  
+**Contesto:** Eliminazione sezione "Attività Recenti" dal pannello turista
+
+**Principio:** Nel pannello turista non ha senso inserire sezioni di "attività recenti" come in un ambiente aziendale. Il turista vive la sua vacanza giorno per giorno e si ricorda perfettamente le sue esperienze.
+
+**Regola operativa:**
+```
+Eliminare qualsiasi sezione che occupi spazio inutile senza valore per l'utente finale
+```
+
+**Applicazione pratica:**
+- Contestualizzare sempre le funzionalità al tipo di utente
+- Differenziare UX turistiche da UX aziendali
+- Eliminare elementi che non aggiungono valore all'esperienza utente
+- Ogni elemento UI deve avere uno scopo specifico e utile
+
+**Violazione:** Aggiungere sezioni inutili o copiare pattern aziendali in contesti turistici è considerata violazione.
+
+---
+
 ## 🔄 CHANGELOG REGOLE
 
 - **11/07/2025:** Creazione file regole-operative.md
 - **11/07/2025:** Aggiunta Regola n.1 - La doppia verifica
+- **11/07/2025:** Aggiunta Regola n.2 - Eliminazione spazio inutile
 
 ---
 
