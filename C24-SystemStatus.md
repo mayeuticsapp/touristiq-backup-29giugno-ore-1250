@@ -1,8 +1,8 @@
 # C24 System Status Dashboard
 ## TouristIQ - Status Operativo Real-Time
 
-**Generato:** 10/07/2025 - 21:47 UTC
-**Protocollo:** C24-SWEEP v1.0
+**Generato:** 11/07/2025 - 17:30 UTC
+**Protocollo:** C24-SWEEP v1.0 (Regola n.3 attivata)
 
 ---
 
@@ -21,6 +21,7 @@
 - **Structure Module:** ✅ Gestione ospiti e crediti
 - **Admin Panel:** ✅ Controllo sistema
 - **TIQai Chat:** ✅ AI Assistant attivo
+- **TIQ-OTC Discount Tracking:** ✅ Partner-Tourist system operativo
 
 ---
 
