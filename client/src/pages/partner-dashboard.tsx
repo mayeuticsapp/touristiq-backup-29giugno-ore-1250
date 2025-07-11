@@ -354,6 +354,7 @@ export default function PartnerDashboard() {
 
   // Mostra il validatore TIQ-OTC con sconto se richiesto
   if (showTiqOtcValidator) {
+    console.log('🟢 Rendering TiqOtcDiscountValidator');
     return (
       <Layout
         title="Validatore TIQ-OTC con Sconto"
@@ -515,7 +516,10 @@ export default function PartnerDashboard() {
                   </div>
                 </div>
                 <Button 
-                  onClick={() => setShowTiqOtcValidator(true)}
+                  onClick={() => {
+                    console.log('🔵 Bottone Apri Validatore cliccato');
+                    setShowTiqOtcValidator(true);
+                  }}
                   className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
                 >
                   <Calculator className="w-4 h-4 mr-2" />
