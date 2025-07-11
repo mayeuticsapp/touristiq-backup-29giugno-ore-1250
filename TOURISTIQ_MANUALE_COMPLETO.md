@@ -251,7 +251,7 @@
 ### Caratteristiche
 - **AI**: OpenAI GPT-4 integrato
 - **Personalità**: Genius Loci d'Italia
-- **Multilingue**: IT/EN/ES/DE
+- **Multilingue**: IT/EN/ES/DE (espandibile automaticamente)
 - **Contesto**: Database partner reale
 
 ### Funzionalità
@@ -263,6 +263,33 @@
 ### Endpoint API
 - `POST /api/tiqai/chat`: Conversazione AI
 - `GET /api/tiqai/context`: Contesto partner
+
+---
+
+## SISTEMA TRADUZIONE AUTOMATICA
+
+### Caratteristiche
+- **Rilevamento automatico** stringhe hardcoded
+- **Traduzione DeepL API** con privacy garantita
+- **Supporto 30+ lingue** per espansione globale
+- **Aggiornamento dinamico** file di localizzazione
+
+### Scripts Disponibili
+- `node scripts/auto-translate.js`: Traduzione automatica
+- `node scripts/add-languages.js`: Aggiunta nuove lingue
+- `node scripts/add-languages.js fr pt ru`: Lingue specifiche
+- `node scripts/add-languages.js popular`: Lingue popolari
+
+### Lingue Supportate
+- **Attive**: IT, EN, ES, DE
+- **Disponibili**: FR, PT, RU, ZH, JA, AR, NL, PL, SV, DA, NO, FI, TR, KO, HI, TH, VI, UK, CS, HU, RO, BG, HR, SK, SL, ET, LV, LT, e altre
+
+### Workflow Automatico
+1. **Sviluppo** nuova funzionalità in italiano
+2. **Esecuzione** `node scripts/auto-translate.js`
+3. **Traduzione automatica** in tutte le lingue attive
+4. **Aggiornamento** file di localizzazione
+5. **Testing** multilingue immediato
 
 ---
 
@@ -320,6 +347,15 @@
 ---
 
 ## CHANGELOG MODIFICHE
+
+### 11 Luglio 2025 - Aggiornamento 2
+- **Implementazione**: Sistema di traduzione automatica completo
+- **Creazione**: Script auto-translate.js per rilevamento stringhe hardcoded
+- **Creazione**: Script add-languages.js per aggiunta dinamica lingue
+- **Supporto**: 30+ lingue tramite DeepL API con privacy garantita
+- **Scalabilità**: Da 4 lingue a espansione globale senza refactoring
+- **Automazione**: Traduzione automatica ogni nuova funzionalità
+- **Documentazione**: README_TRANSLATION_SYSTEM.md completo
 
 ### 11 Luglio 2025
 - **Creazione**: Manuale operativo completo
