@@ -142,9 +142,11 @@ export interface IStorage {
   validateOneTimeCode(code: string, partnerCode: string, partnerName: string): Promise<{ valid: boolean; used: boolean }>;
   getTouristOneTimeCodes(touristIqCode: string): Promise<OneTimeCode[]>;
   getTouristAvailableUses(touristIqCode: string): Promise<number>;
+  getTouristTotalDiscountUsed(touristIqCode: string): Promise<number>;
   initializeOneTimeCodesForTourist(touristIqCode: string, quantity: number): Promise<void>;
   getTouristsWithoutOneTimeCodes(): Promise<{ code: string; availableUses: number }[]>;
   getOneTimeCodeDetails(code: string): Promise<{ touristIqCode: string } | null>;
+  applyDiscountToOneTimeCode(code: string, partnerCode: string, partnerName: string, originalAmount: number, discountPercentage: number, discountAmount: number, offerDescription?: string): Promise<void>;
 
   // **SISTEMA RISPARMI TURISTI**
   createTouristSaving(savingData: InsertTouristSavings): Promise<TouristSavings>;
@@ -2924,6 +2926,52 @@ class ExtendedPostgreStorage extends PostgreStorage {
     return codeDetails || null;
   }
 
+  async getTouristTotalDiscountUsed(touristIqCode: string): Promise<number> {
+    const [result] = await this.db
+      .select({ 
+        totalDiscount: sql<number>`COALESCE(SUM(${oneTimeCodes.discountAmount}), 0)` 
+      })
+      .from(oneTimeCodes)
+      .where(
+        and(
+          eq(oneTimeCodes.touristIqCode, touristIqCode),
+          eq(oneTimeCodes.isUsed, true)
+        )
+      );
+
+    const totalUsed = result ? Number(result.totalDiscount) : 0;
+    console.log(`💰 getTouristTotalDiscountUsed: ${touristIqCode} ha utilizzato €${totalUsed} del plafond €150`);
+    return totalUsed;
+  }
+
+  async applyDiscountToOneTimeCode(
+    code: string, 
+    partnerCode: string, 
+    partnerName: string, 
+    originalAmount: number, 
+    discountPercentage: number, 
+    discountAmount: number, 
+    offerDescription?: string
+  ): Promise<void> {
+    console.log(`🎯 applyDiscountToOneTimeCode: Applicando sconto €${discountAmount} al codice ${code}`);
+    
+    await this.db
+      .update(oneTimeCodes)
+      .set({
+        isUsed: true,
+        usedBy: partnerCode,
+        usedByName: partnerName,
+        originalAmount: originalAmount,
+        discountPercentage: discountPercentage,
+        discountAmount: discountAmount,
+        offerDescription: offerDescription || null,
+        usedAt: new Date()
+      })
+      .where(eq(oneTimeCodes.code, code));
+
+    console.log(`✅ Sconto applicato con successo: ${code} → €${discountAmount}`);
+  }
+
   // Metodi per compatibilità con interfaccia IStorage
   async createTempCode(code: string, createdBy: string): Promise<any> {
     // Implementazione per MemStorage - crea un oggetto temporaneo
@@ -3397,6 +3445,24 @@ class ExtendedMemStorage extends MemStorage {
     // MemStorage non ha accesso al database, quindi ritorna 0
     // Il sistema reale usa PostgreSQL
     return 0;
+  }
+
+  async getTouristTotalDiscountUsed(touristIqCode: string): Promise<number> {
+    // Mock implementation per MemStorage
+    return 0;
+  }
+
+  async applyDiscountToOneTimeCode(
+    code: string, 
+    partnerCode: string, 
+    partnerName: string, 
+    originalAmount: number, 
+    discountPercentage: number, 
+    discountAmount: number, 
+    offerDescription?: string
+  ): Promise<void> {
+    // Mock implementation per MemStorage
+    console.log(`Mock: Sconto applicato - Codice: ${code}, Importo: €${discountAmount}`);
   }
 
   async initializeOneTimeCodesForTourist(touristIqCode: string, quantity: number): Promise<void> {

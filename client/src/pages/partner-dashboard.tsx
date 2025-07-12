@@ -21,6 +21,7 @@ import { PartnerOnboarding } from "@/components/partner-onboarding";
 import { CustodeCodiceDashboard } from "@/components/custode-codice";
 import { OneTimeCodeValidator } from "@/components/OneTimeCodeValidator";
 import { TiqOtcDiscountValidator } from "@/components/TiqOtcDiscountValidator";
+import { PartnerDiscountApplicator } from "@/components/PartnerDiscountApplicator";
 
 interface TouristLinkRequest {
   id: string;
@@ -480,9 +481,9 @@ export default function PartnerDashboard() {
             className="mb-6" 
           />
 
-          {/* Sistema Validazione TIQ-OTC con Sconto Integrato */}
+          {/* Sistema Applicazione Sconto TIQ-OTC con Plafond €150 */}
           <div className="mb-6">
-            <TiqOtcDiscountValidator />
+            <PartnerDiscountApplicator />
           </div>
 
           <div className="grid grid-cols-1 gap-6">

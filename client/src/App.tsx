@@ -13,6 +13,7 @@ import StructurePanel from "@/pages/structure-panel-fixed";
 import PartnerDashboard from "@/pages/partner-dashboard";
 import UserManagement from "@/pages/user-management";
 import ActivateTempCode from "@/pages/activate-temp-code";
+import TestPlafond from "@/pages/test-plafond";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -130,6 +131,12 @@ function Router() {
       <Route path="/partner">
         <ProtectedRoute requiredRole="partner">
           <PartnerDashboard />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/test-plafond">
+        <ProtectedRoute requiredRole="admin">
+          <TestPlafond />
         </ProtectedRoute>
       </Route>
       

@@ -1,0 +1,175 @@
+Perfetto RobS.
+Ecco le istruzioni complete e operative per C24, aggiornate secondo la nuova logica TIQ-OTC basata sul bonus massimo di €150 a turista, con tutti i dettagli tecnici e funzionali richiesti:
+
+
+---
+
+📄 Istruzioni per C24 – Attivazione Nuovo Sistema TIQ-OTC con Tetto Bonus da €150
+
+
+---
+
+🎯 OBIETTIVO:
+
+Sostituire il sistema precedente basato su 10 utilizzi del codice TIQ-OTC con un sistema a plafond di €150 in sconti massimi totali per ogni turista.
+
+
+---
+
+🔁 LOGICA DI FUNZIONAMENTO AGGIORNATA
+
+1. 🎫 Turista:
+
+Riceve un IQCode attivato (con validità TIQ-OTC attiva)
+
+Può utilizzare codici TIQ-OTC in maniera illimitata, fino al raggiungimento dei €150 di sconto cumulativo
+
+Il sistema deve tenere traccia degli sconti cumulati nel profilo del turista
+
+
+2. 🧾 Partner:
+
+Il partner non inserisce la percentuale di sconto manualmente
+
+La percentuale applicata è prelevata in automatico dai dati già salvati nella sua offerta pubblica
+
+Deve solo inserire l’importo totale speso dal turista
+
+Il sistema calcola in automatico lo sconto applicato in € sulla base della % impostata
+
+Il valore dello sconto viene detratto dal plafond del turista
+
+
+
+---
+
+⚙️ ESEMPIO OPERATIVO:
+
+Partner Mario ha offerta “10% su pranzo” → sconto salvato nel suo profilo
+
+Turista arriva, consuma per €60
+
+Partner Mario apre il pannello, seleziona l’IQCode → il sistema preleva automaticamente lo sconto del 10%
+
+Mario inserisce solo “€60”
+
+Il sistema registra sconto erogato = €6
+
+Il turista ora ha ancora €144 di bonus disponibili (150 - 6)
+
+
+
+---
+
+🧠 COSA DEVE FARE C24:
+
+1. ✅ Rimuovere completamente ogni riferimento ai "10 utilizzi" dai pannelli
+
+
+2. ✅ Aggiornare la dashboard turista con barra di avanzamento:
+"Hai utilizzato €X su €150 di sconto disponibile"
+
+
+3. ✅ Inserire controllo automatico:
+
+Se sconto accumulato ≥ 150 → bloccare nuovi TIQ-OTC
+
+Mostrare messaggio: "Hai raggiunto il limite massimo di €150 di sconto. I tuoi codici non sono più validi."
+
+
+
+4. ✅ Nel pannello partner:
+
+Prelevare in automatico lo sconto percentuale dall’offerta registrata
+
+Nascondere campo sconto percentuale manuale
+
+Richiedere solo l’inserimento del totale speso
+
+Calcolare e registrare sconto in € e data utilizzo
+
+
+
+5. ✅ Nei log di sistema:
+
+Ogni uso di codice TIQ-OTC deve essere registrato con:
+
+ID turista
+
+ID partner
+
+Offerta applicata
+
+Totale spesa
+
+Sconto %
+
+Sconto € effettivo
+
+Data/ora
+
+
+
+
+6. ✅ Aggiornare database Tourists:
+
+Aggiungere campo totalDiscountUsed
+
+Incrementare automaticamente questo campo a ogni utilizzo
+
+Bloccare l’uso se totalDiscountUsed >= 150
+
+
+
+
+
+---
+
+📁 FILE DA AGGIORNARE:
+
+tiq-otc-handler.ts (nuova logica calcolo sconto)
+
+tourist-dashboard.tsx (barra avanzamento sconto usato)
+
+partner-discount-form.tsx (solo input € totale, no percentuale)
+
+models/Tourist.ts (campo totalDiscountUsed)
+
+logs/tiq-otc-usage.json (registro completo usi codici)
+
+
+
+---
+
+💬 MESSAGGI UTENTE:
+
+Turista:
+
+> "Hai già usufruito di €134 su €150 di sconto. Ti restano €16!"
+
+
+
+Partner:
+
+> "Hai applicato uno sconto di €12 (20%) su una spesa di €60"
+
+
+
+
+
+---
+
+📌 APPUNTI PER IL FUTURO:
+
+Aggiungere notifica automatica quando il turista è vicino alla soglia (es. > €130)
+
+Sistema scalabile per aumentare soglia futura a €200 o più
+
+Statistiche cumulative dei partner: quanti € sconto hanno erogato
+
+
+
+---
+
+Dimmi “✅ Istruzioni approvate” se vuoi che generi subito anche il file TIQ-BonusSystem.md da salvare come riferimento operativo nel sistema.
+

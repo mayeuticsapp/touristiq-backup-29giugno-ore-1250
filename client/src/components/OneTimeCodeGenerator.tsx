@@ -14,6 +14,10 @@ interface OneTimeCode {
   isUsed: boolean;
   usedBy?: string;
   usedByName?: string;
+  originalAmount?: number;
+  discountPercentage?: number;
+  discountAmount?: number;
+  offerDescription?: string;
   createdAt: string;
   usedAt?: string;
 }
@@ -174,50 +178,72 @@ export function OneTimeCodeGenerator() {
           </div>
         )}
 
-        {/* Stato attuale */}
-        <div className="flex items-center justify-between p-3 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border">
-          <div>
-            <p className="text-sm font-medium">Codici disponibili</p>
-            <p className="text-2xl font-bold text-emerald-600">{availableUses}</p>
+        {/* Plafond €150 - Nuovo Sistema */}
+        <div className="p-4 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border-2 border-emerald-200">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-sm font-medium text-emerald-800">Plafond Sconti TIQ-OTC</p>
+              <p className="text-2xl font-bold text-emerald-600">€{data?.totalDiscountUsed || 0} / €150</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => refetch()}
+                disabled={isLoading}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={() => generateCodeMutation.mutate()}
+                disabled={generateCodeMutation.isPending || (data?.totalDiscountUsed || 0) >= 150}
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Genera Codice
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => refetch()}
-              disabled={isLoading}
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-            <Button
-              onClick={() => generateCodeMutation.mutate()}
-              disabled={generateCodeMutation.isPending || availableUses <= 0}
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Genera Codice
-            </Button>
+          
+          {/* Barra di progresso plafond */}
+          <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+            <div 
+              className="bg-gradient-to-r from-emerald-500 to-blue-500 h-3 rounded-full transition-all duration-300"
+              style={{ width: `${Math.min(((data?.totalDiscountUsed || 0) / 150) * 100, 100)}%` }}
+            />
           </div>
+          
+          <div className="flex justify-between text-xs text-gray-600">
+            <span>Usato: €{data?.totalDiscountUsed || 0}</span>
+            <span>Disponibile: €{150 - (data?.totalDiscountUsed || 0)}</span>
+          </div>
+          
+          {/* Messaggio stato plafond */}
+          {(data?.totalDiscountUsed || 0) >= 150 ? (
+            <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+              🚫 <strong>Plafond esaurito</strong> - Hai utilizzato tutti i €150 disponibili per questo mese
+            </div>
+          ) : (
+            <div className="mt-3 p-2 bg-emerald-50 border border-emerald-200 rounded text-xs text-emerald-700">
+              💎 <strong>Plafond attivo</strong> - Puoi ancora ottenere €{150 - (data?.totalDiscountUsed || 0)} di sconti
+            </div>
+          )}
         </div>
 
 
 
-        {availableUses <= 0 && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-700">
-              ⚠️ Codici monouso esauriti. Contatta la struttura ricettiva per una ricarica.
-            </p>
+        {/* Informazione sistema plafond */}
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <div className="text-2xl">💡</div>
+            <div>
+              <p className="text-sm text-blue-700 font-medium">Sistema Plafond €150</p>
+              <p className="text-xs text-blue-600">
+                Ogni turista TouristIQ riceve €150 di sconti mensili. Genera codici illimitati fino ad esaurimento plafond.
+              </p>
+            </div>
           </div>
-        )}
-
-        {/* Messaggio informativo se non ci sono codici generati ma ci sono utilizzi disponibili */}
-        {availableUses > 0 && codes.length === 0 && !lastGeneratedCode && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-700">
-              💡 Hai <strong>{availableUses} codici disponibili</strong>. Clicca "Genera Codice" per creare il tuo primo TIQ-OTC.
-            </p>
-          </div>
-        )}
+        </div>
 
         <Separator />
 
@@ -271,6 +297,11 @@ export function OneTimeCodeGenerator() {
                           <p className="text-xs text-muted-foreground mt-1">
                             da {code.usedByName}
                           </p>
+                        )}
+                        {code.isUsed && (code.discountAmount || code.originalAmount) && (
+                          <div className="text-xs text-emerald-600 mt-1 font-medium">
+                            Sconto: €{code.discountAmount || 0} su €{code.originalAmount || 0}
+                          </div>
                         )}
                         {code.isUsed && code.usedAt && (
                           <p className="text-xs text-muted-foreground">

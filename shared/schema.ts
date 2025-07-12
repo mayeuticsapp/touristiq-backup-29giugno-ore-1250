@@ -19,6 +19,7 @@ export const iqCodes = pgTable("iq_codes", {
   isDeleted: boolean("is_deleted").notNull().default(false), // Cestino temporaneo
   deletedAt: timestamp("deleted_at"), // Data eliminazione per auto-cleanup
   availableOneTimeUses: integer("available_one_time_uses").default(10), // Codici monouso disponibili per turisti
+  totalDiscountUsed: decimal("total_discount_used", { precision: 10, scale: 2 }).default("0.00"), // Totale sconto usato (max €150)
 });
 
 export const sessions = pgTable("sessions", {
@@ -108,6 +109,11 @@ export const oneTimeCodes = pgTable("one_time_codes", {
   isUsed: boolean("is_used").notNull().default(false),
   usedBy: text("used_by"), // IQCode del partner che ha validato
   usedByName: text("used_by_name"), // Nome del partner per cronologia turista
+  // Campi per nuovo sistema €150
+  originalAmount: decimal("original_amount", { precision: 10, scale: 2 }), // Importo originale speso
+  discountPercentage: decimal("discount_percentage", { precision: 5, scale: 2 }), // % sconto applicato
+  discountAmount: decimal("discount_amount", { precision: 10, scale: 2 }), // Importo sconto in €
+  offerDescription: text("offer_description"), // Descrizione offerta partner
   createdAt: timestamp("created_at").notNull().defaultNow(),
   usedAt: timestamp("used_at"),
 });

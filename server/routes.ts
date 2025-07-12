@@ -3285,6 +3285,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint per partner: applica sconto con plafond €150
+  app.post("/api/partner/apply-discount", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['partner'])) return;
+
+      const { code, originalAmount, discountPercentage, offerDescription } = req.body;
+      
+      if (!code || !originalAmount || !discountPercentage) {
+        return res.status(400).json({ error: "Codice, importo originale e percentuale sconto richiesti" });
+      }
+
+      const session = req.userSession;
+      const partnerData = await storage.getIqCodeByCode(session.iqCode);
+      const partnerName = partnerData?.assignedTo || 'Partner';
+
+      // Ottieni dettagli del codice
+      const codeDetails = await storage.getOneTimeCodeDetails(code);
+      
+      if (!codeDetails) {
+        return res.status(400).json({ error: "Codice TIQ-OTC non valido" });
+      }
+
+      // Calcola sconto effettivo
+      const originalAmountNum = parseFloat(originalAmount);
+      const discountPercentageNum = parseFloat(discountPercentage);
+      const discountAmount = (originalAmountNum * discountPercentageNum) / 100;
+
+      // Verifica plafond disponibile
+      const totalDiscountUsed = await storage.getTouristTotalDiscountUsed(codeDetails.touristIqCode);
+      const remainingPlafond = 150 - totalDiscountUsed;
+
+      if (remainingPlafond <= 0) {
+        return res.status(400).json({ 
+          error: "Plafond €150 esaurito per questo turista" 
+        });
+      }
+
+      // Limita sconto al plafond disponibile
+      const finalDiscountAmount = Math.min(discountAmount, remainingPlafond);
+
+      // Applica lo sconto aggiornando il database
+      await storage.applyDiscountToOneTimeCode(
+        code, 
+        session.iqCode, 
+        partnerName, 
+        originalAmountNum, 
+        discountPercentageNum, 
+        finalDiscountAmount,
+        offerDescription
+      );
+
+      res.json({
+        success: true,
+        message: "Sconto applicato con successo",
+        originalAmount: originalAmountNum,
+        discountPercentage: discountPercentageNum,
+        discountAmount: finalDiscountAmount,
+        finalAmount: originalAmountNum - finalDiscountAmount,
+        newTotalUsed: totalDiscountUsed + finalDiscountAmount,
+        remainingPlafond: remainingPlafond - finalDiscountAmount
+      });
+
+    } catch (error) {
+      console.error("Errore applicazione sconto:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
   // Endpoint per turisti: visualizza cronologia codici monouso
   app.get("/api/tourist/one-time-codes", async (req, res) => {
     try {
@@ -3301,12 +3369,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const codes = await storage.getTouristOneTimeCodes(session.iqCode);
       const available = await storage.getTouristAvailableUses(session.iqCode);
+      const totalDiscountUsed = await storage.getTouristTotalDiscountUsed(session.iqCode);
 
-      console.log(`📊 API Response: codes=${codes.length}, availableUses=${available}`);
+      console.log(`📊 API Response: codes=${codes.length}, availableUses=${available}, totalDiscountUsed=€${totalDiscountUsed}`);
 
       res.json({
         codes,
-        availableUses: available
+        availableUses: available,
+        totalDiscountUsed: totalDiscountUsed
       });
 
     } catch (error) {
