@@ -3691,6 +3691,30 @@ app.get('/api/partner/discount-stats', async (req, res) => {
     }
   });
 
+  // Ottieni informazioni business di un partner specifico per i turisti (endpoint pubblico)
+  app.get("/api/partner/:partnerCode/business-info", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['tourist'])) return;
+      
+      const partnerCode = req.params.partnerCode;
+      console.log("🔍 TOURIST: Richiesta business info per partner:", partnerCode);
+      
+      const businessInfo = await storage.getPartnerBusinessInfo(partnerCode);
+      
+      if (!businessInfo) {
+        console.log("⚠️ TOURIST: Nessuna business info trovata per partner:", partnerCode);
+        res.json({});
+        return;
+      }
+      
+      console.log("✅ TOURIST: Business info trovata per partner:", partnerCode);
+      res.json(businessInfo);
+    } catch (error) {
+      console.error("Errore recupero business info per turista:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // Aggiorna informazioni business del partner
   app.post("/api/partner/business-info", async (req, res) => {
     try {

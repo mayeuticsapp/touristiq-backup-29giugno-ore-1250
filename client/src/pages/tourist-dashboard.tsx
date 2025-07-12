@@ -172,17 +172,65 @@ export default function TouristDashboard() {
   });
 
   // Funzione per aprire scheda dettagliata partner con offerta specifica
-  const handleOpenPartnerDetail = (partner: any, offer?: any) => {
+  const handleOpenPartnerDetail = async (partner: any, offer?: any) => {
     setSelectedPartner(partner);
     setSelectedOffer(offer || null);
     setShowPartnerDetail(true);
+    
+    // Carica i dati business info del partner
+    if (partner.partnerCode) {
+      try {
+        console.log("🔍 FRONTEND: Caricando business info per partner:", partner.partnerCode);
+        const response = await apiRequest('GET', `/api/partner/${partner.partnerCode}/business-info`);
+        if (response.ok) {
+          const businessInfo = await response.json();
+          console.log("✅ FRONTEND: Business info caricata:", businessInfo);
+          
+          // Merge i dati business info con i dati del partner
+          const enrichedPartner = {
+            ...partner,
+            ...businessInfo
+          };
+          
+          setSelectedPartner(enrichedPartner);
+        } else {
+          console.log("⚠️ FRONTEND: Nessuna business info trovata per partner:", partner.partnerCode);
+        }
+      } catch (error) {
+        console.error("❌ FRONTEND: Errore caricamento business info:", error);
+      }
+    }
   };
 
   // Funzione per aprire offerta specifica
-  const handleOpenOfferDetail = (offer: any) => {
+  const handleOpenOfferDetail = async (offer: any) => {
     setSelectedPartner(offer);
     setSelectedOffer(offer);
     setShowPartnerDetail(true);
+    
+    // Carica i dati business info del partner
+    if (offer.partnerCode) {
+      try {
+        console.log("🔍 FRONTEND: Caricando business info per offer partner:", offer.partnerCode);
+        const response = await apiRequest('GET', `/api/partner/${offer.partnerCode}/business-info`);
+        if (response.ok) {
+          const businessInfo = await response.json();
+          console.log("✅ FRONTEND: Business info caricata per offer:", businessInfo);
+          
+          // Merge i dati business info con i dati dell'offerta
+          const enrichedOffer = {
+            ...offer,
+            ...businessInfo
+          };
+          
+          setSelectedPartner(enrichedOffer);
+        } else {
+          console.log("⚠️ FRONTEND: Nessuna business info trovata per offer partner:", offer.partnerCode);
+        }
+      } catch (error) {
+        console.error("❌ FRONTEND: Errore caricamento business info per offer:", error);
+      }
+    }
   };
 
   // Gestore per salvare i dati del "Custode del Codice"
