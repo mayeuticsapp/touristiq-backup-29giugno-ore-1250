@@ -124,6 +124,38 @@ export default function PartnerBusinessInfoManager() {
     loadBusinessInfo();
   }, []);
 
+  // Popola automaticamente con dati completi
+  const handleAutoFill = () => {
+    setFormData({
+      phone: '+39 0963 534789',
+      email: 'info@hotelcentrale.it',
+      website: 'https://www.hotelcentrale.it',
+      instagram: 'hotelcentrale',
+      facebook: 'hotelcentrale',
+      tiktok: 'hotelcentrale',
+      youtube: 'hotelcentrale',
+      specialties: ['Cucina tipica calabrese', 'Camere vista mare', 'Wellness center', 'Escursioni guidate'],
+      certifications: ['ISO 9001', 'Green Key', 'TripAdvisor Excellence'],
+      wheelchairAccessible: true,
+      assistanceAvailable: true,
+      reservedParking: true,
+      accessibleBathroom: true,
+      childFriendly: true,
+      highChairs: true,
+      childMenu: true,
+      changingTable: true,
+      playArea: true,
+      glutenFree: true,
+      vegan: true,
+      vegetarian: true,
+      allergenMenu: true,
+      freeWifi: true,
+      creditCards: true,
+      delivery: false,
+      reservations: true
+    });
+  };
+
   // Salva modifiche
   const handleSave = async () => {
     setIsSaving(true);
@@ -210,13 +242,22 @@ export default function PartnerBusinessInfoManager() {
           <h2 className="text-2xl font-semibold text-gray-900">Gestione Informazioni Business</h2>
           <p className="text-sm text-gray-600 mt-1">Aggiorna le tue informazioni per migliorare la visibilità ai turisti</p>
         </div>
-        <Button 
-          onClick={handleSave} 
-          disabled={isSaving}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white"
-        >
-          {isSaving ? 'Salvataggio...' : 'Salva Modifiche'}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleAutoFill} 
+            variant="outline"
+            className="border-blue-200 hover:bg-blue-50"
+          >
+            Compila Automaticamente
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            disabled={isSaving}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            {isSaving ? 'Salvataggio...' : 'Salva Modifiche'}
+          </Button>
+        </div>
       </div>
 
       {/* Contatti Principali */}
