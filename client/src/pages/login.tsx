@@ -8,8 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { MapPin, LogIn, AlertTriangle, Loader2, Shield, KeyRound, Info } from "lucide-react";
+import { MapPin, LogIn, AlertTriangle, Loader2, Shield, KeyRound } from "lucide-react";
 import { login } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -171,8 +170,7 @@ export default function Login() {
   };
 
   return (
-    <TooltipProvider>
-      <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         {/* Language Selector - Top Right */}
         <div className="absolute top-4 right-4 z-50">
           <LanguageSelector />
@@ -292,7 +290,7 @@ export default function Login() {
               {/* Frase di supporto per recupero IQCode */}
               <div className="text-center text-sm text-gray-600 space-y-2">
                 <p>{t('auth.forgotCode')}</p>
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center justify-center">
                   <button
                     type="button"
                     onClick={() => setShowRecoveryModal(true)}
@@ -300,25 +298,6 @@ export default function Login() {
                   >
                     👉 {t('auth.recoverWithCustode')}
                   </button>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info 
-                        className="h-4 w-4 text-blue-500 hover:text-blue-700 cursor-help transition-colors"
-                        aria-label={t('auth.tooltip.custodeAria')}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs p-3 text-sm bg-white border border-blue-200 shadow-lg">
-                      <div className="space-y-2">
-                        <p className="font-semibold text-blue-800">{t('auth.tooltip.custodeTitle')}</p>
-                        <p className="text-gray-700">
-                          {t('auth.tooltip.custodeDescription')}
-                        </p>
-                        <p className="text-gray-700">
-                          {t('auth.tooltip.custodeSecure')}
-                        </p>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
                 </div>
               </div>
 
@@ -451,6 +430,5 @@ export default function Login() {
         </Dialog>
       </div>
     </div>
-    </TooltipProvider>
   );
 }
