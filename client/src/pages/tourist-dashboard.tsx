@@ -321,8 +321,8 @@ export default function TouristDashboard() {
       navigation={navigation}
       sidebarColor="bg-tourist-green"
     >
-      {/* Selettore lingua - solo nel pannello turista */}
-      <div className="absolute top-4 right-4 z-10">
+      {/* Selettore lingua - posizionato in basso a sinistra per non interferire con "Esci" */}
+      <div className="fixed bottom-4 left-4 z-10">
         <LanguageSelector />
       </div>
       {/* Saluto personalizzato con calore calabrese */}
