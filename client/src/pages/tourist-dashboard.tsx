@@ -1104,84 +1104,85 @@ export default function TouristDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Popup di Benvenuto Caldo e Istruttivo con Effetto Sunrise */}
+      {/* Popup di Benvenuto Mobile-Friendly */}
       <Dialog open={showWelcomePopup} onOpenChange={() => setShowWelcomePopup(false)}>
-        <DialogContent className="sm:max-w-lg animate-sunrise">
+        <DialogContent className="w-[95vw] max-w-md max-h-[85vh] overflow-y-auto animate-sunrise">
           <div className="relative overflow-hidden">
             {/* Background decorativo calabrese */}
             <div className="absolute inset-0 bg-calabria-sunset opacity-5"></div>
             <div className="relative">
-              <DialogHeader className="text-center pb-4">
-                <div className="mx-auto mb-4 w-20 h-20 bg-calabria-warm rounded-full flex items-center justify-center animate-gentle-pulse">
-                  <span className="text-3xl">🌅</span>
+              <DialogHeader className="text-center pb-3">
+                <div className="mx-auto mb-3 w-16 h-16 bg-calabria-warm rounded-full flex items-center justify-center animate-gentle-pulse">
+                  <span className="text-2xl">🌅</span>
                 </div>
-                <DialogTitle className="text-2xl font-bold text-gray-900">
+                <DialogTitle className="text-xl font-bold text-gray-900">
                   Benvenuto in TouristIQ!
                 </DialogTitle>
-                <p className="text-gray-600 mt-2 animate-fade-in-delayed">
+                <p className="text-gray-600 mt-1 text-sm animate-fade-in-delayed">
                   {welcomeMessage || "La tua porta d'accesso alle esperienze autentiche della Calabria"}
                 </p>
               </DialogHeader>
               
-              <div className="space-y-6 py-4">
-                {/* Benefici principali */}
-                <div className="grid gap-4">
+              <div className="space-y-4 py-3">
+                {/* Benefici principali - versione compatta */}
+                <div className="grid gap-3">
                   <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 bg-calabria-nature rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-sm">🎯</span>
+                    <div className="w-7 h-7 bg-calabria-nature rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-xs">🎯</span>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Sconti Esclusivi</h4>
-                      <p className="text-sm text-gray-600">Partner selezionati offrono vantaggi riservati solo a te</p>
+                      <h4 className="font-semibold text-gray-900 text-sm">Sconti Esclusivi</h4>
+                      <p className="text-xs text-gray-600">Partner selezionati offrono vantaggi riservati solo a te</p>
                     </div>
                   </div>
                   
                   <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 bg-calabria-sea rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-sm">🤖</span>
+                    <div className="w-7 h-7 bg-calabria-sea rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-xs">🤖</span>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">TIQai, la tua Guida AI</h4>
-                      <p className="text-sm text-gray-600">Consigli personalizzati per scoprire luoghi autentici</p>
+                      <h4 className="font-semibold text-gray-900 text-sm">TIQai, la tua Guida AI</h4>
+                      <p className="text-xs text-gray-600">Consigli personalizzati per scoprire luoghi autentici</p>
                     </div>
                   </div>
                   
                   <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 bg-calabria-sunset rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-sm">🔐</span>
+                    <div className="w-7 h-7 bg-calabria-sunset rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-xs">🔐</span>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Privacy Totale</h4>
-                      <p className="text-sm text-gray-600">Il tuo codice IQ protegge la tua identità</p>
+                      <h4 className="font-semibold text-gray-900 text-sm">Privacy Totale</h4>
+                      <p className="text-xs text-gray-600">Il tuo codice IQ protegge la tua identità</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Call to action */}
-                <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
-                  <div className="flex items-center justify-center mb-2">
-                    <span className="text-lg mr-2">✨</span>
-                    <span className="font-semibold text-gray-900">Inizia la tua esplorazione</span>
+                {/* Call to action compatto */}
+                <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
+                  <div className="flex items-center justify-center mb-1">
+                    <span className="text-sm mr-1">✨</span>
+                    <span className="font-semibold text-gray-900 text-sm">Inizia la tua esplorazione</span>
                   </div>
-                  <p className="text-sm text-gray-600 text-center">
+                  <p className="text-xs text-gray-600 text-center">
                     Usa il tuo codice IQ per sconti immediati o chiedi a TIQai consigli per la zona
                   </p>
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              {/* Bottoni mobile-friendly */}
+              <div className="flex flex-col gap-2 pt-3">
+                <Button 
+                  onClick={() => handleCloseWelcome(true)}
+                  className="w-full bg-calabria-sunset text-white hover:bg-orange-600"
+                >
+                  Perfetto, non mostrare più
+                </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => handleCloseWelcome(false)}
-                  className="flex-1"
+                  className="w-full"
                 >
                   Chiudi per ora
-                </Button>
-                <Button 
-                  onClick={() => handleCloseWelcome(true)}
-                  className="flex-1 bg-calabria-sunset text-white hover:bg-orange-600"
-                >
-                  Perfetto, non mostrare più
                 </Button>
               </div>
             </div>
