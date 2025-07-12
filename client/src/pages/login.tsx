@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { MapPin, LogIn, AlertTriangle, Loader2, Shield, KeyRound } from "lucide-react";
+import { Sun, LogIn, AlertTriangle, Loader2, Shield, KeyRound } from "lucide-react";
 import { login } from "@/lib/auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -250,7 +250,7 @@ export default function Login() {
         {/* Logo and Header */}
         <div className="text-center relative z-10">
           <div className="mx-auto h-28 w-28 bg-gradient-to-br from-orange-400 via-yellow-400 to-orange-500 rounded-full flex items-center justify-center mb-6 shadow-2xl border-4 border-white/60 backdrop-blur-sm">
-            <MapPin className="text-white text-5xl drop-shadow-xl" size={48} />
+            <Sun className="text-white text-5xl drop-shadow-xl animate-pulse" size={48} />
           </div>
           <h1 className="text-6xl font-bold text-white mb-4 drop-shadow-2xl">
             TouristIQ
