@@ -79,48 +79,49 @@ export default function PartnerBusinessInfoManager() {
   });
 
   // Carica informazioni business esistenti
-  useEffect(() => {
-    const loadBusinessInfo = async () => {
-      try {
-        const response = await apiRequest('/api/partner/business-info');
-        if (response) {
-          setBusinessInfo(response);
-          setFormData({
-            phone: response.phone || '',
-            email: response.email || '',
-            website: response.website || '',
-            instagram: response.instagram || '',
-            facebook: response.facebook || '',
-            tiktok: response.tiktok || '',
-            youtube: response.youtube || '',
-            specialties: response.specialties || [],
-            certifications: response.certifications || [],
-            wheelchairAccessible: response.wheelchairAccessible || false,
-            assistanceAvailable: response.assistanceAvailable || false,
-            reservedParking: response.reservedParking || false,
-            accessibleBathroom: response.accessibleBathroom || false,
-            childFriendly: response.childFriendly || false,
-            highChairs: response.highChairs || false,
-            childMenu: response.childMenu || false,
-            changingTable: response.changingTable || false,
-            playArea: response.playArea || false,
-            glutenFree: response.glutenFree || false,
-            vegan: response.vegan || false,
-            vegetarian: response.vegetarian || false,
-            allergenMenu: response.allergenMenu || false,
-            freeWifi: response.freeWifi || false,
-            creditCards: response.creditCards || false,
-            delivery: response.delivery || false,
-            reservations: response.reservations || false
-          });
-        }
-      } catch (error) {
-        console.error('Errore caricamento business info:', error);
-      } finally {
-        setIsLoading(false);
+  const loadBusinessInfo = async () => {
+    try {
+      const response = await apiRequest('GET', '/api/partner/business-info');
+      if (response) {
+        const data = await response.json();
+        setBusinessInfo(data);
+        setFormData({
+          phone: data.phone || '',
+          email: data.email || '',
+          website: data.website || '',
+          instagram: data.instagram || '',
+          facebook: data.facebook || '',
+          tiktok: data.tiktok || '',
+          youtube: data.youtube || '',
+          specialties: data.specialties || [],
+          certifications: data.certifications || [],
+          wheelchairAccessible: data.wheelchairAccessible || false,
+          assistanceAvailable: data.assistanceAvailable || false,
+          reservedParking: data.reservedParking || false,
+          accessibleBathroom: data.accessibleBathroom || false,
+          childFriendly: data.childFriendly || false,
+          highChairs: data.highChairs || false,
+          childMenu: data.childMenu || false,
+          changingTable: data.changingTable || false,
+          playArea: data.playArea || false,
+          glutenFree: data.glutenFree || false,
+          vegan: data.vegan || false,
+          vegetarian: data.vegetarian || false,
+          allergenMenu: data.allergenMenu || false,
+          freeWifi: data.freeWifi || false,
+          creditCards: data.creditCards || false,
+          delivery: data.delivery || false,
+          reservations: data.reservations || false
+        });
       }
-    };
+    } catch (error) {
+      console.error('Errore caricamento business info:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadBusinessInfo();
   }, []);
 
@@ -171,6 +172,9 @@ export default function PartnerBusinessInfoManager() {
         title: "Informazioni aggiornate",
         description: "Le tue informazioni business sono state salvate con successo!",
       });
+
+      // Ricarica i dati dopo il salvataggio
+      loadBusinessInfo();
     } catch (error) {
       console.error('❌ FRONTEND: Errore salvataggio:', error);
       console.error('❌ FRONTEND: Dettagli errore:', error.message);
