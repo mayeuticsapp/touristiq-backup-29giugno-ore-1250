@@ -3674,6 +3674,40 @@ app.get('/api/partner/discount-stats', async (req, res) => {
     }
   });
 
+  // ===== PARTNER BUSINESS INFO ENDPOINTS =====
+
+  // Ottieni informazioni business del partner
+  app.get("/api/partner/business-info", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['partner'])) return;
+      
+      const partnerCode = req.userSession.iqCode;
+      const businessInfo = await storage.getPartnerBusinessInfo(partnerCode);
+      
+      res.json(businessInfo || {});
+    } catch (error) {
+      console.error("Errore recupero business info:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Aggiorna informazioni business del partner
+  app.post("/api/partner/business-info", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['partner'])) return;
+      
+      const partnerCode = req.userSession.iqCode;
+      const businessData = req.body;
+      
+      const updatedInfo = await storage.updatePartnerBusinessInfo(partnerCode, businessData);
+      
+      res.json({ success: true, businessInfo: updatedInfo });
+    } catch (error) {
+      console.error("Errore aggiornamento business info:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
@@ -3707,3 +3741,4 @@ async function getRealOffersByTourist(storage: any, touristCode: string) {
     return [];
   }
 }
+

@@ -72,6 +72,59 @@ export const availableIqCodes = pgTable("available_iq_codes", {
   createdAt: timestamp("created_at").notNull().defaultNow()
 });
 
+// Tabella per informazioni business dettagliate dei partner
+export const partnerBusinessInfo = pgTable("partner_business_info", {
+  id: serial("id").primaryKey(),
+  partnerCode: text("partner_code").notNull().unique(), // Codice IQ del partner
+  
+  // Contatti principali
+  phone: text("phone"), // Numero telefono/WhatsApp
+  email: text("email"), // Email aziendale
+  website: text("website"), // Sito web
+  
+  // Social Media
+  instagram: text("instagram"), // Username Instagram (senza @)
+  facebook: text("facebook"), // Nome pagina Facebook
+  tiktok: text("tiktok"), // Username TikTok (senza @)
+  youtube: text("youtube"), // Nome canale YouTube (senza @)
+  
+  // Orari apertura (formato JSON)
+  openingHours: text("opening_hours"), // JSON con orari per ogni giorno
+  
+  // Specialità e servizi
+  specialties: text("specialties"), // JSON array delle specialità
+  certifications: text("certifications"), // JSON array delle certificazioni
+  
+  // Accessibilità
+  wheelchairAccessible: boolean("wheelchair_accessible").default(false),
+  assistanceAvailable: boolean("assistance_available").default(false),
+  reservedParking: boolean("reserved_parking").default(false),
+  accessibleBathroom: boolean("accessible_bathroom").default(false),
+  
+  // Servizi famiglia
+  childFriendly: boolean("child_friendly").default(false),
+  highChairs: boolean("high_chairs").default(false),
+  childMenu: boolean("child_menu").default(false),
+  changingTable: boolean("changing_table").default(false),
+  playArea: boolean("play_area").default(false),
+  
+  // Allergie e intolleranze
+  glutenFree: boolean("gluten_free").default(false),
+  vegan: boolean("vegan").default(false),
+  vegetarian: boolean("vegetarian").default(false),
+  allergenMenu: boolean("allergen_menu").default(false),
+  
+  // Servizi extra
+  freeWifi: boolean("free_wifi").default(false),
+  creditCards: boolean("credit_cards").default(false),
+  delivery: boolean("delivery").default(false),
+  reservations: boolean("reservations").default(false),
+  
+  // Metadati
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
+
 // Tabella ospiti per gestione completa da parte delle strutture
 export const guests = pgTable("guests", {
   id: serial("id").primaryKey(),

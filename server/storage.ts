@@ -52,6 +52,10 @@ export interface IStorage {
   // IQCode validation methods - Sistema validazione Partner-Turista
 
 
+  // Partner business info methods
+  getPartnerBusinessInfo(partnerCode: string): Promise<any>;
+  updatePartnerBusinessInfo(partnerCode: string, businessData: any): Promise<any>;
+
   // Admin credits methods - Pacchetto RobS
   getAdminCredits(adminCode: string): Promise<AdminCredits | undefined>;
   createAdminCredits(adminCredits: InsertAdminCredits): Promise<AdminCredits>;
@@ -3143,6 +3147,150 @@ class ExtendedPostgreStorage extends PostgreStorage {
     return result;
   }
 
+  // **SISTEMA BUSINESS INFO PARTNER - PostgreSQL Implementation**
+  async getPartnerBusinessInfo(partnerCode: string): Promise<any> {
+    try {
+      const result = await this.db.execute(sql`
+        SELECT * FROM partner_business_info 
+        WHERE partner_code = ${partnerCode}
+      `);
+      
+      if (result.rows.length === 0) {
+        return null;
+      }
+      
+      const row = result.rows[0];
+      return {
+        partnerCode: row.partner_code,
+        phone: row.phone,
+        email: row.email,
+        website: row.website,
+        instagram: row.instagram,
+        facebook: row.facebook,
+        tiktok: row.tiktok,
+        youtube: row.youtube,
+        openingHours: row.opening_hours ? JSON.parse(row.opening_hours) : null,
+        specialties: row.specialties ? JSON.parse(row.specialties) : [],
+        certifications: row.certifications ? JSON.parse(row.certifications) : [],
+        wheelchairAccessible: row.wheelchair_accessible,
+        assistanceAvailable: row.assistance_available,
+        reservedParking: row.reserved_parking,
+        accessibleBathroom: row.accessible_bathroom,
+        childFriendly: row.child_friendly,
+        highChairs: row.high_chairs,
+        childMenu: row.child_menu,
+        changingTable: row.changing_table,
+        playArea: row.play_area,
+        glutenFree: row.gluten_free,
+        vegan: row.vegan,
+        vegetarian: row.vegetarian,
+        allergenMenu: row.allergen_menu,
+        freeWifi: row.free_wifi,
+        creditCards: row.credit_cards,
+        delivery: row.delivery,
+        reservations: row.reservations,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      };
+    } catch (error) {
+      console.error("Errore recupero business info:", error);
+      return null;
+    }
+  }
+
+  async updatePartnerBusinessInfo(partnerCode: string, businessData: any): Promise<any> {
+    try {
+      // Prepara i dati per l'aggiornamento
+      const updateData = {
+        phone: businessData.phone || null,
+        email: businessData.email || null,
+        website: businessData.website || null,
+        instagram: businessData.instagram || null,
+        facebook: businessData.facebook || null,
+        tiktok: businessData.tiktok || null,
+        youtube: businessData.youtube || null,
+        opening_hours: businessData.openingHours ? JSON.stringify(businessData.openingHours) : null,
+        specialties: businessData.specialties ? JSON.stringify(businessData.specialties) : null,
+        certifications: businessData.certifications ? JSON.stringify(businessData.certifications) : null,
+        wheelchair_accessible: businessData.wheelchairAccessible || false,
+        assistance_available: businessData.assistanceAvailable || false,
+        reserved_parking: businessData.reservedParking || false,
+        accessible_bathroom: businessData.accessibleBathroom || false,
+        child_friendly: businessData.childFriendly || false,
+        high_chairs: businessData.highChairs || false,
+        child_menu: businessData.childMenu || false,
+        changing_table: businessData.changingTable || false,
+        play_area: businessData.playArea || false,
+        gluten_free: businessData.glutenFree || false,
+        vegan: businessData.vegan || false,
+        vegetarian: businessData.vegetarian || false,
+        allergen_menu: businessData.allergenMenu || false,
+        free_wifi: businessData.freeWifi || false,
+        credit_cards: businessData.creditCards || false,
+        delivery: businessData.delivery || false,
+        reservations: businessData.reservations || false,
+        updated_at: new Date().toISOString()
+      };
+
+      // Esegui UPSERT (inserimento o aggiornamento)
+      await this.db.execute(sql`
+        INSERT INTO partner_business_info (
+          partner_code, phone, email, website, instagram, facebook, tiktok, youtube,
+          opening_hours, specialties, certifications,
+          wheelchair_accessible, assistance_available, reserved_parking, accessible_bathroom,
+          child_friendly, high_chairs, child_menu, changing_table, play_area,
+          gluten_free, vegan, vegetarian, allergen_menu,
+          free_wifi, credit_cards, delivery, reservations, updated_at
+        ) VALUES (
+          ${partnerCode}, ${updateData.phone}, ${updateData.email}, ${updateData.website},
+          ${updateData.instagram}, ${updateData.facebook}, ${updateData.tiktok}, ${updateData.youtube},
+          ${updateData.opening_hours}, ${updateData.specialties}, ${updateData.certifications},
+          ${updateData.wheelchair_accessible}, ${updateData.assistance_available}, 
+          ${updateData.reserved_parking}, ${updateData.accessible_bathroom},
+          ${updateData.child_friendly}, ${updateData.high_chairs}, ${updateData.child_menu},
+          ${updateData.changing_table}, ${updateData.play_area},
+          ${updateData.gluten_free}, ${updateData.vegan}, ${updateData.vegetarian}, ${updateData.allergen_menu},
+          ${updateData.free_wifi}, ${updateData.credit_cards}, ${updateData.delivery}, ${updateData.reservations},
+          ${updateData.updated_at}
+        ) ON CONFLICT (partner_code) DO UPDATE SET
+          phone = EXCLUDED.phone,
+          email = EXCLUDED.email,
+          website = EXCLUDED.website,
+          instagram = EXCLUDED.instagram,
+          facebook = EXCLUDED.facebook,
+          tiktok = EXCLUDED.tiktok,
+          youtube = EXCLUDED.youtube,
+          opening_hours = EXCLUDED.opening_hours,
+          specialties = EXCLUDED.specialties,
+          certifications = EXCLUDED.certifications,
+          wheelchair_accessible = EXCLUDED.wheelchair_accessible,
+          assistance_available = EXCLUDED.assistance_available,
+          reserved_parking = EXCLUDED.reserved_parking,
+          accessible_bathroom = EXCLUDED.accessible_bathroom,
+          child_friendly = EXCLUDED.child_friendly,
+          high_chairs = EXCLUDED.high_chairs,
+          child_menu = EXCLUDED.child_menu,
+          changing_table = EXCLUDED.changing_table,
+          play_area = EXCLUDED.play_area,
+          gluten_free = EXCLUDED.gluten_free,
+          vegan = EXCLUDED.vegan,
+          vegetarian = EXCLUDED.vegetarian,
+          allergen_menu = EXCLUDED.allergen_menu,
+          free_wifi = EXCLUDED.free_wifi,
+          credit_cards = EXCLUDED.credit_cards,
+          delivery = EXCLUDED.delivery,
+          reservations = EXCLUDED.reservations,
+          updated_at = EXCLUDED.updated_at
+      `);
+
+      // Restituisci i dati aggiornati
+      return await this.getPartnerBusinessInfo(partnerCode);
+    } catch (error) {
+      console.error("Errore aggiornamento business info:", error);
+      throw error;
+    }
+  }
+
 }
 
 // Extend MemStorage con metodi impostazioni
@@ -3551,6 +3699,15 @@ class ExtendedMemStorage extends MemStorage {
       monthlyDiscounts: 0,
       monthlyRevenue: 0
     };
+  }
+
+  // **SISTEMA BUSINESS INFO PARTNER - Mock Implementation**
+  async getPartnerBusinessInfo(partnerCode: string): Promise<any> {
+    return null; // Mock implementation
+  }
+
+  async updatePartnerBusinessInfo(partnerCode: string, businessData: any): Promise<any> {
+    return businessData; // Mock implementation
   }
 }
 

@@ -17,6 +17,7 @@ import { useState, useRef } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { AdvancedAccounting } from "@/components/advanced-accounting";
 import { PartnerOnboarding } from "@/components/partner-onboarding";
+import PartnerBusinessInfoManager from "@/components/PartnerBusinessInfoManager";
 
 import { CustodeCodiceDashboard } from "@/components/custode-codice";
 import { OneTimeCodeValidator } from "@/components/OneTimeCodeValidator";
@@ -69,6 +70,7 @@ export default function PartnerDashboard() {
   const [showSpecialClientDialog, setShowSpecialClientDialog] = useState(false);
   const [showAccountDeleteDialog, setShowAccountDeleteDialog] = useState(false);
   const [showMiniGestionale, setShowMiniGestionale] = useState(false);
+  const [showBusinessInfoManager, setShowBusinessInfoManager] = useState(false);
 
 
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -353,6 +355,28 @@ export default function PartnerDashboard() {
     />;
   }
 
+  if (showBusinessInfoManager) {
+    return (
+      <Layout
+        title="Gestione Informazioni Business"
+        role="partner"
+        navigation={[
+          {
+            label: "Torna al Dashboard",
+            icon: <Settings className="h-4 w-4" />,
+            href: "#",
+            onClick: () => setShowBusinessInfoManager(false)
+          }
+        ]}
+        sidebarColor="bg-orange-600"
+      >
+        <div className="min-h-screen bg-gray-50 p-6">
+          <PartnerBusinessInfoManager />
+        </div>
+      </Layout>
+    );
+  }
+
 
 
   return (
@@ -361,16 +385,22 @@ export default function PartnerDashboard() {
       role="partner"
       navigation={[
         {
-          label: "Elimina Account",
-          icon: <Trash2 className="h-4 w-4" />,
+          label: "Gestisci Info Business",
+          icon: <Settings className="h-4 w-4" />,
           href: "#",
-          onClick: () => setShowAccountDeleteDialog(true)
+          onClick: () => setShowBusinessInfoManager(true)
         },
         {
           label: "Mini-gestionale",
           icon: <Calculator className="h-4 w-4" />,
           href: "#",
           onClick: () => setShowMiniGestionale(true)
+        },
+        {
+          label: "Elimina Account",
+          icon: <Trash2 className="h-4 w-4" />,
+          href: "#",
+          onClick: () => setShowAccountDeleteDialog(true)
         },
 
       ]}
@@ -394,6 +424,14 @@ export default function PartnerDashboard() {
               <p className="text-gray-600">Gestisci i tuoi turisti e le tue offerte speciali</p>
             </div>
             <div className="flex gap-2">
+              <Button
+                onClick={() => setShowBusinessInfoManager(true)}
+                variant="outline"
+                className="border-emerald-200 hover:bg-emerald-50"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Gestisci Info Business
+              </Button>
               <Button
                 onClick={() => setShowMiniGestionale(true)}
                 variant="outline"
