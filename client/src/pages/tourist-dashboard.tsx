@@ -609,50 +609,138 @@ export default function TouristDashboard() {
         <OneTimeCodeGenerator />
       </div>
 
+      {/* 4. Sistema Custode del Codice - DASHBOARD PRINCIPALE */}
+      <div className="mb-8">
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Shield className="w-6 h-6 text-blue-600" />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Custode del Codice</h3>
+                  <p className="text-sm text-gray-600">
+                    Proteggi il tuo accesso con un sistema di recupero sicuro e anonimo
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {custodeStatus?.hasRecoveryData ? (
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 text-green-600">
+                      <Check className="w-5 h-5" />
+                      <span className="font-medium">Custode attivo</span>
+                    </div>
+                    <Button
+                      onClick={handleOpenUpdateCustodeForm}
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Gestisci Custode del Codice
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handleOpenCustodeForm}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    Attiva il Custode del Codice
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Dialog Custode del Codice - Form */}
+
+      {/* Dialog Custode del Codice - Form con Spiegazione Educativa */}
       <Dialog open={showCustodeForm} onOpenChange={setShowCustodeForm}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-blue-600" />
-              Custode del Codice
+              Attiva il Custode del Codice
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            
+            {/* SPIEGAZIONE EDUCATIVA COMPLETA */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-semibold text-blue-900 mb-3">🛡️ Cos'è il Custode del Codice?</h4>
+              <p className="text-sm text-blue-800 mb-3">
+                <strong>Il Custode del Codice è la nostra innovazione per la tua sicurezza.</strong> 
+                Un sistema di recupero completamente anonimo che protegge il tuo accesso senza compromettere la privacy.
+              </p>
+              
+              <h5 className="font-semibold text-blue-900 mb-2">🔧 Come funziona:</h5>
+              <ul className="text-sm text-blue-800 space-y-1.5">
+                <li>• <strong>Scegli una parola segreta</strong> che ricorderai facilmente</li>
+                <li>• <strong>Inserisci una data di nascita</strong> (anche inventata, basta che la ricordi)</li>
+                <li>• <strong>I dati vengono criptati</strong> e salvati in modo completamente anonimo</li>
+                <li>• <strong>Potrai recuperare il tuo IQCode</strong> dalla pagina di login quando serve</li>
+                <li>• <strong>Nessun dato personale richiesto:</strong> no email, no telefono, no documenti</li>
+              </ul>
+              
+              <div className="mt-3 p-2 bg-blue-100 rounded border border-blue-300">
+                <p className="text-xs text-blue-900">
+                  <strong>⚠️ Importante:</strong> I dati vengono criptati con hash irreversibile. 
+                  Non possiamo recuperare queste informazioni per te - custodiscile bene!
+                </p>
+              </div>
+            </div>
+            
             <div>
-              <Label htmlFor="secretWord">Parola segreta</Label>
+              <Label htmlFor="secretWord">Parola segreta *</Label>
               <Input
                 id="secretWord"
                 type="text"
                 value={secretWord}
                 onChange={(e) => setSecretWord(e.target.value)}
-                placeholder="Inserisci una parola che ricorderai"
+                placeholder="Es: vacanza2024, famiglia, castello..."
               />
             </div>
             <div>
-              <Label htmlFor="birthDate">Data di nascita</Label>
+              <Label htmlFor="birthDate">Data di nascita *</Label>
               <Input
                 id="birthDate"
                 type="date"
                 value={birthDate}
                 onChange={(e) => setBirthDate(e.target.value)}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Anche una data inventata va bene, basta che la ricordi
+              </p>
             </div>
-            <Button 
-              onClick={handleSaveCustode}
-              disabled={custodeMutation.isPending}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-            >
-              {custodeMutation.isPending ? "Salvando..." : "Salva e attiva il custode"}
-            </Button>
+            
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowCustodeForm(false);
+                  setSecretWord("");
+                  setBirthDate("");
+                }}
+                className="flex-1"
+              >
+                Annulla
+              </Button>
+              <Button 
+                onClick={handleSaveCustode}
+                disabled={!secretWord.trim() || !birthDate || custodeMutation.isPending}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                {custodeMutation.isPending ? "Attivazione..." : "Attiva Custode"}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Modifica Custode del Codice */}
+      {/* Dialog Modifica Custode del Codice con Spiegazione Educativa */}
       <Dialog open={showUpdateCustodeForm} onOpenChange={setShowUpdateCustodeForm}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-blue-600" />
@@ -660,35 +748,75 @@ export default function TouristDashboard() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Aggiorna i tuoi dati di recupero. I vecchi dati saranno sostituiti con i nuovi. Ricorda che non possiamo recuperare queste informazioni: custodiscile bene!
-            </p>
+            
+            {/* SPIEGAZIONE EDUCATIVA COMPLETA */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-semibold text-blue-900 mb-3">🔧 Modifica i tuoi dati di recupero</h4>
+              <p className="text-sm text-blue-800 mb-3">
+                <strong>Stai per aggiornare i dati del tuo Custode del Codice.</strong> 
+                I vecchi dati saranno sostituiti con i nuovi in modo completamente sicuro.
+              </p>
+              
+              <h5 className="font-semibold text-blue-900 mb-2">🛡️ Ricorda:</h5>
+              <ul className="text-sm text-blue-800 space-y-1.5">
+                <li>• <strong>Scegli una parola segreta</strong> che ricorderai facilmente</li>
+                <li>• <strong>Inserisci una data di nascita</strong> (anche inventata, basta che la ricordi)</li>
+                <li>• <strong>I dati vengono criptati</strong> e salvati in modo completamente anonimo</li>
+                <li>• <strong>Potrai recuperare il tuo IQCode</strong> dalla pagina di login quando serve</li>
+                <li>• <strong>Nessun dato personale richiesto:</strong> no email, no telefono, no documenti</li>
+              </ul>
+              
+              <div className="mt-3 p-2 bg-blue-100 rounded border border-blue-300">
+                <p className="text-xs text-blue-900">
+                  <strong>⚠️ Importante:</strong> I dati vengono criptati con hash irreversibile. 
+                  Non possiamo recuperare queste informazioni per te - custodiscile bene!
+                </p>
+              </div>
+            </div>
+            
             <div>
-              <Label htmlFor="updateSecretWord">Nuova parola segreta</Label>
+              <Label htmlFor="updateSecretWord">Nuova parola segreta *</Label>
               <Input
                 id="updateSecretWord"
                 type="text"
                 value={secretWord}
                 onChange={(e) => setSecretWord(e.target.value)}
-                placeholder="Inserisci una nuova parola che ricorderai"
+                placeholder="Es: vacanza2024, famiglia, castello..."
               />
             </div>
             <div>
-              <Label htmlFor="updateBirthDate">Nuova data di nascita</Label>
+              <Label htmlFor="updateBirthDate">Nuova data di nascita *</Label>
               <Input
                 id="updateBirthDate"
                 type="date"
                 value={birthDate}
                 onChange={(e) => setBirthDate(e.target.value)}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Anche una data inventata va bene, basta che la ricordi
+              </p>
             </div>
-            <Button 
-              onClick={handleUpdateCustode}
-              disabled={updateCustodeMutation.isPending}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-            >
-              {updateCustodeMutation.isPending ? "Aggiornando..." : "Aggiorna dati di recupero"}
-            </Button>
+            
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowUpdateCustodeForm(false);
+                  setSecretWord("");
+                  setBirthDate("");
+                }}
+                className="flex-1"
+              >
+                Annulla
+              </Button>
+              <Button 
+                onClick={handleUpdateCustode}
+                disabled={!secretWord.trim() || !birthDate || updateCustodeMutation.isPending}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                {updateCustodeMutation.isPending ? "Aggiornando..." : "Aggiorna Custode"}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -884,9 +1012,9 @@ export default function TouristDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Custode del Codice dal Menu Laterale */}
+      {/* Dialog Custode del Codice dal Menu Laterale - CON SPIEGAZIONE EDUCATIVA COMPLETA */}
       <Dialog open={showCustodeModal} onOpenChange={setShowCustodeModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-blue-600" />
@@ -894,7 +1022,31 @@ export default function TouristDashboard() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">{t('custode.securityDescription')}</p>
+            
+            {/* SPIEGAZIONE EDUCATIVA COMPLETA */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-semibold text-blue-900 mb-3">🛡️ Cos'è il Custode del Codice?</h4>
+              <p className="text-sm text-blue-800 mb-3">
+                <strong>Il Custode del Codice è la nostra innovazione per la tua sicurezza.</strong> 
+                Un sistema di recupero completamente anonimo che protegge il tuo accesso senza compromettere la privacy.
+              </p>
+              
+              <h5 className="font-semibold text-blue-900 mb-2">🔧 Come funziona:</h5>
+              <ul className="text-sm text-blue-800 space-y-1.5">
+                <li>• <strong>Scegli una parola segreta</strong> che ricorderai facilmente</li>
+                <li>• <strong>Inserisci una data di nascita</strong> (anche inventata, basta che la ricordi)</li>
+                <li>• <strong>I dati vengono criptati</strong> e salvati in modo completamente anonimo</li>
+                <li>• <strong>Potrai recuperare il tuo IQCode</strong> dalla pagina di login quando serve</li>
+                <li>• <strong>Nessun dato personale richiesto:</strong> no email, no telefono, no documenti</li>
+              </ul>
+              
+              <div className="mt-3 p-2 bg-blue-100 rounded border border-blue-300">
+                <p className="text-xs text-blue-900">
+                  <strong>⚠️ Importante:</strong> I dati vengono criptati con hash irreversibile. 
+                  Non possiamo recuperare queste informazioni per te - custodiscile bene!
+                </p>
+              </div>
+            </div>
             
             {custodeStatus?.hasRecoveryData ? (
               <div className="bg-green-50 p-4 rounded-lg border border-green-200">
@@ -903,7 +1055,7 @@ export default function TouristDashboard() {
                   <span className="font-medium">{t('custode.alreadyActive')}</span>
                 </div>
                 <p className="text-sm text-green-600 mb-3">
-                  Il sistema di recupero è attivo e pronto all'uso.
+                  Il sistema di recupero è attivo e pronto all'uso. Puoi modificare i tuoi dati di recupero quando vuoi.
                 </p>
                 <Button 
                   onClick={() => {
@@ -912,13 +1064,14 @@ export default function TouristDashboard() {
                   }}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  {t('custode.manageButton')}
+                  <Shield className="w-4 h-4 mr-2" />
+                  Gestisci Custode del Codice
                 </Button>
               </div>
             ) : (
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <p className="text-sm text-blue-700 mb-3">
-                  Attiva il sistema di recupero per proteggere il tuo accesso.
+                  Attiva il sistema di recupero per proteggere il tuo accesso in modo completamente anonimo.
                 </p>
                 <Button 
                   onClick={() => {
@@ -927,6 +1080,7 @@ export default function TouristDashboard() {
                   }}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 >
+                  <Shield className="w-4 h-4 mr-2" />
                   {t('custode.activateButton')}
                 </Button>
               </div>
