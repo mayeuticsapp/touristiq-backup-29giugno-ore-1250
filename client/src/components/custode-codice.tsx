@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Shield, Info, Check, Edit, Loader2 } from "lucide-react";
+import { Shield, Check, Edit, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -20,7 +20,6 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
   const queryClient = useQueryClient();
   const [showCustodeDialog, setShowCustodeDialog] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
   const [secretWord, setSecretWord] = useState("");
   const [birthDate, setBirthDate] = useState("");
 
@@ -136,13 +135,7 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
     }
   };
 
-  const tooltipText = (custodeStatus as any)?.hasRecoveryData
-    ? (roleType === "structure" 
-        ? "Modifica la parola segreta e la data di nascita associate al tuo IQCode struttura per un futuro recupero. I dati restano anonimi e non recuperabili dal nostro sistema."
-        : "Modifica la parola segreta e la data di nascita associate al tuo IQCode partner per un futuro recupero. I dati restano anonimi e non recuperabili dal nostro sistema.")
-    : (roleType === "structure" 
-        ? "Attiva il Custode del Codice per recuperare il tuo IQCode struttura in modo sicuro, senza email o telefono. Ti basta una parola segreta e una data di nascita."
-        : "Attiva il Custode del Codice per recuperare il tuo IQCode partner in modo sicuro, senza email o telefono. Ti basta una parola segreta e una data di nascita.");
+
 
   return (
     <>
@@ -159,35 +152,6 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="relative group">
-                <Info 
-                  className="w-5 h-5 text-blue-600 cursor-help" 
-                  aria-label="Cos'è il Custode del Codice?"
-                  onClick={() => setShowTooltip(!showTooltip)}
-                />
-                {/* Tooltip per desktop */}
-                <div className="absolute right-0 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 hidden md:block">
-                  {tooltipText}
-                </div>
-                {/* Tooltip per mobile - click */}
-                {showTooltip && (
-                  <>
-                    <div 
-                      className="fixed inset-0 z-[9] md:hidden"
-                      onClick={() => setShowTooltip(false)}
-                    />
-                    <div className="absolute right-0 bottom-full mb-2 w-64 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-100 transition-opacity duration-200 z-10 md:hidden">
-                      {tooltipText}
-                      <button 
-                        onClick={() => setShowTooltip(false)}
-                        className="absolute top-1 right-1 text-white hover:text-gray-300 text-xl leading-none"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
               {(custodeStatus as any)?.hasRecoveryData ? (
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 text-green-600">
@@ -241,14 +205,27 @@ export function CustodeCodiceDashboard({ roleType, iqCode, className = "" }: Cus
           
           <div className="space-y-4 py-4">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-semibold text-blue-900 mb-2">Come funziona?</h4>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Scegli una parola segreta che ricorderai facilmente</li>
-                <li>• Inserisci una data di nascita (anche inventata)</li>
-                <li>• I dati vengono hashati e salvati in modo anonimo</li>
-                <li>• Potrai recuperare il tuo IQCode dal login quando serve</li>
-                <li>⚠️ <strong>Importante:</strong> non possiamo recuperare questi dati, custodiscili bene!</li>
+              <h4 className="font-semibold text-blue-900 mb-3">🛡️ Cos'è il Custode del Codice?</h4>
+              <p className="text-sm text-blue-800 mb-3">
+                <strong>Il Custode del Codice è la nostra innovazione per la tua sicurezza.</strong> 
+                Un sistema di recupero completamente anonimo che protegge il tuo accesso senza compromettere la privacy.
+              </p>
+              
+              <h5 className="font-semibold text-blue-900 mb-2">🔧 Come funziona:</h5>
+              <ul className="text-sm text-blue-800 space-y-1.5">
+                <li>• <strong>Scegli una parola segreta</strong> che ricorderai facilmente</li>
+                <li>• <strong>Inserisci una data di nascita</strong> (anche inventata, basta che la ricordi)</li>
+                <li>• <strong>I dati vengono criptati</strong> e salvati in modo completamente anonimo</li>
+                <li>• <strong>Potrai recuperare il tuo IQCode</strong> dalla pagina di login quando serve</li>
+                <li>• <strong>Nessun dato personale richiesto:</strong> no email, no telefono, no documenti</li>
               </ul>
+              
+              <div className="mt-3 p-2 bg-blue-100 rounded border border-blue-300">
+                <p className="text-xs text-blue-900">
+                  <strong>⚠️ Importante:</strong> I dati vengono criptati con hash irreversibile. 
+                  Non possiamo recuperarli per te - custodiscili bene!
+                </p>
+              </div>
             </div>
 
             <div className="space-y-4">
