@@ -19,11 +19,11 @@ export function TIQaiChat() {
   
   // Messaggi di benvenuto multilingue
   const welcomeMessages = {
-    it: '🌅 Ciao, viaggiatore! Sono TIQai, il tuo genius loci digitale. Sussurrami i tuoi desideri di scoperta e ti guiderò verso tesori nascosti che solo il cuore autentico dell\'Italia conosce...',
-    en: '🌅 Hello, traveler! I am TIQai, your digital genius loci. Whisper your desires for discovery and I will guide you to hidden treasures that only the authentic heart of Italy knows...',
-    es: '🌅 ¡Hola, viajero! Soy TIQai, tu genius loci digital. Susúrrame tus deseos de descubrimiento y te guiaré hacia tesoros ocultos que solo el corazón auténtico de Italia conoce...',
-    de: '🌅 Hallo, Reisender! Ich bin TIQai, dein digitaler Genius Loci. Flüstere mir deine Entdeckungswünsche zu und ich führe dich zu verborgenen Schätzen, die nur das authentische Herz Italiens kennt...',
-    fr: '🌅 Bonjour, voyageur ! Je suis TIQai, votre genius loci numérique. Murmurez-moi vos désirs de découverte et je vous guiderai vers des trésors cachés que seul le cœur authentique de l\'Italie connaît...'
+    it: '👋 Ciao! Sono TIQai, il tuo assistente turistico AI. Dimmi cosa stai cercando e ti aiuterò a scoprire i migliori partner e offerte della zona per un\'esperienza autentica!',
+    en: '👋 Hi! I am TIQai, your AI tourism assistant. Tell me what you are looking for and I will help you discover the best partners and offers in the area for an authentic experience!',
+    es: '👋 ¡Hola! Soy TIQai, tu asistente turístico AI. ¡Dime qué buscas y te ayudaré a descubrir los mejores socios y ofertas de la zona para una experiencia auténtica!',
+    de: '👋 Hallo! Ich bin TIQai, dein AI-Tourismusassistent. Sag mir, was du suchst und ich helfe dir die besten Partner und Angebote in der Gegend für ein authentisches Erlebnis zu entdecken!',
+    fr: '👋 Salut ! Je suis TIQai, votre assistant touristique IA. Dites-moi ce que vous cherchez et je vous aiderai à découvrir les meilleurs partenaires et offres de la région pour une expérience authentique !'
   };
 
   const [messages, setMessages] = useState<Message[]>([
@@ -136,8 +136,8 @@ export function TIQaiChat() {
             <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
           </div>
           <div>
-            <h1 className="text-lg sm:text-xl font-bold">Marco</h1>
-            <p className="text-xs sm:text-sm text-emerald-100">Assistente TouristIQ</p>
+            <h1 className="text-lg sm:text-xl font-bold">TIQai</h1>
+            <p className="text-xs sm:text-sm text-emerald-100">Assistente Turistico AI</p>
           </div>
         </div>
         <div className="flex items-center space-x-1 text-emerald-100">
@@ -243,7 +243,7 @@ export function TIQaiChat() {
             </Button>
           </div>
           <p className="text-xs text-gray-400 mt-2 text-center">
-            Marco • Assistente TouristIQ
+            TIQai • Assistente Turistico AI
           </p>
         </div>
       </div>

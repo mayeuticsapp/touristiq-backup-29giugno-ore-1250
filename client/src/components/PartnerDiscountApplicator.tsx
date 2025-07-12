@@ -231,14 +231,14 @@ export function PartnerDiscountApplicator() {
         </form>
 
         {/* Informazioni sistema */}
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
-            <AlertCircle className="h-5 w-5 text-amber-600" />
-            <h4 className="font-semibold text-amber-800">Sistema Plafond €150</h4>
+            <AlertCircle className="h-5 w-5 text-blue-600" />
+            <h4 className="font-semibold text-blue-800">Sistema Validazione TIQ-OTC</h4>
           </div>
-          <p className="text-sm text-amber-700">
-            Ogni turista ha un plafond mensile di €150 per gli sconti. Il sistema limita automaticamente 
-            gli sconti applicabili al plafond disponibile per evitare superamenti.
+          <p className="text-sm text-blue-700">
+            Inserisci il codice TIQ-OTC del turista per applicare lo sconto. Il sistema registra automaticamente 
+            la transazione e conferma l'applicazione dello sconto.
           </p>
         </div>
       </CardContent>

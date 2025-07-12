@@ -481,7 +481,7 @@ export default function PartnerDashboard() {
             className="mb-6" 
           />
 
-          {/* Sistema Applicazione Sconto TIQ-OTC con Plafond €150 */}
+          {/* Sistema Applicazione Sconto TIQ-OTC */}
           <div className="mb-6">
             <PartnerDiscountApplicator />
           </div>

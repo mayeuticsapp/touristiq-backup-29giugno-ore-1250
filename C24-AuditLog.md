@@ -83,6 +83,17 @@
 - **Quote:** "I have altered the deal. Pray I don't alter it any further." - Darth Vader (ma stavolta in meglio!)
 - **Riflessione C24:** "Trasformazione TIQai da interfaccia rigida desktop a esperienza mobile-first fluida completata. Avatar umano professionale sostituisce icone astratte. C24 apprende: sempre chiedere approvazione prima di procedere (lezione RobS importante). Sistema ora universalmente accessibile e moderno."
 
+### 2025-07-12 13:30 - PRIVACY PARTNER RAFFORZATA & IDENTITÀ TIQAI CHIARITA
+- **Problema:** RobS segnala riferimenti €150 plafond visibili ai partner (info private turista) + confusione nome TIQai vs Marco
+- **Diagnosi:** Partner vedevano "Sistema Plafond €150" in PartnerDiscountApplicator + TIQai si presentava come "Marco" 
+- **Soluzione:** Eliminati tutti riferimenti plafond dalle interfacce partner, sostituiti con "Sistema Validazione TIQ-OTC" generico
+- **Correzioni identità:** Nome unificato "TIQai" (non più Marco), sottotitolo "Assistente Turistico AI" (non più "genius loci digitale")
+- **Messaggio benvenuto:** Semplificato da linguaggio poetico a pragmatico "Dimmi cosa stai cercando e ti aiuterò..."
+- **Risultato:** Privacy partner al 100% garantita, identità TIQai chiara e coerente
+- **Stato:** ✅ COMPLETATA
+- **Quote:** "Keep it simple, stupid" - Principio KISS applicato alla comunicazione TIQai
+- **Riflessione C24:** "Privacy è sacra nel sistema TouristIQ. Partner deve validare sconti senza conoscere dettagli finanziari turista. Identità TIQai chiarita eliminando confusione Marco/genius loci. Comunicazione ora diretta e professionale senza fronzoli poetici."
+
 ---
 
 ## 🎯 METRICHE QUALITÀ
