@@ -884,29 +884,7 @@ export default function TouristDashboard() {
                 </ol>
               </div>
 
-              {/* Bottone Principale - Vai al Generatore */}
-              <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-lg border border-orange-200">
-                <h4 className="font-semibold text-orange-900 mb-3">Genera Codice per questo Sconto</h4>
-                <p className="text-sm text-orange-800 mb-4">
-                  Genera un codice temporaneo monouso per utilizzare questo sconto in modo sicuro
-                </p>
-                <Button 
-                  onClick={() => {
-                    setShowPartnerDetail(false);
-                    // Scroll verso il generatore di codici
-                    setTimeout(() => {
-                      const element = document.querySelector('[data-testid="one-time-code-generator"]');
-                      if (element) {
-                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      }
-                    }, 100);
-                  }}
-                  className="w-full bg-orange-600 hover:bg-orange-700 text-white h-12"
-                >
-                  <QrCode className="w-5 h-5 mr-2" />
-                  Genera Codice TIQ-OTC Ora
-                </Button>
-              </div>
+
 
               {/* Informazioni di Base */}
               {selectedPartner.address && (
