@@ -177,19 +177,7 @@ export default function Login() {
         </div>
       {/* Sfondo Naturale Mediterraneo */}
       <div className="absolute inset-0 bg-gradient-to-b from-sky-400 via-blue-500 to-cyan-600">
-        {/* Sole splendente */}
-        <div className="absolute top-16 right-20 w-24 h-24 bg-gradient-to-br from-yellow-300 to-orange-400 rounded-full opacity-90 animate-pulse shadow-2xl">
-          <div className="absolute inset-2 bg-gradient-to-br from-yellow-200 to-orange-300 rounded-full animate-glow" />
-          {/* Raggi del sole */}
-          <div className="absolute -top-8 left-1/2 w-1 h-16 bg-yellow-300/60 transform -translate-x-1/2 animate-pulse" />
-          <div className="absolute -bottom-8 left-1/2 w-1 h-16 bg-yellow-300/60 transform -translate-x-1/2 animate-pulse" />
-          <div className="absolute -left-8 top-1/2 h-1 w-16 bg-yellow-300/60 transform -translate-y-1/2 animate-pulse" />
-          <div className="absolute -right-8 top-1/2 h-1 w-16 bg-yellow-300/60 transform -translate-y-1/2 animate-pulse" />
-          <div className="absolute -top-6 -left-6 w-1 h-12 bg-yellow-300/40 transform rotate-45 animate-pulse" style={{animationDelay: '0.5s'}} />
-          <div className="absolute -top-6 -right-6 w-1 h-12 bg-yellow-300/40 transform -rotate-45 animate-pulse" style={{animationDelay: '0.5s'}} />
-          <div className="absolute -bottom-6 -left-6 w-1 h-12 bg-yellow-300/40 transform -rotate-45 animate-pulse" style={{animationDelay: '0.5s'}} />
-          <div className="absolute -bottom-6 -right-6 w-1 h-12 bg-yellow-300/40 transform rotate-45 animate-pulse" style={{animationDelay: '0.5s'}} />
-        </div>
+
 
         {/* Nuvole soffici */}
         <div className="absolute top-20 left-16 w-40 h-16 bg-white/80 rounded-full opacity-90 animate-float">
@@ -216,10 +204,7 @@ export default function Login() {
           <div className="absolute bottom-2 w-full h-6 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" style={{animationDelay: '0.5s'}} />
           <div className="absolute bottom-4 w-full h-4 bg-gradient-to-r from-white/15 via-cyan-200/30 to-white/15 animate-pulse" style={{animationDelay: '1s'}} />
 
-          {/* Riflessi del sole sul mare */}
-          <div className="absolute bottom-8 right-16 w-2 h-12 bg-yellow-200/60 animate-twinkle" />
-          <div className="absolute bottom-12 right-20 w-1 h-8 bg-yellow-300/50 animate-twinkle" style={{animationDelay: '0.7s'}} />
-          <div className="absolute bottom-6 right-24 w-3 h-6 bg-orange-200/40 animate-twinkle" style={{animationDelay: '1.4s'}} />
+
         </div>
 
         {/* Palme tropicali */}
