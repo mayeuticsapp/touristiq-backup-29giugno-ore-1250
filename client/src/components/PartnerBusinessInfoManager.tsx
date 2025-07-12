@@ -128,20 +128,26 @@ export default function PartnerBusinessInfoManager() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await apiRequest('/api/partner/business-info', {
+      console.log('🔍 FRONTEND: Inizio salvataggio business info');
+      console.log('🔍 FRONTEND: Dati da salvare:', formData);
+      
+      const response = await apiRequest('/api/partner/business-info', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
       });
+      
+      console.log('🔍 FRONTEND: Risposta dal backend:', response);
 
       toast({
         title: "Informazioni aggiornate",
         description: "Le tue informazioni business sono state salvate con successo!",
       });
     } catch (error) {
-      console.error('Errore salvataggio:', error);
+      console.error('❌ FRONTEND: Errore salvataggio:', error);
+      console.error('❌ FRONTEND: Dettagli errore:', error.message);
       toast({
         title: "Errore",
         description: "Impossibile salvare le informazioni. Riprova.",
