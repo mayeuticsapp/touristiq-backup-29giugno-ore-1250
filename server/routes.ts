@@ -3300,8 +3300,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const partnerData = await storage.getIqCodeByCode(session.iqCode);
       const partnerName = partnerData?.assignedTo || 'Partner';
 
-      // Ottieni dettagli del codice
-      const codeDetails = await storage.getOneTimeCodeDetails(code);
+      // Normalizza il codice: se arriva come "55046", convertilo in "TIQ-OTC-55046"
+      const normalizedCode = code.length === 5 ? code : code.replace('TIQ-OTC-', '');
+      console.log(`🔍 APPLY DISCOUNT: Codice ricevuto "${code}" → normalizzato "${normalizedCode}"`);
+      
+      // Ottieni dettagli del codice usando il formato numerico
+      const codeDetails = await storage.getOneTimeCodeDetails(normalizedCode);
       
       if (!codeDetails) {
         return res.status(400).json({ error: "Codice TIQ-OTC non valido" });
@@ -3327,7 +3331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Applica lo sconto aggiornando il database
       await storage.applyDiscountToOneTimeCode(
-        code, 
+        normalizedCode, 
         session.iqCode, 
         partnerName, 
         originalAmountNum, 
