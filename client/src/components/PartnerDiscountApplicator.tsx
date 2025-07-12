@@ -125,7 +125,7 @@ export function PartnerDiscountApplicator() {
                   <strong>Importo finale:</strong> €{lastResult.finalAmount.toFixed(2)}
                 </p>
                 <p className="text-green-700">
-                  <strong>Plafond rimanente:</strong> €{lastResult.remainingPlafond.toFixed(2)}
+                  <strong>Transazione completata</strong> ✅
                 </p>
               </div>
             </div>
