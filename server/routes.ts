@@ -3694,16 +3694,23 @@ app.get('/api/partner/discount-stats', async (req, res) => {
   // Aggiorna informazioni business del partner
   app.post("/api/partner/business-info", async (req, res) => {
     try {
+      console.log("🔍 PARTNER BUSINESS INFO UPDATE: Inizio richiesta");
+      
       if (!await verifyRoleAccess(req, res, ['partner'])) return;
       
       const partnerCode = req.userSession.iqCode;
       const businessData = req.body;
       
+      console.log("🔍 PARTNER BUSINESS INFO UPDATE: Partner code:", partnerCode);
+      console.log("🔍 PARTNER BUSINESS INFO UPDATE: Dati ricevuti:", JSON.stringify(businessData, null, 2));
+      
       const updatedInfo = await storage.updatePartnerBusinessInfo(partnerCode, businessData);
+      
+      console.log("🔍 PARTNER BUSINESS INFO UPDATE: Dati aggiornati:", updatedInfo);
       
       res.json({ success: true, businessInfo: updatedInfo });
     } catch (error) {
-      console.error("Errore aggiornamento business info:", error);
+      console.error("❌ Errore aggiornamento business info:", error);
       res.status(500).json({ message: "Errore del server" });
     }
   });
