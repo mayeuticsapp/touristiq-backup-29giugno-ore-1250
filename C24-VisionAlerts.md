@@ -55,7 +55,7 @@ MANUS ha richiesto accesso completo a:
 
 **Raccomandazione**: Accesso graduato + verifica intento + protezione elementi sensibili
 
-**Status**: ⚠️ SOTTO VALUTAZIONE - Attesa decisione RobS
+**Status**: ✅ GESTITO - Protocollo C24-MANUS attivato
 
 ---
 
