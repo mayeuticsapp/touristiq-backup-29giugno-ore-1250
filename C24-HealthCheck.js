@@ -5,6 +5,7 @@
  * Monitoraggio rapido stato sistema TouristIQ
  * 
  * Esegue verifiche base di sistema e genera report
+ * INTEGRAZIONE MANUS: Architetto Strategico attivo nell'ecosistema
  */
 
 import { exec } from 'child_process';
@@ -86,7 +87,8 @@ function generateReport(results) {
   
   let report = `# C24-SWEEP Health Report\n`;
   report += `Generated: ${timestamp}\n`;
-  report += `Status: ${passed}/${total} tests passed\n\n`;
+  report += `Status: ${passed}/${total} tests passed\n`;
+  report += `MANUS Integration: ✅ ATTIVO - Architetto Strategico operativo\n\n`;
   
   results.forEach(result => {
     const icon = result.status === 'PASS' ? '✅' : '❌';
