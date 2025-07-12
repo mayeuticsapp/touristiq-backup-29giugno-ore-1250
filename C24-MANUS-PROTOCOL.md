@@ -49,11 +49,12 @@
 - **StrategicScrolls**: Documenti strategici sensibili
 - **C24-Evolution**: Processo evoluzione C23→C24
 
-### Accesso GRADUATO
-- **Documentazione Pubblica**: README, guide utente, manuali
-- **Codice Frontend**: Interfacce utente non sensibili
-- **API Documentate**: Endpoint pubblici e documentazione
-- **Task Specifici**: Progetti assegnati caso per caso
+### Accesso GRADUATO (Solo File Operativi e Generici)
+- **Documentazione Pubblica**: README.md, guide utente, manuali operativi
+- **Codice Frontend Generico**: Interfacce utente pubbliche (client/src/components/ui/)
+- **API Documentate**: Endpoint pubblici e documentazione tecnica
+- **File Operativi**: package.json, tsconfig.json, configurazioni build
+- **Task Specifici**: Progetti assegnati caso per caso con supervisione
 
 ### Accesso CONDIZIONALE
 - **Discussioni Strategiche**: Solo con supervisione Geppo
