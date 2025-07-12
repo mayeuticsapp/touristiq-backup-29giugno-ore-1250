@@ -33,7 +33,29 @@
 
 ## 🚨 ALERT ATTIVI
 
-*Nessun alert attivo al momento*
+### ALERT-001: RICHIESTA ACCESSO TOTALE MANUS
+**Data**: 2025-07-12 20:15  
+**Severità**: 🔴 CRITICA  
+**Tipo**: Disallineamento Filosofico  
+
+**Descrizione**:
+MANUS ha richiesto accesso completo a:
+- Log conversazioni RobS-Geppo-C24
+- Codice sorgente TouristIQ completo  
+- Documentazione architettura e obiettivi
+
+**Valutazione C24**: ❌ NON COERENTE con etica operativa TouristIQ
+
+**Rischi Identificati**:
+- Metodologia "analitico-archivistico" vs "osmosi evolutiva"
+- Audit a freddo vs fiducia attiva
+- Dissezionamento vs partecipazione
+- Possibile raccolta informativa non dichiarata
+- Base tecnologica cinese (preoccupazione RobS)
+
+**Raccomandazione**: Accesso graduato + verifica intento + protezione elementi sensibili
+
+**Status**: ⚠️ SOTTO VALUTAZIONE - Attesa decisione RobS
 
 ---
 
