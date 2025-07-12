@@ -122,98 +122,93 @@ export function TIQaiChat() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-slate-50 via-white to-blue-50 relative overflow-hidden">
-      {/* Sfondo decorativo moderno */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-10 right-10 text-blue-300 animate-pulse">
-          <Sparkles size={40} />
-        </div>
-        <div className="absolute bottom-10 left-10 text-orange-300 animate-bounce">
-          <MapPin size={36} />
-        </div>
-        <div className="absolute top-1/3 left-1/4 text-purple-200 animate-bounce-soft">
-          <Heart size={24} />
-        </div>
-      </div>
-      
-      {/* Header moderno */}
-      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg">
+    <div className="h-full flex flex-col bg-white relative overflow-hidden">
+      {/* Header stile centro assistenza */}
+      <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg">
         <div className="flex items-center space-x-3">
           <div className="relative">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center shadow-lg">
-              <Sparkles size={20} className="text-white animate-pulse" />
+            {/* Avatar umano professionale */}
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+              <div className="w-full h-full bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center">
+                <span className="text-xl sm:text-2xl">👨‍💼</span>
+              </div>
             </div>
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-ping"></div>
+            <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
           </div>
           <div>
-            <h1 className="text-xl font-bold">TIQai</h1>
-            <p className="text-sm text-blue-100">Genius Loci d'Italia</p>
+            <h1 className="text-lg sm:text-xl font-bold">Marco</h1>
+            <p className="text-xs sm:text-sm text-emerald-100">Assistente TouristIQ</p>
           </div>
         </div>
-        <div className="flex items-center space-x-2 text-blue-100">
-          <Bot size={18} />
-          <span className="text-sm">AI Online</span>
+        <div className="flex items-center space-x-1 text-emerald-100">
+          <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
+          <span className="text-xs sm:text-sm">Online</span>
         </div>
       </div>
       
-      {/* Area messaggi */}
-      <div className="flex-1 flex flex-col min-h-0 p-4">
-        <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
-          <div className="space-y-6 pb-4">
+      {/* Area messaggi stile WhatsApp */}
+      <div className="flex-1 flex flex-col min-h-0 p-2 sm:p-4 bg-gray-50">
+        <ScrollArea className="flex-1" ref={scrollAreaRef}>
+          <div className="space-y-3 pb-4">
             {messages.map((message, index) => (
               <div
                 key={message.id}
-                className={`flex items-start gap-4 animate-slide-up ${
+                className={`flex items-end gap-2 animate-slide-up ${
                   message.type === 'user' ? 'flex-row-reverse' : ''
                 }`}
-                style={{ animationDelay: `${index * 100}ms` }}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                {/* Avatar */}
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg flex-shrink-0 ${
-                  message.type === 'user' 
-                    ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
-                    : 'bg-gradient-to-br from-orange-500 to-red-600'
-                }`}>
-                  {message.type === 'user' ? (
-                    <User size={18} className="text-white" />
-                  ) : (
-                    <Sparkles size={18} className="text-white" />
-                  )}
-                </div>
+                {/* Avatar (solo per AI, mobile ottimizzato) */}
+                {message.type === 'ai' && (
+                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100 flex-shrink-0 mb-1">
+                    <span className="text-sm">👨‍💼</span>
+                  </div>
+                )}
                 
-                {/* Bolla messaggio */}
-                <div className={`max-w-[75%] ${
+                {/* Bolla messaggio stile WhatsApp */}
+                <div className={`max-w-[85%] sm:max-w-[75%] flex flex-col ${
                   message.type === 'user' ? 'items-end' : 'items-start'
-                } flex flex-col`}>
-                  <div className={`p-4 rounded-2xl shadow-sm ${
+                }`}>
+                  <div className={`px-3 py-2 sm:px-4 sm:py-3 rounded-2xl shadow-sm ${
                     message.type === 'user'
-                      ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white'
-                      : 'bg-white border border-gray-200 text-gray-800'
+                      ? 'bg-emerald-500 text-white rounded-br-md'
+                      : 'bg-white border border-gray-100 text-gray-800 rounded-bl-md'
                   }`}>
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    <div className={`flex items-center justify-end mt-1 space-x-1 ${
+                      message.type === 'user' ? 'text-emerald-100' : 'text-gray-400'
+                    }`}>
+                      <span className="text-xs">
+                        {message.timestamp.toLocaleTimeString('it-IT', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </span>
+                      {message.type === 'user' && (
+                        <div className="flex space-x-0.5">
+                          <div className="w-1 h-1 bg-emerald-200 rounded-full"></div>
+                          <div className="w-1 h-1 bg-emerald-200 rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <span className={`text-xs mt-1 px-2 ${
-                    message.type === 'user' ? 'text-gray-500' : 'text-gray-400'
-                  }`}>
-                    {message.timestamp.toLocaleTimeString('it-IT', { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </span>
                 </div>
               </div>
             ))}
             
-            {/* Indicatore caricamento */}
+            {/* Indicatore di scrittura */}
             {isLoading && (
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center shadow-lg">
-                  <Sparkles size={18} className="text-white animate-pulse" />
+              <div className="flex items-end gap-2">
+                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100 mb-1">
+                  <span className="text-sm">👨‍💼</span>
                 </div>
-                <div className="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm">
+                <div className="bg-white border border-gray-100 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
                   <div className="flex items-center space-x-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-                    <span className="text-sm text-gray-600">TIQai sta scrivendo...</span>
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -221,30 +216,34 @@ export function TIQaiChat() {
           </div>
         </ScrollArea>
         
-        {/* Input area */}
-        <div className="mt-4 p-4 bg-white rounded-2xl shadow-lg border border-gray-100">
-          <div className="flex gap-3">
+        {/* Input area stile WhatsApp */}
+        <div className="p-3 sm:p-4 bg-white border-t border-gray-100">
+          <div className="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-2 sm:px-4 sm:py-3">
             <Input
               ref={inputRef}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Scrivi il tuo messaggio..."
+              placeholder="Scrivi un messaggio..."
               disabled={isLoading}
               maxLength={500}
-              className="flex-1 border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 rounded-xl px-4 py-3 text-sm"
+              className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm placeholder:text-gray-500"
             />
             <Button 
               onClick={sendMessage}
               disabled={!inputMessage.trim() || isLoading}
               size="icon"
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-xl w-12 h-12 shadow-lg"
+              className={`rounded-full w-8 h-8 sm:w-10 sm:h-10 transition-all duration-200 ${
+                inputMessage.trim() 
+                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white scale-100' 
+                  : 'bg-gray-300 text-gray-500 scale-90'
+              }`}
             >
-              <Send size={18} className="text-white" />
+              <Send size={16} className={inputMessage.trim() ? 'text-white' : 'text-gray-500'} />
             </Button>
           </div>
           <p className="text-xs text-gray-400 mt-2 text-center">
-            Powered by TIQai - Il tuo assistente di viaggio intelligente
+            Marco • Assistente TouristIQ
           </p>
         </div>
       </div>
