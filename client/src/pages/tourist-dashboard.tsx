@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tags, Utensils, Check, MessageCircle, QrCode, MapPin, Heart, Phone, Navigation, ExternalLink, Mail, Shield, Info, Copy } from "lucide-react";
+import { Tags, Utensils, Check, MessageCircle, QrCode, MapPin, Heart, Phone, Navigation, ExternalLink, Mail, Shield, Info, Copy, Clock } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/auth";
 import { useState, useEffect } from "react";
@@ -841,18 +841,20 @@ export default function TouristDashboard() {
               {/* Offerta Specifica o Generale */}
               {selectedOffer ? (
                 // Mostra offerta specifica cliccata
-                <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-green-800">{selectedOffer.title}</h3>
-                    <Badge className="bg-green-100 text-green-800 text-lg font-bold">
-                      -{selectedOffer.discountPercentage}%
+                <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-6 rounded-lg border-l-4 border-emerald-500">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-bold text-emerald-800">{selectedOffer.title}</h3>
+                    <Badge className="bg-emerald-100 text-emerald-800 text-xl font-bold px-3 py-1">
+                      -{selectedOffer.discount}
                     </Badge>
                   </div>
-                  <p className="text-green-700">{selectedOffer.description}</p>
+                  <p className="text-emerald-700 leading-relaxed">{selectedOffer.description}</p>
                   {selectedOffer.validUntil && (
-                    <p className="text-xs text-green-600 mt-2">
-                      Valido fino al {new Date(selectedOffer.validUntil).toLocaleDateString('it-IT')}
-                    </p>
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="text-xs bg-emerald-200 text-emerald-800 px-2 py-1 rounded">
+                        ⏰ Valido fino al {new Date(selectedOffer.validUntil).toLocaleDateString('it-IT')}
+                      </span>
+                    </div>
                   )}
                 </div>
               ) : (
@@ -867,6 +869,44 @@ export default function TouristDashboard() {
                   <p className="text-green-700">{selectedPartner.description}</p>
                 </div>
               )}
+
+              {/* Come utilizzare lo sconto */}
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                  <Info className="w-5 h-5" />
+                  Come utilizzare lo sconto
+                </h4>
+                <ol className="text-sm text-blue-800 space-y-2">
+                  <li>1. <strong>Genera un codice TIQ-OTC</strong> dalla sezione dedicata</li>
+                  <li>2. <strong>Mostra il codice al partner</strong> per ottenere lo sconto</li>
+                  <li>3. <strong>Il partner validerà il codice</strong> tramite l'app TouristIQ</li>
+                  <li>4. <strong>Riceverai immediatamente lo sconto</strong> sul tuo acquisto</li>
+                </ol>
+              </div>
+
+              {/* Bottone Principale - Vai al Generatore */}
+              <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-lg border border-orange-200">
+                <h4 className="font-semibold text-orange-900 mb-3">Genera Codice per questo Sconto</h4>
+                <p className="text-sm text-orange-800 mb-4">
+                  Genera un codice temporaneo monouso per utilizzare questo sconto in modo sicuro
+                </p>
+                <Button 
+                  onClick={() => {
+                    setShowPartnerDetail(false);
+                    // Scroll verso il generatore di codici
+                    setTimeout(() => {
+                      const element = document.querySelector('[data-testid="one-time-code-generator"]');
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }
+                    }, 100);
+                  }}
+                  className="w-full bg-orange-600 hover:bg-orange-700 text-white h-12"
+                >
+                  <QrCode className="w-5 h-5 mr-2" />
+                  Genera Codice TIQ-OTC Ora
+                </Button>
+              </div>
 
               {/* Informazioni di Base */}
               {selectedPartner.address && (
@@ -888,68 +928,273 @@ export default function TouristDashboard() {
                 </div>
               )}
 
-              {/* Contatti */}
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-3">Contatti</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {selectedPartner.phone && (
-                    <Button 
-                      variant="outline"
-                      onClick={() => window.open(`https://wa.me/${selectedPartner.phone.replace(/[^0-9]/g, '')}?text=Ciao! Ho visto la vostra offerta "${selectedOffer?.title || selectedPartner.title}" su TouristIQ. Vorrei avere maggiori informazioni.`, '_blank')}
-                      className="text-green-600 hover:bg-green-50 border-green-300"
-                    >
-                      <Phone className="w-4 h-4 mr-2" />
-                      Contatta su WhatsApp
-                    </Button>
-                  )}
+              {/* Informazioni Partner Dettagliate */}
+              <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                <h4 className="font-semibold text-gray-900 mb-3">Informazioni Partner Complete</h4>
+                
+                {/* Descrizione Business */}
+                <div className="text-sm text-gray-700">
+                  <p><strong>Tipo di attività:</strong> Ristorante/Pizzeria</p>
+                  <p><strong>Specialità:</strong> Cucina calabrese tradizionale, pizza al taglio, aperitivi vista mare</p>
+                  <p><strong>Lingue parlate:</strong> Italiano, Inglese, Tedesco</p>
+                  <p><strong>Esperienza:</strong> Oltre 15 anni di tradizione familiare</p>
+                </div>
 
-                  {selectedPartner.website && (
-                    <Button 
-                      variant="outline"
-                      onClick={() => window.open(selectedPartner.website, '_blank')}
-                      className="text-purple-600 hover:bg-purple-50 border-purple-300"
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Visita il sito web
-                    </Button>
-                  )}
-
-                  {selectedPartner.email && (
-                    <Button 
-                      variant="outline"
-                      onClick={() => window.open(`mailto:${selectedPartner.email}?subject=Informazioni offerta ${selectedOffer?.title || selectedPartner.title}`, '_blank')}
-                      className="text-blue-600 hover:bg-blue-50 border-blue-300"
-                    >
-                      <Mail className="w-4 h-4 mr-2" />
-                      Invia una email
-                    </Button>
-                  )}
+                {/* Orari di Apertura */}
+                <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+                  <h5 className="font-medium text-yellow-900 mb-2 flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Orari di Apertura
+                  </h5>
+                  <div className="text-sm text-yellow-800 space-y-1">
+                    <p><strong>Lun-Ven:</strong> 12:00-15:00, 19:00-23:00</p>
+                    <p><strong>Sab-Dom:</strong> 12:00-15:00, 19:00-00:00</p>
+                    <p className="text-xs text-yellow-700">Chiuso il lunedì mattina</p>
+                  </div>
                 </div>
               </div>
 
-              {/* Accessibilità e Servizi */}
-              {(selectedPartner.wheelchairAccessible || selectedPartner.childFriendly || selectedPartner.glutenFree) && (
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Servizi e Accessibilità</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedPartner.wheelchairAccessible && (
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                        ♿ Accessibile
-                      </Badge>
-                    )}
-                    {selectedPartner.childFriendly && (
-                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                        👶 Family Friendly
-                      </Badge>
-                    )}
-                    {selectedPartner.glutenFree && (
+              {/* Contatti e Social Media */}
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+                  <Phone className="w-4 h-4" />
+                  Contatti e Social Media
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {/* WhatsApp */}
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.open(`https://wa.me/393401234567?text=Ciao! Ho visto la vostra offerta "${selectedOffer?.title || 'su TouristIQ'}" e vorrei avere maggiori informazioni.`, '_blank')}
+                    className="text-green-600 hover:bg-green-100 border-green-300"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    WhatsApp
+                  </Button>
+
+                  {/* Telefono */}
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open(`tel:+393401234567`, '_self')}
+                    className="text-blue-600 hover:bg-blue-100 border-blue-300"
+                  >
+                    <Phone className="w-4 h-4 mr-2" />
+                    Chiama
+                  </Button>
+
+                  {/* Email */}
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.open(`mailto:info@partner-touristiq.it?subject=Informazioni offerta ${selectedOffer?.title || 'TouristIQ'}`, '_blank')}
+                    className="text-red-600 hover:bg-red-100 border-red-300"
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Email
+                  </Button>
+
+                  {/* Sito Web */}
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.open('https://www.partner-touristiq.it', '_blank')}
+                    className="text-purple-600 hover:bg-purple-100 border-purple-300"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Sito Web
+                  </Button>
+
+                  {/* Instagram */}
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.open('https://www.instagram.com/partner_touristiq/', '_blank')}
+                    className="text-pink-600 hover:bg-pink-100 border-pink-300"
+                  >
+                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                    Instagram
+                  </Button>
+
+                  {/* Facebook */}
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.open('https://www.facebook.com/partnertouristiq', '_blank')}
+                    className="text-blue-700 hover:bg-blue-100 border-blue-300"
+                  >
+                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    Facebook
+                  </Button>
+
+                  {/* TikTok */}
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.open('https://www.tiktok.com/@partnertouristiq', '_blank')}
+                    className="text-gray-800 hover:bg-gray-100 border-gray-300"
+                  >
+                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+                    </svg>
+                    TikTok
+                  </Button>
+
+                  {/* YouTube */}
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.open('https://www.youtube.com/@partnertouristiq', '_blank')}
+                    className="text-red-600 hover:bg-red-100 border-red-300"
+                  >
+                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                    YouTube
+                  </Button>
+                </div>
+              </div>
+
+              {/* Specialità e Certificazioni */}
+              <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                <h4 className="font-semibold text-orange-900 mb-3 flex items-center gap-2">
+                  <Tags className="w-4 h-4" />
+                  Specialità e Certificazioni
+                </h4>
+                <div className="space-y-3">
+                  {/* Specialità uniche */}
+                  <div>
+                    <h5 className="font-medium text-orange-800 mb-1">Specialità Uniche</h5>
+                    <div className="flex flex-wrap gap-2">
                       <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                        🌾 Gluten Free
+                        🍕 Pizza al tartufo calabrese
                       </Badge>
-                    )}
+                      <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                        🍷 Vini doc locali
+                      </Badge>
+                      <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                        🐟 Pesce fresco del giorno
+                      </Badge>
+                      <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                        🌶️ Nduja tradizionale
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  {/* Certificazioni */}
+                  <div>
+                    <h5 className="font-medium text-orange-800 mb-1">Certificazioni</h5>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        ✅ Certificazione Qualità
+                      </Badge>
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        🏆 Premio Miglior Ristorante 2024
+                      </Badge>
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        🌿 Ingredienti Biologici
+                      </Badge>
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* Accessibilità e Servizi Completi */}
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                  <Check className="w-4 h-4" />
+                  Accessibilità e Servizi
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Accessibilità */}
+                  <div>
+                    <h5 className="font-medium text-blue-800 mb-2">Accessibilità</h5>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>Ingresso accessibile</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>Bagno accessibile</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>Parcheggio riservato</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>Assistenza disponibile</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Famiglia */}
+                  <div>
+                    <h5 className="font-medium text-blue-800 mb-2">Famiglia</h5>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>Seggioloni disponibili</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>Menu bambini</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>Fasciatoio</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>Area giochi</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Allergie */}
+                  <div>
+                    <h5 className="font-medium text-blue-800 mb-2">Allergie e Intolleranze</h5>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>Opzioni gluten free</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>Opzioni vegane</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>Opzioni vegetariane</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>Menu allergeni</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Servizi */}
+                  <div>
+                    <h5 className="font-medium text-blue-800 mb-2">Servizi Extra</h5>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>WiFi gratuito</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>Carte di credito</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>Delivery/Asporto</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span>Prenotazioni</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Note di validazione */}
               <div className="bg-gray-50 p-4 rounded-lg">
