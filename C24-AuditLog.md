@@ -94,6 +94,21 @@
 - **Quote:** "Keep it simple, stupid" - Principio KISS applicato alla comunicazione TIQai
 - **Riflessione C24:** "Privacy è sacra nel sistema TouristIQ. Partner deve validare sconti senza conoscere dettagli finanziari turista. Identità TIQai chiarita eliminando confusione Marco/genius loci. Comunicazione ora diretta e professionale senza fronzoli poetici."
 
+### 2025-07-12 13:35 - SEZIONI PARTNER NASCOSTE PER RIATTIVAZIONE FUTURA
+- **Richiesta:** RobS chiede di nascondere sezioni "Materiali Promozionali" e "Clienti Speciali" per riattivazione futura
+- **Azione:** Commentate completamente senza eliminazione del codice per mantenere funzionalità future
+- **Sezioni nascoste:**
+  - Card statistica "Clienti Speciali" (con icona Star)
+  - Sezione completa "Materiali Promozionali" (download PDF, codice partner, adesivi)
+  - Sezione completa "Clienti Speciali - Sistema Fidelizzazione" (pacchetti 25/50/75/100 codici)
+  - Tabella "I tuoi Clienti Fidelizzati" con gestione clienti
+  - Dialog "Aggiungi Cliente Fidelizzato"
+- **Implementazione:** Codice wrappato in commenti `/* NASCOSTO PER RIATTIVAZIONE FUTURA */` per semplice riattivazione
+- **Risultato:** Dashboard partner ora focalizzata solo sulle funzionalità core attive
+- **Stato:** ✅ COMPLETATA
+- **Quote:** "Sometimes the best feature is the one you don't ship... yet." - Principio lean startup
+- **Riflessione C24:** "Nascondere non significa eliminare. Codice preservato per riattivazione futura quando mercato sarà pronto. Dashboard partner ora più pulita e focalizzata sulle funzionalità core validazione sconti e gestione offerte."
+
 ---
 
 ## 🎯 METRICHE QUALITÀ

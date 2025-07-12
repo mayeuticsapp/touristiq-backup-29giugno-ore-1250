@@ -459,6 +459,8 @@ export default function PartnerDashboard() {
               </CardContent>
             </Card>
 
+            {/* NASCOSTO PER RIATTIVAZIONE FUTURA - Card Clienti Speciali */}
+            {/* 
             <Card className="bg-purple-50 border-purple-200">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
@@ -472,6 +474,7 @@ export default function PartnerDashboard() {
                 </div>
               </CardContent>
             </Card>
+            */}
           </div>
 
           {/* Sistema Custode del Codice per Partner */}
@@ -634,7 +637,8 @@ export default function PartnerDashboard() {
               </CardContent>
             </Card>
 
-            {/* Promotional Materials */}
+            {/* NASCOSTO PER RIATTIVAZIONE FUTURA - Materiali Promozionali */}
+            {/* 
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
@@ -692,9 +696,11 @@ export default function PartnerDashboard() {
                 </div>
               </CardContent>
             </Card>
+            */}
           </div>
 
-          {/* Special Clients Section */}
+          {/* NASCOSTO PER RIATTIVAZIONE FUTURA - Clienti Speciali */}
+          {/* 
           <div className="mt-8">
             <div className="bg-gradient-to-r from-purple-600 to-purple-800 rounded-lg p-6 text-white mb-6">
               <div className="flex items-center gap-3 mb-4">
@@ -835,6 +841,7 @@ export default function PartnerDashboard() {
               </CardContent>
             </Card>
           </div>
+          */}
         </div>
 
         {/* Dialogs */}
@@ -945,6 +952,8 @@ export default function PartnerDashboard() {
           </DialogContent>
         </Dialog>
 
+        {/* NASCOSTO PER RIATTIVAZIONE FUTURA - Dialog Cliente Speciale */}
+        {/* 
         <Dialog open={showSpecialClientDialog} onOpenChange={setShowSpecialClientDialog}>
           <DialogContent>
             <DialogHeader>
@@ -979,6 +988,7 @@ export default function PartnerDashboard() {
             </div>
           </DialogContent>
         </Dialog>
+        */}
 
         <Dialog open={showAccountDeleteDialog} onOpenChange={setShowAccountDeleteDialog}>
           <DialogContent>
