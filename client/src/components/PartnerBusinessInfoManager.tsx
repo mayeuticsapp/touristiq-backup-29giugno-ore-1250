@@ -163,13 +163,7 @@ export default function PartnerBusinessInfoManager() {
       console.log('🔍 FRONTEND: Inizio salvataggio business info');
       console.log('🔍 FRONTEND: Dati da salvare:', formData);
       
-      const response = await apiRequest('/api/partner/business-info', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await apiRequest('POST', '/api/partner/business-info', formData);
       
       console.log('🔍 FRONTEND: Risposta dal backend:', response);
 
