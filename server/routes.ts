@@ -1639,30 +1639,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`📊 ADMIN STATISTICHE - Raccolta dati globali risparmio ospiti`);
 
-      // Ottieni tutte le strutture attive
+      // **PARTE 1: Dati TIQ-OTC (sistema attivo)**
+      const tiqOtcStats = await storage.getAllOneTimeCodes();
+      const usedTiqOtcCodes = tiqOtcStats.filter(code => code.isUsed && code.discountAmount > 0);
+      
+      const tiqOtcTotalSavings = usedTiqOtcCodes.reduce((sum, code) => sum + (code.discountAmount || 0), 0);
+      const tiqOtcUniqueTourists = new Set(usedTiqOtcCodes.map(code => code.touristIqCode)).size;
+      
+      console.log(`💰 TIQ-OTC RISPARMI: €${tiqOtcTotalSavings} da ${usedTiqOtcCodes.length} codici utilizzati`);
+      console.log(`👥 TIQ-OTC TURISTI: ${tiqOtcUniqueTourists} turisti unici`);
+
+      // **PARTE 2: Dati demo strutture (sistema legacy)**
       const allStructures = await storage.getAllIqCodes();
       const activeStructures = allStructures.filter(code => 
         code.role === 'structure' && code.isActive
       );
 
-      const globalStats = {
-        totalStructures: activeStructures.length,
-        totalSavingsGenerated: 0,
-        totalCodesIssued: 0,
-        totalActiveGuests: 0,
-        structureBreakdown: [] as any[]
-      };
+      let legacyTotalSavings = 0;
+      let legacyTotalCodes = 0;
+      let legacyActiveGuests = 0;
+      const structureBreakdown = [];
 
-      // Raccoglie statistiche per ogni struttura
       for (const structure of activeStructures) {
         try {
           const stats = await storage.getStructureGuestSavingsStats(structure.code);
           
-          globalStats.totalSavingsGenerated += stats.totalSavingsGenerated;
-          globalStats.totalCodesIssued += stats.totalCodesIssued;
-          globalStats.totalActiveGuests += stats.activeGuestsCount;
+          legacyTotalSavings += stats.totalSavingsGenerated;
+          legacyTotalCodes += stats.totalCodesIssued;
+          legacyActiveGuests += stats.activeGuestsCount;
           
-          globalStats.structureBreakdown.push({
+          structureBreakdown.push({
             structureCode: structure.code,
             structureName: structure.businessName || structure.code,
             totalSavingsGenerated: stats.totalSavingsGenerated,
@@ -1675,7 +1681,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      console.log(`📊 ADMIN RISPARMIO GLOBALE: €${globalStats.totalSavingsGenerated} da ${globalStats.totalStructures} strutture`);
+      // **PARTE 3: Statistiche combinate**
+      const globalStats = {
+        totalStructures: activeStructures.length,
+        totalSavingsGenerated: tiqOtcTotalSavings + legacyTotalSavings,
+        totalCodesIssued: usedTiqOtcCodes.length + legacyTotalCodes,
+        totalActiveGuests: tiqOtcUniqueTourists + legacyActiveGuests,
+        structureBreakdown,
+        // Nuovi dati TIQ-OTC
+        tiqOtcStats: {
+          totalSavings: tiqOtcTotalSavings,
+          totalCodes: usedTiqOtcCodes.length,
+          uniqueTourists: tiqOtcUniqueTourists,
+          recentTransactions: usedTiqOtcCodes.slice(-5).map(code => ({
+            code: code.code,
+            amount: code.discountAmount,
+            tourist: code.touristIqCode,
+            partner: code.partnerName || 'Partner sconosciuto',
+            usedAt: code.usedAt
+          }))
+        }
+      };
+
+      console.log(`📊 ADMIN RISPARMIO GLOBALE: €${globalStats.totalSavingsGenerated} (TIQ-OTC: €${tiqOtcTotalSavings}, Legacy: €${legacyTotalSavings})`);
 
       res.json({
         success: true,

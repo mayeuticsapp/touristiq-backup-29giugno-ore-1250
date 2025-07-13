@@ -156,6 +156,7 @@ export interface IStorage {
   generateOneTimeCode(touristIqCode: string): Promise<{ code: string; remaining: number }>;
   validateOneTimeCode(code: string, partnerCode: string, partnerName: string): Promise<{ valid: boolean; used: boolean }>;
   getTouristOneTimeCodes(touristIqCode: string): Promise<OneTimeCode[]>;
+  getAllOneTimeCodes(): Promise<OneTimeCode[]>;
   getTouristAvailableUses(touristIqCode: string): Promise<number>;
   getTouristTotalDiscountUsed(touristIqCode: string): Promise<number>;
   initializeOneTimeCodesForTourist(touristIqCode: string, quantity: number): Promise<void>;
@@ -1725,6 +1726,23 @@ export class PostgreStorage implements IStorage {
     }
   }
 
+  async getAllOneTimeCodes(): Promise<OneTimeCode[]> {
+    console.log(`🔍 getAllOneTimeCodes: Caricamento TUTTI i codici TIQ-OTC dal database`);
+    
+    try {
+      const codes = await this.db
+        .select()
+        .from(oneTimeCodes)
+        .orderBy(desc(oneTimeCodes.usedAt), desc(oneTimeCodes.createdAt));
+
+      console.log(`📊 getAllOneTimeCodes: trovati ${codes.length} codici TIQ-OTC totali`);
+      return codes;
+    } catch (error) {
+      console.error(`❌ ERRORE getAllOneTimeCodes:`, error);
+      return [];
+    }
+  }
+
 
 }
 
@@ -2922,6 +2940,23 @@ class ExtendedPostgreStorage extends PostgreStorage {
     
     console.log(`✅ CRONOLOGIA PRIVACY: restituiti ${formattedCodes.length} codici utilizzati (nascosti ${codes.length} non usati)`);
     return formattedCodes;
+  }
+
+  async getAllOneTimeCodes(): Promise<OneTimeCode[]> {
+    console.log(`🔍 getAllOneTimeCodes: Caricamento TUTTI i codici TIQ-OTC dal database`);
+    
+    try {
+      const codes = await this.db
+        .select()
+        .from(oneTimeCodes)
+        .orderBy(desc(oneTimeCodes.usedAt), desc(oneTimeCodes.createdAt));
+
+      console.log(`📊 getAllOneTimeCodes: trovati ${codes.length} codici TIQ-OTC totali`);
+      return codes;
+    } catch (error) {
+      console.error(`❌ ERRORE getAllOneTimeCodes:`, error);
+      return [];
+    }
   }
 
   async getTouristAvailableUses(touristIqCode: string): Promise<number> {
