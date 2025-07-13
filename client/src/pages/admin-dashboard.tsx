@@ -1489,30 +1489,149 @@ function DirectGenerationView({ adminCredits, onRefreshCredits }: { adminCredits
 }
 
 function SettingsView() {
+  const [settings, setSettings] = useState({
+    platformName: "TouristIQ",
+    supportEmail: "support@touristiq.com", 
+    welcomeMessage: "Benvenuto nella piattaforma TouristIQ",
+    maxCodesPerDay: 500
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch('/api/admin/settings', { credentials: 'include' });
+      const data = await response.json();
+      if (data.settings) {
+        setSettings(data.settings);
+      }
+    } catch (error) {
+      console.error('Errore caricamento impostazioni:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(settings)
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        toast({
+          title: "Impostazioni salvate",
+          description: "Le configurazioni sono state aggiornate con successo",
+        });
+      } else {
+        toast({
+          title: "Errore",
+          description: data.message || "Errore nel salvataggio delle impostazioni",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Errore salvataggio impostazioni:', error);
+      toast({
+        title: "Errore",
+        description: "Errore di connessione durante il salvataggio",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string | number) => {
+    setSettings(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Impostazioni Sistema</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4">Caricamento impostazioni...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Impostazioni Sistema</CardTitle>
+        <p className="text-sm text-gray-600">
+          Configura le impostazioni globali della piattaforma TouristIQ
+        </p>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
           <div>
             <Label>Nome Piattaforma</Label>
-            <Input defaultValue="TouristIQ" />
+            <Input 
+              value={settings.platformName}
+              onChange={(e) => handleInputChange('platformName', e.target.value)}
+              placeholder="Nome della piattaforma"
+            />
           </div>
           <div>
             <Label>Email Supporto</Label>
-            <Input defaultValue="support@touristiq.com" />
+            <Input 
+              type="email"
+              value={settings.supportEmail}
+              onChange={(e) => handleInputChange('supportEmail', e.target.value)}
+              placeholder="Email per supporto utenti"
+            />
           </div>
           <div>
             <Label>Messaggio di Benvenuto</Label>
-            <Textarea defaultValue="Benvenuto nella piattaforma TouristIQ" />
+            <Textarea 
+              value={settings.welcomeMessage}
+              onChange={(e) => handleInputChange('welcomeMessage', e.target.value)}
+              placeholder="Messaggio mostrato ai nuovi utenti"
+              rows={3}
+            />
           </div>
           <div>
             <Label>Max Codici per Giorno</Label>
-            <Input type="number" defaultValue="100" />
+            <Input 
+              type="number" 
+              value={settings.maxCodesPerDay}
+              onChange={(e) => handleInputChange('maxCodesPerDay', parseInt(e.target.value) || 0)}
+              min="1"
+              max="1000"
+              placeholder="Limite giornaliero generazione codici"
+            />
+            <p className="text-sm text-gray-500 mt-1">
+              Limite massimo di codici IQ generabili al giorno (1-1000)
+            </p>
           </div>
-          <Button>Salva Impostazioni</Button>
+          <Button 
+            onClick={handleSave}
+            disabled={isSaving}
+            className="w-full"
+          >
+            {isSaving ? 'Salvataggio...' : 'Salva Impostazioni'}
+          </Button>
         </div>
       </CardContent>
     </Card>

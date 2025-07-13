@@ -753,12 +753,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
         platformName: "TouristIQ",
         supportEmail: "support@touristiq.com",
         welcomeMessage: "Benvenuto nella piattaforma TouristIQ",
-        maxCodesPerDay: 100
+        maxCodesPerDay: 500
       };
 
       res.json({ settings });
     } catch (error) {
       console.error("Errore impostazioni:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Admin Settings - Save
+  app.put("/api/admin/settings", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      if (session.role !== 'admin') {
+        return res.status(403).json({ message: "Accesso negato - solo admin" });
+      }
+
+      const { platformName, supportEmail, welcomeMessage, maxCodesPerDay } = req.body;
+
+      // Validazione base
+      if (!platformName || !supportEmail || !welcomeMessage || !maxCodesPerDay) {
+        return res.status(400).json({ message: "Tutti i campi sono obbligatori" });
+      }
+
+      if (maxCodesPerDay < 1 || maxCodesPerDay > 1000) {
+        return res.status(400).json({ message: "Max codici per giorno deve essere tra 1 e 1000" });
+      }
+
+      // Per ora salvo in memoria, in futuro si può aggiungere persistenza database
+      const updatedSettings = {
+        platformName,
+        supportEmail,
+        welcomeMessage,
+        maxCodesPerDay: parseInt(maxCodesPerDay)
+      };
+
+      res.json({ 
+        success: true, 
+        settings: updatedSettings,
+        message: "Impostazioni salvate con successo" 
+      });
+    } catch (error) {
+      console.error("Errore salvataggio impostazioni:", error);
       res.status(500).json({ message: "Errore del server" });
     }
   });
