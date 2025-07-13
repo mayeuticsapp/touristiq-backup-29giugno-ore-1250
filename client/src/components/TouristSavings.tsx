@@ -204,7 +204,7 @@ const TouristSavings: React.FC<TouristSavingsProps> = ({ onOpenFeedback }) => {
                       <MapPin className="h-5 w-5 text-emerald-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">{code.partnerName || 'Partner'}</p>
+                      <p className="font-medium text-gray-900">{code.usedByName || code.partnerName || 'Partner'}</p>
                       <p className="text-sm text-gray-600">{code.offerDescription || `Sconto ${code.discountPercentage}%`}</p>
                       <p className="text-xs text-gray-500">
                         {formatDate(code.usedAt)}
@@ -223,9 +223,9 @@ const TouristSavings: React.FC<TouristSavingsProps> = ({ onOpenFeedback }) => {
                     </Badge>
                     
                     {/* Pulsante feedback solo se utilizzato entro 2 ore */}
-                    {isHotFeedback(code.usedAt) && code.partnerCode && (
+                    {isHotFeedback(code.usedAt) && (code.usedBy || code.partnerCode) && (
                       <Button
-                        onClick={() => onOpenFeedback?.(code.partnerCode, code.partnerName || 'Partner')}
+                        onClick={() => onOpenFeedback?.(code.usedBy || code.partnerCode, code.usedByName || code.partnerName || 'Partner')}
                         variant="outline"
                         size="sm"
                         className="text-blue-600 border-blue-300 hover:bg-blue-50 flex items-center gap-1"
