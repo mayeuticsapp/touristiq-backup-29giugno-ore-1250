@@ -1631,24 +1631,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // **SISTEMA RISPARMIO OSPITI STRUTTURE - Endpoint statistiche**
-  app.get("/api/structure/guest-savings-stats", async (req, res) => {
-    console.log(`🔥 ENDPOINT GUEST-SAVINGS-STATS - Richiesta ricevuta!`);
-    
+  // **SISTEMA RISPARMIO OSPITI - Endpoint ADMIN (raccoglie tutti i dati)**
+  app.get("/api/admin/all-guest-savings-stats", async (req, res) => {
     try {
-      // Usa il middleware standard per l'autenticazione
-      console.log(`🔥 CHIAMATA VERIFY_ROLE_ACCESS con ruoli: ['structure']`);
-      const hasAccess = await verifyRoleAccess(req, res, ['structure']);
-      console.log(`🔥 VERIFY_ROLE_ACCESS RISULTATO: ${hasAccess}`);
-      
-      if (!hasAccess) {
-        console.log(`🔥 ACCESSO NEGATO - verifyRoleAccess ha restituito false`);
-        return; // verifyRoleAccess ha già inviato la risposta di errore
+      const hasAccess = await verifyRoleAccess(req, res, ['admin']);
+      if (!hasAccess) return;
+
+      console.log(`📊 ADMIN STATISTICHE - Raccolta dati globali risparmio ospiti`);
+
+      // Ottieni tutte le strutture attive
+      const allStructures = await storage.getAllIqCodes();
+      const activeStructures = allStructures.filter(code => 
+        code.role === 'structure' && code.isActive
+      );
+
+      const globalStats = {
+        totalStructures: activeStructures.length,
+        totalSavingsGenerated: 0,
+        totalCodesIssued: 0,
+        totalActiveGuests: 0,
+        structureBreakdown: [] as any[]
+      };
+
+      // Raccoglie statistiche per ogni struttura
+      for (const structure of activeStructures) {
+        try {
+          const stats = await storage.getStructureGuestSavingsStats(structure.code);
+          
+          globalStats.totalSavingsGenerated += stats.totalSavingsGenerated;
+          globalStats.totalCodesIssued += stats.totalCodesIssued;
+          globalStats.totalActiveGuests += stats.activeGuestsCount;
+          
+          globalStats.structureBreakdown.push({
+            structureCode: structure.code,
+            structureName: structure.businessName || structure.code,
+            totalSavingsGenerated: stats.totalSavingsGenerated,
+            totalCodesIssued: stats.totalCodesIssued,
+            activeGuestsCount: stats.activeGuestsCount,
+            averageSavingPerGuest: stats.averageSavingPerGuest
+          });
+        } catch (error) {
+          console.error(`Errore stats per struttura ${structure.code}:`, error);
+        }
       }
 
-      console.log(`📊 STATISTICHE RISPARMIO - Accesso autorizzato per: ${req.userSession.iqCode}`);
+      console.log(`📊 ADMIN RISPARMIO GLOBALE: €${globalStats.totalSavingsGenerated} da ${globalStats.totalStructures} strutture`);
 
-      // Ottieni le statistiche dal sistema di storage
+      res.json({
+        success: true,
+        globalStats,
+        lastUpdated: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Errore statistiche admin risparmio ospiti:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // **SISTEMA RISPARMIO OSPITI - Endpoint STRUTTURA (riceve dati filtrati dall'admin)**
+  app.get("/api/structure/guest-savings-stats", async (req, res) => {
+    try {
+      const hasAccess = await verifyRoleAccess(req, res, ['structure']);
+      if (!hasAccess) return;
+
+      console.log(`📊 STRUTTURA STATISTICHE - Richiesta dati per: ${req.userSession.iqCode}`);
+
+      // Ottieni le statistiche dal sistema di storage (stesso metodo, approccio semplificato)
       const stats = await storage.getStructureGuestSavingsStats(req.userSession.iqCode);
 
       console.log(`📊 RISPARMIO OSPITI STRUTTURA: ${req.userSession.iqCode} - Totale risparmi: €${stats.totalSavingsGenerated}`);
@@ -1665,7 +1713,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      console.error("🔥 ERRORE ENDPOINT GUEST-SAVINGS-STATS:", error);
+      console.error("Errore statistiche struttura risparmio ospiti:", error);
       res.status(500).json({ message: "Errore del server" });
     }
   });

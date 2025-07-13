@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Users, QrCode, Building2, Settings, BarChart3, Package, Trash2, StickyNote, TrendingUp, Send, RotateCcw, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AdminRechargeManagement } from "@/components/admin-recharge-management";
+import AdminGuestSavingsStats from "@/components/AdminGuestSavingsStats";
 
 function StatsValue({ endpoint, field }: { endpoint: string; field: string }) {
   const [value, setValue] = useState(0);
@@ -56,6 +57,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
     { icon: <Package size={20} />, label: "Genera Codici", href: "/admin/generate-direct", onClick: () => setActiveView("generate-direct") },
     { icon: <Package size={20} />, label: "Assegna Pacchetti", href: "/admin/assign-iqcodes", onClick: () => setActiveView("assign-iqcodes") },
     { icon: <CreditCard size={20} />, label: "Gestione Ricariche", href: "/admin/recharges", onClick: () => setActiveView("recharges") },
+    { icon: <TrendingUp size={20} />, label: "Risparmio Ospiti", href: "/admin/guest-savings", onClick: () => setActiveView("guest-savings") },
     { icon: <TrendingUp size={20} />, label: "Report", href: "/admin/reports", onClick: () => setActiveView("reports") },
     { icon: <BarChart3 size={20} />, label: "Statistiche", href: "/admin/stats", onClick: () => setActiveView("stats") },
     { icon: <Settings size={20} />, label: "Impostazioni", href: "/admin/settings", onClick: () => setActiveView("settings") }
@@ -302,6 +304,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
         />
       )}
       {activeView === "recharges" && <AdminRechargeManagement />}
+      {activeView === "guest-savings" && <AdminGuestSavingsStats />}
       {activeView === "reports" && <ReportsView />}
       {activeView === "stats" && <StatsView />}
       {activeView === "settings" && <SettingsView />}
