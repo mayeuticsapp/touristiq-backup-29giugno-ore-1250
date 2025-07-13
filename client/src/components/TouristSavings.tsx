@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { PartnerFeedbackComponent } from '@/components/PartnerFeedbackComponent';
+// Dialog e PartnerFeedbackComponent non servono più qui
 import { Wallet, TrendingUp, Target, Award, Calendar, MapPin, RefreshCw, MessageCircle, Clock } from 'lucide-react';
 
 interface TouristSaving {
@@ -26,17 +25,15 @@ interface SavingsStats {
   monthlyTotal: number;
 }
 
-const TouristSavings: React.FC = () => {
+interface TouristSavingsProps {
+  onOpenFeedback?: (partnerCode: string, partnerName: string) => void;
+}
+
+const TouristSavings: React.FC<TouristSavingsProps> = ({ onOpenFeedback }) => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   
-  // Stati per gestire il modal del feedback
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [selectedPartner, setSelectedPartner] = useState<{
-    code: string;
-    name: string;
-    usedAt: string;
-  } | null>(null);
+  // Non serve più il modal locale, tutto gestito dal parent
 
   // Query per ottenere i dati TIQ-OTC con plafond €150
   const { data: otcData, isLoading } = useQuery<{
@@ -70,15 +67,7 @@ const TouristSavings: React.FC = () => {
     return diffInHours <= 2;
   };
 
-  // Funzione per aprire il modal di feedback
-  const handleOpenFeedback = (partnerCode: string, partnerName: string, usedAt: string) => {
-    setSelectedPartner({
-      code: partnerCode,
-      name: partnerName,
-      usedAt: usedAt
-    });
-    setShowFeedbackModal(true);
-  };
+  // Funzione per aprire il modal di feedback gestita dal parent
 
   if (isLoading) {
     return (
@@ -236,7 +225,7 @@ const TouristSavings: React.FC = () => {
                     {/* Pulsante feedback solo se utilizzato entro 2 ore */}
                     {isHotFeedback(code.usedAt) && code.partnerCode && (
                       <Button
-                        onClick={() => handleOpenFeedback(code.partnerCode, code.partnerName || 'Partner', code.usedAt)}
+                        onClick={() => onOpenFeedback?.(code.partnerCode, code.partnerName || 'Partner')}
                         variant="outline"
                         size="sm"
                         className="text-blue-600 border-blue-300 hover:bg-blue-50 flex items-center gap-1"
@@ -263,21 +252,7 @@ const TouristSavings: React.FC = () => {
         </p>
       </div>
 
-      {/* Modal feedback partner */}
-      <Dialog open={showFeedbackModal} onOpenChange={setShowFeedbackModal}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Valuta il servizio di {selectedPartner?.name}</DialogTitle>
-          </DialogHeader>
-          {selectedPartner && (
-            <PartnerFeedbackComponent 
-              partnerCode={selectedPartner.code}
-              partnerName={selectedPartner.name}
-              onClose={() => setShowFeedbackModal(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Modal feedback gestito dal parent (tourist-dashboard.tsx) */}
     </div>
   );
 };

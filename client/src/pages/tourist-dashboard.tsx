@@ -51,6 +51,7 @@ export default function TouristDashboard() {
   const [showCustodeModal, setShowCustodeModal] = useState(false);
   const [showSavingsModal, setShowSavingsModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [selectedPartnerForFeedback, setSelectedPartnerForFeedback] = useState<{code: string, name: string} | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -1409,7 +1410,12 @@ export default function TouristDashboard() {
             </DialogTitle>
           </DialogHeader>
           <div className="mt-4">
-            <TouristSavings />
+            <TouristSavings 
+              onOpenFeedback={(partnerCode: string, partnerName: string) => {
+                setSelectedPartnerForFeedback({ code: partnerCode, name: partnerName });
+                setShowFeedbackModal(true);
+              }}
+            />
           </div>
         </DialogContent>
       </Dialog>
@@ -1506,20 +1512,21 @@ export default function TouristDashboard() {
           <DialogHeader>
             <DialogTitle>Valuta il Partner</DialogTitle>
           </DialogHeader>
-          {selectedPartner && (
+          {selectedPartnerForFeedback && (
             <div className="space-y-4">
               <div className="text-center">
-                <h3 className="font-semibold text-lg">{selectedPartner.name}</h3>
+                <h3 className="font-semibold text-lg">{selectedPartnerForFeedback.name}</h3>
                 <p className="text-sm text-gray-600 mb-4">
                   Come è stata la tua esperienza con questo partner?
                 </p>
               </div>
               
               <PartnerFeedbackComponent 
-                partnerCode={selectedPartner.code}
-                onFeedbackComplete={() => {
+                partnerCode={selectedPartnerForFeedback.code}
+                partnerName={selectedPartnerForFeedback.name}
+                onClose={() => {
                   setShowFeedbackModal(false);
-                  setSelectedPartner(null);
+                  setSelectedPartnerForFeedback(null);
                 }}
               />
             </div>
