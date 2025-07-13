@@ -1,13 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, generatedEmotionalCodes, oneTimeCodes } from "@shared/schema";
+import { loginSchema, generatedEmotionalCodes, oneTimeCodes, structureGuestSavings } from "@shared/schema";
 import { nanoid } from "nanoid";
 import { chatWithTIQai } from "./openai";
 import { createIQCode } from "./createIQCode";
 import { z } from "zod";
 import { c23Monitor } from "./c23-monitor";
-import { eq, and, inArray, desc } from "drizzle-orm";
+import { eq, and, inArray, desc, isNotNull } from "drizzle-orm";
 import { 
   loginLimiter, 
   apiLimiter, 
@@ -1730,14 +1730,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { structureCode } = req.params;
       console.log(`📊 STRUTTURA ${structureCode} - Calcolo sconti TIQ-OTC`);
 
-      // Step 1: Trova tutti i turisti generati da questa struttura
+      // Step 1: Trova tutti i turisti generati da questa struttura tramite codici temporanei
       const structureTourists = await storage.db
-        .select({ touristCode: generatedEmotionalCodes.code })
-        .from(generatedEmotionalCodes)
-        .where(eq(generatedEmotionalCodes.generatedBy, structureCode));
+        .select({ touristCode: structureGuestSavings.touristIqCode })
+        .from(structureGuestSavings)
+        .where(
+          and(
+            eq(structureGuestSavings.structureCode, structureCode),
+            isNotNull(structureGuestSavings.touristIqCode)
+          )
+        );
 
-      const touristCodes = structureTourists.map(t => t.touristCode);
-      console.log(`🔍 STRUTTURA ${structureCode} - Trovati ${touristCodes.length} turisti generati`);
+      const touristCodes = structureTourists.map(t => t.touristCode).filter(code => code);
+      console.log(`🔍 STRUTTURA ${structureCode} - Trovati ${touristCodes.length} turisti generati tramite codici temporanei`);
 
       if (touristCodes.length === 0) {
         return res.json({
