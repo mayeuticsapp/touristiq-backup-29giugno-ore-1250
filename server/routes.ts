@@ -1641,9 +1641,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // **PARTE 1: Dati TIQ-OTC (sistema attivo)**
       const tiqOtcStats = await storage.getAllOneTimeCodes();
-      const usedTiqOtcCodes = tiqOtcStats.filter(code => code.isUsed && code.discountAmount > 0);
+      const usedTiqOtcCodes = tiqOtcStats.filter(code => code.isUsed && parseFloat(code.discountAmount) > 0);
       
-      const tiqOtcTotalSavings = usedTiqOtcCodes.reduce((sum, code) => sum + (code.discountAmount || 0), 0);
+      const tiqOtcTotalSavings = usedTiqOtcCodes.reduce((sum, code) => {
+        const amount = parseFloat(code.discountAmount) || 0;
+        return sum + amount;
+      }, 0);
+      
       const tiqOtcUniqueTourists = new Set(usedTiqOtcCodes.map(code => code.touristIqCode)).size;
       
       console.log(`💰 TIQ-OTC RISPARMI: €${tiqOtcTotalSavings} da ${usedTiqOtcCodes.length} codici utilizzati`);
@@ -1695,7 +1699,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           uniqueTourists: tiqOtcUniqueTourists,
           recentTransactions: usedTiqOtcCodes.slice(-5).map(code => ({
             code: code.code,
-            amount: code.discountAmount,
+            amount: parseFloat(code.discountAmount) || 0,
             tourist: code.touristIqCode,
             partner: code.partnerName || 'Partner sconosciuto',
             usedAt: code.usedAt
