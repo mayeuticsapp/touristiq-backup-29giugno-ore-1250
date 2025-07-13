@@ -1642,10 +1642,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // **PARTE 1: Dati TIQ-OTC (sistema attivo)**
       const tiqOtcStats = await storage.getAllOneTimeCodes();
-      const usedTiqOtcCodes = tiqOtcStats.filter(code => code.isUsed && parseFloat(code.discountAmount) > 0);
+      const usedTiqOtcCodes = tiqOtcStats.filter(code => {
+        const isUsed = code.isUsed === true;
+        const hasDiscount = parseFloat(code.discountAmount || '0') > 0;
+        
+
+        
+        return isUsed && hasDiscount;
+      });
       
       const tiqOtcTotalSavings = usedTiqOtcCodes.reduce((sum, code) => {
-        const amount = parseFloat(code.discountAmount) || 0;
+        const amount = parseFloat(code.discountAmount || '0');
         return sum + amount;
       }, 0);
       
@@ -1653,6 +1660,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`💰 TIQ-OTC RISPARMI: €${tiqOtcTotalSavings} da ${usedTiqOtcCodes.length} codici utilizzati`);
       console.log(`👥 TIQ-OTC TURISTI: ${tiqOtcUniqueTourists} turisti unici`);
+      
+
 
       // **PARTE 2: Dati demo strutture (sistema legacy)**
       const allStructures = await storage.getAllIqCodes();
@@ -1698,13 +1707,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalSavings: tiqOtcTotalSavings,
           totalCodes: usedTiqOtcCodes.length,
           uniqueTourists: tiqOtcUniqueTourists,
-          recentTransactions: usedTiqOtcCodes.slice(-5).map(code => ({
-            code: code.code,
-            amount: parseFloat(code.discountAmount) || 0,
-            tourist: code.touristIqCode,
-            partner: code.partnerName || 'Partner sconosciuto',
-            usedAt: code.usedAt
-          }))
+          recentTransactions: usedTiqOtcCodes
+            .sort((a, b) => new Date(b.usedAt || 0).getTime() - new Date(a.usedAt || 0).getTime())
+            .slice(0, 5)
+            .map(code => ({
+              code: code.code,
+              amount: parseFloat(code.discountAmount || '0'),
+              tourist: code.touristIqCode,
+              partner: code.partnerName || 'Partner sconosciuto',
+              usedAt: code.usedAt
+            }))
         }
       };
 
