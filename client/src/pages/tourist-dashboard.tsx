@@ -19,6 +19,7 @@ import { isTemporaryCode } from "@/lib/temp-code-utils";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { PartnerFeedbackComponent } from "@/components/PartnerFeedbackComponent";
 
 export default function TouristDashboard() {
   const { t } = useTranslation();
@@ -49,6 +50,7 @@ export default function TouristDashboard() {
   const [showIQCodeModal, setShowIQCodeModal] = useState(false);
   const [showCustodeModal, setShowCustodeModal] = useState(false);
   const [showSavingsModal, setShowSavingsModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -629,6 +631,19 @@ export default function TouristDashboard() {
                           >
                             <ExternalLink className="w-3 h-3 mr-1" />
                             Scopri Tutto
+                          </Button>
+                          
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedPartner(partner);
+                              setShowFeedbackModal(true);
+                            }}
+                            className="bg-purple-500 text-white border-none hover:bg-purple-600 text-xs hover-warm"
+                          >
+                            <Heart className="w-3 h-3 mr-1" />
+                            Valuta
                           </Button>
                         </div>
                       </div>
@@ -1482,6 +1497,33 @@ export default function TouristDashboard() {
               </div>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Feedback Partner */}
+      <Dialog open={showFeedbackModal} onOpenChange={setShowFeedbackModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Valuta il Partner</DialogTitle>
+          </DialogHeader>
+          {selectedPartner && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <h3 className="font-semibold text-lg">{selectedPartner.name}</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Come è stata la tua esperienza con questo partner?
+                </p>
+              </div>
+              
+              <PartnerFeedbackComponent 
+                partnerCode={selectedPartner.code}
+                onFeedbackComplete={() => {
+                  setShowFeedbackModal(false);
+                  setSelectedPartner(null);
+                }}
+              />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </Layout>

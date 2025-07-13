@@ -24,6 +24,7 @@ import { OneTimeCodeValidator } from "@/components/OneTimeCodeValidator";
 import { TiqOtcDiscountValidator } from "@/components/TiqOtcDiscountValidator";
 import { PartnerDiscountApplicator } from "@/components/PartnerDiscountApplicator";
 import PartnerReportTouristiq from "@/components/PartnerReportTouristiq";
+import { PartnerRatingDisplay } from "@/components/PartnerRatingDisplay";
 
 interface TouristLinkRequest {
   id: string;
@@ -543,6 +544,11 @@ export default function PartnerDashboard() {
               </CardContent>
             </Card>
             */}
+          </div>
+
+          {/* Sistema Feedback e Rating Partner */}
+          <div className="mb-6">
+            <PartnerRatingDisplay partnerCode={entityInfo?.code || ''} />
           </div>
 
           {/* Sistema Custode del Codice per Partner */}

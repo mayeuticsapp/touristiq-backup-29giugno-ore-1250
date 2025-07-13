@@ -661,3 +661,48 @@ export type InsertTouristSavings = z.infer<typeof insertTouristSavingsSchema>;
 
 export type PartnerDiscountApplication = typeof partnerDiscountApplications.$inferSelect;
 export type InsertPartnerDiscountApplication = z.infer<typeof insertPartnerDiscountApplicationSchema>;
+
+// Tabella per i feedback turista-partner
+export const partnerFeedback = pgTable('partner_feedback', {
+  id: serial('id').primaryKey(),
+  touristIqCode: text('tourist_iq_code').notNull(),
+  partnerCode: text('partner_code').notNull(),
+  otcCode: text('otc_code').notNull(), // Codice TIQ-OTC utilizzato
+  rating: text('rating').notNull(), // 'positive' o 'negative'
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  notes: text('notes'), // Note opzionali del turista
+});
+
+// Tabella per il rating aggregato dei partner
+export const partnerRatings = pgTable('partner_ratings', {
+  id: serial('id').primaryKey(),
+  partnerCode: text('partner_code').notNull().unique(),
+  totalFeedbacks: integer('total_feedbacks').notNull().default(0),
+  positiveFeedbacks: integer('positive_feedbacks').notNull().default(0),
+  negativeFeedbacks: integer('negative_feedbacks').notNull().default(0),
+  currentRating: decimal('current_rating', { precision: 5, scale: 2 }).notNull().default('0.00'), // Percentuale
+  lastUpdated: timestamp('last_updated').notNull().defaultNow(),
+  warningLevel: integer('warning_level').notNull().default(0), // 0=ok, 1=70%, 2=60%, 3=50%, 4=40%
+  isExcluded: boolean('is_excluded').notNull().default(false),
+  excludedAt: timestamp('excluded_at'),
+  excludedBy: text('excluded_by'), // admin che ha escluso
+});
+
+// Schema per inserimento feedback
+export const insertPartnerFeedbackSchema = createInsertSchema(partnerFeedback).omit({
+  id: true,
+  createdAt: true
+});
+
+// Schema per inserimento rating
+export const insertPartnerRatingSchema = createInsertSchema(partnerRatings).omit({
+  id: true,
+  lastUpdated: true,
+  excludedAt: true
+});
+
+// Tipi TypeScript
+export type PartnerFeedback = typeof partnerFeedback.$inferSelect;
+export type InsertPartnerFeedback = z.infer<typeof insertPartnerFeedbackSchema>;
+export type PartnerRating = typeof partnerRatings.$inferSelect;
+export type InsertPartnerRating = z.infer<typeof insertPartnerRatingSchema>;

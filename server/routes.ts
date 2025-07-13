@@ -4059,6 +4059,112 @@ app.get('/api/partner/discount-stats', async (req, res) => {
     }
   });
 
+  // **SISTEMA FEEDBACK PARTNER - ENDPOINTS**
+  
+  // Endpoint per turisti: invia feedback su partner
+  app.post("/api/feedback", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['tourist'])) return;
+
+      const session = req.userSession;
+      const { partnerCode, feedback } = req.body;
+
+      if (!partnerCode || !feedback) {
+        return res.status(400).json({ error: "Dati insufficienti: partnerCode e feedback richiesti" });
+      }
+
+      // Valida feedback (deve essere "positive" o "negative")
+      if (feedback !== 'positive' && feedback !== 'negative') {
+        return res.status(400).json({ error: "Feedback non valido: deve essere 'positive' o 'negative'" });
+      }
+
+      const feedbackData = {
+        touristCode: session.iqCode,
+        partnerCode,
+        feedback,
+        createdAt: new Date()
+      };
+
+      await storage.createPartnerFeedback(feedbackData);
+
+      // Aggiorna il rating del partner
+      await storage.updatePartnerRating(partnerCode);
+
+      res.json({ success: true, message: "Feedback inviato con successo" });
+
+    } catch (error) {
+      console.error("Errore invio feedback:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  // Endpoint per partner: recupera il proprio rating
+  app.get("/api/partner/rating", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['partner'])) return;
+
+      const session = req.userSession;
+      const rating = await storage.getPartnerRating(session.iqCode);
+
+      res.json({ rating: rating || null });
+
+    } catch (error) {
+      console.error("Errore recupero rating partner:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  // Endpoint per admin: recupera tutti i warning partner
+  app.get("/api/admin/partner-warnings", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['admin'])) return;
+
+      const warnings = await storage.getPartnerRatingWarnings();
+
+      res.json({ warnings });
+
+    } catch (error) {
+      console.error("Errore recupero warning partner:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  // Endpoint per admin: esclude partner dal sistema
+  app.post("/api/admin/exclude-partner", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['admin'])) return;
+
+      const { partnerCode } = req.body;
+
+      if (!partnerCode) {
+        return res.status(400).json({ error: "Partner code richiesto" });
+      }
+
+      await storage.excludePartnerFromSystem(partnerCode);
+
+      res.json({ success: true, message: "Partner escluso dal sistema con successo" });
+
+    } catch (error) {
+      console.error("Errore esclusione partner:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  // Endpoint per admin: ottieni statistiche feedback globali
+  app.get("/api/admin/feedback-stats", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['admin'])) return;
+
+      const stats = await storage.getFeedbackStats();
+
+      res.json(stats);
+
+    } catch (error) {
+      console.error("Errore recupero statistiche feedback:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
   return httpServer;
 }
 

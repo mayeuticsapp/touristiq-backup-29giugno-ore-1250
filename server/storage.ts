@@ -1,7 +1,7 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, oneTimeCodes, touristSavings, partnerDiscountApplications, structureGuestSavings, systemSettings, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode, type OneTimeCode, type InsertOneTimeCode, type TouristSavings, type InsertTouristSavings, type PartnerDiscountApplication, type InsertPartnerDiscountApplication, type StructureGuestSavings, type InsertStructureGuestSavings } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, oneTimeCodes, touristSavings, partnerDiscountApplications, structureGuestSavings, systemSettings, partnerFeedback, partnerRatings, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode, type OneTimeCode, type InsertOneTimeCode, type TouristSavings, type InsertTouristSavings, type PartnerDiscountApplication, type InsertPartnerDiscountApplication, type StructureGuestSavings, type InsertStructureGuestSavings, type PartnerFeedback, type InsertPartnerFeedback, type PartnerRating, type InsertPartnerRating } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { eq, and, lt, desc, like, sql, inArray, gt, isNull } from "drizzle-orm";
+import { eq, and, lt, desc, like, sql, inArray, gt, isNull, ne } from "drizzle-orm";
 import { pool } from "./db";
 
 // Memoria globale condivisa per onboarding partner
@@ -192,7 +192,14 @@ export interface IStorage {
     monthlyRevenue: number;
   }>;
 
-
+  // **SISTEMA FEEDBACK PARTNER**
+  createPartnerFeedback(feedback: {touristIqCode: string, partnerCode: string, otcCode: string, rating: 'positive' | 'negative', notes?: string}): Promise<any>;
+  getPartnerFeedbacks(partnerCode: string): Promise<any[]>;
+  getPartnerRating(partnerCode: string): Promise<any>;
+  updatePartnerRating(partnerCode: string): Promise<void>;
+  getPartnerRatingWarnings(): Promise<any[]>;
+  excludePartner(partnerCode: string, excludedBy: string): Promise<void>;
+  reinstatePartner(partnerCode: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -3779,6 +3786,205 @@ class ExtendedPostgreStorage extends PostgreStorage {
     }
   }
 
+  // **SISTEMA FEEDBACK PARTNER - PostgreSQL Implementation**
+  async createPartnerFeedback(feedback: {
+    touristIqCode: string;
+    partnerCode: string;
+    otcCode: string;
+    rating: 'positive' | 'negative';
+    notes?: string;
+  }): Promise<any> {
+    try {
+      const [result] = await this.db
+        .insert(partnerFeedback)
+        .values({
+          touristIqCode: feedback.touristIqCode,
+          partnerCode: feedback.partnerCode,
+          otcCode: feedback.otcCode,
+          rating: feedback.rating,
+          notes: feedback.notes,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+
+      console.log(`✅ Feedback creato per partner ${feedback.partnerCode}: ${feedback.rating}`);
+      
+      // Aggiorna automaticamente il rating del partner
+      await this.updatePartnerRating(feedback.partnerCode);
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Errore creazione feedback partner:', error);
+      throw error;
+    }
+  }
+
+  async getPartnerFeedbacks(partnerCode: string): Promise<any[]> {
+    try {
+      const feedbacks = await this.db
+        .select()
+        .from(partnerFeedback)
+        .where(eq(partnerFeedback.partnerCode, partnerCode))
+        .orderBy(desc(partnerFeedback.createdAt));
+
+      return feedbacks;
+    } catch (error) {
+      console.error('❌ Errore recupero feedback partner:', error);
+      return [];
+    }
+  }
+
+  async getPartnerRating(partnerCode: string): Promise<any> {
+    try {
+      const [rating] = await this.db
+        .select()
+        .from(partnerRatings)
+        .where(eq(partnerRatings.partnerCode, partnerCode))
+        .limit(1);
+
+      return rating || null;
+    } catch (error) {
+      console.error('❌ Errore recupero rating partner:', error);
+      return null;
+    }
+  }
+
+  async updatePartnerRating(partnerCode: string): Promise<void> {
+    try {
+      // Calcola statistiche feedback
+      const feedbacks = await this.getPartnerFeedbacks(partnerCode);
+      
+      if (feedbacks.length === 0) {
+        return;
+      }
+
+      const totalFeedbacks = feedbacks.length;
+      const positiveFeedbacks = feedbacks.filter(f => f.rating === 'positive').length;
+      const negativeFeedbacks = feedbacks.filter(f => f.rating === 'negative').length;
+      const positivePercentage = Math.round((positiveFeedbacks / totalFeedbacks) * 100);
+
+      // Determina livello di warning
+      let warningLevel: 'none' | 'low' | 'medium' | 'high' | 'excluded' = 'none';
+      
+      if (positivePercentage < 40) {
+        warningLevel = 'excluded';
+      } else if (positivePercentage < 50) {
+        warningLevel = 'high';
+      } else if (positivePercentage < 60) {
+        warningLevel = 'medium';
+      } else if (positivePercentage < 70) {
+        warningLevel = 'low';
+      }
+
+      // Controlla se il rating esiste già
+      const existingRating = await this.getPartnerRating(partnerCode);
+      
+      if (existingRating) {
+        // Aggiorna rating esistente
+        await this.db
+          .update(partnerRatings)
+          .set({
+            totalFeedbacks,
+            positiveFeedbacks,
+            negativeFeedbacks,
+            positivePercentage,
+            warningLevel,
+            lastUpdated: new Date()
+          })
+          .where(eq(partnerRatings.partnerCode, partnerCode));
+      } else {
+        // Crea nuovo rating
+        await this.db
+          .insert(partnerRatings)
+          .values({
+            partnerCode,
+            totalFeedbacks,
+            positiveFeedbacks,
+            negativeFeedbacks,
+            positivePercentage,
+            warningLevel,
+            lastUpdated: new Date()
+          });
+      }
+
+      console.log(`✅ Rating aggiornato per partner ${partnerCode}: ${positivePercentage}% (${warningLevel})`);
+      
+      // Se warning level è 'excluded', esclude automaticamente il partner
+      if (warningLevel === 'excluded') {
+        await this.excludePartner(partnerCode, 'SISTEMA_AUTOMATICO');
+      }
+    } catch (error) {
+      console.error('❌ Errore aggiornamento rating partner:', error);
+    }
+  }
+
+  async getPartnerRatingWarnings(): Promise<any[]> {
+    try {
+      const warnings = await this.db
+        .select()
+        .from(partnerRatings)
+        .where(
+          and(
+            sql`${partnerRatings.warningLevel} != 'none'`,
+            sql`${partnerRatings.warningLevel} != 'excluded'`
+          )
+        )
+        .orderBy(desc(partnerRatings.lastUpdated));
+
+      return warnings;
+    } catch (error) {
+      console.error('❌ Errore recupero warning partner:', error);
+      return [];
+    }
+  }
+
+  async excludePartner(partnerCode: string, excludedBy: string): Promise<void> {
+    try {
+      // Disattiva il codice IQ del partner
+      await this.db
+        .update(iqCodes)
+        .set({
+          isActive: false,
+          internalNote: `Escluso per rating sotto 40% - ${excludedBy}`
+        })
+        .where(eq(iqCodes.code, partnerCode));
+
+      // Aggiorna rating per segnalare esclusione
+      await this.db
+        .update(partnerRatings)
+        .set({
+          warningLevel: 'excluded',
+          lastUpdated: new Date()
+        })
+        .where(eq(partnerRatings.partnerCode, partnerCode));
+
+      console.log(`⚠️ Partner ${partnerCode} escluso dal sistema per rating insufficiente`);
+    } catch (error) {
+      console.error('❌ Errore esclusione partner:', error);
+    }
+  }
+
+  async reinstatePartner(partnerCode: string): Promise<void> {
+    try {
+      // Riattiva il codice IQ del partner
+      await this.db
+        .update(iqCodes)
+        .set({
+          isActive: true,
+          internalNote: 'Ripristinato manualmente'
+        })
+        .where(eq(iqCodes.code, partnerCode));
+
+      // Aggiorna rating per rimuovere esclusione
+      await this.updatePartnerRating(partnerCode);
+
+      console.log(`✅ Partner ${partnerCode} ripristinato nel sistema`);
+    } catch (error) {
+      console.error('❌ Errore ripristino partner:', error);
+    }
+  }
+
 }
 
 // Extend MemStorage con metodi impostazioni
@@ -4249,6 +4455,35 @@ class ExtendedMemStorage extends MemStorage {
 
   async getPartnerDiscountHistory(partnerCode: string, limit: number = 50): Promise<any[]> {
     return [];
+  }
+
+  // **SISTEMA FEEDBACK PARTNER - Mock Implementation**
+  async createPartnerFeedback(feedback: {touristIqCode: string, partnerCode: string, otcCode: string, rating: 'positive' | 'negative', notes?: string}): Promise<any> {
+    return feedback;
+  }
+
+  async getPartnerFeedbacks(partnerCode: string): Promise<any[]> {
+    return [];
+  }
+
+  async getPartnerRating(partnerCode: string): Promise<any> {
+    return null;
+  }
+
+  async updatePartnerRating(partnerCode: string): Promise<void> {
+    // Mock implementation
+  }
+
+  async getPartnerRatingWarnings(): Promise<any[]> {
+    return [];
+  }
+
+  async excludePartner(partnerCode: string, excludedBy: string): Promise<void> {
+    // Mock implementation
+  }
+
+  async reinstatePartner(partnerCode: string): Promise<void> {
+    // Mock implementation
   }
 }
 
