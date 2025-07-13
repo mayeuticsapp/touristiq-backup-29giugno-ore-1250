@@ -1,4 +1,4 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, oneTimeCodes, touristSavings, partnerDiscountApplications, structureGuestSavings, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode, type OneTimeCode, type InsertOneTimeCode, type TouristSavings, type InsertTouristSavings, type PartnerDiscountApplication, type InsertPartnerDiscountApplication, type StructureGuestSavings, type InsertStructureGuestSavings } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, oneTimeCodes, touristSavings, partnerDiscountApplications, structureGuestSavings, systemSettings, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode, type OneTimeCode, type InsertOneTimeCode, type TouristSavings, type InsertTouristSavings, type PartnerDiscountApplication, type InsertPartnerDiscountApplication, type StructureGuestSavings, type InsertStructureGuestSavings } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt, desc, like, sql, inArray, gt, isNull } from "drizzle-orm";
@@ -95,6 +95,10 @@ export interface IStorage {
   // Settings config methods - Impostazioni generali persistenti
   getSettingsConfig(structureCode: string): Promise<any>;
   updateSettingsConfig(structureCode: string, settings: any): Promise<any>;
+  
+  // System settings methods - Impostazioni admin globali
+  getSystemSettings(): Promise<{ [key: string]: string }>;
+  updateSystemSettings(settings: { [key: string]: string }, updatedBy: string): Promise<void>;
 
   // Partner methods
   createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void>;
@@ -1810,6 +1814,49 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .returning();
 
     return updated;
+  }
+
+  // System settings methods implementation
+  async getSystemSettings(): Promise<{ [key: string]: string }> {
+    const result = await this.db
+      .select()
+      .from(systemSettings);
+    
+    const settings: { [key: string]: string } = {};
+    result.forEach(setting => {
+      settings[setting.key] = setting.value;
+    });
+    
+    // Valori di default se non presenti
+    if (!settings.platformName) settings.platformName = "TouristIQ";
+    if (!settings.supportEmail) settings.supportEmail = "support@touristiq.com";
+    if (!settings.welcomeMessage) settings.welcomeMessage = "Benvenuto nel sistema TouristIQ!";
+    if (!settings.maxCodesPerDay) settings.maxCodesPerDay = "500";
+    
+    return settings;
+  }
+
+  async updateSystemSettings(settings: { [key: string]: string }, updatedBy: string): Promise<void> {
+    for (const [key, value] of Object.entries(settings)) {
+      // Verifica se esiste già
+      const existing = await this.db
+        .select()
+        .from(systemSettings)
+        .where(eq(systemSettings.key, key));
+      
+      if (existing.length > 0) {
+        // Aggiorna esistente
+        await this.db
+          .update(systemSettings)
+          .set({ value, updatedAt: new Date(), updatedBy })
+          .where(eq(systemSettings.key, key));
+      } else {
+        // Crea nuovo
+        await this.db
+          .insert(systemSettings)
+          .values({ key, value, updatedBy, updatedAt: new Date() });
+      }
+    }
   }
 
   // Partner methods implementation
@@ -3723,6 +3770,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
 class ExtendedMemStorage extends MemStorage {
   private settingsConfigMap: Map<string, SettingsConfig> = new Map();
   private partnerOffers: any[] = [];
+  private systemSettingsMap: Map<string, string> = new Map();
 
   async getSettingsConfig(structureCode: string): Promise<SettingsConfig | null> {
     if (!this.settingsConfigMap.has(structureCode)) {
@@ -3775,6 +3823,35 @@ class ExtendedMemStorage extends MemStorage {
 
     this.settingsConfigMap.set(structureCode, updated);
     return updated;
+  }
+
+  async getSystemSettings(): Promise<{ [key: string]: string }> {
+    // Valori di default se non presenti
+    if (!this.systemSettingsMap.has('platformName')) {
+      this.systemSettingsMap.set('platformName', 'TouristIQ');
+    }
+    if (!this.systemSettingsMap.has('supportEmail')) {
+      this.systemSettingsMap.set('supportEmail', 'support@touristiq.com');
+    }
+    if (!this.systemSettingsMap.has('welcomeMessage')) {
+      this.systemSettingsMap.set('welcomeMessage', 'Benvenuto nel sistema TouristIQ!');
+    }
+    if (!this.systemSettingsMap.has('maxCodesPerDay')) {
+      this.systemSettingsMap.set('maxCodesPerDay', '500');
+    }
+    
+    const settings: { [key: string]: string } = {};
+    this.systemSettingsMap.forEach((value, key) => {
+      settings[key] = value;
+    });
+    
+    return settings;
+  }
+
+  async updateSystemSettings(settings: { [key: string]: string }, updatedBy: string): Promise<void> {
+    for (const [key, value] of Object.entries(settings)) {
+      this.systemSettingsMap.set(key, value);
+    }
   }
 
   async createTouristLinkRequest(partnerCode: string, touristCode: string): Promise<void> {

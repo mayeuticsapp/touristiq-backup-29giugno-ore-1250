@@ -1508,10 +1508,18 @@ function SettingsView() {
       const response = await fetch('/api/admin/settings', { credentials: 'include' });
       const data = await response.json();
       if (data.settings) {
-        setSettings(data.settings);
+        setSettings({
+          ...data.settings,
+          maxCodesPerDay: parseInt(data.settings.maxCodesPerDay) || 500
+        });
       }
     } catch (error) {
       console.error('Errore caricamento impostazioni:', error);
+      toast({
+        title: "Errore",
+        description: "Errore nel caricamento delle impostazioni",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

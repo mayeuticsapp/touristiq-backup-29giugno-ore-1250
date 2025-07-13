@@ -749,13 +749,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo admin" });
       }
 
-      const settings = {
-        platformName: "TouristIQ",
-        supportEmail: "support@touristiq.com",
-        welcomeMessage: "Benvenuto nella piattaforma TouristIQ",
-        maxCodesPerDay: 500
-      };
-
+      const settings = await storage.getSystemSettings();
       res.json({ settings });
     } catch (error) {
       console.error("Errore impostazioni:", error);
@@ -791,12 +785,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Max codici per giorno deve essere tra 1 e 1000" });
       }
 
-      // Per ora salvo in memoria, in futuro si può aggiungere persistenza database
+      // Salvo nel database
+      await storage.updateSystemSettings({
+        platformName,
+        supportEmail,
+        welcomeMessage,
+        maxCodesPerDay: maxCodesPerDay.toString()
+      }, session.iqCode);
+
       const updatedSettings = {
         platformName,
         supportEmail,
         welcomeMessage,
-        maxCodesPerDay: parseInt(maxCodesPerDay)
+        maxCodesPerDay: parseInt(maxCodesPerDay.toString())
       };
 
       res.json({ 

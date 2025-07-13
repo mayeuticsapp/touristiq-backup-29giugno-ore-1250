@@ -72,6 +72,16 @@ export const availableIqCodes = pgTable("available_iq_codes", {
   createdAt: timestamp("created_at").notNull().defaultNow()
 });
 
+// Tabella per le impostazioni del sistema admin
+export const systemSettings = pgTable("system_settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(), // Nome impostazione
+  value: text("value").notNull(), // Valore impostazione
+  description: text("description"), // Descrizione opzionale
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  updatedBy: text("updated_by").notNull(), // Admin che ha modificato
+});
+
 // Tabella per informazioni business dettagliate dei partner
 export const partnerBusinessInfo = pgTable("partner_business_info", {
   id: serial("id").primaryKey(),
