@@ -122,6 +122,10 @@ export default function TouristDashboard() {
     enabled: !!user,
   });
 
+  // Debug per verificare le offerte
+  console.log("🔍 DEBUG realOffers:", realOffers);
+  console.log("🔍 DEBUG realOffers?.discounts:", realOffers?.discounts);
+
   // Mutation per salvare dati "Custode del Codice"
   const custodeMutation = useMutation({
     mutationFn: async (data: { secretWord: string; birthDate: string }) => {
@@ -341,6 +345,10 @@ export default function TouristDashboard() {
 
   // Determina quali offerte mostrare
   const offersToShow = searchMode === "default" ? (realOffers as any)?.discounts || [] : locationOffers;
+  
+  // Debug per verificare offerte da mostrare
+  console.log("🔍 DEBUG offersToShow:", offersToShow);
+  console.log("🔍 DEBUG offersToShow.length:", offersToShow.length);
 
   const navigation = [
     { icon: <Tags size={16} />, label: t('tourist.myDiscounts'), href: "#" },
