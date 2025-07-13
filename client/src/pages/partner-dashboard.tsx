@@ -805,7 +805,7 @@ export default function PartnerDashboard() {
                       Clienti TouristIQ
                     </span>
                     <span className="flex items-center gap-1">
-                      <Euro className="w-3 h-3" />
+                      <TrendingUp className="w-3 h-3" />
                       Ricavi aggiuntivi
                     </span>
                     <span className="flex items-center gap-1">

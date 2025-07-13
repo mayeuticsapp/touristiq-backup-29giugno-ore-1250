@@ -9,12 +9,12 @@ import { apiRequest } from '@/lib/queryClient';
 import { 
   TrendingUp, 
   Users, 
-  Euro, 
   Calendar, 
   Clock, 
   Award,
   BarChart3,
-  RefreshCw
+  RefreshCw,
+  DollarSign
 } from 'lucide-react';
 
 interface TouristiqStats {
@@ -182,7 +182,7 @@ export default function PartnerReportTouristiq() {
                   <p className="text-2xl font-bold">{formatCurrency(stats.totalDiscounts)}</p>
                 </div>
                 <Badge className="bg-orange-500">
-                  <Euro className="h-4 w-4" />
+                  <DollarSign className="h-4 w-4" />
                 </Badge>
               </div>
             </CardContent>
