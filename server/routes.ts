@@ -1649,6 +1649,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo strutture" });
       }
 
+      // Controlla solo se la struttura è attiva
+      if (!userIqCode.isActive) {
+        console.log(`❌ STRUTTURA NON ATTIVA: ${userIqCode.code} - isActive: ${userIqCode.isActive}`);
+        return res.status(403).json({ message: "Struttura non attiva" });
+      }
+
+      console.log(`✅ ACCESSO AUTORIZZATO STATISTICHE: ${userIqCode.code} - isActive: ${userIqCode.isActive}`);
+
       // Ottieni le statistiche dal sistema di storage
       const stats = await storage.getStructureGuestSavingsStats(userIqCode.code);
 
