@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Wallet, TrendingUp, Target, Award, Calendar, MapPin, RefreshCw } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { PartnerFeedbackComponent } from '@/components/PartnerFeedbackComponent';
+import { Wallet, TrendingUp, Target, Award, Calendar, MapPin, RefreshCw, MessageCircle, Clock } from 'lucide-react';
 
 interface TouristSaving {
   id: string;
@@ -27,6 +29,14 @@ interface SavingsStats {
 const TouristSavings: React.FC = () => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  
+  // Stati per gestire il modal del feedback
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState<{
+    code: string;
+    name: string;
+    usedAt: string;
+  } | null>(null);
 
   // Query per ottenere i dati TIQ-OTC con plafond €150
   const { data: otcData, isLoading } = useQuery<{
@@ -50,6 +60,24 @@ const TouristSavings: React.FC = () => {
   // Funzione per forzare l'aggiornamento dei dati
   const handleRefresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ['/api/tourist/one-time-codes'] });
+  };
+
+  // Funzione per verificare se un codice è "hot" (utilizzato entro 2 ore)
+  const isHotFeedback = (usedAtString: string) => {
+    const usedAt = new Date(usedAtString);
+    const now = new Date();
+    const diffInHours = (now.getTime() - usedAt.getTime()) / (1000 * 60 * 60);
+    return diffInHours <= 2;
+  };
+
+  // Funzione per aprire il modal di feedback
+  const handleOpenFeedback = (partnerCode: string, partnerName: string, usedAt: string) => {
+    setSelectedPartner({
+      code: partnerCode,
+      name: partnerName,
+      usedAt: usedAt
+    });
+    setShowFeedbackModal(true);
   };
 
   if (isLoading) {
@@ -192,12 +220,31 @@ const TouristSavings: React.FC = () => {
                       <p className="text-xs text-gray-500">
                         {formatDate(code.usedAt)}
                       </p>
+                      {isHotFeedback(code.usedAt) && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <Clock className="w-3 h-3 text-orange-500" />
+                          <span className="text-xs text-orange-600">Feedback disponibile</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex items-center gap-2">
                     <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
                       Risparmiato {formatCurrency(code.discountAmount)}
                     </Badge>
+                    
+                    {/* Pulsante feedback solo se utilizzato entro 2 ore */}
+                    {isHotFeedback(code.usedAt) && code.partnerCode && (
+                      <Button
+                        onClick={() => handleOpenFeedback(code.partnerCode, code.partnerName || 'Partner', code.usedAt)}
+                        variant="outline"
+                        size="sm"
+                        className="text-blue-600 border-blue-300 hover:bg-blue-50 flex items-center gap-1"
+                      >
+                        <MessageCircle className="w-3 h-3" />
+                        Feedback
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -215,6 +262,22 @@ const TouristSavings: React.FC = () => {
           }
         </p>
       </div>
+
+      {/* Modal feedback partner */}
+      <Dialog open={showFeedbackModal} onOpenChange={setShowFeedbackModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Valuta il servizio di {selectedPartner?.name}</DialogTitle>
+          </DialogHeader>
+          {selectedPartner && (
+            <PartnerFeedbackComponent 
+              partnerCode={selectedPartner.code}
+              partnerName={selectedPartner.name}
+              onClose={() => setShowFeedbackModal(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -210,6 +210,8 @@ export const partnerDiscountApplications = pgTable("partner_discount_application
   appliedAt: timestamp("applied_at").notNull().defaultNow(), // Quando è stato applicato
 });
 
+
+
 // Pacchetti IQCode acquistati dalle strutture
 export const purchasedPackages = pgTable("purchased_packages", {
   id: serial("id").primaryKey(),
@@ -537,6 +539,8 @@ export const insertTemporaryCodeSchema = createInsertSchema(temporaryCodes).omit
   createdAt: true,
 });
 
+
+
 export const loginSchema = z.object({
   iqCode: z.string().min(1, "Codice IQ richiesto").max(100),
 });
@@ -669,6 +673,7 @@ export const partnerFeedback = pgTable('partner_feedback', {
   partnerCode: text('partner_code').notNull(),
   otcCode: text('otc_code').notNull(), // Codice TIQ-OTC utilizzato
   rating: text('rating').notNull(), // 'positive' o 'negative'
+  serviceUsedAt: timestamp('service_used_at').notNull(), // Quando il servizio è stato utilizzato
   createdAt: timestamp('created_at').notNull().defaultNow(),
   notes: text('notes'), // Note opzionali del turista
 });
