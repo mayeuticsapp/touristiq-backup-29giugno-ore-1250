@@ -864,6 +864,21 @@ export class MemStorage implements IStorage {
   async createStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
   async updateStructureSettings(): Promise<StructureSettings> { throw new Error("Not implemented"); }
   async checkGestionaleAccess(): Promise<{hasAccess: boolean, hoursRemaining?: number}> { return { hasAccess: false }; }
+  
+  // System settings methods - Implementazione base in memoria
+  async getSystemSettings(): Promise<{ [key: string]: string }> {
+    return {
+      platformName: "TouristIQ",
+      supportEmail: "support@touristiq.com",
+      welcomeMessage: "Benvenuto nel sistema TouristIQ!",
+      maxCodesPerDay: "500"
+    };
+  }
+  
+  async updateSystemSettings(settings: { [key: string]: string }, updatedBy: string): Promise<void> {
+    // Implementazione base - in memoria (i dati non persistono)
+    console.log(`MemStorage: Aggiornamento impostazioni da ${updatedBy}:`, settings);
+  }
 
   // Removed duplicate methods (originals are implemented above)
 
