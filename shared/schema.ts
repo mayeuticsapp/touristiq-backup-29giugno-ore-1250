@@ -669,28 +669,27 @@ export type InsertPartnerDiscountApplication = z.infer<typeof insertPartnerDisco
 // Tabella per i feedback turista-partner
 export const partnerFeedback = pgTable('partner_feedback', {
   id: serial('id').primaryKey(),
-  touristIqCode: text('tourist_iq_code').notNull(),
-  partnerCode: text('partner_code').notNull(),
-  otcCode: text('otc_code').notNull(), // Codice TIQ-OTC utilizzato
+  tourist_iq_code: text('tourist_iq_code').notNull(),
+  partner_code: text('partner_code').notNull(),
+  otc_code: text('otc_code').notNull(), // Codice TIQ-OTC utilizzato
   rating: text('rating').notNull(), // 'positive' o 'negative'
-  serviceUsedAt: timestamp('service_used_at').notNull(), // Quando il servizio è stato utilizzato
-  createdAt: timestamp('created_at').notNull().defaultNow(),
+  created_at: timestamp('created_at').notNull().defaultNow(),
   notes: text('notes'), // Note opzionali del turista
 });
 
 // Tabella per il rating aggregato dei partner
 export const partnerRatings = pgTable('partner_ratings', {
   id: serial('id').primaryKey(),
-  partnerCode: text('partner_code').notNull().unique(),
-  totalFeedbacks: integer('total_feedbacks').notNull().default(0),
-  positiveFeedbacks: integer('positive_feedbacks').notNull().default(0),
-  negativeFeedbacks: integer('negative_feedbacks').notNull().default(0),
-  currentRating: decimal('current_rating', { precision: 5, scale: 2 }).notNull().default('0.00'), // Percentuale
-  lastUpdated: timestamp('last_updated').notNull().defaultNow(),
-  warningLevel: integer('warning_level').notNull().default(0), // 0=ok, 1=70%, 2=60%, 3=50%, 4=40%
-  isExcluded: boolean('is_excluded').notNull().default(false),
-  excludedAt: timestamp('excluded_at'),
-  excludedBy: text('excluded_by'), // admin che ha escluso
+  partner_code: text('partner_code').notNull().unique(),
+  total_feedbacks: integer('total_feedbacks').notNull().default(0),
+  positive_feedbacks: integer('positive_feedbacks').notNull().default(0),
+  negative_feedbacks: integer('negative_feedbacks').notNull().default(0),
+  current_rating: decimal('current_rating', { precision: 5, scale: 2 }).notNull().default('0.00'), // Percentuale
+  last_updated: timestamp('last_updated').notNull().defaultNow(),
+  warning_level: integer('warning_level').notNull().default(0), // 0=ok, 1=70%, 2=60%, 3=50%, 4=40%
+  is_excluded: boolean('is_excluded').notNull().default(false),
+  excluded_at: timestamp('excluded_at'),
+  excluded_by: text('excluded_by'), // admin che ha escluso
 });
 
 // Schema per inserimento feedback
