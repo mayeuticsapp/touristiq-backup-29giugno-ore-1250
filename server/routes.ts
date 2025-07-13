@@ -1630,10 +1630,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // **SISTEMA RISPARMIO OSPITI STRUTTURE - Endpoint statistiche**
+  app.get("/api/structure/guest-savings-stats", async (req, res) => {
+    try {
+      const sessionToken = req.cookies.session_token;
+      if (!sessionToken) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = await storage.getSessionByToken(sessionToken);
+      if (!session) {
+        return res.status(401).json({ message: "Sessione non valida" });
+      }
+
+      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
+      if (!userIqCode || userIqCode.role !== 'structure') {
+        return res.status(403).json({ message: "Accesso negato - solo strutture" });
+      }
+
+      // Ottieni le statistiche dal sistema di storage
+      const stats = await storage.getStructureGuestSavingsStats(userIqCode.code);
+
+      console.log(`📊 RISPARMIO OSPITI STRUTTURA: ${userIqCode.code} - Totale risparmi: €${stats.totalSavingsGenerated}`);
+
+      res.json({
+        success: true,
+        structureCode: userIqCode.code,
+        stats: {
+          totalSavingsGenerated: stats.totalSavingsGenerated,
+          totalCodesIssued: stats.totalCodesIssued,
+          activeGuestsCount: stats.activeGuestsCount,
+          averageSavingPerGuest: stats.averageSavingPerGuest,
+          lastUpdated: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error("Errore statistiche risparmio ospiti:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
   // Clean expired sessions periodically
   setInterval(async () => {
     await storage.cleanExpiredSessions();
   }, 60000); // Clean every minute
+
+  // **INIZIALIZZAZIONE DATI DEMO RISPARMIO OSPITI**
+  // Inizializza i dati demo al primo avvio per dimostrare il sistema
+  setTimeout(async () => {
+    try {
+      await storage.initializeDemoGuestSavingsData();
+      console.log('✅ Sistema risparmio ospiti inizializzato con dati demo');
+    } catch (error) {
+      console.error('❌ Errore inizializzazione dati demo:', error);
+    }
+  }, 5000); // Dopo 5 secondi dall'avvio
 
   // Generate tourist code from package pool (for structures/partners)
   app.post("/api/generate-tourist-code", async (req, res) => {
@@ -3109,6 +3160,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: new Date(),
       });
 
+      // **TRACKING RISPARMIO OSPITI STRUTTURE** - Inizializza tracking per codice temporaneo
+      await storage.createStructureGuestSavingsRecord({
+        structureCode: session.iqCode,
+        temporaryCode: tempCode,
+        guestName: guestName || "Ospite",
+        guestPhone: guestPhone || "",
+        temporaryCodeIssuedAt: new Date()
+      });
+      console.log(`🏨 TRACKING INIZIALIZZATO: Codice temporaneo ${tempCode} per struttura ${session.iqCode}`);
+
       res.json({ 
         tempCode,
         expiresIn: 15, // minuti  
@@ -3162,6 +3223,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!result.success) {
         return res.status(400).json({ error: "Impossibile creare IQCode definitivo" });
       }
+
+      // **TRACKING RISPARMIO OSPITI STRUTTURE** - Collega codice temporaneo al permanente
+      await storage.trackTemporaryCodeActivation(tempCode, result.permanentCode, result.permanentCode);
+      console.log(`🏨 TRACKING ATTIVAZIONE: ${tempCode} → ${result.permanentCode}`);
 
       // Crea sessione per il nuovo turista
       const sessionToken = nanoid();
@@ -3568,6 +3633,10 @@ app.post('/api/apply-otc-discount', async (req, res) => {
       savedAmount: discountAmount.toString(),
       notes: `Sconto ${discountPercentage}% applicato via TIQ-OTC`
     });
+
+    // **TRACKING RISPARMIO OSPITI STRUTTURE** - Aggiorna automaticamente i risparmi della struttura
+    await storage.trackDiscountApplication(touristIqCode, discountAmount);
+    console.log(`🏨 TRACKING RISPARMIO OSPITI: ${touristIqCode} ha risparmiato €${discountAmount} - struttura aggiornata`);
 
     res.json({
       success: true,

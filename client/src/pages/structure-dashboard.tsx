@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { ReactNode } from "react";
 import { AdvancedAccounting } from "@/components/advanced-accounting";
 import { CustodeCodiceDashboard } from "@/components/custode-codice";
+import GuestSavingsStats from "@/components/GuestSavingsStats";
 
 // Interfacce TypeScript per tipizzazione completa
 interface Guest {
@@ -1083,6 +1084,11 @@ export default function StructureDashboard() {
       {/* Contenuto basato su sezione attiva */}
       {activeSection === "dashboard" && (
         <div className="space-y-6">
+          {/* Statistiche Risparmio Ospiti */}
+          <GuestSavingsStats 
+            structureCode={structureData?.iqCode || `TIQ-VV-STT-${structureId}`}
+          />
+
           {/* Gestione ospiti integrata */}
           {renderGuestManagement()}
 

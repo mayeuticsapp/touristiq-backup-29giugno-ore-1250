@@ -1,4 +1,4 @@
-import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, oneTimeCodes, touristSavings, partnerDiscountApplications, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode, type OneTimeCode, type InsertOneTimeCode, type TouristSavings, type InsertTouristSavings, type PartnerDiscountApplication, type InsertPartnerDiscountApplication } from "@shared/schema";
+import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, oneTimeCodes, touristSavings, partnerDiscountApplications, structureGuestSavings, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode, type OneTimeCode, type InsertOneTimeCode, type TouristSavings, type InsertTouristSavings, type PartnerDiscountApplication, type InsertPartnerDiscountApplication, type StructureGuestSavings, type InsertStructureGuestSavings } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq, and, lt, desc, like, sql, inArray, gt, isNull } from "drizzle-orm";
@@ -186,6 +186,26 @@ export interface IStorage {
     monthlyDiscounts: number;
     monthlyRevenue: number;
   }>;
+
+  // **SISTEMA RISPARMIO OSPITI STRUTTURE**
+  createStructureGuestSaving(savingData: any): Promise<any>;
+  updateStructureGuestSaving(structureCode: string, temporaryCode: string, permanentCode: string, savingAmount: number): Promise<any>;
+  getStructureGuestSavingsStats(structureCode: string): Promise<{
+    totalCodesIssued: number;
+    totalSavingsGenerated: number;
+    averageSavingPerGuest: number;
+    activeGuestsCount: number;
+  }>;
+  trackTemporaryCodeActivation(temporaryCode: string, permanentCode: string, touristIqCode: string): Promise<void>;
+  trackDiscountApplication(touristIqCode: string, discountAmount: number): Promise<void>;
+  createStructureGuestSavingsRecord(data: {
+    structureCode: string;
+    temporaryCode: string;
+    guestName: string;
+    guestPhone: string;
+    temporaryCodeIssuedAt: Date;
+  }): Promise<void>;
+  initializeDemoGuestSavingsData(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -902,6 +922,56 @@ export class MemStorage implements IStorage {
   async getPartnerOffersByCity(cityName: string): Promise<any[]> {
     // MemStorage implementation - usa sempre array vuoto per dev
     return [];
+  }
+
+  // **SISTEMA RISPARMIO OSPITI STRUTTURE - Memory Implementation (stub)**
+  async createStructureGuestSaving(savingData: any): Promise<any> {
+    // Mock implementation per MemStorage
+    return { id: Math.floor(Math.random() * 1000), ...savingData };
+  }
+
+  async updateStructureGuestSaving(structureCode: string, temporaryCode: string, permanentCode: string, savingAmount: number): Promise<any> {
+    // Mock implementation per MemStorage
+    return { structureCode, temporaryCode, permanentCode, savingAmount };
+  }
+
+  async getStructureGuestSavingsStats(structureCode: string): Promise<{
+    totalCodesIssued: number;
+    totalSavingsGenerated: number;
+    averageSavingPerGuest: number;
+    activeGuestsCount: number;
+  }> {
+    // Mock implementation per MemStorage
+    return {
+      totalCodesIssued: 0,
+      totalSavingsGenerated: 0,
+      averageSavingPerGuest: 0,
+      activeGuestsCount: 0
+    };
+  }
+
+  async trackTemporaryCodeActivation(temporaryCode: string, permanentCode: string, touristIqCode: string): Promise<void> {
+    // Mock implementation per MemStorage
+    console.log(`Mock: Attivazione tracciata ${temporaryCode} → ${permanentCode}`);
+  }
+
+  async trackDiscountApplication(touristIqCode: string, discountAmount: number): Promise<void> {
+    // Mock implementation per MemStorage
+    console.log(`Mock: Sconto tracciato ${touristIqCode} → €${discountAmount}`);
+  }
+
+  async createStructureGuestSavingsRecord(data: {
+    structureCode: string;
+    temporaryCode: string;
+    guestName: string;
+    guestPhone: string;
+    temporaryCodeIssuedAt: Date;
+  }): Promise<void> {
+    console.log(`📝 MemStorage: creato record risparmio ospite ${data.guestName} per struttura ${data.structureCode}`);
+  }
+
+  async initializeDemoGuestSavingsData(): Promise<void> {
+    console.log('🔄 MemStorage: inizializzazione dati demo risparmio ospiti');
   }
 }
 
@@ -3400,6 +3470,237 @@ class ExtendedPostgreStorage extends PostgreStorage {
     } catch (error) {
       console.error("Errore aggiornamento business info:", error);
       throw error;
+    }
+  }
+
+  // **SISTEMA RISPARMIO OSPITI STRUTTURE - PostgreSQL Implementation**
+  async createStructureGuestSaving(savingData: any): Promise<any> {
+    const [saving] = await this.db
+      .insert(structureGuestSavings)
+      .values(savingData)
+      .returning();
+    
+    console.log(`🏨 RISPARMIO STRUTTURA: ${savingData.structureCode} - codice temporaneo ${savingData.temporaryCode}`);
+    return saving;
+  }
+
+  async updateStructureGuestSaving(structureCode: string, temporaryCode: string, permanentCode: string, savingAmount: number): Promise<any> {
+    const [updated] = await this.db
+      .update(structureGuestSavings)
+      .set({
+        totalSavingsGenerated: sql`total_savings_generated + ${savingAmount}`,
+        discountApplicationsCount: sql`discount_applications_count + 1`,
+        lastSavingUpdatedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(
+        and(
+          eq(structureGuestSavings.structureCode, structureCode),
+          eq(structureGuestSavings.temporaryCode, temporaryCode)
+        )
+      )
+      .returning();
+
+    console.log(`💰 AGGIORNAMENTO RISPARMIO: ${structureCode} - ${temporaryCode} → +€${savingAmount}`);
+    return updated;
+  }
+
+  async getStructureGuestSavingsStats(structureCode: string): Promise<{
+    totalCodesIssued: number;
+    totalSavingsGenerated: number;
+    averageSavingPerGuest: number;
+    activeGuestsCount: number;
+  }> {
+    try {
+      const stats = await this.db
+        .select({
+          totalCodesIssued: sql<number>`count(*)`,
+          totalSavingsGenerated: sql<number>`sum(total_savings_generated)`,
+          activeGuestsCount: sql<number>`count(case when permanent_code is not null then 1 end)`
+        })
+        .from(structureGuestSavings)
+        .where(eq(structureGuestSavings.structureCode, structureCode));
+
+      const result = stats[0];
+      const totalCodesIssued = Number(result.totalCodesIssued) || 0;
+      const totalSavingsGenerated = Number(result.totalSavingsGenerated) || 0;
+      const activeGuestsCount = Number(result.activeGuestsCount) || 0;
+
+      return {
+        totalCodesIssued,
+        totalSavingsGenerated,
+        averageSavingPerGuest: activeGuestsCount > 0 ? totalSavingsGenerated / activeGuestsCount : 0,
+        activeGuestsCount
+      };
+    } catch (error) {
+      console.error(`❌ ERRORE STATS RISPARMIO STRUTTURA ${structureCode}:`, error);
+      return {
+        totalCodesIssued: 0,
+        totalSavingsGenerated: 0,
+        averageSavingPerGuest: 0,
+        activeGuestsCount: 0
+      };
+    }
+  }
+
+  async trackTemporaryCodeActivation(temporaryCode: string, permanentCode: string, touristIqCode: string): Promise<void> {
+    // Trova la struttura che ha generato il codice temporaneo
+    const [tempCodeData] = await this.db
+      .select()
+      .from(structureGuestSavings)
+      .where(eq(structureGuestSavings.temporaryCode, temporaryCode))
+      .limit(1);
+
+    if (tempCodeData) {
+      // Aggiorna con il codice permanente
+      await this.db
+        .update(structureGuestSavings)
+        .set({
+          permanentCode,
+          touristIqCode,
+          permanentCodeActivatedAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(structureGuestSavings.temporaryCode, temporaryCode));
+
+      console.log(`✅ ATTIVAZIONE TRACCIATA: ${temporaryCode} → ${permanentCode} (struttura: ${tempCodeData.structureCode})`);
+    } else {
+      console.log(`🟡 CODICE TEMPORANEO NON TROVATO: ${temporaryCode}`);
+    }
+  }
+
+  async trackDiscountApplication(touristIqCode: string, discountAmount: number): Promise<void> {
+    // Trova la struttura che ha generato il codice temporaneo per questo turista
+    const [savingRecord] = await this.db
+      .select()
+      .from(structureGuestSavings)
+      .where(eq(structureGuestSavings.touristIqCode, touristIqCode))
+      .limit(1);
+
+    if (savingRecord) {
+      // Aggiorna i risparmi totali
+      await this.db
+        .update(structureGuestSavings)
+        .set({
+          totalSavingsGenerated: sql`total_savings_generated + ${discountAmount}`,
+          discountApplicationsCount: sql`discount_applications_count + 1`,
+          lastSavingUpdatedAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(structureGuestSavings.touristIqCode, touristIqCode));
+
+      console.log(`💰 SCONTO TRACCIATO: ${touristIqCode} → +€${discountAmount} (struttura: ${savingRecord.structureCode})`);
+    } else {
+      console.log(`🟡 TURISTA NON TRACCIATO: ${touristIqCode}`);
+    }
+  }
+
+  // Implementazione con controllo esistenza
+  async createStructureGuestSavingsRecord(data: {
+    structureCode: string;
+    temporaryCode: string;
+    guestName: string;
+    guestPhone: string;
+    temporaryCodeIssuedAt: Date;
+  }): Promise<void> {
+    const existing = await this.db
+      .select()
+      .from(structureGuestSavings)
+      .where(eq(structureGuestSavings.temporaryCode, data.temporaryCode))
+      .limit(1);
+
+    if (existing.length === 0) {
+      await this.db.insert(structureGuestSavings).values({
+        structureCode: data.structureCode,
+        temporaryCode: data.temporaryCode,
+        guestName: data.guestName,
+        guestPhone: data.guestPhone,
+        temporaryCodeIssuedAt: data.temporaryCodeIssuedAt,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+    }
+  }
+
+  // Metodo per inizializzare dati demo risparmio ospiti
+  async initializeDemoGuestSavingsData(): Promise<void> {
+    try {
+      // Trova strutture esistenti
+      const structures = await this.db
+        .select()
+        .from(iqCodes)
+        .where(eq(iqCodes.role, 'structure'))
+        .limit(3);
+
+      if (structures.length === 0) {
+        console.log('🟡 Nessuna struttura trovata per dati demo risparmio ospiti');
+        return;
+      }
+
+      // Crea dati demo per ogni struttura
+      for (const structure of structures) {
+        const demoData = [
+          {
+            structureCode: structure.code,
+            temporaryCode: 'IQCODE-PRIMOACCESSO-DEMO1',
+            permanentCode: 'TIQ-IT-DEMO-OSPITE1',
+            touristIqCode: 'TIQ-IT-DEMO-OSPITE1',
+            guestName: 'Marco Rossi',
+            guestPhone: '+39 333 1234567',
+            temporaryCodeIssuedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+            permanentCodeActivatedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+            totalSavingsGenerated: 47.50,
+            discountApplicationsCount: 3,
+            lastSavingUpdatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+          },
+          {
+            structureCode: structure.code,
+            temporaryCode: 'IQCODE-PRIMOACCESSO-DEMO2',
+            permanentCode: 'TIQ-IT-DEMO-OSPITE2',
+            touristIqCode: 'TIQ-IT-DEMO-OSPITE2',
+            guestName: 'Giulia Bianchi',
+            guestPhone: '+39 347 9876543',
+            temporaryCodeIssuedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+            permanentCodeActivatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+            totalSavingsGenerated: 23.20,
+            discountApplicationsCount: 2,
+            lastSavingUpdatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000)
+          },
+          {
+            structureCode: structure.code,
+            temporaryCode: 'IQCODE-PRIMOACCESSO-DEMO3',
+            permanentCode: 'TIQ-IT-DEMO-OSPITE3',
+            touristIqCode: 'TIQ-IT-DEMO-OSPITE3',
+            guestName: 'Andrea Verdi',
+            guestPhone: '+39 320 5551234',
+            temporaryCodeIssuedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+            permanentCodeActivatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+            totalSavingsGenerated: 12.80,
+            discountApplicationsCount: 1,
+            lastSavingUpdatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000)
+          }
+        ];
+
+        for (const demo of demoData) {
+          const existing = await this.db
+            .select()
+            .from(structureGuestSavings)
+            .where(eq(structureGuestSavings.temporaryCode, demo.temporaryCode))
+            .limit(1);
+
+          if (existing.length === 0) {
+            await this.db.insert(structureGuestSavings).values({
+              ...demo,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+          }
+        }
+      }
+
+      console.log('✅ DATI DEMO RISPARMIO OSPITI INIZIALIZZATI');
+    } catch (error) {
+      console.error('❌ Errore inizializzazione dati demo risparmio ospiti:', error);
     }
   }
 

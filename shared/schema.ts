@@ -243,6 +243,22 @@ export const structureSettings = pgTable("structure_settings", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// Tabella per tracciare il risparmio totale generato dai codici temporanei di ogni struttura
+export const structureGuestSavings = pgTable("structure_guest_savings", {
+  id: serial("id").primaryKey(),
+  structureCode: text("structure_code").notNull(), // Codice della struttura che ha generato il codice temporaneo
+  temporaryCode: text("temporary_code").notNull(), // Codice temporaneo generato (TIQ-IT-PRIMOACCESSO-XXXXX)
+  permanentCode: text("permanent_code"), // Codice definitivo attivato dal turista
+  touristIqCode: text("tourist_iq_code"), // IQCode definitivo del turista
+  totalSavingsGenerated: decimal("total_savings_generated", { precision: 10, scale: 2 }).default("0.00"), // Totale risparmi generati
+  discountApplicationsCount: integer("discount_applications_count").default(0), // Numero di applicazioni sconti
+  temporaryCodeGeneratedAt: timestamp("temporary_code_generated_at").notNull(), // Quando è stato generato il codice temporaneo
+  permanentCodeActivatedAt: timestamp("permanent_code_activated_at"), // Quando è stato attivato il codice definitivo
+  lastSavingUpdatedAt: timestamp("last_saving_updated_at"), // Ultimo aggiornamento risparmio
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
+
 
 
 // Sistema ricarica utilizzi per turisti
@@ -465,6 +481,12 @@ export const insertStructureSettingsSchema = createInsertSchema(structureSetting
   updatedAt: true,
 });
 
+export const insertStructureGuestSavingsSchema = createInsertSchema(structureGuestSavings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertSettingsConfigSchema = createInsertSchema(settingsConfig).omit({
   id: true,
   createdAt: true,
@@ -535,6 +557,9 @@ export type InsertAccountingMovement = z.infer<typeof insertAccountingMovementSc
 
 export type StructureSettings = typeof structureSettings.$inferSelect;
 export type InsertStructureSettings = z.infer<typeof insertStructureSettingsSchema>;
+
+export type StructureGuestSavings = typeof structureGuestSavings.$inferSelect;
+export type InsertStructureGuestSavings = z.infer<typeof insertStructureGuestSavingsSchema>;
 
 export type SettingsConfig = typeof settingsConfig.$inferSelect;
 export type InsertSettingsConfig = z.infer<typeof insertSettingsConfigSchema>;
