@@ -942,15 +942,7 @@ export class MemStorage implements IStorage {
     console.log('⚠️ Metodo obsoleto: trackDiscountApplication - sistema risparmio ospiti centralizzato solo per admin');
   }
 
-  async createStructureGuestSavingsRecord(data: {
-    structureCode: string;
-    temporaryCode: string;
-    guestName: string;
-    guestPhone: string;
-    temporaryCodeIssuedAt: Date;
-  }): Promise<void> {
-    console.log('⚠️ Metodo obsoleto: createStructureGuestSavingsRecord - sistema risparmio ospiti centralizzato solo per admin');
-  }
+
 
   async initializeDemoGuestSavingsData(): Promise<void> {
     console.log('⚠️ Metodo obsoleto: initializeDemoGuestSavingsData - sistema risparmio ospiti centralizzato solo per admin');
@@ -3618,6 +3610,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
     guestName: string;
     guestPhone: string;
     temporaryCodeIssuedAt: Date;
+    temporaryCodeGeneratedAt: Date;
   }): Promise<void> {
     const existing = await this.db
       .select()
@@ -3632,6 +3625,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
         guestName: data.guestName,
         guestPhone: data.guestPhone,
         temporaryCodeIssuedAt: data.temporaryCodeIssuedAt,
+        temporaryCodeGeneratedAt: data.temporaryCodeGeneratedAt,
         createdAt: new Date(),
         updatedAt: new Date()
       });

@@ -3293,7 +3293,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         temporaryCode: tempCode,
         guestName: guestName || "Ospite",
         guestPhone: guestPhone || "",
-        temporaryCodeIssuedAt: new Date()
+        temporaryCodeIssuedAt: new Date(),
+        temporaryCodeGeneratedAt: new Date()
       });
       console.log(`🏨 TRACKING INIZIALIZZATO: Codice temporaneo ${tempCode} per struttura ${session.iqCode}`);
 
