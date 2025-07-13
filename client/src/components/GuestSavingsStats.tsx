@@ -35,6 +35,12 @@ export default function GuestSavingsStats({ structureCode }: GuestSavingsStatsPr
         setStats(data.stats);
       } catch (error) {
         console.error('Errore caricamento statistiche risparmio ospiti:', error);
+        
+        // Prova a stampare la response per debug
+        if (error instanceof Error) {
+          console.log('Errore dettagliato:', error.message);
+        }
+        
         setError('Errore nel caricamento delle statistiche');
       } finally {
         setLoading(false);
