@@ -1,12 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema } from "@shared/schema";
+import { loginSchema, generatedEmotionalCodes, oneTimeCodes } from "@shared/schema";
 import { nanoid } from "nanoid";
 import { chatWithTIQai } from "./openai";
 import { createIQCode } from "./createIQCode";
 import { z } from "zod";
 import { c23Monitor } from "./c23-monitor";
+import { eq, and, inArray, desc } from "drizzle-orm";
 import { 
   loginLimiter, 
   apiLimiter, 
@@ -1716,6 +1717,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Errore statistiche admin risparmio ospiti:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // **ENDPOINT STRUTTURE - Totale sconti TIQ-OTC per struttura specifica**
+  app.get("/api/structure/tiq-otc-savings/:structureCode", async (req, res) => {
+    try {
+      const hasAccess = await verifyRoleAccess(req, res, ['structure']);
+      if (!hasAccess) return;
+
+      const { structureCode } = req.params;
+      console.log(`📊 STRUTTURA ${structureCode} - Calcolo sconti TIQ-OTC`);
+
+      // Step 1: Trova tutti i turisti generati da questa struttura
+      const structureTourists = await storage.db
+        .select({ touristCode: generatedEmotionalCodes.code })
+        .from(generatedEmotionalCodes)
+        .where(eq(generatedEmotionalCodes.generatedBy, structureCode));
+
+      const touristCodes = structureTourists.map(t => t.touristCode);
+      console.log(`🔍 STRUTTURA ${structureCode} - Trovati ${touristCodes.length} turisti generati`);
+
+      if (touristCodes.length === 0) {
+        return res.json({
+          success: true,
+          structureCode,
+          totalSavings: 0,
+          totalTransactions: 0,
+          recentTransactions: [],
+          lastUpdated: new Date().toISOString()
+        });
+      }
+
+      // Step 2: Trova tutti i codici TIQ-OTC utilizzati da questi turisti
+      const structureOtcCodes = await storage.db
+        .select()
+        .from(oneTimeCodes)
+        .where(
+          and(
+            eq(oneTimeCodes.isUsed, true),
+            inArray(oneTimeCodes.touristIqCode, touristCodes)
+          )
+        )
+        .orderBy(desc(oneTimeCodes.usedAt));
+
+      // Step 3: Calcola totale sconti
+      const totalSavings = structureOtcCodes.reduce((sum, code) => {
+        const amount = parseFloat(code.discountAmount) || 0;
+        return sum + amount;
+      }, 0);
+
+      console.log(`💰 STRUTTURA ${structureCode} - Totale sconti: €${totalSavings} da ${structureOtcCodes.length} transazioni`);
+
+      // Step 4: Prepara transazioni recenti (ultime 10)
+      const recentTransactions = structureOtcCodes.slice(0, 10).map(code => ({
+        code: code.code,
+        amount: parseFloat(code.discountAmount) || 0,
+        tourist: code.touristIqCode,
+        partnerName: code.usedByName || 'Partner sconosciuto',
+        usedAt: code.usedAt,
+        description: code.offerDescription || 'Sconto TIQ-OTC'
+      }));
+
+      res.json({
+        success: true,
+        structureCode,
+        totalSavings,
+        totalTransactions: structureOtcCodes.length,
+        recentTransactions,
+        lastUpdated: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error(`Errore calcolo sconti struttura ${req.params.structureCode}:`, error);
       res.status(500).json({ message: "Errore del server" });
     }
   });

@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { ReactNode } from "react";
 import { AdvancedAccounting } from "@/components/advanced-accounting";
 import { CustodeCodiceDashboard } from "@/components/custode-codice";
+import StructureTiqOtcSavings from "@/components/StructureTiqOtcSavings";
 
 
 // Interfacce TypeScript per tipizzazione completa
@@ -1096,6 +1097,11 @@ export default function StructureDashboard() {
             roleType="structure" 
             iqCode={entityInfo?.code}
             className="mb-6" 
+          />
+
+          {/* Sconti TIQ-OTC generati dai tuoi ospiti */}
+          <StructureTiqOtcSavings 
+            structureCode={structureData?.iqCode || `TIQ-VV-STT-${structureId}`}
           />
 
           {/* Mini gestionale contabile integrato */}
