@@ -1688,53 +1688,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // **SISTEMA RISPARMIO OSPITI - Endpoint STRUTTURA (riceve dati filtrati dall'admin)**
-  app.get("/api/structure/guest-savings-stats", async (req, res) => {
-    try {
-      console.log(`🔍 STRUTTURA ENDPOINT ACCESS - Verifica accesso per endpoint guest-savings-stats`);
-      
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        console.log(`❌ STRUTTURA ENDPOINT: Nessun session_token trovato`);
-        return res.status(401).json({ message: "Non autenticato" });
-      }
 
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        console.log(`❌ STRUTTURA ENDPOINT: Sessione non trovata`);
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      console.log(`🔍 STRUTTURA ENDPOINT: Sessione trovata - Utente: ${session.iqCode}, Ruolo: ${session.role}`);
-
-      if (session.role !== 'structure') {
-        console.log(`🚨 STRUTTURA ENDPOINT: Accesso negato - Ruolo ${session.role} non autorizzato`);
-        return res.status(403).json({ message: "Accesso negato - solo strutture autorizzate" });
-      }
-
-      console.log(`📊 STRUTTURA STATISTICHE - Richiesta dati per: ${session.iqCode}`);
-
-      // Ottieni le statistiche dal sistema di storage (stesso metodo, approccio semplificato)
-      const stats = await storage.getStructureGuestSavingsStats(session.iqCode);
-
-      console.log(`📊 RISPARMIO OSPITI STRUTTURA: ${session.iqCode} - Totale risparmi: €${stats.totalSavingsGenerated}`);
-
-      res.json({
-        success: true,
-        structureCode: session.iqCode,
-        stats: {
-          totalSavingsGenerated: stats.totalSavingsGenerated,
-          totalCodesIssued: stats.totalCodesIssued,
-          activeGuestsCount: stats.activeGuestsCount,
-          averageSavingPerGuest: stats.averageSavingPerGuest,
-          lastUpdated: new Date().toISOString()
-        }
-      });
-    } catch (error) {
-      console.error("Errore statistiche struttura risparmio ospiti:", error);
-      res.status(500).json({ message: "Errore del server" });
-    }
-  });
 
   // Clean expired sessions periodically
   setInterval(async () => {

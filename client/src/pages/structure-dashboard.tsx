@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { ReactNode } from "react";
 import { AdvancedAccounting } from "@/components/advanced-accounting";
 import { CustodeCodiceDashboard } from "@/components/custode-codice";
-import GuestSavingsStats from "@/components/GuestSavingsStats";
+
 
 // Interfacce TypeScript per tipizzazione completa
 interface Guest {
@@ -672,7 +672,7 @@ export default function StructureDashboard() {
     { icon: <TrendingUp size={16} />, label: "Dashboard Struttura", href: "#", onClick: () => setActiveSection("dashboard") },
     { icon: <Package size={16} />, label: "Acquista Pacchetti", href: `/structure/${structureId}/panel` },
     { icon: <DollarSign size={16} />, label: "Mini-gestionale", href: "#", onClick: () => setActiveSection("contabilita") },
-    { icon: <Gift size={16} />, label: "Risparmio Ospiti", href: "#", onClick: () => setActiveSection("risparmio-ospiti") },
+
     { icon: <Settings size={16} />, label: "Condizioni Generali", href: "#", onClick: () => setActiveSection("terms") },
     { icon: <Trash2 size={16} className="text-red-500" />, label: "Elimina Account", href: "#", onClick: () => setActiveSection("elimina-account") },
   ];
@@ -1115,28 +1115,7 @@ export default function StructureDashboard() {
         </div>
       )}
 
-      {activeSection === "risparmio-ospiti" && (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Gift className="h-5 w-5 text-green-600" />
-                Risparmio Totale Ospiti
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-4">
-                <p className="text-gray-600 mb-4">
-                  Monitora quanto hanno risparmiato i tuoi ospiti utilizzando i codici IQ che hai fornito loro
-                </p>
-                <GuestSavingsStats 
-                  structureCode={structureData?.iqCode || `TIQ-VV-STT-${structureId}`}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+
 
       {activeSection === "terms" && (
         <div className="space-y-6">

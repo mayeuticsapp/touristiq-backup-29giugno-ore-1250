@@ -187,25 +187,7 @@ export interface IStorage {
     monthlyRevenue: number;
   }>;
 
-  // **SISTEMA RISPARMIO OSPITI STRUTTURE**
-  createStructureGuestSaving(savingData: any): Promise<any>;
-  updateStructureGuestSaving(structureCode: string, temporaryCode: string, permanentCode: string, savingAmount: number): Promise<any>;
-  getStructureGuestSavingsStats(structureCode: string): Promise<{
-    totalCodesIssued: number;
-    totalSavingsGenerated: number;
-    averageSavingPerGuest: number;
-    activeGuestsCount: number;
-  }>;
-  trackTemporaryCodeActivation(temporaryCode: string, permanentCode: string, touristIqCode: string): Promise<void>;
-  trackDiscountApplication(touristIqCode: string, discountAmount: number): Promise<void>;
-  createStructureGuestSavingsRecord(data: {
-    structureCode: string;
-    temporaryCode: string;
-    guestName: string;
-    guestPhone: string;
-    temporaryCodeIssuedAt: Date;
-  }): Promise<void>;
-  initializeDemoGuestSavingsData(): Promise<void>;
+
 }
 
 export class MemStorage implements IStorage {
@@ -924,15 +906,16 @@ export class MemStorage implements IStorage {
     return [];
   }
 
-  // **SISTEMA RISPARMIO OSPITI STRUTTURE - Memory Implementation (stub)**
+  // **SISTEMA RISPARMIO OSPITI STRUTTURE - RIMOSSO**
+  // Metodi obsoleti mantenuti per compatibilità ma vuoti
   async createStructureGuestSaving(savingData: any): Promise<any> {
-    // Mock implementation per MemStorage
-    return { id: Math.floor(Math.random() * 1000), ...savingData };
+    console.log('⚠️ Metodo obsoleto: createStructureGuestSaving - sistema risparmio ospiti centralizzato solo per admin');
+    return null;
   }
 
   async updateStructureGuestSaving(structureCode: string, temporaryCode: string, permanentCode: string, savingAmount: number): Promise<any> {
-    // Mock implementation per MemStorage
-    return { structureCode, temporaryCode, permanentCode, savingAmount };
+    console.log('⚠️ Metodo obsoleto: updateStructureGuestSaving - sistema risparmio ospiti centralizzato solo per admin');
+    return null;
   }
 
   async getStructureGuestSavingsStats(structureCode: string): Promise<{
@@ -941,7 +924,7 @@ export class MemStorage implements IStorage {
     averageSavingPerGuest: number;
     activeGuestsCount: number;
   }> {
-    // Mock implementation per MemStorage
+    console.log('⚠️ Metodo obsoleto: getStructureGuestSavingsStats - sistema risparmio ospiti centralizzato solo per admin');
     return {
       totalCodesIssued: 0,
       totalSavingsGenerated: 0,
@@ -951,13 +934,11 @@ export class MemStorage implements IStorage {
   }
 
   async trackTemporaryCodeActivation(temporaryCode: string, permanentCode: string, touristIqCode: string): Promise<void> {
-    // Mock implementation per MemStorage
-    console.log(`Mock: Attivazione tracciata ${temporaryCode} → ${permanentCode}`);
+    console.log('⚠️ Metodo obsoleto: trackTemporaryCodeActivation - sistema risparmio ospiti centralizzato solo per admin');
   }
 
   async trackDiscountApplication(touristIqCode: string, discountAmount: number): Promise<void> {
-    // Mock implementation per MemStorage
-    console.log(`Mock: Sconto tracciato ${touristIqCode} → €${discountAmount}`);
+    console.log('⚠️ Metodo obsoleto: trackDiscountApplication - sistema risparmio ospiti centralizzato solo per admin');
   }
 
   async createStructureGuestSavingsRecord(data: {
@@ -967,11 +948,11 @@ export class MemStorage implements IStorage {
     guestPhone: string;
     temporaryCodeIssuedAt: Date;
   }): Promise<void> {
-    console.log(`📝 MemStorage: creato record risparmio ospite ${data.guestName} per struttura ${data.structureCode}`);
+    console.log('⚠️ Metodo obsoleto: createStructureGuestSavingsRecord - sistema risparmio ospiti centralizzato solo per admin');
   }
 
   async initializeDemoGuestSavingsData(): Promise<void> {
-    console.log('🔄 MemStorage: inizializzazione dati demo risparmio ospiti');
+    console.log('⚠️ Metodo obsoleto: initializeDemoGuestSavingsData - sistema risparmio ospiti centralizzato solo per admin');
   }
 }
 
