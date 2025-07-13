@@ -55,6 +55,17 @@ export interface IStorage {
   // Partner business info methods
   getPartnerBusinessInfo(partnerCode: string): Promise<any>;
   updatePartnerBusinessInfo(partnerCode: string, businessData: any): Promise<any>;
+  
+  // Partner report methods
+  getPartnerTouristiqStats(partnerCode: string, days?: number): Promise<{
+    totalDiscounts: number;
+    totalClients: number;
+    totalRevenue: number;
+    averageDiscount: number;
+    recentTransactions: any[];
+    period: string;
+  }>;
+  getPartnerDiscountHistory(partnerCode: string, limit?: number): Promise<any[]>;
 
   // Admin credits methods - Pacchetto RobS
   getAdminCredits(adminCode: string): Promise<AdminCredits | undefined>;
@@ -1559,6 +1570,107 @@ export class PostgreStorage implements IStorage {
     } catch (error) {
       console.error('Errore completePartnerOnboarding PostgreSQL:', error);
       throw error;
+    }
+  }
+
+  // **SISTEMA REPORT PARTNER TOURISTIQ - PostgreSQL Implementation**
+  async getPartnerTouristiqStats(partnerCode: string, days: number = 7): Promise<{
+    totalDiscounts: number;
+    totalClients: number;
+    totalRevenue: number;
+    averageDiscount: number;
+    recentTransactions: any[];
+    period: string;
+  }> {
+    console.log(`📊 REPORT PARTNER: Generando statistiche per ${partnerCode} - ultimo ${days} giorni`);
+    
+    const dateFrom = new Date();
+    dateFrom.setDate(dateFrom.getDate() - days);
+
+    try {
+      // Query per ottenere tutti i codici TIQ-OTC validati da questo partner
+      const transactions = await this.db
+        .select({
+          code: oneTimeCodes.code,
+          discountAmount: oneTimeCodes.discountAmount,
+          usedAt: oneTimeCodes.usedAt,
+          touristIqCode: oneTimeCodes.touristIqCode,
+          partnerCode: oneTimeCodes.partnerCode,
+          partnerName: oneTimeCodes.partnerName
+        })
+        .from(oneTimeCodes)
+        .where(
+          and(
+            eq(oneTimeCodes.partnerCode, partnerCode),
+            eq(oneTimeCodes.isUsed, true),
+            gt(oneTimeCodes.usedAt, dateFrom)
+          )
+        )
+        .orderBy(desc(oneTimeCodes.usedAt));
+
+      // Calcola statistiche
+      const totalDiscounts = transactions.reduce((sum, t) => sum + (t.discountAmount || 0), 0);
+      const totalClients = new Set(transactions.map(t => t.touristIqCode)).size;
+      const averageDiscount = totalClients > 0 ? totalDiscounts / totalClients : 0;
+      
+      // Stima ricavi: assumendo che lo sconto sia il 10-20% del totale
+      const estimatedRevenue = totalDiscounts * 6; // Moltiplicatore conservativo
+
+      console.log(`📊 STATISTICHE PARTNER ${partnerCode}:`);
+      console.log(`   💰 Sconti totali: €${totalDiscounts.toFixed(2)}`);
+      console.log(`   👥 Clienti TouristIQ: ${totalClients}`);
+      console.log(`   📈 Ricavi stimati: €${estimatedRevenue.toFixed(2)}`);
+      console.log(`   🎯 Sconto medio: €${averageDiscount.toFixed(2)}`);
+
+      return {
+        totalDiscounts,
+        totalClients,
+        totalRevenue: estimatedRevenue,
+        averageDiscount,
+        recentTransactions: transactions.slice(0, 20), // Ultime 20 transazioni
+        period: `${days} giorni`
+      };
+    } catch (error) {
+      console.error(`❌ ERRORE REPORT PARTNER ${partnerCode}:`, error);
+      return {
+        totalDiscounts: 0,
+        totalClients: 0,
+        totalRevenue: 0,
+        averageDiscount: 0,
+        recentTransactions: [],
+        period: `${days} giorni`
+      };
+    }
+  }
+
+  async getPartnerDiscountHistory(partnerCode: string, limit: number = 50): Promise<any[]> {
+    console.log(`📋 CRONOLOGIA SCONTI: Partner ${partnerCode} - ultimi ${limit} sconti`);
+    
+    try {
+      const history = await this.db
+        .select({
+          id: oneTimeCodes.id,
+          code: oneTimeCodes.code,
+          discountAmount: oneTimeCodes.discountAmount,
+          usedAt: oneTimeCodes.usedAt,
+          touristIqCode: oneTimeCodes.touristIqCode,
+          partnerName: oneTimeCodes.partnerName
+        })
+        .from(oneTimeCodes)
+        .where(
+          and(
+            eq(oneTimeCodes.partnerCode, partnerCode),
+            eq(oneTimeCodes.isUsed, true)
+          )
+        )
+        .orderBy(desc(oneTimeCodes.usedAt))
+        .limit(limit);
+
+      console.log(`📋 CRONOLOGIA: Trovati ${history.length} sconti per ${partnerCode}`);
+      return history;
+    } catch (error) {
+      console.error(`❌ ERRORE CRONOLOGIA PARTNER ${partnerCode}:`, error);
+      return [];
     }
   }
 
@@ -3708,6 +3820,29 @@ class ExtendedMemStorage extends MemStorage {
 
   async updatePartnerBusinessInfo(partnerCode: string, businessData: any): Promise<any> {
     return businessData; // Mock implementation
+  }
+
+  // **SISTEMA REPORT PARTNER TOURISTIQ - Mock Implementation**
+  async getPartnerTouristiqStats(partnerCode: string, days: number = 7): Promise<{
+    totalDiscounts: number;
+    totalClients: number;
+    totalRevenue: number;
+    averageDiscount: number;
+    recentTransactions: any[];
+    period: string;
+  }> {
+    return {
+      totalDiscounts: 0,
+      totalClients: 0,
+      totalRevenue: 0,
+      averageDiscount: 0,
+      recentTransactions: [],
+      period: `${days} giorni`
+    };
+  }
+
+  async getPartnerDiscountHistory(partnerCode: string, limit: number = 50): Promise<any[]> {
+    return [];
   }
 }
 

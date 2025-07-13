@@ -3740,6 +3740,63 @@ app.get('/api/partner/discount-stats', async (req, res) => {
   });
 
   const httpServer = createServer(app);
+  // **SISTEMA REPORT PARTNER TOURISTIQ**
+  
+  // Partner TouristIQ statistics endpoint
+  app.get('/api/partner/touristiq-stats', async (req, res) => {
+    if (!await verifyRoleAccess(req, res, ['partner'])) return;
+    
+    try {
+      const partnerCode = req.userSession.iqCode;
+      const days = parseInt(req.query.days as string) || 7;
+      
+      console.log(`📊 RICHIESTA STATS: Partner ${partnerCode} - periodo ${days} giorni`);
+      
+      const stats = await storage.getPartnerTouristiqStats(partnerCode, days);
+      
+      res.json({
+        success: true,
+        data: stats,
+        partnerCode,
+        generatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Errore statistiche partner:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Errore nel recupero delle statistiche' 
+      });
+    }
+  });
+
+  // Partner discount history endpoint
+  app.get('/api/partner/discount-history', async (req, res) => {
+    if (!await verifyRoleAccess(req, res, ['partner'])) return;
+    
+    try {
+      const partnerCode = req.userSession.iqCode;
+      const limit = parseInt(req.query.limit as string) || 50;
+      
+      console.log(`📋 RICHIESTA CRONOLOGIA: Partner ${partnerCode} - limit ${limit}`);
+      
+      const history = await storage.getPartnerDiscountHistory(partnerCode, limit);
+      
+      res.json({
+        success: true,
+        data: history,
+        partnerCode,
+        total: history.length,
+        generatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Errore cronologia sconti partner:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Errore nel recupero della cronologia' 
+      });
+    }
+  });
+
   return httpServer;
 }
 

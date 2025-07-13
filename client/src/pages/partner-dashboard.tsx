@@ -23,6 +23,7 @@ import { CustodeCodiceDashboard } from "@/components/custode-codice";
 import { OneTimeCodeValidator } from "@/components/OneTimeCodeValidator";
 import { TiqOtcDiscountValidator } from "@/components/TiqOtcDiscountValidator";
 import { PartnerDiscountApplicator } from "@/components/PartnerDiscountApplicator";
+import PartnerReportTouristiq from "@/components/PartnerReportTouristiq";
 
 interface TouristLinkRequest {
   id: string;
@@ -71,6 +72,7 @@ export default function PartnerDashboard() {
   const [showAccountDeleteDialog, setShowAccountDeleteDialog] = useState(false);
   const [showMiniGestionale, setShowMiniGestionale] = useState(false);
   const [showBusinessInfoManager, setShowBusinessInfoManager] = useState(false);
+  const [showReportTouristiq, setShowReportTouristiq] = useState(false);
 
 
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -377,6 +379,28 @@ export default function PartnerDashboard() {
     );
   }
 
+  if (showReportTouristiq) {
+    return (
+      <Layout
+        title="Report TouristIQ"
+        role="partner"
+        navigation={[
+          {
+            label: "Torna al Dashboard",
+            icon: <BarChart3 className="h-4 w-4" />,
+            href: "#",
+            onClick: () => setShowReportTouristiq(false)
+          }
+        ]}
+        sidebarColor="bg-orange-600"
+      >
+        <div className="min-h-screen bg-gray-50 p-6">
+          <PartnerReportTouristiq />
+        </div>
+      </Layout>
+    );
+  }
+
 
 
   return (
@@ -395,6 +419,12 @@ export default function PartnerDashboard() {
           icon: <Calculator className="h-4 w-4" />,
           href: "#",
           onClick: () => setShowMiniGestionale(true)
+        },
+        {
+          label: "Report TouristIQ",
+          icon: <BarChart3 className="h-4 w-4" />,
+          href: "#",
+          onClick: () => setShowReportTouristiq(true)
         },
         {
           label: "Elimina Account",
@@ -735,6 +765,57 @@ export default function PartnerDashboard() {
               </CardContent>
             </Card>
             */}
+
+            {/* Report TouristIQ */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                      <BarChart3 className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Report TouristIQ</h3>
+                      <p className="text-gray-600 text-sm">Monitora l'impatto concreto dei clienti TouristIQ</p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => setShowReportTouristiq(true)}
+                    className="bg-emerald-500 hover:bg-emerald-600"
+                  >
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Visualizza Report
+                  </Button>
+                </div>
+
+                <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg p-4 border border-emerald-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+                      <TrendingUp className="w-3 h-3 text-white" />
+                    </div>
+                    <span className="font-medium text-emerald-800">Valore Aggiunto TouristIQ</span>
+                  </div>
+                  <p className="text-sm text-emerald-700 mb-3">
+                    Scopri quanti clienti in più hai servito e quanto ricavo aggiuntivo 
+                    hai generato grazie alla partecipazione al network TouristIQ.
+                  </p>
+                  <div className="flex items-center gap-4 text-xs text-emerald-600">
+                    <span className="flex items-center gap-1">
+                      <Users className="w-3 h-3" />
+                      Clienti TouristIQ
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Euro className="w-3 h-3" />
+                      Ricavi aggiuntivi
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Trophy className="w-3 h-3" />
+                      ROI dettagliato
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* NASCOSTO PER RIATTIVAZIONE FUTURA - Clienti Speciali */}
