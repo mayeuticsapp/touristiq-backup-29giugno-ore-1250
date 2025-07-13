@@ -3934,11 +3934,11 @@ class ExtendedPostgreStorage extends PostgreStorage {
         .from(partnerRatings)
         .where(
           and(
-            sql`${partnerRatings.warningLevel} != 'none'`,
-            sql`${partnerRatings.warningLevel} != 'excluded'`
+            sql`${partnerRatings.warning_level} != 0`,
+            sql`${partnerRatings.warning_level} != 4`
           )
         )
-        .orderBy(desc(partnerRatings.lastUpdated));
+        .orderBy(desc(partnerRatings.last_updated));
 
       return warnings;
     } catch (error) {
@@ -3962,10 +3962,13 @@ class ExtendedPostgreStorage extends PostgreStorage {
       await this.db
         .update(partnerRatings)
         .set({
-          warningLevel: 'excluded',
-          lastUpdated: new Date()
+          warning_level: 4,
+          is_excluded: true,
+          excluded_at: new Date(),
+          excluded_by: excludedBy,
+          last_updated: new Date()
         })
-        .where(eq(partnerRatings.partnerCode, partnerCode));
+        .where(eq(partnerRatings.partner_code, partnerCode));
 
       console.log(`⚠️ Partner ${partnerCode} escluso dal sistema per rating insufficiente`);
     } catch (error) {
