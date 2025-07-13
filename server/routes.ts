@@ -411,8 +411,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo strutture" });
       }
 
-      if (userIqCode.status !== 'approved') {
-        return res.status(403).json({ message: "Struttura non ancora approvata dall'admin" });
+      // Controlla solo se la struttura è attiva
+      if (!userIqCode.isActive) {
+        return res.status(403).json({ message: "Struttura non attiva" });
       }
 
       // Verifico che la struttura stia accedendo alla propria dashboard
