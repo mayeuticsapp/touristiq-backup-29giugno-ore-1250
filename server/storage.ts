@@ -3798,13 +3798,12 @@ class ExtendedPostgreStorage extends PostgreStorage {
       const [result] = await this.db
         .insert(partnerFeedback)
         .values({
-          touristIqCode: feedback.touristIqCode,
-          partnerCode: feedback.partnerCode,
-          otcCode: feedback.otcCode,
+          tourist_iq_code: feedback.touristIqCode,
+          partner_code: feedback.partnerCode,
+          otc_code: feedback.otcCode,
           rating: feedback.rating,
           notes: feedback.notes,
-          createdAt: new Date(),
-          updatedAt: new Date()
+          created_at: new Date()
         })
         .returning();
 
@@ -3825,8 +3824,8 @@ class ExtendedPostgreStorage extends PostgreStorage {
       const feedbacks = await this.db
         .select()
         .from(partnerFeedback)
-        .where(eq(partnerFeedback.partnerCode, partnerCode))
-        .orderBy(desc(partnerFeedback.createdAt));
+        .where(eq(partnerFeedback.partner_code, partnerCode))
+        .orderBy(desc(partnerFeedback.created_at));
 
       return feedbacks;
     } catch (error) {
@@ -3840,7 +3839,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
       const [rating] = await this.db
         .select()
         .from(partnerRatings)
-        .where(eq(partnerRatings.partnerCode, partnerCode))
+        .where(eq(partnerRatings.partner_code, partnerCode))
         .limit(1);
 
       return rating || null;
@@ -3864,17 +3863,19 @@ class ExtendedPostgreStorage extends PostgreStorage {
       const negativeFeedbacks = feedbacks.filter(f => f.rating === 'negative').length;
       const positivePercentage = Math.round((positiveFeedbacks / totalFeedbacks) * 100);
 
-      // Determina livello di warning
-      let warningLevel: 'none' | 'low' | 'medium' | 'high' | 'excluded' = 'none';
+      // Determina livello di warning (come numero per il database)
+      let warningLevel: number = 0; // 0 = none, 1 = low, 2 = medium, 3 = high, 4 = excluded
+      let isExcluded = false;
       
       if (positivePercentage < 40) {
-        warningLevel = 'excluded';
+        warningLevel = 4;
+        isExcluded = true;
       } else if (positivePercentage < 50) {
-        warningLevel = 'high';
+        warningLevel = 3;
       } else if (positivePercentage < 60) {
-        warningLevel = 'medium';
+        warningLevel = 2;
       } else if (positivePercentage < 70) {
-        warningLevel = 'low';
+        warningLevel = 1;
       }
 
       // Controlla se il rating esiste già
@@ -3885,33 +3886,40 @@ class ExtendedPostgreStorage extends PostgreStorage {
         await this.db
           .update(partnerRatings)
           .set({
-            totalFeedbacks,
-            positiveFeedbacks,
-            negativeFeedbacks,
-            positivePercentage,
-            warningLevel,
-            lastUpdated: new Date()
+            total_feedbacks: totalFeedbacks,
+            positive_feedbacks: positiveFeedbacks,
+            negative_feedbacks: negativeFeedbacks,
+            current_rating: positivePercentage,
+            warning_level: warningLevel,
+            is_excluded: isExcluded,
+            last_updated: new Date(),
+            excluded_at: isExcluded ? new Date() : null,
+            excluded_by: isExcluded ? 'SISTEMA_AUTOMATICO' : null
           })
-          .where(eq(partnerRatings.partnerCode, partnerCode));
+          .where(eq(partnerRatings.partner_code, partnerCode));
       } else {
         // Crea nuovo rating
         await this.db
           .insert(partnerRatings)
           .values({
-            partnerCode,
-            totalFeedbacks,
-            positiveFeedbacks,
-            negativeFeedbacks,
-            positivePercentage,
-            warningLevel,
-            lastUpdated: new Date()
+            partner_code: partnerCode,
+            total_feedbacks: totalFeedbacks,
+            positive_feedbacks: positiveFeedbacks,
+            negative_feedbacks: negativeFeedbacks,
+            current_rating: positivePercentage,
+            warning_level: warningLevel,
+            is_excluded: isExcluded,
+            last_updated: new Date(),
+            excluded_at: isExcluded ? new Date() : null,
+            excluded_by: isExcluded ? 'SISTEMA_AUTOMATICO' : null
           });
       }
 
-      console.log(`✅ Rating aggiornato per partner ${partnerCode}: ${positivePercentage}% (${warningLevel})`);
+      const warningLabels = ['none', 'low', 'medium', 'high', 'excluded'];
+      console.log(`✅ Rating aggiornato per partner ${partnerCode}: ${positivePercentage}% (${warningLabels[warningLevel]})`);
       
       // Se warning level è 'excluded', esclude automaticamente il partner
-      if (warningLevel === 'excluded') {
+      if (warningLevel === 4) {
         await this.excludePartner(partnerCode, 'SISTEMA_AUTOMATICO');
       }
     } catch (error) {
