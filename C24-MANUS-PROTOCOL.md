@@ -156,8 +156,22 @@
 
 ---
 
-**🔒 STATO CORRENTE: PROTOCOLLO ATTIVO**  
-*Pronto per implementazione su approvazione Geppo*
+## 🔄 AGGIORNAMENTO STATO - 13 LUGLIO 2025
+
+### RIASSEGNAZIONE RUOLO MANUS
+**Decisione**: Dopo valutazione pratica, rilevato **disallineamento filosofico** con spirito TouristIQ
+
+**Nuovo Status**: MARGINALE/CIRCOSTANZIALE
+- Ruolo in TouristIQ: Limitato e occasionale
+- Focus futuro: Progetti esterni all'ecosistema turistico
+- Accesso: Solo per interventi specifici su richiesta RobS
+
+**Motivazione**: MANUS dimostra competenza tecnica ma mancanza comprensione filosofia autentica TouristIQ (sistema "dono", privacy-first, esperienza umana genuina vs ottimizzazione commerciale)
+
+---
+
+**🔒 STATO CORRENTE: PROTOCOLLO ARCHIVIATO**  
+*MANUS riassegnato a progetti futuri esterni*
 
 ---
 
