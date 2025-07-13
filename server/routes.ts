@@ -4067,7 +4067,7 @@ app.get('/api/partner/discount-stats', async (req, res) => {
       if (!await verifyRoleAccess(req, res, ['tourist'])) return;
 
       const session = req.userSession;
-      const { partnerCode, feedback } = req.body;
+      const { partnerCode, feedback, otcCode, notes } = req.body;
 
       if (!partnerCode || !feedback) {
         return res.status(400).json({ error: "Dati insufficienti: partnerCode e feedback richiesti" });
@@ -4078,22 +4078,48 @@ app.get('/api/partner/discount-stats', async (req, res) => {
         return res.status(400).json({ error: "Feedback non valido: deve essere 'positive' o 'negative'" });
       }
 
+      console.log(`🔍 FEEDBACK SUBMISSION: Turista ${session.iqCode} valuta partner ${partnerCode} come ${feedback}`);
+
+      // Trova il codice TIQ-OTC più recente se non fornito
+      let validOtcCode = otcCode;
+      if (!validOtcCode) {
+        const recentCodes = await storage.getTouristOneTimeCodes(session.iqCode);
+        const recentUsedCode = recentCodes.find(code => 
+          code.usedBy === partnerCode && 
+          code.usedAt && 
+          new Date(code.usedAt).getTime() > (Date.now() - 2 * 60 * 60 * 1000) // entro 2 ore
+        );
+        
+        if (recentUsedCode) {
+          validOtcCode = recentUsedCode.code;
+        }
+      }
+
+      if (!validOtcCode) {
+        return res.status(400).json({ error: "Nessun codice TIQ-OTC valido trovato per questo partner nelle ultime 2 ore" });
+      }
+
       const feedbackData = {
-        touristCode: session.iqCode,
+        touristIqCode: session.iqCode,
         partnerCode,
-        feedback,
-        createdAt: new Date()
+        otcCode: validOtcCode,
+        rating: feedback,
+        notes: notes || null
       };
+
+      console.log(`📝 FEEDBACK DATA:`, feedbackData);
 
       await storage.createPartnerFeedback(feedbackData);
 
       // Aggiorna il rating del partner
       await storage.updatePartnerRating(partnerCode);
 
+      console.log(`✅ FEEDBACK COMPLETATO: Partner ${partnerCode} valutato con successo`);
+
       res.json({ success: true, message: "Feedback inviato con successo" });
 
     } catch (error) {
-      console.error("Errore invio feedback:", error);
+      console.error("❌ Errore invio feedback:", error);
       res.status(500).json({ error: "Errore interno del server" });
     }
   });
