@@ -1633,10 +1633,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // **SISTEMA RISPARMIO OSPITI STRUTTURE - Endpoint statistiche**
   app.get("/api/structure/guest-savings-stats", async (req, res) => {
+    console.log(`🔥 ENDPOINT GUEST-SAVINGS-STATS - Richiesta ricevuta!`);
+    
     try {
       // Usa il middleware standard per l'autenticazione
+      console.log(`🔥 CHIAMATA VERIFY_ROLE_ACCESS con ruoli: ['structure']`);
       const hasAccess = await verifyRoleAccess(req, res, ['structure']);
+      console.log(`🔥 VERIFY_ROLE_ACCESS RISULTATO: ${hasAccess}`);
+      
       if (!hasAccess) {
+        console.log(`🔥 ACCESSO NEGATO - verifyRoleAccess ha restituito false`);
         return; // verifyRoleAccess ha già inviato la risposta di errore
       }
 
@@ -1659,7 +1665,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      console.error("Errore statistiche risparmio ospiti:", error);
+      console.error("🔥 ERRORE ENDPOINT GUEST-SAVINGS-STATS:", error);
       res.status(500).json({ message: "Errore del server" });
     }
   });
