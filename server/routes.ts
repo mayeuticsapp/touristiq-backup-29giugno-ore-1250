@@ -1634,53 +1634,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // **SISTEMA RISPARMIO OSPITI STRUTTURE - Endpoint statistiche**
   app.get("/api/structure/guest-savings-stats", async (req, res) => {
     try {
-      console.log(`🔍 STATISTICHE RISPARMIO - Inizio controllo accesso`);
-      
-      const sessionToken = req.cookies.session_token;
-      if (!sessionToken) {
-        console.log(`❌ STATISTICHE RISPARMIO - Nessun token sessione`);
-        return res.status(401).json({ message: "Non autenticato" });
+      // Usa il middleware standard per l'autenticazione
+      const hasAccess = await verifyRoleAccess(req, res, ['structure']);
+      if (!hasAccess) {
+        return; // verifyRoleAccess ha già inviato la risposta di errore
       }
 
-      console.log(`🔍 STATISTICHE RISPARMIO - Token trovato: ${sessionToken.substring(0, 10)}...`);
-      
-      const session = await storage.getSessionByToken(sessionToken);
-      if (!session) {
-        console.log(`❌ STATISTICHE RISPARMIO - Sessione non valida per token ${sessionToken.substring(0, 10)}...`);
-        return res.status(401).json({ message: "Sessione non valida" });
-      }
-
-      console.log(`🔍 STATISTICHE RISPARMIO - Sessione valida per utente: ${session.iqCode}`);
-
-      const userIqCode = await storage.getIqCodeByCode(session.iqCode);
-      if (!userIqCode) {
-        console.log(`❌ STATISTICHE RISPARMIO - Utente non trovato: ${session.iqCode}`);
-        return res.status(403).json({ message: "Utente non trovato" });
-      }
-
-      console.log(`🔍 STATISTICHE RISPARMIO - Utente trovato: ${userIqCode.code}, ruolo: ${userIqCode.role}, attivo: ${userIqCode.isActive}`);
-
-      if (userIqCode.role !== 'structure') {
-        console.log(`❌ STATISTICHE RISPARMIO - Ruolo non autorizzato: ${userIqCode.role}`);
-        return res.status(403).json({ message: "Accesso negato - solo strutture" });
-      }
-
-      // Controlla solo se la struttura è attiva
-      if (!userIqCode.isActive) {
-        console.log(`❌ STATISTICHE RISPARMIO - Struttura non attiva: ${userIqCode.code}`);
-        return res.status(403).json({ message: "Struttura non attiva" });
-      }
-
-      console.log(`✅ STATISTICHE RISPARMIO - Accesso autorizzato per: ${userIqCode.code}`);
+      console.log(`📊 STATISTICHE RISPARMIO - Accesso autorizzato per: ${req.userSession.iqCode}`);
 
       // Ottieni le statistiche dal sistema di storage
-      const stats = await storage.getStructureGuestSavingsStats(userIqCode.code);
+      const stats = await storage.getStructureGuestSavingsStats(req.userSession.iqCode);
 
-      console.log(`📊 RISPARMIO OSPITI STRUTTURA: ${userIqCode.code} - Totale risparmi: €${stats.totalSavingsGenerated}`);
+      console.log(`📊 RISPARMIO OSPITI STRUTTURA: ${req.userSession.iqCode} - Totale risparmi: €${stats.totalSavingsGenerated}`);
 
       res.json({
         success: true,
-        structureCode: userIqCode.code,
+        structureCode: req.userSession.iqCode,
         stats: {
           totalSavingsGenerated: stats.totalSavingsGenerated,
           totalCodesIssued: stats.totalCodesIssued,
