@@ -11,13 +11,14 @@ interface PartnerRatingDisplayProps {
 
 interface PartnerRating {
   id: number;
-  partnerCode: string;
-  positiveCount: number;
-  negativeCount: number;
-  totalCount: number;
-  positivePercentage: number;
-  warningLevel: string;
-  lastUpdated: string;
+  partner_code: string;
+  positive_feedbacks: number;
+  negative_feedbacks: number;
+  total_feedbacks: number;
+  current_rating: string;
+  warning_level: number;
+  last_updated: string;
+  is_excluded: boolean;
 }
 
 export const PartnerRatingDisplay: React.FC<PartnerRatingDisplayProps> = ({ partnerCode }) => {
@@ -76,7 +77,28 @@ export const PartnerRatingDisplay: React.FC<PartnerRatingDisplayProps> = ({ part
     );
   }
 
-  const { positiveCount, negativeCount, totalCount, positivePercentage, warningLevel } = rating.rating;
+  const { positive_feedbacks, negative_feedbacks, total_feedbacks, current_rating, warning_level, is_excluded } = rating.rating;
+  
+  // Converti i dati dal formato backend
+  const positiveCount = positive_feedbacks;
+  const negativeCount = negative_feedbacks;
+  const totalCount = total_feedbacks;
+  const positivePercentage = parseFloat(current_rating);
+  
+  // Converti warning_level numerico in stringa
+  const getWarningLevelString = (level: number, excluded: boolean): string => {
+    if (excluded) return 'excluded';
+    switch (level) {
+      case 0: return 'green';  // >= 70%
+      case 1: return 'yellow'; // >= 60%
+      case 2: return 'orange'; // >= 50%
+      case 3: return 'red';    // >= 40%
+      case 4: return 'red';    // < 40%
+      default: return 'green';
+    }
+  };
+  
+  const warningLevel = getWarningLevelString(warning_level, is_excluded);
 
   const getWarningColor = (level: string) => {
     switch (level) {
