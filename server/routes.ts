@@ -4140,6 +4140,22 @@ app.get('/api/partner/discount-stats', async (req, res) => {
     }
   });
 
+  // Endpoint per partner: recupera i propri feedback
+  app.get("/api/partner/feedbacks", async (req, res) => {
+    try {
+      if (!await verifyRoleAccess(req, res, ['partner'])) return;
+
+      const session = req.userSession;
+      const feedbacks = await storage.getPartnerFeedbacks(session.iqCode);
+
+      res.json(feedbacks);
+
+    } catch (error) {
+      console.error("Errore recupero feedback partner:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
   // Endpoint per admin: recupera tutti i warning partner
   app.get("/api/admin/partner-warnings", async (req, res) => {
     try {
