@@ -2332,7 +2332,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
           COALESCE(pd.business_name, ic.assigned_to, 'Partner') as "partnerName",
           pd.business_type as "businessType",
           pd.address,
-          pd.city,
+          COALESCE(po.city, pd.city) as city,
           pd.province,
           pd.phone,
           pd.email,
