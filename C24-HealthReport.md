@@ -1,5 +1,5 @@
 # C24-SWEEP Health Report
-Generated: 2025-07-14T05:45:50.502Z
+Generated: 2025-07-14T07:20:35.142Z
 Status: 2/3 tests passed
 MANUS Integration: ✅ ATTIVO - Architetto Strategico operativo
 

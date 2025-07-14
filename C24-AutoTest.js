@@ -10,6 +10,11 @@
 
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+// ES modules equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Configurazione test
 const BASE_URL = 'http://localhost:5000';
@@ -225,9 +230,9 @@ async function main() {
   return results;
 }
 
-// Esegui se chiamato direttamente
-if (require.main === module) {
+// Esegui se chiamato direttamente (ES modules)
+if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(console.error);
 }
 
-module.exports = { main, runEndpointTests, generateReport };
+export { main, runEndpointTests, generateReport };
