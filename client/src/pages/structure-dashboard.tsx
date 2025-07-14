@@ -706,9 +706,13 @@ export default function StructureDashboard() {
       if (response.ok) {
         const result = await response.json();
         setGeneratedTempCode(result.tempCode);
+        
+        // **REFRESH IMMEDIATO CREDITI** - Invalida cache per aggiornare contatore
+        await queryClient.invalidateQueries({ queryKey: ["/api/my-packages"] });
+        
         toast({
           title: "Codice temporaneo generato",
-          description: "Il codice è valido SENZA SCADENZA. L'ospite può usarlo quando vuole per il primo accesso.",
+          description: `Codice creato! Crediti scalati: ${result.creditsUsed || 1}. Il codice è valido SENZA SCADENZA.`,
         });
       } else {
         const error = await response.json();
