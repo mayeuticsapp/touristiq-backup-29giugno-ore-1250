@@ -852,217 +852,58 @@ export default function StructureDashboard() {
         </CardContent>
       </Card>
 
-      {/* Dettaglio Pacchetti */}
+      {/* INFO PACCHETTO SEMPLIFICATA - Solo contatori senza dettagli interni */}
       {packagesData?.packages && packagesData.packages.length > 0 && (
-        <Card className="warm-panel">
-          <CardHeader>
-            <CardTitle>Dettaglio Pacchetti Acquistati</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {packagesData.packages.map((pkg: any) => (
-                <div key={pkg.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-3">
-                    <div>
-                      <h4 className="font-semibold">Pacchetto {pkg.packageSize} Codici</h4>
-                      <p className="text-sm text-gray-600">ID: {pkg.id} • Assegnato da: {pkg.assignedBy}</p>
-                    </div>
-                    <Badge className="bg-blue-100 text-blue-800">
-                      {pkg.availableCodes}/{pkg.packageSize} disponibili
-                    </Badge>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Utilizzo</span>
-                      <span>{pkg.packageSize - pkg.availableCodes} utilizzati</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-purple-600 h-2 rounded-full" 
-                        style={{width: `${((pkg.packageSize - pkg.availableCodes) / pkg.packageSize) * 100}%`}}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-semibold text-blue-800">Crediti Disponibili</h4>
+              <p className="text-sm text-blue-600">Per generazione codici temporanei e assegnazioni IQ</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-blue-800">
+                {packagesData.packages.reduce((total: number, pkg: any) => total + (pkg.availableCodes || 0), 0)}
+              </div>
+              <div className="text-sm text-blue-600">
+                di {packagesData.packages.reduce((total: number, pkg: any) => total + pkg.packageSize, 0)} totali
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
 
-  // Renderizza sezione gestione ospiti
+  // Renderizza sezione gestione ospiti - Solo visualizzazione
   const renderGuestManagement = () => (
     <div className="space-y-6">
-      {/* Form aggiunta nuovo ospite */}
-      <Card className="warm-panel">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserPlus size={20} />
-            Registra Nuovo Ospite
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="firstName">Nome *</Label>
-              <Input
-                id="firstName"
-                value={newGuest.firstName}
-                onChange={(e) => setNewGuest({...newGuest, firstName: e.target.value})}
-                placeholder="Mario"
-              />
-            </div>
-            <div>
-              <Label htmlFor="lastName">Cognome *</Label>
-              <Input
-                id="lastName"
-                value={newGuest.lastName}
-                onChange={(e) => setNewGuest({...newGuest, lastName: e.target.value})}
-                placeholder="Rossi"
-              />
-            </div>
-            <div>
-              <Label htmlFor="phone">Telefono</Label>
-              <Input
-                id="phone"
-                value={newGuest.phone}
-                onChange={(e) => setNewGuest({...newGuest, phone: e.target.value})}
-                placeholder="+39 123 456 7890"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="roomNumber">Camera</Label>
-              <Input
-                id="roomNumber"
-                value={newGuest.roomNumber}
-                onChange={(e) => setNewGuest({...newGuest, roomNumber: e.target.value})}
-                placeholder="101"
-              />
-            </div>
-            <div>
-              <Label htmlFor="checkinDate">Check-in</Label>
-              <Input
-                id="checkinDate"
-                type="date"
-                value={newGuest.checkinDate}
-                onChange={(e) => {
-                  setNewGuest({...newGuest, checkinDate: e.target.value});
-                  // Apertura automatica date picker check-out dopo selezione check-in
-                  if (e.target.value && checkoutDateRef.current) {
-                    setTimeout(() => {
-                      const checkoutInput = checkoutDateRef.current;
-                      if (checkoutInput) {
-                        checkoutInput.focus();
-                        // Prova diversi metodi per aprire il date picker
-                        try {
-                          // Metodo 1: showPicker standard
-                          if (typeof checkoutInput.showPicker === 'function') {
-                            checkoutInput.showPicker();
-                            console.log('Date picker aperto con showPicker()');
-                          }
-                        } catch (error) {
-                          console.log('showPicker fallito, provo click:', error);
-                          // Metodo 2: Simula click se showPicker fallisce
-                          try {
-                            checkoutInput.click();
-                            console.log('Date picker aperto con click()');
-                          } catch (clickError) {
-                            console.log('Anche click fallito:', clickError);
-                          }
-                        }
-                      }
-                    }, 200);
-                  }
-                }}
-              />
-            </div>
-            <div>
-              <Label htmlFor="checkoutDate">Check-out</Label>
-              <Input
-                ref={checkoutDateRef}
-                id="checkoutDate"
-                type="date"
-                value={newGuest.checkoutDate}
-                onChange={(e) => setNewGuest({...newGuest, checkoutDate: e.target.value})}
-              />
-            </div>
-            <div className="md:col-span-2">
-              <Label htmlFor="notes">Note</Label>
-              <Textarea
-                id="notes"
-                value={newGuest.notes}
-                onChange={(e) => setNewGuest({...newGuest, notes: e.target.value})}
-                placeholder="Note aggiuntive sull'ospite..."
-                rows={2}
-              />
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <Button 
-              onClick={handleCreateGuest}
-              className="bg-purple-600 hover:bg-purple-700"
-              disabled={!newGuest.firstName || !newGuest.lastName || !newGuest.phone}
-            >
-              <UserPlus size={16} className="mr-2" />
-              Registra Ospite
-            </Button>
-          </div>
-
-          {/* Pannello Azioni Rapide Post-Creazione */}
-          {justCreatedGuest && (
-            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <h4 className="font-semibold text-green-800 mb-3">
-                ✅ Ospite creato: {justCreatedGuest.firstName} {justCreatedGuest.lastName} - Camera {justCreatedGuest.roomNumber}
-              </h4>
-              <div className="flex gap-3 flex-wrap">
-                {/* BOTTONE RIMOSSO - Ora esiste solo sistema Codici Temporanei */}
-
-                <Button 
-                  onClick={handleSendWhatsAppToNewGuest}
-                  className="bg-green-600 hover:bg-green-700"
-                  size="sm"
-                  disabled={!assignedCode}
-                >
-                  <Send size={16} className="mr-2" />
-                  Invia via WhatsApp
-                </Button>
-
-                <Button 
-                  onClick={handleCopyCodeToClipboard}
-                  className="bg-gray-600 hover:bg-gray-700"
-                  size="sm"
-                  disabled={!assignedCode}
-                >
-                  <Copy size={16} className="mr-2" />
-                  Copia Codice
-                </Button>
-
-                <Button 
-                  onClick={() => {setJustCreatedGuest(null); setAssignedCode("");}}
-                  variant="outline"
-                  size="sm"
-                >
-                  <Check size={16} className="mr-2" />
-                  Fatto
-                </Button>
-              </div>
-
-              {assignedCode && (
-                <div className="mt-3 p-2 bg-white border rounded font-mono text-sm">
-                  Codice assegnato: <strong>***{assignedCode.slice(-4)}</strong> (privacy protetta)
+      {/* Lista ospiti esistenti - Solo per gestione IQCode */}
+      {guestsData?.guests && guestsData.guests.length > 0 && (
+        <Card className="warm-panel">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users size={20} />
+              Ospiti Registrati ({filteredGuests.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">
+              📋 Ospiti registrati in struttura. Per nuovi ospiti usa il sistema Codici Temporanei qui sopra.
+            </p>
+            {filteredGuests.map((guest: Guest) => (
+              <div key={guest.id} className="border border-gray-200 rounded-lg p-4 mb-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-semibold">{guest.firstName} {guest.lastName}</h4>
+                    <p className="text-sm text-gray-600">🏠 Camera: {guest.roomNumber || 'N/A'}</p>
+                    <p className="text-sm text-gray-600">🔑 {guest.assignedCodes} codici IQ assegnati</p>
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 
