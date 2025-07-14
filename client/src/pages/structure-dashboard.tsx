@@ -865,7 +865,10 @@ export default function StructureDashboard() {
                 {packagesData.packages.reduce((total: number, pkg: any) => total + (pkg.availableCodes || 0), 0)}
               </div>
               <div className="text-sm text-blue-600">
-                di {packagesData.packages.reduce((total: number, pkg: any) => total + pkg.packageSize, 0)} totali
+                di {packagesData.packages.reduce((total: number, pkg: any) => total + pkg.packageSize, 0)} acquistati
+              </div>
+              <div className="text-xs text-blue-500 mt-1">
+                {packagesData.packages.reduce((total: number, pkg: any) => total + (pkg.packageSize - (pkg.availableCodes || 0)), 0)} già utilizzati
               </div>
             </div>
           </div>

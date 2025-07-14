@@ -3378,6 +3378,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: new Date(),
       });
 
+      // **DECREMENTA CREDITI PACCHETTO** - Trova il primo pacchetto con crediti e decrementa
+      let packageDecrementedId = null;
+      for (const pkg of structurePackages) {
+        if (pkg.creditsRemaining && pkg.creditsRemaining > 0) {
+          await storage.decrementPackageCredits(pkg.id);
+          packageDecrementedId = pkg.id;
+          console.log(`💳 CREDITI SCALATI: Pacchetto ${pkg.id} - Da ${pkg.creditsRemaining} a ${pkg.creditsRemaining - 1} crediti`);
+          break;
+        }
+      }
+
       // **TRACKING RISPARMIO OSPITI STRUTTURE** - Inizializza tracking per codice temporaneo
       await storage.createStructureGuestSavingsRecord({
         structureCode: session.iqCode,
@@ -3392,7 +3403,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         tempCode,
         expiresIn: 15, // minuti  
-        message: "Codice temporaneo generato. Condividi con il turista per attivazione immediata." 
+        message: "Codice temporaneo generato. Condividi con il turista per attivazione immediata.",
+        creditsUsed: packageDecrementedId ? 1 : 0
       });
 
     } catch (error) {
