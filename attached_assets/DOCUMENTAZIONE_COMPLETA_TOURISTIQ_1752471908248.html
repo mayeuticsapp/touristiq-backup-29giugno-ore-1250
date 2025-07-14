@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TouristIQ - Documentazione Completa</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 50%, #00b894 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* HERO SECTION */
+        .hero {
+            text-align: center;
+            color: white;
+            padding: 60px 20px;
+            margin-bottom: 40px;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero-subtitle {
+            font-size: 1.6rem;
+            margin-bottom: 30px;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .hero-tagline {
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.15);
+            padding: 20px 40px;
+            border-radius: 50px;
+            display: inline-block;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 30px;
+        }
+
+        /* NAVIGATION */
+        .nav-menu {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .nav-menu a {
+            display: inline-block;
+            padding: 12px 25px;
+            margin: 5px;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-menu a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(116, 185, 255, 0.4);
+        }
+
+        /* CONTENT SECTIONS */
+        .content-section {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(116, 185, 255, 0.2);
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            color: #0984e3;
+            margin-bottom: 25px;
+            text-align: center;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #74b9ff, #00b894);
+            margin: 15px auto;
+            border-radius: 2px;
+        }
+
+        .subsection {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #3498db;
+        }
+
+        .subsection h3 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subsection h4 {
+            color: #34495e;
+            font-size: 1.4rem;
+            margin: 20px 0 10px 0;
+            border-bottom: 2px solid #e0e6ed;
+            padding-bottom: 8px;
+        }
+
+        /* GRID LAYOUTS */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin: 25px 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(116, 185, 255, 0.4);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .feature-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        /* ROLE CARDS */
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 25px 0;
+        }
+
+        .role-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-top: 5px solid;
+            transition: transform 0.3s ease;
+        }
+
+        .role-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .role-card.admin { border-top-color: #e74c3c; }
+        .role-card.tourist { border-top-color: #3498db; }
+        .role-card.structure { border-top-color: #f39c12; }
+        .role-card.partner { border-top-color: #27ae60; }
+
+        .role-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .role-icon {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .role-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        /* COMPARISON TABLE */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #0984e3, #74b9ff);
+            color: white;
+            padding: 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 18px;
+            border-bottom: 1px solid #e0e6ed;
+            vertical-align: top;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #f8fffe;
+        }
+
+        .tourist-column { color: #00b894; font-weight: 600; }
+        .others-column { color: #e17055; font-weight: 600; }
+
+        /* STEP LISTS */
+        .step-list {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .step-list li {
+            counter-increment: step-counter;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 12px;
+            border-left: 5px solid #3498db;
+            position: relative;
+        }
+
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: -15px;
+            top: 15px;
+            background: #3498db;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* SPECIAL BOXES */
+        .highlight-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .example-box {
+            background: linear-gradient(45deg, #e8f5e8, #f0f8f0);
+            border: 2px solid #27ae60;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .example-box::before {
+            content: "💡 ESEMPIO PRATICO";
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #27ae60;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .warning-box {
+            background: linear-gradient(45deg, #fff3cd, #ffeaa7);
+            border: 2px solid #f39c12;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .warning-box::before {
+            content: "⚠️ IMPORTANTE";
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #f39c12;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        /* BENEFITS */
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .benefit-card {
+            background: linear-gradient(135deg, #a8e6cf, #00b894);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .benefit-actor {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            z-index: 2;
+            position: relative;
+        }
+
+        .benefit-list {
+            list-style: none;
+            z-index: 2;
+            position: relative;
+        }
+
+        .benefit-list li {
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .benefit-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        /* FOOTER */
+        .footer {
+            background: linear-gradient(135deg, #2d3436, #636e72);
+            color: white;
+            padding: 50px;
+            border-radius: 20px;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .hero-subtitle { font-size: 1.2rem; }
+            .section-title { font-size: 2rem; }
+            .content-section { padding: 25px; }
+            .features-grid { grid-template-columns: 1fr; }
+            .roles-grid { grid-template-columns: 1fr; }
+            .benefits-grid { grid-template-columns: 1fr; }
+            .nav-menu a { display: block; margin: 5px 0; }
+        }
+
+        /* SMOOTH SCROLLING */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* FLOATING ELEMENTS */
+        .floating-icon {
+            position: absolute;
+            opacity: 0.1;
+            font-size: 6rem;
+            color: white;
+            z-index: 0;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .icon-1 { top: 10%; left: 10%; animation-delay: 0s; }
+        .icon-2 { top: 60%; right: 15%; animation-delay: 2s; }
+        .icon-3 { bottom: 20%; left: 20%; animation-delay: 4s; }
+    </style>
+</head>
+<body>
+    <!-- Floating Icons -->
+    <div class="floating-icon icon-1">🏖️</div>
+    <div class="floating-icon icon-2">🌴</div>
+    <div class="floating-icon icon-3">🏄‍♀️</div>
+
+    <div class="container">
+        <!-- HERO SECTION -->
+        <div class="hero">
+            <h1>🛡️ TOURISTIQ</h1>
+            <div class="hero-subtitle">
+                La Prima Piattaforma Turistica Privacy-First al Mondo
+            </div>
+            <div class="hero-tagline">
+                🌍 Zero Dati Sensibili • 🤝 Massima Privacy • 🌱 100% Etico • 🎯 Autenticità Garantita
+            </div>
+        </div>
+
+        <!-- NAVIGATION MENU -->
+        <div class="nav-menu">
+            <a href="#manifesto">📜 Manifesto Etico</a>
+            <a href="#panoramica">🎯 Panoramica Sistema</a>
+            <a href="#ruoli">👥 Ruoli Utente</a>
+            <a href="#codici-iq">🎫 Codici IQ</a>
+            <a href="#guide-operative">📋 Guide Operative</a>
+            <a href="#tecnologia">⚙️ Tecnologia</a>
+            <a href="#benefici">🌟 Benefici</a>
+        </div>
+
+        <!-- MANIFESTO ETICO -->
+        <div id="manifesto" class="content-section">
+            <h2 class="section-title">📜 Manifesto Etico TouristIQ</h2>
+            
+            <div class="subsection">
+                <h3>🎯 La Nostra Missione</h3>
+                <p style="font-size: 1.2rem; text-align: center; margin-bottom: 30px; color: #636e72;">
+                    <strong>TouristIQ</strong> è il primo eco-sistema turistico mondiale progettato per <strong>rispettare completamente la privacy</strong> di ogni utente. 
+                    Crediamo che il turismo debba essere <strong>autentico, sostenibile e libero dalla sorveglianza digitale</strong>.
+                </p>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">🔐</span>
+                        <div class="feature-title">Privacy Assoluta</div>
+                        <div class="feature-description">
+                            Zero raccolta dati personali. Nessun consenso GDPR da firmare. 
+                            Accesso tramite codici IQ anonimi. La tua privacy è sacra.
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">🤝</span>
+                        <div class="feature-title">Relazioni Autentiche</div>
+                        <div class="feature-description">
+                            Niente recensioni pubbliche competitive. Feedback privato costruttivo. 
+                            Focus su miglioramento qualità, non ranking.
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">🌱</span>
+                        <div class="feature-title">Sostenibilità Etica</div>
+                        <div class="feature-description">
+                            Non vendiamo mai i tuoi dati. Modello business trasparente. 
+                            Primo vero eco-sistema privacy-native del turismo.
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">🎯</span>
+                        <div class="feature-title">Esperienza Pura</div>
+                        <div class="feature-description">
+                            Tutto si basa sull'esperienza vera degli utenti. 
+                            Niente algoritmi invasivi. Solo autenticità e qualità.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>⚖️ TouristIQ vs Altre Piattaforme</h3>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Aspetto</th>
+                            <th>🛡️ TouristIQ</th>
+                            <th>🔍 Altri Servizi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Dati Personali</strong></td>
+                            <td class="tourist-column">❌ Zero raccolta<br>Solo codici IQ anonimi</td>
+                            <td class="others-column">✅ Nome, email, telefono<br>Profilazione completa</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Consensi Privacy</strong></td>
+                            <td class="tourist-column">❌ Nessun consenso GDPR<br>Privacy by design</td>
+                            <td class="others-column">✅ Consensi obbligatori<br>Termini lunghi e complessi</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Recensioni</strong></td>
+                            <td class="tourist-column">🤝 Feedback privato costruttivo<br>Aiuto diretto al partner</td>
+                            <td class="others-column">👁️ Recensioni pubbliche<br>Competizione e ranking</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Modello Business</strong></td>
+                            <td class="tourist-column">💎 Vendita IQCode<br>Non vendiamo dati utenti</td>
+                            <td class="others-column">📊 Vendita dati utenti<br>Pubblicità mirata</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Esperienza</strong></td>
+                            <td class="tourist-column">🎯 Autentica e libera<br>Zero tracking invasivo</td>
+                            <td class="others-column">🕸️ Personalizzata ma invasiva<br>Tracking continuo</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PANORAMICA SISTEMA -->
+        <div id="panoramica" class="content-section">
+            <h2 class="section-title">🎯 Panoramica del Sistema</h2>
+            
+            <div class="subsection">
+                <h3>🔧 Architettura Tecnica</h3>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">⚛️</span>
+                        <div class="feature-title">Frontend Moderno</div>
+                        <div class="feature-description">
+                            React con TypeScript, Tailwind CSS, shadcn/ui components, 
+                            TanStack Query per state management
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">🖥️</span>
+                        <div class="feature-title">Backend Robusto</div>
+                        <div class="feature-description">
+                            Node.js con Express, TypeScript ES modules, 
+                            sessioni cookie-based sicure
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">🗄️</span>
+                        <div class="feature-title">Database PostgreSQL</div>
+                        <div class="feature-description">
+                            Drizzle ORM, 15 tabelle operative, 
+                            schema management automatizzato
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">🤖</span>
+                        <div class="feature-title">AI Integrata</div>
+                        <div class="feature-description">
+                            TIQai assistente OpenAI, consigli personalizzati, 
+                            informazioni turistiche autentiche
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>🔄 Flusso Operativo</h3>
+                <ol class="step-list">
+                    <li>
+                        <strong>Accesso con Codice IQ:</strong> Utenti si autenticano con codici alfanumerici unici, 
+                        nessuna registrazione tradizionale richiesta
+                    </li>
+                    <li>
+                        <strong>Dashboard Personalizzata:</strong> Interfaccia specifica per ruolo 
+                        (admin, turista, struttura, partner) con funzionalità dedicate
+                    </li>
+                    <li>
+                        <strong>Gestione Sessioni:</strong> Autenticazione cookie-based con scadenza 24h, 
+                        sicurezza massima senza dati persistenti
+                    </li>
+                    <li>
+                        <strong>Interazioni Business:</strong> Validazione codici partner-turista, 
+                        gestione pacchetti, mini-gestionale contabile
+                    </li>
+                    <li>
+                        <strong>AI Assistant:</strong> TIQai fornisce consigli turistici basati su 
+                        database interno verificato, zero dati esterni
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- RUOLI UTENTE -->
+        <div id="ruoli" class="content-section">
+            <h2 class="section-title">👥 Ruoli Utente del Sistema</h2>
+            
+            <div class="roles-grid">
+                <div class="role-card admin">
+                    <div class="role-header">
+                        <span class="role-icon">👑</span>
+                        <div class="role-title">ADMIN</div>
+                    </div>
+                    <h4>Funzionalità Principali:</h4>
+                    <ul class="benefit-list">
+                        <li>Gestione completa utenti e codici IQ</li>
+                        <li>Pacchetto RobS con 1000 crediti emozionali</li>
+                        <li>Approvazione strutture e partner</li>
+                        <li>Sistema gestione ricariche turistiche</li>
+                        <li>Statistiche e analytics platform</li>
+                        <li>Bypass onboarding per test</li>
+                    </ul>
+                    <div class="example-box">
+                        <strong>Codice Esempio:</strong> TIQ-IT-ADMIN (nascosto dalla gestione utenti)
+                    </div>
+                </div>
+
+                <div class="role-card tourist">
+                    <div class="role-header">
+                        <span class="role-icon">🏖️</span>
+                        <div class="role-title">TURISTA</div>
+                    </div>
+                    <h4>Funzionalità Principali:</h4>
+                    <ul class="benefit-list">
+                        <li>Dashboard semplificata per sconti</li>
+                        <li>Chat TIQai per consigli personalizzati</li>
+                        <li>Sistema validazione codici con partner</li>
+                        <li>10 utilizzi per codice (ricaricabili)</li>
+                        <li>Feedback privato ai partner</li>
+                        <li>Zero dati personali richiesti</li>
+                    </ul>
+                    <div class="example-box">
+                        <strong>Codici Esempio:</strong><br>
+                        • TIQ-IT-9948-DUOMO (nuovo formato sicuro)<br>
+                        • TIQ-IT-MARGHERITA (formato legacy)
+                    </div>
+                </div>
+
+                <div class="role-card structure">
+                    <div class="role-header">
+                        <span class="role-icon">🏨</span>
+                        <div class="role-title">STRUTTURA</div>
+                    </div>
+                    <h4>Funzionalità Principali:</h4>
+                    <ul class="benefit-list">
+                        <li>Dashboard completa gestione ospiti</li>
+                        <li>Sistema registrazione e assegnazione IQCode</li>
+                        <li>Mini-gestionale contabile integrato</li>
+                        <li>WhatsApp automatico per codici</li>
+                        <li>Archivio ospiti con ricerca avanzata</li>
+                        <li>Export PDF e CSV per contabilità</li>
+                    </ul>
+                    <div class="example-box">
+                        <strong>Codici Esempio:</strong><br>
+                        • TIQ-VV-STT-2567 (Resort Capo Vaticano)<br>
+                        • TIQ-RC-STT-4334 (Grand Hotel Reggio)
+                    </div>
+                </div>
+
+                <div class="role-card partner">
+                    <div class="role-header">
+                        <span class="role-icon">🛍️</span>
+                        <div class="role-title">PARTNER</div>
+                    </div>
+                    <h4>Funzionalità Principali:</h4>
+                    <ul class="benefit-list">
+                        <li>Onboarding obbligatorio 6 sezioni</li>
+                        <li>Dashboard validazione codici turistici</li>
+                        <li>Sistema feedback da turisti</li>
+                        <li>Visibilità su TIQai se completato</li>
+                        <li>Mini-gestionale per tracking sconti</li>
+                        <li>Eco-sistema network calabrese</li>
+                    </ul>
+                    <div class="example-box">
+                        <strong>Codici Esempio:</strong><br>
+                        • TIQ-VV-PRT-2250 (Ristorante Il Borgo)<br>
+                        • TIQ-RC-PRT-5842 (Boutique Calabria)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CODICI IQ -->
+        <div id="codici-iq" class="content-section">
+            <h2 class="section-title">🎫 Sistema Codici IQ</h2>
+            
+            <div class="subsection">
+                <h3>🔐 Tipologie di Codici</h3>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">💙</span>
+                        <div class="feature-title">Codici Emozionali</div>
+                        <div class="feature-description">
+                            Formato: TIQ-IT-[4CIFRE]-[PAROLA]<br>
+                            Esempio: TIQ-IT-9948-DUOMO<br>
+                            Scalano crediti Pacchetto RobS<br>
+                            Sicurezza anti-bruteforce
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">💼</span>
+                        <div class="feature-title">Codici Professionali</div>
+                        <div class="feature-description">
+                            Formato: TIQ-[PROVINCIA]-[TIPO]-[4CIFRE]<br>
+                            Esempio: TIQ-VV-STT-2567<br>
+                            Generazione illimitata<br>
+                            Per strutture e partner
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <strong>Sicurezza Implementata:</strong> I nuovi codici emozionali includono 4 cifre casuali 
+                    per prevenire attacchi di tipo bruteforce. Impossibile indovinare TIQ-IT-PIZZA partendo da TIQ-IT-MARGHERITA.
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>🔄 Sistema Utilizzi e Ricariche</h3>
+                
+                <div class="example-box">
+                    <strong>Flusso Utilizzi Turistici:</strong><br>
+                    1. Turista riceve codice con 10 utilizzi<br>
+                    2. Partner valida codice → utilizzi -1<br>
+                    3. Codice esaurito → bottone "Ricarica 10 Utilizzi"<br>
+                    4. Pagamento SumUp → admin approva → utilizzi ripristinati
+                </div>
+
+                <h4>📊 Gestione Ricariche Admin</h4>
+                <ul class="benefit-list">
+                    <li>Dashboard statistiche real-time</li>
+                    <li>Barra ricerca con debounce per migliaia di richieste</li>
+                    <li>Filtri multipli per stato (pending/approved/rejected)</li>
+                    <li>Ordinamento cronologico con paginazione</li>
+                    <li>Endpoint backend ottimizzato LIMIT/OFFSET</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3>✅ Sistema Validazione Partner-Turista</h3>
+                
+                <ol class="step-list">
+                    <li>
+                        <strong>Partner inserisce codice IQ turista</strong> nella propria dashboard 
+                        per applicare sconto o servizio
+                    </li>
+                    <li>
+                        <strong>Turista riceve notifica</strong> nel proprio pannello con dettagli 
+                        della richiesta di validazione
+                    </li>
+                    <li>
+                        <strong>Turista accetta o rifiuta</strong> la validazione basandosi 
+                        sull'esperienza ricevuta
+                    </li>
+                    <li>
+                        <strong>Partner vede risultato</strong> immediatamente con utilizzi rimanenti 
+                        e può procedere con lo sconto
+                    </li>
+                    <li>
+                        <strong>Sistema previene usi impropri</strong> e garantisce che solo 
+                        esperienze positive vengano validate
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- GUIDE OPERATIVE -->
+        <div id="guide-operative" class="content-section">
+            <h2 class="section-title">📋 Guide Operative Complete</h2>
+            
+            <div class="subsection">
+                <h3>🏖️ Guida Pannello Turista</h3>
+                
+                <h4>🎯 Primo Accesso</h4>
+                <ol class="step-list">
+                    <li><strong>Ricevi il codice IQ</strong> dalla struttura ricettiva o partner</li>
+                    <li><strong>Accedi a TouristIQ</strong> inserendo solo il codice, nessuna registrazione</li>
+                    <li><strong>Esplora il pannello</strong> con utilizzi disponibili e chat TIQai</li>
+                    <li><strong>Scopri la Calabria</strong> con consigli autentici e sconti esclusivi</li>
+                </ol>
+
+                <h4>💬 Chat con TIQai</h4>
+                <div class="example-box">
+                    <strong>Esempi domande efficaci:</strong><br>
+                    • "Dove posso mangiare pesce fresco a Tropea?"<br>
+                    • "Boutique di artigianato locale a Reggio Calabria?"<br>
+                    • "Hotel con spa vicino a Capo Vaticano?"<br>
+                    • "Escursioni in Aspromonte per famiglie?"
+                </div>
+
+                <h4>🎫 Sistema Validazioni</h4>
+                <ul class="benefit-list">
+                    <li>Ricevi notifiche per ogni richiesta di validazione</li>
+                    <li>Accetta solo se soddisfatto dell'esperienza</li>
+                    <li>Rifiuta se il servizio non è stato all'altezza</li>
+                    <li>Lascia feedback privato per aiutare i partner</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3>🏨 Guida Gestione Ospiti Strutture</h3>
+                
+                <h4>📱 Flusso Operativo Completo</h4>
+                <ol class="step-list">
+                    <li>
+                        <strong>Registrazione Nuovo Ospite:</strong> Dashboard Struttura → inserisci 
+                        nome, telefono, camera e note di provenienza
+                    </li>
+                    <li>
+                        <strong>Assegnazione Codice IQ:</strong> Sistema genera automaticamente codice 
+                        turistico consumando crediti del pacchetto
+                    </li>
+                    <li>
+                        <strong>Invio via WhatsApp:</strong> Messaggio precompilato con saluto personalizzato 
+                        e istruzioni per l'uso del codice
+                    </li>
+                    <li>
+                        <strong>Archiviazione Automatica:</strong> Ospite sparisce dalla dashboard e va 
+                        nella sezione "Ospiti con IQ Code"
+                    </li>
+                </ol>
+
+                <h4>🔍 Gestione Archivio Ospiti</h4>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">🔍</span>
+                        <div class="feature-title">Ricerca Avanzata</div>
+                        <div class="feature-description">
+                            Per nome, luogo, camera, telefono con filtri rapidi 
+                            Roma, Napoli, Oggi, Tutti
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">⚡</span>
+                        <div class="feature-title">Azioni Rapide</div>
+                        <div class="feature-description">
+                            Gestisci, WhatsApp, Copia IQ, Chiama - 
+                            tutto disponibile per ogni ospite
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>🛍️ Guida Dashboard Partner</h3>
+                
+                <h4>🚀 Onboarding Obbligatorio</h4>
+                <div class="warning-box">
+                    <strong>ATTENZIONE:</strong> L'onboarding è obbligatorio e richiede almeno 2 informazioni 
+                    per ogni sezione. Non si può accedere alla dashboard senza completarlo!
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">🏢</span>
+                        <div class="feature-title">Business Info</div>
+                        <div class="feature-description">
+                            Nome attività, tipo, descrizione, indirizzo, contatti
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">♿</span>
+                        <div class="feature-title">Accessibilità</div>
+                        <div class="feature-description">
+                            Servizi per disabilità, accesso carrozzine, servizi speciali
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">🥗</span>
+                        <div class="feature-title">Allergie</div>
+                        <div class="feature-description">
+                            Opzioni senza glutine, vegane, halal, gestione allergie
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">👨‍👩‍👧‍👦</span>
+                        <div class="feature-title">Famiglia</div>
+                        <div class="feature-description">
+                            Servizi bambini, seggioloni, menù bimbi, area giochi
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">⭐</span>
+                        <div class="feature-title">Specialità</div>
+                        <div class="feature-description">
+                            Cosa vi rende unici, tradizioni locali, esperienze esclusive
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">🛎️</span>
+                        <div class="feature-title">Servizi</div>
+                        <div class="feature-description">
+                            WiFi, animali, carte credito, delivery, prenotazioni
+                        </div>
+                    </div>
+                </div>
+
+                <h4>🤖 Vantaggio TIQai</h4>
+                <div class="highlight-box">
+                    <h4>Assistente AI Esclusivo</h4>
+                    <p>TIQai utilizza esclusivamente informazioni raccolte dall'interno di TouristIQ, 
+                    garantendo dati verificati, aggiornati e di qualità superiore rispetto a contenuti generici di Google o TripAdvisor.</p>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>📊 Guida Mini-Gestionale</h3>
+                
+                <h4>💰 Dashboard Contabile</h4>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">📈</span>
+                        <div class="feature-title">4 KPI Principali</div>
+                        <div class="feature-description">
+                            Entrate Totali, Spese Totali, Saldo, Clienti Serviti 
+                            aggiornati in tempo reale
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">📋</span>
+                        <div class="feature-title">Categorie Smart</div>
+                        <div class="feature-description">
+                            Entrate: Camere, Colazioni, Extra, IQCode, Parcheggio<br>
+                            Spese: Commissioni, Forniture, Pulizie, Utenze
+                        </div>
+                    </div>
+                </div>
+
+                <h4>💸 Gestione Movimenti</h4>
+                <ol class="step-list">
+                    <li><strong>Registra movimento:</strong> Tipo, categoria, descrizione, importo, data, pagamento</li>
+                    <li><strong>Clienti serviti:</strong> Traccia numero ospiti per movimento (opzionale)</li>
+                    <li><strong>IQCodes usati:</strong> Monitora utilizzo codici per movimento</li>
+                    <li><strong>Export dati:</strong> CSV per commercialista, PDF per report professionali</li>
+                </ol>
+
+                <div class="example-box">
+                    <strong>Esempio movimento completo:</strong><br>
+                    Tipo: Entrata | Categoria: Camere | Descrizione: "Camera 101 - Mario Rossi"<br>
+                    Importo: €85,00 | Data: 28/06/2025 | Pagamento: Carta | Clienti: 2 | IQCode: 1
+                </div>
+            </div>
+        </div>
+
+        <!-- TECNOLOGIA -->
+        <div id="tecnologia" class="content-section">
+            <h2 class="section-title">⚙️ Stack Tecnologico</h2>
+            
+            <div class="subsection">
+                <h3>🏗️ Architettura Sistema</h3>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">⚛️</span>
+                        <div class="feature-title">Frontend Moderno</div>
+                        <div class="feature-description">
+                            React 18 + TypeScript + Vite<br>
+                            Tailwind CSS + shadcn/ui<br>
+                            TanStack Query + Wouter Routing
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">🖥️</span>
+                        <div class="feature-title">Backend Robusto</div>
+                        <div class="feature-description">
+                            Node.js 20 + Express + TypeScript<br>
+                            Sessioni Cookie-based Sicure<br>
+                            API RESTful + Middleware Auth
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">🗄️</span>
+                        <div class="feature-title">Database Layer</div>
+                        <div class="feature-description">
+                            PostgreSQL 16 + Drizzle ORM<br>
+                            15 Tabelle Operative<br>
+                            Migrazioni Automatizzate
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">🤖</span>
+                        <div class="feature-title">AI Integration</div>
+                        <div class="feature-description">
+                            OpenAI GPT-4 + TIQai Assistant<br>
+                            Context-Aware Responses<br>
+                            Tourism-Specific Training
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>🔒 Sicurezza e Privacy</h3>
+                
+                <ul class="benefit-list">
+                    <li><strong>Zero Data Collection:</strong> Nessun dato personale mai memorizzato</li>
+                    <li><strong>Session-Only Auth:</strong> Autenticazione basata su sessioni temporanee</li>
+                    <li><strong>Secure Cookies:</strong> HTTP-only cookies con scadenza 24h</li>
+                    <li><strong>Anti-Bruteforce:</strong> Codici con cifre casuali per sicurezza</li>
+                    <li><strong>GDPR Compliance:</strong> Privacy by design, nessun consenso richiesto</li>
+                    <li><strong>Encrypted Communications:</strong> HTTPS e comunicazioni crittografate</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3>📊 Database Schema</h3>
+                
+                <div class="example-box">
+                    <strong>15 Tabelle Operative:</strong><br>
+                    • iq_codes (autenticazione)<br>
+                    • sessions (gestione sessioni)<br>
+                    • admin_credits (Pacchetto RobS)<br>
+                    • iqcode_validations (utilizzi turistici)<br>
+                    • iqcode_recharges (ricariche SumUp)<br>
+                    • partner_onboarding (dati partner)<br>
+                    • guests (archivio ospiti)<br>
+                    • accounting_movements (mini-gestionale)<br>
+                    • packages (sistema pacchetti)<br>
+                    • + altre 6 tabelle specializzate
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>🚀 Deployment e Performance</h3>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">☁️</span>
+                        <div class="feature-title">Cloud Infrastructure</div>
+                        <div class="feature-description">
+                            Replit Deployment + PostgreSQL Cloud<br>
+                            Auto-scaling + Load Balancing<br>
+                            99.9% Uptime Guaranteed
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">⚡</span>
+                        <div class="feature-title">Performance Optimization</div>
+                        <div class="feature-description">
+                            Lazy Loading + Code Splitting<br>
+                            Optimized Queries + Caching<br>
+                            Real-time Updates
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BENEFICI -->
+        <div id="benefici" class="content-section">
+            <h2 class="section-title">🌟 Benefici per Tutti gli Attori</h2>
+            
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <div class="benefit-actor">🏖️ TURISTI</div>
+                    <ul class="benefit-list">
+                        <li>Privacy totale garantita - zero dati richiesti</li>
+                        <li>Accesso immediato con solo codice IQ</li>
+                        <li>Sconti autentici senza tracking invasivo</li>
+                        <li>TIQai assistente AI per consigli personalizzati</li>
+                        <li>Feedback privato per migliorare servizi</li>
+                        <li>Controllo totale sulle validazioni</li>
+                        <li>Sistema ricarica utilizzi semplice e veloce</li>
+                        <li>Esperienza turistica autentica in Calabria</li>
+                    </ul>
+                </div>
+
+                <div class="benefit-card">
+                    <div class="benefit-actor">🏨 STRUTTURE RICETTIVE</div>
+                    <ul class="benefit-list">
+                        <li>Gestione ospiti senza rischi privacy/GDPR</li>
+                        <li>Sistema registrazione e assegnazione IQCode automatico</li>
+                        <li>WhatsApp integrato per invio codici</li>
+                        <li>Mini-gestionale contabile completo</li>
+                        <li>Archivio ospiti con ricerca avanzata</li>
+                        <li>Export PDF/CSV per contabilità</li>
+                        <li>Relazioni autentiche con ospiti</li>
+                        <li>Focus su qualità servizio vs ranking</li>
+                    </ul>
+                </div>
+
+                <div class="benefit-card">
+                    <div class="benefit-actor">🛍️ PARTNER COMMERCIALI</div>
+                    <ul class="benefit-list">
+                        <li>Accesso clienti senza raccolta dati personali</li>
+                        <li>Visibilità su TIQai per turisti con codici IQ</li>
+                        <li>Sistema validazione codici turistici</li>
+                        <li>Feedback privato costruttivo dai clienti</li>
+                        <li>Rete eco-sistema turistico calabrese</li>
+                        <li>Mini-gestionale per tracking sconti</li>
+                        <li>Onboarding completo per qualità garantita</li>
+                        <li>Zero commissioni su transazioni dirette</li>
+                    </ul>
+                </div>
+
+                <div class="benefit-card">
+                    <div class="benefit-actor">👑 AMMINISTRATORI</div>
+                    <ul class="benefit-list">
+                        <li>Controllo completo eco-sistema TouristIQ</li>
+                        <li>Pacchetto RobS 1000 crediti emozionali</li>
+                        <li>Dashboard gestione ricariche scalabile</li>
+                        <li>Sistema approvazione strutture/partner</li>
+                        <li>Analytics e statistiche real-time</li>
+                        <li>Bypass onboarding per testing</li>
+                        <li>Gestione utenti con soft delete</li>
+                        <li>Monetizzazione attraverso vendita IQCode</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h3>🌍 Impatto Sociale ed Economico</h3>
+                
+                <div class="highlight-box">
+                    <h4>Rivoluzione del Turismo Calabrese</h4>
+                    <p>TouristIQ non è solo una piattaforma tecnologica, ma un movimento per trasformare 
+                    il turismo calabrese in un eco-sistema sostenibile, autentico e rispettoso della privacy 
+                    di ogni partecipante.</p>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">🏛️</span>
+                        <div class="feature-title">Valorizzazione Territorio</div>
+                        <div class="feature-description">
+                            Promozione attività locali autentiche, 
+                            supporto economia territoriale, 
+                            tutela tradizioni calabresi
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">🤝</span>
+                        <div class="feature-title">Relazioni Genuine</div>
+                        <div class="feature-description">
+                            Network partnership reali, 
+                            feedback costruttivo privato, 
+                            crescita qualitativa vs quantitativa
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">🌱</span>
+                        <div class="feature-title">Sostenibilità Etica</div>
+                        <div class="feature-description">
+                            Turismo responsabile, 
+                            zero impatto privacy, 
+                            modello business trasparente
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feature-icon">🎯</span>
+                        <div class="feature-title">Futuro Digitale</div>
+                        <div class="feature-description">
+                            Primo esempio mondiale privacy-first, 
+                            innovazione tecnologica etica, 
+                            standard per settore turistico
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <h3>🚀 Il Futuro del Turismo è Qui</h3>
+            <p style="font-size: 1.2rem; margin: 20px 0;">
+                TouristIQ rappresenta la prima vera rivoluzione privacy-first nel turismo mondiale. 
+                Unisciti all'eco-sistema che mette al centro l'autenticità, la qualità e il rispetto 
+                per ogni persona che sceglie di scoprire la meravigliosa Calabria.
+            </p>
+            <p style="opacity: 0.8;">
+                <strong>TouristIQ</strong> - Dove Privacy, Autenticità e Qualità si Incontrano<br>
+                Sviluppato con ❤️ per il Turismo Sostenibile<br>
+                <em>Versione Documentazione: 1.0 - Giugno 2025</em>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

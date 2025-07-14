@@ -8,8 +8,8 @@
  * Genera report di stato per il sistema di monitoraggio
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 // Configurazione test
 const BASE_URL = 'http://localhost:5000';

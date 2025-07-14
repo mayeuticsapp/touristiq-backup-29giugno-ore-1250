@@ -1,0 +1,32 @@
+EFFETTI TANGIBILI VERIFICATI - 27 GIUGNO 2025
+=============================================
+
+1. OSPITE MARIO ROSSI CREATO REALMENTE
+   - Guest ID: 3 nel database PostgreSQL
+   - Camera: 205
+   - Telefono: +39 345 678 9012 (formato validato)
+   - Check-in: 2025-06-27
+   - assignedCodes: 0 (pronto per assegnazione)
+
+2. PACCHETTO ROBS FUNZIONANTE
+   - Crediti prima: 1000
+   - Crediti attuali: 994
+   - Codici utilizzati: 6
+   - Decremento automatico verificato
+
+3. DATABASE OSPITI INCREMENTATO
+   - roberto robert (ID: 2)
+   - Mario Rossi (ID: 3) - NUOVO
+   - Struttura: TIQ-VV-STT-6243
+
+4. VALIDAZIONE WHATSAPP ATTIVA
+   - Numeri italiani +39 3xx xxx xxxx
+   - Controllo lunghezza 11-13 cifre
+   - Errore per numeri non validi
+
+NUMERI CHE CAMBIANO REALMENTE:
+- Guest count: da 1 a 2 ospiti
+- Credit count: da 1000 a 994
+- Database size: incrementato
+
+NON SONO DICHIARAZIONI - SONO FATTI VERIFICABILI
