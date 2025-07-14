@@ -3334,6 +3334,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Accesso negato - solo strutture" });
       }
 
+      // **CONTROLLO CRITICO PACCHETTI** - Verifica se la struttura ha pacchetti attivi
+      const structurePackages = await storage.getPackagesByRecipient(session.iqCode);
+      if (!structurePackages || structurePackages.length === 0) {
+        console.log(`❌ STRUTTURA ${session.iqCode} - Tentativo generazione codice SENZA pacchetti attivi`);
+        return res.status(403).json({ 
+          error: "Accesso negato - nessun pacchetto attivo",
+          message: "Per generare codici temporanei è necessario avere almeno un pacchetto attivo. Contatta l'amministratore per l'assegnazione." 
+        });
+      }
+
+      // Verifica se ci sono crediti disponibili
+      let totalCreditsAvailable = 0;
+      for (const pkg of structurePackages) {
+        totalCreditsAvailable += pkg.creditsRemaining || 0;
+      }
+
+      if (totalCreditsAvailable <= 0) {
+        console.log(`❌ STRUTTURA ${session.iqCode} - Crediti esauriti (${totalCreditsAvailable} disponibili)`);
+        return res.status(403).json({ 
+          error: "Crediti esauriti",
+          message: "Tutti i crediti dei tuoi pacchetti sono stati utilizzati. Contatta l'amministratore per una ricarica." 
+        });
+      }
+
+      console.log(`✅ STRUTTURA ${session.iqCode} - Controllo pacchetti superato (${totalCreditsAvailable} crediti disponibili)`);
+
       const { guestName, guestPhone } = req.body;
       
       // Genera codice temporaneo con stesso formato admin
