@@ -2294,25 +2294,68 @@ class ExtendedPostgreStorage extends PostgreStorage {
   }
 
   async getRealOffersByCity(cityName: string): Promise<any[]> {
-    const { realOffers } = await import('@shared/schema');
-    const { ilike, and, eq } = await import('drizzle-orm');
+    console.log(`🔍 RICERCA CITTÀ: Cercando offerte per "${cityName}"`);
 
-    console.log(`Ricerca per città: ${cityName}`);
+    try {
+      const { sql } = await import('drizzle-orm');
 
-    // Ricerca case-insensitive con matching parziale per città
-    const searchPattern = `%${cityName.toLowerCase()}%`;
+      // Query SQL diretta come getAllPartnersWithOffers ma filtrata per città
+      const result = await this.db.execute(sql`
+        SELECT 
+          po.id,
+          po.title,
+          po.description,
+          po.discount as "discountPercentage",
+          po.valid_until as "validUntil",
+          'general' as category,
+          po.partner_code as "partnerCode",
+          COALESCE(pd.business_name, ic.assigned_to, 'Partner') as "partnerName",
+          pd.business_type as "businessType",
+          pd.address,
+          COALESCE(po.city, pd.city) as city,
+          pd.province,
+          pd.phone,
+          pd.email,
+          pd.website
+        FROM partner_offers po
+        LEFT JOIN iq_codes ic ON po.partner_code = ic.code
+        LEFT JOIN partner_details pd ON po.partner_code = pd.partner_code
+        WHERE po.is_active = true 
+          AND ic.role = 'partner' 
+          AND ic.is_active = true
+          AND LOWER(COALESCE(po.city, pd.city)) = LOWER(${cityName})
+        ORDER BY po.created_at DESC
+      `);
 
-    const result = await this.db
-      .select()
-      .from(realOffers)
-      .where(and(
-        ilike(realOffers.city, searchPattern),
-        eq(realOffers.isActive, true)
-      ));
+      const offers = result.rows.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        discountPercentage: row.discountPercentage,
+        validUntil: row.validUntil,
+        category: row.category,
+        partnerCode: row.partnerCode,
+        partnerName: row.partnerName || 'Partner',
+        businessType: row.businessType || 'Non specificato',
+        address: row.address,
+        city: row.city,
+        province: row.province,
+        phone: row.phone,
+        email: row.email,
+        website: row.website
+      }));
 
-    console.log(`Trovate ${result.length} offerte per ${cityName}`);
+      console.log(`✅ RICERCA CITTÀ: Trovate ${offers.length} offerte per "${cityName}"`);
+      
+      if (offers.length > 0) {
+        console.log(`📍 OFFERTE TROVATE:`, offers.map(o => `${o.title} (${o.city})`));
+      }
 
-    return result;
+      return offers;
+    } catch (error) {
+      console.error(`❌ ERRORE RICERCA CITTÀ "${cityName}":`, error);
+      return [];
+    }
   }
 
   async getAllPartnersWithOffers(): Promise<any[]> {
@@ -4227,8 +4270,8 @@ class ExtendedMemStorage extends MemStorage {
   }
 
   async getRealOffersByCity(cityName: string): Promise<any[]> {
-    // Fallback per MemStorage - restituisce array vuoto
-    return [];
+    // ExtendedPostgreStorage - usa implementazione PostgreStorage corretta
+    return super.getRealOffersByCity(cityName);
   }
 
   async getRealOffersNearby(latitude: number, longitude: number, radius: number): Promise<any[]> {
