@@ -17,6 +17,7 @@ import type { ReactNode } from "react";
 import { AdvancedAccounting } from "@/components/advanced-accounting";
 import { CustodeCodiceDashboard } from "@/components/custode-codice";
 import StructureTiqOtcSavings from "@/components/StructureTiqOtcSavings";
+import { InfoCodiciTemporaneiModal } from "@/components/InfoCodiciTemporaneiModal";
 
 
 // Interfacce TypeScript per tipizzazione completa
@@ -784,13 +785,25 @@ export default function StructureDashboard() {
       {/* Sistema Codici Temporanei Privacy-First */}
       <Card className="warm-panel border-2 border-green-200">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserPlus size={20} />
-            Sistema Privacy-First: Codici Temporanei
+          <CardTitle className="flex items-center gap-2 justify-between">
+            <div className="flex items-center gap-2">
+              <UserPlus size={20} />
+              Sistema Privacy-First: Codici Temporanei
+            </div>
+            <InfoCodiciTemporaneiModal />
           </CardTitle>
-          <p className="text-sm text-gray-600">
-            🔒 Genera codici temporanei SENZA SCADENZA per i tuoi ospiti. Nessun IQCode reale viene mai esposto.
-          </p>
+          <div className="space-y-2">
+            <p className="text-sm text-gray-600">
+              🔒 Genera codici temporanei SENZA SCADENZA per i tuoi ospiti. Nessun IQCode reale viene mai esposto.
+            </p>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-sm text-amber-800">
+                <strong>⚠️ ATTENZIONE</strong>: Ogni generazione scala immediatamente 1 credito dal tuo pacchetto. 
+                <strong>Operazione IRREVERSIBILE e NON RIMBORSABILE</strong>. 
+                Clicca "Come Funziona?" per dettagli completi.
+              </p>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

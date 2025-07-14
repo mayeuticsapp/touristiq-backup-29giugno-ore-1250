@@ -20,6 +20,7 @@ import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { PartnerFeedbackComponent } from "@/components/PartnerFeedbackComponent";
+import { InfoTuristaModal } from "@/components/InfoTuristaModal";
 
 export default function TouristDashboard() {
   const { t } = useTranslation();
@@ -420,6 +421,7 @@ export default function TouristDashboard() {
                   <p className="text-sm text-gray-600">{t('tourist.noOffersAvailable')}</p>
                 </div>
               </div>
+              <InfoTuristaModal />
               <Button 
                 variant="outline" 
                 size="sm"

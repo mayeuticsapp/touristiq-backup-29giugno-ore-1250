@@ -25,6 +25,7 @@ import { TiqOtcDiscountValidator } from "@/components/TiqOtcDiscountValidator";
 import { PartnerDiscountApplicator } from "@/components/PartnerDiscountApplicator";
 import PartnerReportTouristiq from "@/components/PartnerReportTouristiq";
 import { PartnerRatingDisplay } from "@/components/PartnerRatingDisplay";
+import { InfoPartnerModal } from "@/components/InfoPartnerModal";
 
 interface TouristLinkRequest {
   id: string;
@@ -440,10 +441,11 @@ export default function PartnerDashboard() {
       <div className="min-h-screen bg-gray-50">
         {/* Saluto personalizzato */}
         <div className="bg-white border-b border-gray-100 px-6 py-3">
-          <div className="flex items-center">
+          <div className="flex items-center justify-between">
             <h2 className="text-lg font-medium text-gray-800">
               👋 Benvenuto{entityInfo?.name ? `, ${entityInfo.name}` : '!'}
             </h2>
+            <InfoPartnerModal />
           </div>
         </div>
 
