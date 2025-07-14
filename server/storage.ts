@@ -3929,17 +3929,31 @@ class ExtendedPostgreStorage extends PostgreStorage {
 
   async getPartnerRatingWarnings(): Promise<any[]> {
     try {
-      const warnings = await this.db
-        .select()
-        .from(partnerRatings)
-        .where(
-          and(
-            sql`${partnerRatings.warning_level} != 0`,
-            sql`${partnerRatings.warning_level} != 4`
-          )
-        )
-        .orderBy(desc(partnerRatings.last_updated));
+      console.log('🔍 POSTGRESQL getPartnerRatingWarnings chiamato - implementazione corretta');
+      
+      // Usa query SQL diretta per risolvere problemi con Drizzle ORM
+      const result = await this.db.execute(sql`
+        SELECT * FROM partner_ratings 
+        WHERE warning_level > 0 
+        ORDER BY warning_level DESC, last_updated DESC
+      `);
 
+      const warnings = result.rows.map(row => ({
+        id: row.id,
+        partner_code: row.partner_code,
+        total_feedbacks: row.total_feedbacks,
+        positive_feedbacks: row.positive_feedbacks,
+        negative_feedbacks: row.negative_feedbacks,
+        current_rating: row.current_rating,
+        warning_level: row.warning_level,
+        last_updated: row.last_updated,
+        is_excluded: row.is_excluded,
+        excluded_at: row.excluded_at,
+        excluded_by: row.excluded_by
+      }));
+
+      console.log('🔍 PARTNER WARNINGS RECUPERATI:', warnings.length, 'warning trovati');
+      console.log('📋 WARNINGS DETAILS:', warnings);
       return warnings;
     } catch (error) {
       console.error('❌ Errore recupero warning partner:', error);
@@ -4486,6 +4500,8 @@ class ExtendedMemStorage extends MemStorage {
   }
 
   async getPartnerRatingWarnings(): Promise<any[]> {
+    // MemStorage mock - non usato in produzione con PostgreSQL
+    console.log('⚠️ MemStorage getPartnerRatingWarnings chiamato - dovrebbe usare PostgreStorage');
     return [];
   }
 
