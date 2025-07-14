@@ -3864,18 +3864,17 @@ class ExtendedPostgreStorage extends PostgreStorage {
       const positivePercentage = Math.round((positiveFeedbacks / totalFeedbacks) * 100);
 
       // Determina livello di warning (come numero per il database)
-      let warningLevel: number = 0; // 0 = none, 1 = low, 2 = medium, 3 = high, 4 = excluded
-      let isExcluded = false;
+      // NESSUNA ESCLUSIONE AUTOMATICA - Solo warning per contatto admin
+      let warningLevel: number = 0; // 0 = none, 1 = low, 2 = medium, 3 = high, 4 = critico
       
       if (positivePercentage < 40) {
-        warningLevel = 4;
-        isExcluded = true;
+        warningLevel = 4; // Warning critico - da contattare urgentemente
       } else if (positivePercentage < 50) {
-        warningLevel = 3;
+        warningLevel = 3; // Warning alto - da monitorare
       } else if (positivePercentage < 60) {
-        warningLevel = 2;
+        warningLevel = 2; // Warning medio
       } else if (positivePercentage < 70) {
-        warningLevel = 1;
+        warningLevel = 1; // Warning basso
       }
 
       // Controlla se il rating esiste già
@@ -3891,10 +3890,10 @@ class ExtendedPostgreStorage extends PostgreStorage {
             negative_feedbacks: negativeFeedbacks,
             current_rating: positivePercentage,
             warning_level: warningLevel,
-            is_excluded: isExcluded,
+            is_excluded: false, // Mai escludere automaticamente
             last_updated: new Date(),
-            excluded_at: isExcluded ? new Date() : null,
-            excluded_by: isExcluded ? 'SISTEMA_AUTOMATICO' : null
+            excluded_at: null,
+            excluded_by: null
           })
           .where(eq(partnerRatings.partner_code, partnerCode));
       } else {
@@ -3908,19 +3907,19 @@ class ExtendedPostgreStorage extends PostgreStorage {
             negative_feedbacks: negativeFeedbacks,
             current_rating: positivePercentage,
             warning_level: warningLevel,
-            is_excluded: isExcluded,
+            is_excluded: false, // Mai escludere automaticamente
             last_updated: new Date(),
-            excluded_at: isExcluded ? new Date() : null,
-            excluded_by: isExcluded ? 'SISTEMA_AUTOMATICO' : null
+            excluded_at: null,
+            excluded_by: null
           });
       }
 
-      const warningLabels = ['none', 'low', 'medium', 'high', 'excluded'];
+      const warningLabels = ['none', 'low', 'medium', 'high', 'critico'];
       console.log(`✅ Rating aggiornato per partner ${partnerCode}: ${positivePercentage}% (${warningLabels[warningLevel]})`);
       
-      // Se warning level è 'excluded', esclude automaticamente il partner
+      // ESCLUSIONE AUTOMATICA RIMOSSA: ora genera solo warning per contatto admin
       if (warningLevel === 4) {
-        await this.excludePartner(partnerCode, 'SISTEMA_AUTOMATICO');
+        console.log(`🚨 WARNING CRITICO: Partner ${partnerCode} richiede contatto admin urgente (rating ${positivePercentage}%)`);
       }
     } catch (error) {
       console.error('❌ Errore aggiornamento rating partner:', error);

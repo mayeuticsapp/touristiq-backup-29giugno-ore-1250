@@ -31,33 +31,15 @@ export const AdminPartnerWarnings: React.FC = () => {
     refetchInterval: 30000, // Aggiorna ogni 30 secondi
   });
 
-  const excludePartnerMutation = useMutation({
-    mutationFn: async (partnerCode: string) => {
-      return await apiRequest('POST', `/api/admin/exclude-partner/${partnerCode}`);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Partner escluso",
-        description: "Il partner è stato escluso dal sistema a causa di rating insufficiente.",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/partner-warnings'] });
-    },
-    onError: () => {
-      toast({
-        title: "Errore",
-        description: "Impossibile escludere il partner. Riprova più tardi.",
-        variant: "destructive",
-      });
-    }
-  });
+  // Rimosse funzioni di esclusione automatica - ora solo warning per contatto admin
 
   const getWarningLevelString = (level: number): string => {
     switch (level) {
       case 0: return 'none';
-      case 1: return 'low';
-      case 2: return 'medium';
-      case 3: return 'high';
-      case 4: return 'excluded';
+      case 1: return 'Warning Basso';
+      case 2: return 'Warning Medio';
+      case 3: return 'Warning Alto';
+      case 4: return 'CRITICO - Contattare';
       default: return 'unknown';
     }
   };
@@ -68,7 +50,7 @@ export const AdminPartnerWarnings: React.FC = () => {
       case 1: return 'bg-yellow-100 text-yellow-800';
       case 2: return 'bg-orange-100 text-orange-800';
       case 3: return 'bg-red-100 text-red-800';
-      case 4: return 'bg-gray-100 text-gray-800';
+      case 4: return 'bg-red-200 text-red-900 font-bold'; // Critico ma non escluso
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -88,8 +70,8 @@ export const AdminPartnerWarnings: React.FC = () => {
     switch (level) {
       case 1: return 'Attenzione - Qualità del servizio da migliorare';
       case 2: return 'Warning - Necessario intervento per migliorare il servizio';
-      case 3: return 'Allarme - Rischio esclusione automatica';
-      case 4: return 'Escluso - Partner rimosso dal sistema';
+      case 3: return 'Allarme - Situazione critica da monitorare';
+      case 4: return 'CRITICO - Contattare immediatamente per ammonimento';
       default: return 'Status sconosciuto';
     }
   };
@@ -178,15 +160,10 @@ export const AdminPartnerWarnings: React.FC = () => {
                   </Badge>
                 </div>
                 
-                {warning.warning_level === 3 && !warning.is_excluded && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => excludePartnerMutation.mutate(warning.partner_code)}
-                    disabled={excludePartnerMutation.isPending}
-                  >
-                    {excludePartnerMutation.isPending ? 'Escludendo...' : 'Escludi Partner'}
-                  </Button>
+                {warning.warning_level === 4 && (
+                  <Badge variant="destructive" className="pulse-animation">
+                    CONTATTARE SUBITO
+                  </Badge>
                 )}
               </div>
 
