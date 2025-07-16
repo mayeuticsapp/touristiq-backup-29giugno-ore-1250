@@ -1791,15 +1791,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`📊 STRUTTURA ${structureCode} - Calcolo sconti TIQ-OTC`);
 
       // Step 1: Trova tutti i turisti generati da questa struttura tramite codici temporanei
-      const structureTourists = await storage.db
-        .select({ touristCode: structureGuestSavings.touristIqCode })
-        .from(structureGuestSavings)
-        .where(
-          and(
-            eq(structureGuestSavings.structureCode, structureCode),
-            isNotNull(structureGuestSavings.touristIqCode)
-          )
-        );
+      const structureTourists = await storage.getStructureGuestSavings(structureCode);
 
       const touristCodes = structureTourists.map(t => t.touristCode).filter(code => code);
       console.log(`🔍 STRUTTURA ${structureCode} - Trovati ${touristCodes.length} turisti generati tramite codici temporanei`);
@@ -1816,16 +1808,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Step 2: Trova tutti i codici TIQ-OTC utilizzati da questi turisti
-      const structureOtcCodes = await storage.db
-        .select()
-        .from(oneTimeCodes)
-        .where(
-          and(
-            eq(oneTimeCodes.isUsed, true),
-            inArray(oneTimeCodes.touristIqCode, touristCodes)
-          )
-        )
-        .orderBy(desc(oneTimeCodes.usedAt));
+      const structureOtcCodes = await storage.getUsedOneTimeCodesByTourists(touristCodes);
 
       // Step 3: Calcola totale sconti
       const totalSavings = structureOtcCodes.reduce((sum, code) => {
@@ -2801,8 +2784,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Accesso negato - solo turisti" });
       }
 
-      // Prende SOLO dati reali dal database PostgreSQL con dettagli partner completi
-      const realOffers = await storage.getAllPartnersWithOffers();
+      // Prende SOLO dati reali dal database PostgreSQL - offerte attive
+      const realOffers = await storage.getAllPartnerOffers();
       console.log(`Offerte reali dal database: ${realOffers.length}`);
       
       // Usa i dati reali dal database PostgreSQL - già formattati correttamente

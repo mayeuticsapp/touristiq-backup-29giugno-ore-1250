@@ -1,7 +1,7 @@
 import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, oneTimeCodes, touristSavings, partnerDiscountApplications, structureGuestSavings, systemSettings, partnerFeedback, partnerRatings, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode, type OneTimeCode, type InsertOneTimeCode, type TouristSavings, type InsertTouristSavings, type PartnerDiscountApplication, type InsertPartnerDiscountApplication, type StructureGuestSavings, type InsertStructureGuestSavings, type PartnerFeedback, type InsertPartnerFeedback, type PartnerRating, type InsertPartnerRating } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { eq, and, lt, desc, like, sql, inArray, gt, isNull, ne } from "drizzle-orm";
+import { eq, and, lt, desc, like, sql, inArray, gt, isNull, ne, isNotNull } from "drizzle-orm";
 import { pool } from "./db";
 
 // Memoria globale condivisa per onboarding partner
@@ -163,6 +163,13 @@ export interface IStorage {
   getAllOneTimeCodes(): Promise<OneTimeCode[]>;
   getTouristAvailableUses(touristIqCode: string): Promise<number>;
   getTouristTotalDiscountUsed(touristIqCode: string): Promise<number>;
+
+  // **NUOVI METODI PER STRUTTURE TIQ-OTC**
+  getStructureGuestSavings(structureCode: string): Promise<any[]>;
+  getUsedOneTimeCodesByTourists(touristCodes: string[]): Promise<OneTimeCode[]>;
+
+  // **METODI OFFERTE PARTNER CORRETTI**
+  getAllPartnerOffers(): Promise<PartnerOffer[]>;
   initializeOneTimeCodesForTourist(touristIqCode: string, quantity: number): Promise<void>;
   getTouristsWithoutOneTimeCodes(): Promise<{ code: string; availableUses: number }[]>;
   getOneTimeCodeDetails(code: string): Promise<{ touristIqCode: string } | null>;
@@ -2004,6 +2011,50 @@ class ExtendedPostgreStorage extends PostgreStorage {
       .from(partnerOffers)
       .where(eq(partnerOffers.isActive, true));
     return result;
+  }
+
+  // **NUOVI METODI PER STRUTTURE TIQ-OTC**
+  async getStructureGuestSavings(structureCode: string): Promise<any[]> {
+    try {
+      const result = await this.db
+        .select({ touristCode: structureGuestSavings.touristIqCode })
+        .from(structureGuestSavings)
+        .where(
+          and(
+            eq(structureGuestSavings.structureCode, structureCode),
+            isNotNull(structureGuestSavings.touristIqCode)
+          )
+        );
+      
+      console.log(`🔍 getStructureGuestSavings per ${structureCode}: trovati ${result.length} turisti`);
+      return result;
+    } catch (error) {
+      console.error(`Errore getStructureGuestSavings per ${structureCode}:`, error);
+      return [];
+    }
+  }
+
+  async getUsedOneTimeCodesByTourists(touristCodes: string[]): Promise<OneTimeCode[]> {
+    try {
+      if (touristCodes.length === 0) return [];
+      
+      const result = await this.db
+        .select()
+        .from(oneTimeCodes)
+        .where(
+          and(
+            eq(oneTimeCodes.isUsed, true),
+            inArray(oneTimeCodes.touristIqCode, touristCodes)
+          )
+        )
+        .orderBy(desc(oneTimeCodes.usedAt));
+      
+      console.log(`🔍 getUsedOneTimeCodesByTourists: trovati ${result.length} codici usati da ${touristCodes.length} turisti`);
+      return result;
+    } catch (error) {
+      console.error(`Errore getUsedOneTimeCodesByTourists:`, error);
+      return [];
+    }
   }
 
 
