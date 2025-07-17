@@ -2,13 +2,13 @@
 
 ## Introduzione al Progetto
 
-TouristIQ è una piattaforma tourism-tech innovativa che connette turisti, strutture ricettive e partner commerciali attraverso un sistema di IQCode unici e sconti esclusivi. Il progetto nasce in Calabria con l'obiettivo di digitalizzare l'esperienza turistica italiana mantenendo un approccio "privacy-first" e relazioni umane autentiche.
+TouristIQ è una piattaforma tourism-tech innovativa che connette turisti, strutture ricettive e partner commerciali attraverso un sistema di IQCode unici e sconti esclusivi. Il progetto nasce in Italia con l'obiettivo di digitalizzare l'esperienza turistica italiana mantenendo un approccio "privacy-first" e relazioni umane autentiche.
 
 ## Filosofia e Principi Fondamentali
 
 ### Principio "Dono" vs "Vendita"
 - TouristIQ non vende sconti ma li "dona" come esperienza di scoperta
-- Focus sull'accoglienza calabrese e l'ospitalità italiana autentica
+- Focus sull'accoglienza italiana autentica e l'ospitalità genuina
 - Privacy assoluta: nessun dato personale richiesto (email, telefono, nome)
 - Sistema anonimo basato solo su IQCode alfanumerici
 
@@ -240,7 +240,7 @@ TouristIQ è una piattaforma tourism-tech innovativa che connette turisti, strut
 - Generazione codici temporanei (controlli sicurezza anti-bypass)
 
 ### Roadmap Prossimi Sviluppi
-1. **Espansione Geografica**: Scalabilità oltre Calabria
+1. **Espansione Geografica**: Scalabilità su tutto il territorio italiano
 2. **TIQai Evolution**: Memoria emotiva e predictive concierge
 3. **Mobile App**: React Native per esperienza nativa
 4. **Analytics Avanzate**: Business intelligence per partner
@@ -266,7 +266,7 @@ TouristIQ è una piattaforma tourism-tech innovativa che connette turisti, strut
 - "Ogni esperienza inizia con un IQ" (slogan universale)
 - "Privacy assoluta, esperienza autentica" (value proposition)
 - "Dono, non vendita" (filosofia core)
-- "Calabria accoglie, TouristIQ connette" (mission statement)
+- "Italia accoglie, TouristIQ connette" (mission statement)
 
 ---
 

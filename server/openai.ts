@@ -89,7 +89,7 @@ export async function chatWithTIQai(message: string, storage?: any, language: st
             Non inventare mai nomi di ristoranti o attività che non esistono nei dati forniti.
             Mantieni un tono amichevole e professionale.
             
-            NOTA: TouristIQ inizia dalla Calabria (regione meglio coperta) ma si espande in tutta Italia.
+            NOTA: TouristIQ copre tutto il territorio italiano con focus su autenticità e tradizioni locali.
             Adatta le risposte al territorio richiesto mantenendo autenticità locale.${contextData}`
           },
           {

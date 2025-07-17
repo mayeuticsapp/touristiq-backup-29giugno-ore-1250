@@ -630,7 +630,7 @@ export default function TouristDashboard() {
                             variant="outline" 
                             size="sm"
                             onClick={() => handleOpenPartnerDetail(partner)}
-                            className="bg-calabria-sunset text-white border-none hover:bg-orange-600 text-xs hover-warm"
+                            className="bg-italia-sunset text-white border-none hover:bg-orange-600 text-xs hover-warm"
                           >
                             <ExternalLink className="w-3 h-3 mr-1" />
                             Scopri Tutto
@@ -657,7 +657,7 @@ export default function TouristDashboard() {
             ) : (
               <div className="text-center py-12 animate-discover">
                 <div className="animate-gentle-pulse mb-6">
-                  <div className="mx-auto h-20 w-20 bg-calabria-warm rounded-full flex items-center justify-center">
+                  <div className="mx-auto h-20 w-20 bg-italia-warm rounded-full flex items-center justify-center">
                     <Tags className="h-10 w-10 text-white" />
                   </div>
                 </div>
@@ -666,7 +666,7 @@ export default function TouristDashboard() {
                 <div className="flex justify-center gap-3">
                   <Button 
                     onClick={() => setShowLocationSearch(true)}
-                    className="bg-calabria-sunset text-white hover-warm"
+                    className="bg-italia-sunset text-white hover-warm"
                   >
                     <MapPin className="w-4 h-4 mr-2" />
                     {t('tourist.exploreArea')}
@@ -987,7 +987,7 @@ export default function TouristDashboard() {
                 {/* Descrizione Business */}
                 <div className="text-sm text-gray-700">
                   <p><strong>Tipo di attività:</strong> Ristorante/Pizzeria</p>
-                  <p><strong>Specialità:</strong> Cucina calabrese tradizionale, pizza al taglio, aperitivi vista mare</p>
+                  <p><strong>Specialità:</strong> Cucina italiana tradizionale, pizza al taglio, aperitivi vista mare</p>
                   <p><strong>Lingue parlate:</strong> Italiano, Inglese, Tedesco</p>
                   <p><strong>Esperienza:</strong> Oltre 15 anni di tradizione familiare</p>
                 </div>
@@ -1131,7 +1131,7 @@ export default function TouristDashboard() {
                     <h5 className="font-medium text-orange-800 mb-1">Specialità Uniche</h5>
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                        🍕 Pizza al tartufo calabrese
+                        🍕 Pizza al tartufo
                       </Badge>
                       <Badge variant="secondary" className="bg-orange-100 text-orange-800">
                         🍷 Vini doc locali
@@ -1287,7 +1287,7 @@ export default function TouristDashboard() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="bg-calabria-sunset text-white card-premium animate-warm-glow rounded-xl p-6">
+            <div className="bg-italia-sunset text-white card-premium animate-warm-glow rounded-xl p-6">
               <div className="text-center">
                 <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 mb-4">
                   <span className="text-2xl font-bold tracking-wider text-gray-800">{user?.iqCode}</span>
@@ -1426,18 +1426,18 @@ export default function TouristDashboard() {
       <Dialog open={showWelcomePopup} onOpenChange={() => setShowWelcomePopup(false)}>
         <DialogContent className="w-[95vw] max-w-md max-h-[85vh] overflow-y-auto animate-sunrise">
           <div className="relative overflow-hidden">
-            {/* Background decorativo calabrese */}
-            <div className="absolute inset-0 bg-calabria-sunset opacity-5"></div>
+            {/* Background decorativo italiano */}
+            <div className="absolute inset-0 bg-italia-sunset opacity-5"></div>
             <div className="relative">
               <DialogHeader className="text-center pb-3">
-                <div className="mx-auto mb-3 w-16 h-16 bg-calabria-warm rounded-full flex items-center justify-center animate-gentle-pulse">
+                <div className="mx-auto mb-3 w-16 h-16 bg-italia-warm rounded-full flex items-center justify-center animate-gentle-pulse">
                   <span className="text-2xl">🌅</span>
                 </div>
                 <DialogTitle className="text-xl font-bold text-gray-900">
                   Benvenuto in TouristIQ!
                 </DialogTitle>
                 <p className="text-gray-600 mt-1 text-sm animate-fade-in-delayed">
-                  {welcomeMessage || "La tua porta d'accesso alle esperienze autentiche della Calabria"}
+                  {welcomeMessage || "La tua porta d'accesso alle esperienze autentiche d'Italia"}
                 </p>
               </DialogHeader>
               
@@ -1445,7 +1445,7 @@ export default function TouristDashboard() {
                 {/* Benefici principali - versione compatta */}
                 <div className="grid gap-3">
                   <div className="flex items-start space-x-3">
-                    <div className="w-7 h-7 bg-calabria-nature rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-7 h-7 bg-italia-nature rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-white text-xs">🎯</span>
                     </div>
                     <div>
@@ -1455,7 +1455,7 @@ export default function TouristDashboard() {
                   </div>
                   
                   <div className="flex items-start space-x-3">
-                    <div className="w-7 h-7 bg-calabria-sea rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-7 h-7 bg-italia-sea rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-white text-xs">🤖</span>
                     </div>
                     <div>
@@ -1465,7 +1465,7 @@ export default function TouristDashboard() {
                   </div>
                   
                   <div className="flex items-start space-x-3">
-                    <div className="w-7 h-7 bg-calabria-sunset rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-7 h-7 bg-italia-sunset rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-white text-xs">🔐</span>
                     </div>
                     <div>
@@ -1491,7 +1491,7 @@ export default function TouristDashboard() {
               <div className="flex flex-col gap-2 pt-3">
                 <Button 
                   onClick={() => handleCloseWelcome(true)}
-                  className="w-full bg-calabria-sunset text-white hover:bg-orange-600"
+                  className="w-full bg-italia-sunset text-white hover:bg-orange-600"
                 >
                   Perfetto, non mostrare più
                 </Button>

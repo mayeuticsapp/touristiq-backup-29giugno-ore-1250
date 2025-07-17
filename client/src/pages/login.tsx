@@ -187,7 +187,7 @@ export default function Login() {
         <div className="absolute top-32 right-40 w-32 h-12 bg-white/70 rounded-full opacity-80 animate-float" style={{animationDelay: '2s'}} />
         <div className="absolute top-10 left-1/2 w-28 h-10 bg-white/60 rounded-full opacity-75 animate-float" style={{animationDelay: '4s'}} />
 
-        {/* Montagne calabresi in lontananza */}
+        {/* Montagne italiane in lontananza */}
         <div className="absolute bottom-1/3 left-0 w-full h-48">
           <div className="absolute bottom-0 left-0 w-1/3 h-32 bg-gradient-to-t from-green-700 to-green-500 opacity-60" 
                style={{clipPath: 'polygon(0% 100%, 50% 20%, 100% 100%)'}} />
