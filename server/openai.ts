@@ -1,15 +1,15 @@
-import OpenAI from "openai";
+import { Mistral } from '@mistralai/mistralai';
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
+// Mistral AI client configuration
+const mistral = process.env.MISTRAL_API_KEY ? new Mistral({ apiKey: process.env.MISTRAL_API_KEY }) : null;
 
 export async function chatWithTIQai(message: string, storage?: any, language: string = "it"): Promise<string> {
   try {
-    if (!openai) {
+    if (!mistral) {
       return "Mi dispiace, il sistema TIQai non è attualmente disponibile. Per favore contatta l'amministratore per configurare il servizio.";
     }
     
-    console.log("Invio richiesta a OpenAI per:", message);
+    console.log("Invio richiesta a Mistral AI per:", message);
     
     // Cerca informazioni sui partner nel database se richieste
     let contextData = "";
@@ -44,7 +44,7 @@ export async function chatWithTIQai(message: string, storage?: any, language: st
           
           if (partners.length > 0) {
             contextData = `\n\nIMPORTANTE: Nella zona di ${mentionedCity} abbiamo questi partner TouristIQ autentici:\n`;
-            partners.forEach(p => {
+            partners.forEach((p: any) => {
               contextData += `- ${p.partnerName}: ${p.title} - ${p.description} (${p.discountPercentage}% di sconto)\n`;
             });
             contextData += "\nSuggerisci SOLO questi partner reali, non inventare nomi.";
@@ -66,11 +66,11 @@ export async function chatWithTIQai(message: string, storage?: any, language: st
       fr: "Réponds toujours en français."
     };
 
-    const languageInstruction = languageInstructions[language] || languageInstructions.it;
+    const languageInstruction = languageInstructions[language as keyof typeof languageInstructions] || languageInstructions.it;
     
     const response = await Promise.race([
-      openai.chat.completions.create({
-        model: "gpt-4o",
+      mistral.chat.complete({
+        model: "mistral-large-latest",
         messages: [
           {
             role: "system",
@@ -97,7 +97,7 @@ export async function chatWithTIQai(message: string, storage?: any, language: st
             content: message,
           },
         ],
-        max_tokens: 300,
+        maxTokens: 300,
         temperature: 0.7,
       }),
       new Promise((_, reject) => 
@@ -105,11 +105,11 @@ export async function chatWithTIQai(message: string, storage?: any, language: st
       )
     ]);
 
-    console.log("Risposta ricevuta da OpenAI");
+    console.log("Risposta ricevuta da Mistral AI");
     return (response as any).choices[0].message.content || "Mi dispiace, non sono riuscito a processare la tua richiesta.";
   } catch (error) {
-    console.error("Errore OpenAI:", error);
-    if (error.message === 'Timeout') {
+    console.error("Errore Mistral AI:", error);
+    if (error instanceof Error && error.message === 'Timeout') {
       return "Mi dispiace, la risposta sta impiegando troppo tempo. Riprova con una domanda più breve.";
     }
     return "Mi dispiace, al momento non riesco a rispondere. Riprova più tardi.";
