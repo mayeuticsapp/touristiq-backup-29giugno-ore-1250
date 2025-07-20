@@ -74,7 +74,7 @@ export async function chatWithTIQai(message: string, storage?: any, language: st
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: "llama-3.1-sonar-small-128k-online",
+          model: "sonar",
           messages: [
             {
               role: "system",
@@ -106,7 +106,17 @@ export async function chatWithTIQai(message: string, storage?: any, language: st
           top_p: 0.9,
           stream: false,
           presence_penalty: 0,
-          frequency_penalty: 1
+          frequency_penalty: 1,
+          search_mode: "web",
+          search_recency_filter: "month",
+          return_related_questions: false,
+          return_images: false,
+          web_search_options: {
+            search_context_size: "medium",
+            user_location: {
+              country: "IT"
+            }
+          }
         })
       }),
       new Promise((_, reject) => 
@@ -121,7 +131,13 @@ export async function chatWithTIQai(message: string, storage?: any, language: st
     }
     
     const data = await response.json();
-    return data.choices[0].message.content || "Mi dispiace, non sono riuscito a processare la tua richiesta.";
+    
+    if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+      return data.choices[0].message.content;
+    } else {
+      console.error("Struttura risposta Perplexity non valida:", data);
+      return "Mi dispiace, non sono riuscito a processare la tua richiesta.";
+    }
   } catch (error) {
     console.error("Errore Perplexity AI:", error);
     if (error instanceof Error && error.message === 'Timeout') {
