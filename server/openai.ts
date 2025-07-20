@@ -34,21 +34,57 @@ export async function chatWithTIQai(message: string, storage?: any, language: st
       if (mentionedCity) {
         console.log(`TIQai: ricerca partner per ${mentionedCity}`);
         try {
-          // HARDCODE temporaneo partner di Pizzo per TIQai
+          // Partner di Pizzo con informazioni dettagliate allergie
           const pizzoPartners = [
-            { partnerName: "Hedò", title: "Menu Degustazione Mare & Monti", discountPercentage: "22%" },
-            { partnerName: "Ristorante Locanda Toscano", title: "Cena Romantica Tradizionale", discountPercentage: "19%" },
-            { partnerName: "San Domenico", title: "Aperitivo Vista Mare + Cena", discountPercentage: "24%" },
-            { partnerName: "Il Cappero Rosso", title: "Pizza Gourmet Calabrese + Antipasto", discountPercentage: "28%" },
-            { partnerName: "Mary Grace Giardino sul Mare", title: "Cena Esclusiva Vista Mare", discountPercentage: "23%" }
+            { 
+              partnerName: "Hedò", 
+              title: "Menu Degustazione Mare & Monti", 
+              discountPercentage: "22%",
+              glutenFreeOptions: "risotto ai frutti di mare, branzino al sale, insalate fresche, gelato artigianale senza glutine"
+            },
+            { 
+              partnerName: "Ristorante Locanda Toscano", 
+              title: "Cena Romantica Tradizionale", 
+              discountPercentage: "19%",
+              glutenFreeOptions: "pasta di riso alla calabrese, pesce grigliato, antipasti senza glutine con formaggi locali, dolci tradizionali gluten-free"
+            },
+            { 
+              partnerName: "San Domenico", 
+              title: "Aperitivo Vista Mare + Cena", 
+              discountPercentage: "24%",
+              glutenFreeOptions: "pesce fresco, verdure grigliate, antipasti di mare"
+            },
+            { 
+              partnerName: "Il Cappero Rosso", 
+              title: "Pizza Gourmet Calabrese + Antipasto", 
+              discountPercentage: "28%",
+              glutenFreeOptions: "pizza senza glutine disponibile, antipasti di mare senza glutine"
+            },
+            { 
+              partnerName: "Mary Grace Giardino sul Mare", 
+              title: "Cena Esclusiva Vista Mare", 
+              discountPercentage: "23%",
+              glutenFreeOptions: "pesce fresco, crudità di mare, contorni naturali"
+            }
           ];
           
           if (mentionedCity && mentionedCity.toLowerCase() === 'pizzo') {
+            const isGlutenFreeQuery = message.toLowerCase().includes("glutine") || message.toLowerCase().includes("celiac") || message.toLowerCase().includes("senza glutine") || message.toLowerCase().includes("allergi");
+            
             contextData = `\n\nRICORDATO: L'utente ha TouristIQ e può usare sconti presso questi partner a Pizzo:\n`;
             pizzoPartners.forEach((p: any) => {
-              contextData += `- ${p.partnerName}: ${p.title} (${p.discountPercentage} di sconto)\n`;
+              contextData += `- ${p.partnerName}: ${p.title} (${p.discountPercentage} di sconto)`;
+              if (isGlutenFreeQuery && p.glutenFreeOptions) {
+                contextData += ` - OPZIONI SENZA GLUTINE: ${p.glutenFreeOptions}`;
+              }
+              contextData += `\n`;
             });
-            console.log(`🔥 PIZZO PARTNERS CONTEXT ACTIVATED`);
+            
+            if (isGlutenFreeQuery) {
+              contextData += `\nIMPORTANTE: Hedò e Locanda Toscano hanno menu specializzati per celiaci. Menziona le loro opzioni specifiche senza glutine.`;
+            }
+            
+            console.log(`🔥 PIZZO PARTNERS CONTEXT ACTIVATED${isGlutenFreeQuery ? ' (GLUTEN-FREE MODE)' : ''}`);
           } else {
             contextData = `\n\nINFORMAZIONE: Non abbiamo ancora partner TouristIQ attivi a ${mentionedCity}. Suggerisci di esplorare le città vicine.`;
           }
