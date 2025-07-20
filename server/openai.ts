@@ -1,15 +1,13 @@
-import { Mistral } from '@mistralai/mistralai';
-
-// Mistral AI client configuration
-const mistral = process.env.MISTRAL_API_KEY ? new Mistral({ apiKey: process.env.MISTRAL_API_KEY }) : null;
+// Perplexity AI configuration
+const perplexityApiKey = process.env.PERPLEXITY_API_KEY;
 
 export async function chatWithTIQai(message: string, storage?: any, language: string = "it"): Promise<string> {
   try {
-    if (!mistral) {
+    if (!perplexityApiKey) {
       return "Mi dispiace, il sistema TIQai non è attualmente disponibile. Per favore contatta l'amministratore per configurare il servizio.";
     }
     
-    console.log("Invio richiesta a Mistral AI per:", message);
+    console.log("Invio richiesta a Perplexity AI per:", message);
     
     // Cerca informazioni sui partner nel database se richieste
     let contextData = "";
@@ -69,46 +67,63 @@ export async function chatWithTIQai(message: string, storage?: any, language: st
     const languageInstruction = languageInstructions[language as keyof typeof languageInstructions] || languageInstructions.it;
     
     const response = await Promise.race([
-      mistral.chat.complete({
-        model: "mistral-large-latest",
-        messages: [
-          {
-            role: "system",
-            content: `Sei TIQai, l'assistente virtuale di TouristIQ specializzato nel turismo autentico italiano. 
-            ${languageInstruction}
-            
-            Fornisci informazioni utili su:
-            - Attrazioni turistiche e luoghi da visitare
-            - Ristoranti e cucina locale
-            - Eventi e attività
-            - Trasporti e logistica
-            - Consigli di viaggio
-            - Storia e cultura italiana
-            
-            REGOLA CRITICA: Se hai informazioni sui partner TouristIQ reali, usa SOLO quelli.
-            Non inventare mai nomi di ristoranti o attività che non esistono nei dati forniti.
-            Mantieni un tono amichevole e professionale.
-            
-            NOTA: TouristIQ copre tutto il territorio italiano con focus su autenticità e tradizioni locali.
-            Adatta le risposte al territorio richiesto mantenendo autenticità locale.${contextData}`
-          },
-          {
-            role: "user",
-            content: message,
-          },
-        ],
-        maxTokens: 300,
-        temperature: 0.7,
+      fetch('https://api.perplexity.ai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${perplexityApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: "llama-3.1-sonar-small-128k-online",
+          messages: [
+            {
+              role: "system",
+              content: `Sei TIQai, l'assistente virtuale di TouristIQ specializzato nel turismo autentico italiano. 
+              ${languageInstruction}
+              
+              Fornisci informazioni utili su:
+              - Attrazioni turistiche e luoghi da visitare
+              - Ristoranti e cucina locale
+              - Eventi e attività
+              - Trasporti e logistica
+              - Consigli di viaggio
+              - Storia e cultura italiana
+              
+              REGOLA CRITICA: Se hai informazioni sui partner TouristIQ reali, usa SOLO quelli.
+              Non inventare mai nomi di ristoranti o attività che non esistono nei dati forniti.
+              Mantieni un tono amichevole e professionale.
+              
+              NOTA: TouristIQ copre tutto il territorio italiano con focus su autenticità e tradizioni locali.
+              Adatta le risposte al territorio richiesto mantenendo autenticità locale.${contextData}`
+            },
+            {
+              role: "user",
+              content: message,
+            },
+          ],
+          max_tokens: 300,
+          temperature: 0.2,
+          top_p: 0.9,
+          stream: false,
+          presence_penalty: 0,
+          frequency_penalty: 1
+        })
       }),
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Timeout')), 15000)
       )
     ]);
 
-    console.log("Risposta ricevuta da Mistral AI");
-    return (response as any).choices[0].message.content || "Mi dispiace, non sono riuscito a processare la tua richiesta.";
+    console.log("Risposta ricevuta da Perplexity AI");
+    
+    if (!(response instanceof Response)) {
+      throw new Error('Timeout');
+    }
+    
+    const data = await response.json();
+    return data.choices[0].message.content || "Mi dispiace, non sono riuscito a processare la tua richiesta.";
   } catch (error) {
-    console.error("Errore Mistral AI:", error);
+    console.error("Errore Perplexity AI:", error);
     if (error instanceof Error && error.message === 'Timeout') {
       return "Mi dispiace, la risposta sta impiegando troppo tempo. Riprova con una domanda più breve.";
     }
