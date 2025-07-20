@@ -37,13 +37,19 @@ export async function chatWithTIQai(message: string, storage?: any, language: st
       if (mentionedCity) {
         console.log(`TIQai: ricerca partner per ${mentionedCity}`);
         try {
-          const partners = await storage.getPartnerOffersByCity(mentionedCity);
-          console.log(`TIQai: trovate ${partners.length} offerte per ${mentionedCity}`);
+          // Usa getAllPartnersWithOffers e filtra per città
+          const allPartners = await storage.getAllPartnersWithOffers();
+          const partners = allPartners.filter(p => 
+            p.city?.toLowerCase().includes(mentionedCity.toLowerCase()) || 
+            p.address?.toLowerCase().includes(mentionedCity.toLowerCase())
+          );
+          
+          console.log(`TIQai: trovate ${partners.length} offerte per ${mentionedCity} su ${allPartners.length} totali`);
           
           if (partners.length > 0) {
             contextData = `\n\nIMPORTANTE: Nella zona di ${mentionedCity} abbiamo questi partner TouristIQ autentici:\n`;
             partners.forEach((p: any) => {
-              contextData += `- ${p.partnerName}: ${p.title} - ${p.description} (${p.discountPercentage}% di sconto)\n`;
+              contextData += `- ${p.partnerName}: ${p.title} - ${p.description} (${p.discountPercentage})\n`;
             });
             contextData += "\nSuggerisci SOLO questi partner reali, non inventare nomi.";
           } else {

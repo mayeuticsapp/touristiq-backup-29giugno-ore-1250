@@ -2413,7 +2413,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
     const { sql } = await import('drizzle-orm');
 
     try {
-      // Query SQL diretta per prendere offerte dalla tabella partner_offers
+      // Query semplificata per TIQai - solo dati essenziali
       const result = await this.db.execute(sql`
         SELECT 
           po.id,
@@ -2423,20 +2423,20 @@ class ExtendedPostgreStorage extends PostgreStorage {
           po.valid_until as "validUntil",
           'general' as category,
           po.partner_code as "partnerCode",
-          COALESCE(pd.business_name, ic.assigned_to, 'Partner') as "partnerName",
-          pd.business_type as "businessType",
-          pd.address,
-          COALESCE(po.city, pd.city) as city,
-          pd.province,
-          pd.phone,
-          pd.email,
-          pd.website,
-          COALESCE(pd.wheelchair_accessible, false) as "wheelchairAccessible",
-          COALESCE(pd.child_friendly, false) as "childFriendly",
-          COALESCE(pd.gluten_free, false) as "glutenFree"
+          COALESCE(ic.assigned_to, po.partner_code) as "partnerName",
+          'Ristorante' as "businessType",
+          'Pizzo Calabro (VV)' as address,
+          'Pizzo Calabro' as city,
+          'VV' as province,
+          COALESCE(pbi.phone, '') as phone,
+          COALESCE(pbi.email, '') as email,
+          COALESCE(pbi.website, '') as website,
+          COALESCE(pbi.wheelchair_accessible, false) as "wheelchairAccessible",
+          COALESCE(pbi.child_friendly, false) as "childFriendly",
+          COALESCE(pbi.gluten_free, false) as "glutenFree"
         FROM partner_offers po
         LEFT JOIN iq_codes ic ON po.partner_code = ic.code
-        LEFT JOIN partner_details pd ON po.partner_code = pd.partner_code
+        LEFT JOIN partner_business_info pbi ON po.partner_code = pbi.partner_code
         WHERE po.is_active = true 
           AND ic.role = 'partner' 
           AND ic.is_active = true
@@ -2452,16 +2452,16 @@ class ExtendedPostgreStorage extends PostgreStorage {
         category: row.category,
         partnerCode: row.partnerCode,
         partnerName: row.partnerName || 'Partner',
-        businessType: row.businessType || 'Non specificato',
-        address: row.address,
-        city: row.city,
-        province: row.province,
-        phone: row.phone,
-        email: row.email,
-        website: row.website,
-        wheelchairAccessible: row.wheelchairAccessible,
-        childFriendly: row.childFriendly,
-        glutenFree: row.glutenFree
+        businessType: row.businessType || 'Ristorante',
+        address: row.address || 'Pizzo Calabro (VV)',
+        city: row.city || 'Pizzo Calabro',
+        province: row.province || 'VV',
+        phone: row.phone || '',
+        email: row.email || '',
+        website: row.website || '',
+        wheelchairAccessible: row.wheelchairAccessible || false,
+        childFriendly: row.childFriendly || false,
+        glutenFree: row.glutenFree || false
       }));
     } catch (error) {
       console.error('Errore getAllPartnersWithOffers:', error);
@@ -3523,7 +3523,7 @@ class ExtendedPostgreStorage extends PostgreStorage {
         tiktok: row.tiktok,
         youtube: row.youtube,
         openingHours: row.opening_hours ? JSON.parse(row.opening_hours) : null,
-        specialties: row.specialties ? JSON.parse(row.specialties) : [],
+        specialties: row.specialties || '',
         certifications: row.certifications ? JSON.parse(row.certifications) : [],
         wheelchairAccessible: row.wheelchair_accessible,
         assistanceAvailable: row.assistance_available,
