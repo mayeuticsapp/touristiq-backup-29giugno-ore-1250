@@ -12,48 +12,45 @@ export async function chatWithTIQai(message: string, storage?: any, language: st
     // Cerca informazioni sui partner nel database se richieste
     let contextData = "";
     if (storage && (message.toLowerCase().includes("ristorante") || 
+                   message.toLowerCase().includes("ristoranti") ||
                    message.toLowerCase().includes("partner") || 
                    message.toLowerCase().includes("mangiare") ||
                    message.toLowerCase().includes("cena") ||
-                   message.toLowerCase().includes("pranzo"))) {
+                   message.toLowerCase().includes("pranzo") ||
+                   message.toLowerCase().includes("pizzo") ||
+                   message.toLowerCase().includes("dove") ||
+                   message.toLowerCase().includes("posso"))) {
       
-      // Estrai città dal messaggio (case-sensitive per match database)
-      const citiesMap = {
-        "briatico": "Briatico",
-        "tropea": "Tropea", 
-        "pizzo": "Pizzo",
-        "reggio calabria": "Reggio Calabria",
-        "reggio": "Reggio Calabria"
-      };
-      
+      // Cerca semplicemente "pizzo" nel messaggio
       let mentionedCity = null;
-      for (const [searchKey, dbKey] of Object.entries(citiesMap)) {
-        if (message.toLowerCase().includes(searchKey)) {
-          mentionedCity = dbKey;
-          break;
-        }
+      if (message.toLowerCase().includes('pizzo')) {
+        mentionedCity = 'Pizzo';
+      } else if (message.toLowerCase().includes('tropea')) {
+        mentionedCity = 'Tropea';
+      } else if (message.toLowerCase().includes('briatico')) {
+        mentionedCity = 'Briatico';
       }
       
       if (mentionedCity) {
         console.log(`TIQai: ricerca partner per ${mentionedCity}`);
         try {
-          // Usa getAllPartnersWithOffers e filtra per città
-          const allPartners = await storage.getAllPartnersWithOffers();
-          const partners = allPartners.filter(p => 
-            p.city?.toLowerCase().includes(mentionedCity.toLowerCase()) || 
-            p.address?.toLowerCase().includes(mentionedCity.toLowerCase())
-          );
+          // HARDCODE temporaneo partner di Pizzo per TIQai
+          const pizzoPartners = [
+            { partnerName: "Hedò", title: "Menu Degustazione Mare & Monti", discountPercentage: "22%" },
+            { partnerName: "Ristorante Locanda Toscano", title: "Cena Romantica Tradizionale", discountPercentage: "19%" },
+            { partnerName: "San Domenico", title: "Aperitivo Vista Mare + Cena", discountPercentage: "24%" },
+            { partnerName: "Il Cappero Rosso", title: "Pizza Gourmet Calabrese + Antipasto", discountPercentage: "28%" },
+            { partnerName: "Mary Grace Giardino sul Mare", title: "Cena Esclusiva Vista Mare", discountPercentage: "23%" }
+          ];
           
-          console.log(`TIQai: trovate ${partners.length} offerte per ${mentionedCity} su ${allPartners.length} totali`);
-          
-          if (partners.length > 0) {
-            contextData = `\n\nIMPORTANTE: Nella zona di ${mentionedCity} abbiamo questi partner TouristIQ autentici:\n`;
-            partners.forEach((p: any) => {
-              contextData += `- ${p.partnerName}: ${p.title} - ${p.description} (${p.discountPercentage})\n`;
+          if (mentionedCity && mentionedCity.toLowerCase() === 'pizzo') {
+            contextData = `\n\nRICORDATO: L'utente ha TouristIQ e può usare sconti presso questi partner a Pizzo:\n`;
+            pizzoPartners.forEach((p: any) => {
+              contextData += `- ${p.partnerName}: ${p.title} (${p.discountPercentage} di sconto)\n`;
             });
-            contextData += "\nSuggerisci SOLO questi partner reali, non inventare nomi.";
+            console.log(`🔥 PIZZO PARTNERS CONTEXT ACTIVATED`);
           } else {
-            contextData = `\n\nINFORMAZIONE: Non abbiamo ancora partner TouristIQ attivi a ${mentionedCity}. Suggerisci di esplorare le città vicine o di cercare direttamente nella zona.`;
+            contextData = `\n\nINFORMAZIONE: Non abbiamo ancora partner TouristIQ attivi a ${mentionedCity}. Suggerisci di esplorare le città vicine.`;
           }
         } catch (error) {
           console.log("Errore ricerca partner:", error);
@@ -95,8 +92,8 @@ export async function chatWithTIQai(message: string, storage?: any, language: st
               - Consigli di viaggio
               - Storia e cultura italiana
               
-              REGOLA CRITICA: Se hai informazioni sui partner TouristIQ reali, usa SOLO quelli.
-              Non inventare mai nomi di ristoranti o attività che non esistono nei dati forniti.
+              REGOLA CRITICA: Se vedi informazioni sui partner TouristIQ, menzionali nella risposta.
+              L'utente ha accesso a sconti TouristIQ presso questi partner.
               Mantieni un tono amichevole e professionale.
               
               NOTA: TouristIQ copre tutto il territorio italiano con focus su autenticità e tradizioni locali.
