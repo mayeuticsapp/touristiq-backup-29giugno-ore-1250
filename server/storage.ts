@@ -1,6 +1,6 @@
 import { iqCodes, sessions, assignedPackages, guests, adminCredits, purchasedPackages, accountingMovements, structureSettings, settingsConfig, iqcodeRecharges, iqcodeRecoveryKeys, partnerOffers, temporaryCodes, oneTimeCodes, touristSavings, partnerDiscountApplications, structureGuestSavings, systemSettings, partnerFeedback, partnerRatings, type IqCode, type InsertIqCode, type Session, type InsertSession, type AssignedPackage, type InsertAssignedPackage, type Guest, type InsertGuest, type AdminCredits, type InsertAdminCredits, type PurchasedPackage, type InsertPurchasedPackage, type AccountingMovement, type InsertAccountingMovement, type StructureSettings, type InsertStructureSettings, type SettingsConfig, type InsertSettingsConfig, type UserRole, type IqcodeRecharge, type InsertIqcodeRecharge, type PartnerOffer, type InsertPartnerOffer, type TemporaryCode, type InsertTemporaryCode, type OneTimeCode, type InsertOneTimeCode, type TouristSavings, type InsertTouristSavings, type PartnerDiscountApplication, type InsertPartnerDiscountApplication, type StructureGuestSavings, type InsertStructureGuestSavings, type PartnerFeedback, type InsertPartnerFeedback, type PartnerRating, type InsertPartnerRating } from "@shared/schema";
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { eq, and, lt, desc, like, sql, inArray, gt, isNull, ne, isNotNull } from "drizzle-orm";
 import { pool } from "./db";
 
@@ -987,8 +987,8 @@ export class PostgreStorage implements IStorage {
   protected db: any;
 
   constructor() {
-    const sql = neon(process.env.DATABASE_URL!);
-    this.db = drizzle(sql, { schema: { iqCodes, sessions, assignedPackages, guests, partnerOffers, iqcodeRecoveryKeys, oneTimeCodes } });
+    const pgPool = new Pool({ connectionString: process.env.DATABASE_URL });
+    this.db = drizzle(pgPool, { schema: { iqCodes, sessions, assignedPackages, guests, partnerOffers, iqcodeRecoveryKeys, oneTimeCodes } });
     this.initializeDefaultCodes();
   }
 
