@@ -1,0 +1,171 @@
+M
+maieutica
+touristiq07122025
+
+Produzione
+
+
+touristiq-db
+
+Ricerca
+Command+
+K
+
+Nuovo
+
+Aggiornamento
+
+
+M
+Ambiente
+touristiq-db
+Informazioni
+Monitor
+Registri
+Metrica
+Maneggio
+Applicazioni
+Recupero
+
+Registro delle modifiche
+Invita un amico
+
+Contatta l'assistenza
+Stato di rendering
+PostgreSQL
+touristiq-db
+Gratuito
+Aggiorna la tua istanza
+Visualizza i documenti
+
+Collegare
+ID servizio :
+dpg-d4qns0adbo4c73bv5ul0-a
+
+Informazioni
+Il tuo database scadrà il 6 gennaio 2026Il database verrà eliminato a meno che non si effettui l'upgrade a un tipo di istanza a pagamento.
+Generale
+Nome
+Un nome univoco per il tuo database.
+touristiq-db
+
+Modificare
+Creazione da
+2 minutes ago
+Stato
+disponibile
+Versione PostgreSQL
+16
+Regione
+Francoforte (UE Centrale)
+Leggi le repliche
+
+Aggiungi replica di lettura
+Magazzinaggio
+Recupero delle metriche di archiviazione
+Autoscaling dell'archiviazione
+Disabili
+Chiave API Datadog
+
+Aggiungi la chiave API Datadog
+Istanza Postgres
+Tipo di istanza
+Gratuito
+256 MB
+ Memoria RAM
+0,1
+ processore
+1 GB
+ Magazzinaggio
+
+Aggiornamento
+Per modificare i tipi di istanza è necessaria una carta di credito.
+Aggiungi
+informazioni di pagamento
+Alta disponibilità
+Esegui un'istanza di standby del tuo database ed esegui automaticamente il failover su di essa se il database primario riscontra un problema.
+
+
+Disabili
+Disponibile solo per le istanze Pro e superiori.
+Vedi le opzioni di aggiornamento
+Connessioni
+Nome host
+Un nome host interno utilizzato dai servizi Render.
+dpg-d4qns0adbo4c73bv5ul0-a
+
+Porta
+5432
+
+Banca dati
+touristiq_db
+
+Nome utente
+touristiq_db_user
+
+Password
+••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
+
+
+URL del database interno
+••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
+
+
+URL del database esterno
+••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
+
+
+Comando PSQL
+••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
+
+
+Credenziali
+Crea nuove credenziali predefinite ed elimina quelle vecchie quando sei pronto.
+
+Username
+1
+
+Password
+
+Created
+touristiq_db_userDefault	
+••••••••••••••••
+2min	
+
+Nuova credenziale predefinita
+Networking
+Inbound IP Restrictions
+Limit incoming traffic to your services from specific IP ranges. Sources are specified in CIDR block notation.
+
+1
+IP range is allowed from outside of your private network.
+
+Validate IP address
+0.0.0.0
+PostgreSQL Inbound IP Rules
+Source	Description	Delete
+CIDR block
+0.0.0.0/0
+Description
+everywhere
+
+
+Add source
+Cancel
+Save
+
+Elimina database
+
+Riavvia il database
+
+Sospendi database
+0 servizi selezionati:
+
+Mossa
+
+Genera progetto
+
+Riprendere
+
+Sospendere
+
