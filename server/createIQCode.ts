@@ -6,7 +6,8 @@ export async function createIQCode(
   codeType: "emotional" | "professional",
   role: UserRole,
   location: string, // country for emotional, province for professional
-  assignedTo = ""
+  assignedTo = "",
+  email?: string // Email opzionale per evitare duplicati
 ) {
   let attempts = 0;
   const maxAttempts = 50;
@@ -35,7 +36,8 @@ export async function createIQCode(
         isActive: true,
         assignedTo,
         location,
-        codeType
+        codeType,
+        email: email || undefined // Salva email se presente
       });
 
       return {

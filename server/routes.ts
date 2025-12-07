@@ -303,9 +303,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // DISTINZIONE CRITICA: CODICI PROFESSIONALI vs EMOZIONALI
       if (codeType === "professional") {
+        // CONTROLLO EMAIL DUPLICATA - Se email presente, verifica se esiste già
+        if (email && email.trim()) {
+          const existingCode = await storage.getIqCodeByEmail(email.trim().toLowerCase());
+          if (existingCode) {
+            console.log(`⚠️ EMAIL GIÀ ESISTENTE: ${email} -> ${existingCode.code}`);
+            return res.status(400).json({ 
+              message: `Questa email è già associata al codice ${existingCode.code}. Impossibile generare un duplicato.`,
+              existingCode: existingCode.code
+            });
+          }
+        }
+
         // CODICI PROFESSIONALI - SEMPRE DISPONIBILI (NON SCALANO CREDITI)
         const { createIQCode } = await import("./createIQCode");
-        const result = await createIQCode(codeType, role, location, assignedTo || `Generato da ${session.iqCode}`);
+        const result = await createIQCode(codeType, role, location, assignedTo || `Generato da ${session.iqCode}`, email?.trim().toLowerCase());
         
         // Se email presente, invia codice automaticamente
         if (email && email.trim()) {
@@ -315,6 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else if (role === 'structure') {
             await sendStructurePaymentConfirmationEmail(email, assignedTo || 'Struttura', result.code, 'Codice Professionale', 0, 'Gratuito');
           }
+          console.log(`✅ EMAIL INVIATA E SALVATA: ${email} -> ${result.code}`);
         }
         
         res.json({ ...result, emailSent: !!(email && email.trim()) });

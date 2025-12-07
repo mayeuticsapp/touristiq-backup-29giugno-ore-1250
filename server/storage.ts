@@ -11,6 +11,7 @@ const globalValidationsData = new Map<string, any>();
 export interface IStorage {
   // IQ Code methods
   getIqCodeByCode(code: string): Promise<IqCode | undefined>;
+  getIqCodeByEmail(email: string): Promise<IqCode | undefined>;
   createIqCode(iqCode: InsertIqCode): Promise<IqCode>;
   getAllIqCodes(): Promise<IqCode[]>;
   updateIqCodeStatus(id: number, status: string, approvedBy?: string): Promise<IqCode>;
@@ -1077,6 +1078,11 @@ export class PostgreStorage implements IStorage {
     console.log("🔍 IQ LOGIN ATTEMPT:", code);
     const result = await this.db.select().from(iqCodes).where(eq(iqCodes.code, code)).limit(1);
     console.log("📋 IQ CODE FOUND:", result[0] ? "✅ SI" : "❌ NO");
+    return result[0];
+  }
+
+  async getIqCodeByEmail(email: string): Promise<IqCode | undefined> {
+    const result = await this.db.select().from(iqCodes).where(eq(iqCodes.email, email)).limit(1);
     return result[0];
   }
 

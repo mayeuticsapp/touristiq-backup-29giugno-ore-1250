@@ -20,6 +20,7 @@ export const iqCodes = pgTable("iq_codes", {
   deletedAt: timestamp("deleted_at"), // Data eliminazione per auto-cleanup
   availableOneTimeUses: integer("available_one_time_uses").default(10), // Codici monouso disponibili per turisti
   totalDiscountUsed: decimal("total_discount_used", { precision: 10, scale: 2 }).default("0.00"), // Totale sconto usato (max €150)
+  email: text("email"), // Email opzionale per evitare duplicati e comunicazioni
 });
 
 export const sessions = pgTable("sessions", {
