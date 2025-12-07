@@ -1285,8 +1285,10 @@ function DirectGenerationView({ adminCredits, onRefreshCredits }: { adminCredits
   const [country, setCountry] = useState('IT');
   const [province, setProvince] = useState('VV');
   const [assignedTo, setAssignedTo] = useState('');
+  const [email, setEmail] = useState(''); // Email opzionale
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [lastEmailSent, setLastEmailSent] = useState<boolean>(false);
 
   const handleGenerate = async () => {
     if (!assignedTo.trim()) {
@@ -1310,16 +1312,20 @@ function DirectGenerationView({ adminCredits, onRefreshCredits }: { adminCredits
           role,
           country: codeType === 'emotional' ? country : undefined,
           province: codeType === 'professional' ? province : undefined,
-          assignedTo: assignedTo.trim()
+          assignedTo: assignedTo.trim(),
+          email: email.trim() || undefined
         })
       });
 
       if (response.ok) {
         const result = await response.json();
         setLastGenerated(result.code);
-        alert(`IQCode generato con successo: ${result.code}`);
-        onRefreshCredits(); // Aggiorna il saldo
+        setLastEmailSent(result.emailSent || false);
+        const emailMsg = result.emailSent ? ` - Email inviata a ${email}` : '';
+        alert(`IQCode generato con successo: ${result.code}${emailMsg}`);
+        onRefreshCredits();
         setAssignedTo('');
+        setEmail('');
       } else {
         const error = await response.json();
         alert(`Errore: ${error.message}`);
@@ -1416,23 +1422,135 @@ function DirectGenerationView({ adminCredits, onRefreshCredits }: { adminCredits
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="VV">Vibo Valentia</SelectItem>
-                  <SelectItem value="RC">Reggio Calabria</SelectItem>
-                  <SelectItem value="CS">Cosenza</SelectItem>
-                  <SelectItem value="CZ">Catanzaro</SelectItem>
-                  <SelectItem value="KR">Crotone</SelectItem>
+                <SelectContent className="max-h-[300px]">
+                  <SelectItem value="VV">Vibo Valentia (Calabria)</SelectItem>
+                  <SelectItem value="RC">Reggio Calabria (Calabria)</SelectItem>
+                  <SelectItem value="CS">Cosenza (Calabria)</SelectItem>
+                  <SelectItem value="CZ">Catanzaro (Calabria)</SelectItem>
+                  <SelectItem value="KR">Crotone (Calabria)</SelectItem>
+                  <SelectItem value="AG">Agrigento (Sicilia)</SelectItem>
+                  <SelectItem value="AL">Alessandria (Piemonte)</SelectItem>
+                  <SelectItem value="AN">Ancona (Marche)</SelectItem>
+                  <SelectItem value="AO">Aosta (Valle d'Aosta)</SelectItem>
+                  <SelectItem value="AR">Arezzo (Toscana)</SelectItem>
+                  <SelectItem value="AP">Ascoli Piceno (Marche)</SelectItem>
+                  <SelectItem value="AT">Asti (Piemonte)</SelectItem>
+                  <SelectItem value="AV">Avellino (Campania)</SelectItem>
+                  <SelectItem value="BA">Bari (Puglia)</SelectItem>
+                  <SelectItem value="BT">Barletta-Andria-Trani (Puglia)</SelectItem>
+                  <SelectItem value="BL">Belluno (Veneto)</SelectItem>
+                  <SelectItem value="BN">Benevento (Campania)</SelectItem>
+                  <SelectItem value="BG">Bergamo (Lombardia)</SelectItem>
+                  <SelectItem value="BI">Biella (Piemonte)</SelectItem>
+                  <SelectItem value="BO">Bologna (Emilia-Romagna)</SelectItem>
+                  <SelectItem value="BZ">Bolzano (Trentino-Alto Adige)</SelectItem>
+                  <SelectItem value="BS">Brescia (Lombardia)</SelectItem>
+                  <SelectItem value="BR">Brindisi (Puglia)</SelectItem>
+                  <SelectItem value="CA">Cagliari (Sardegna)</SelectItem>
+                  <SelectItem value="CL">Caltanissetta (Sicilia)</SelectItem>
+                  <SelectItem value="CB">Campobasso (Molise)</SelectItem>
+                  <SelectItem value="CE">Caserta (Campania)</SelectItem>
+                  <SelectItem value="CT">Catania (Sicilia)</SelectItem>
+                  <SelectItem value="CH">Chieti (Abruzzo)</SelectItem>
+                  <SelectItem value="CO">Como (Lombardia)</SelectItem>
+                  <SelectItem value="CR">Cremona (Lombardia)</SelectItem>
+                  <SelectItem value="CN">Cuneo (Piemonte)</SelectItem>
+                  <SelectItem value="EN">Enna (Sicilia)</SelectItem>
+                  <SelectItem value="FM">Fermo (Marche)</SelectItem>
+                  <SelectItem value="FE">Ferrara (Emilia-Romagna)</SelectItem>
+                  <SelectItem value="FI">Firenze (Toscana)</SelectItem>
+                  <SelectItem value="FG">Foggia (Puglia)</SelectItem>
+                  <SelectItem value="FC">Forlì-Cesena (Emilia-Romagna)</SelectItem>
+                  <SelectItem value="FR">Frosinone (Lazio)</SelectItem>
+                  <SelectItem value="GE">Genova (Liguria)</SelectItem>
+                  <SelectItem value="GO">Gorizia (Friuli-Venezia Giulia)</SelectItem>
+                  <SelectItem value="GR">Grosseto (Toscana)</SelectItem>
+                  <SelectItem value="IM">Imperia (Liguria)</SelectItem>
+                  <SelectItem value="IS">Isernia (Molise)</SelectItem>
+                  <SelectItem value="SP">La Spezia (Liguria)</SelectItem>
+                  <SelectItem value="AQ">L'Aquila (Abruzzo)</SelectItem>
+                  <SelectItem value="LT">Latina (Lazio)</SelectItem>
+                  <SelectItem value="LE">Lecce (Puglia)</SelectItem>
+                  <SelectItem value="LC">Lecco (Lombardia)</SelectItem>
+                  <SelectItem value="LI">Livorno (Toscana)</SelectItem>
+                  <SelectItem value="LO">Lodi (Lombardia)</SelectItem>
+                  <SelectItem value="LU">Lucca (Toscana)</SelectItem>
+                  <SelectItem value="MC">Macerata (Marche)</SelectItem>
+                  <SelectItem value="MN">Mantova (Lombardia)</SelectItem>
+                  <SelectItem value="MS">Massa-Carrara (Toscana)</SelectItem>
+                  <SelectItem value="MT">Matera (Basilicata)</SelectItem>
+                  <SelectItem value="ME">Messina (Sicilia)</SelectItem>
+                  <SelectItem value="MI">Milano (Lombardia)</SelectItem>
+                  <SelectItem value="MO">Modena (Emilia-Romagna)</SelectItem>
+                  <SelectItem value="MB">Monza e Brianza (Lombardia)</SelectItem>
+                  <SelectItem value="NA">Napoli (Campania)</SelectItem>
+                  <SelectItem value="NO">Novara (Piemonte)</SelectItem>
+                  <SelectItem value="NU">Nuoro (Sardegna)</SelectItem>
+                  <SelectItem value="OR">Oristano (Sardegna)</SelectItem>
+                  <SelectItem value="PD">Padova (Veneto)</SelectItem>
+                  <SelectItem value="PA">Palermo (Sicilia)</SelectItem>
+                  <SelectItem value="PR">Parma (Emilia-Romagna)</SelectItem>
+                  <SelectItem value="PV">Pavia (Lombardia)</SelectItem>
+                  <SelectItem value="PG">Perugia (Umbria)</SelectItem>
+                  <SelectItem value="PU">Pesaro e Urbino (Marche)</SelectItem>
+                  <SelectItem value="PE">Pescara (Abruzzo)</SelectItem>
+                  <SelectItem value="PC">Piacenza (Emilia-Romagna)</SelectItem>
+                  <SelectItem value="PI">Pisa (Toscana)</SelectItem>
+                  <SelectItem value="PT">Pistoia (Toscana)</SelectItem>
+                  <SelectItem value="PN">Pordenone (Friuli-Venezia Giulia)</SelectItem>
+                  <SelectItem value="PZ">Potenza (Basilicata)</SelectItem>
+                  <SelectItem value="PO">Prato (Toscana)</SelectItem>
+                  <SelectItem value="RG">Ragusa (Sicilia)</SelectItem>
+                  <SelectItem value="RA">Ravenna (Emilia-Romagna)</SelectItem>
+                  <SelectItem value="RE">Reggio Emilia (Emilia-Romagna)</SelectItem>
+                  <SelectItem value="RI">Rieti (Lazio)</SelectItem>
+                  <SelectItem value="RN">Rimini (Emilia-Romagna)</SelectItem>
+                  <SelectItem value="RM">Roma (Lazio)</SelectItem>
+                  <SelectItem value="RO">Rovigo (Veneto)</SelectItem>
+                  <SelectItem value="SA">Salerno (Campania)</SelectItem>
+                  <SelectItem value="SS">Sassari (Sardegna)</SelectItem>
+                  <SelectItem value="SV">Savona (Liguria)</SelectItem>
+                  <SelectItem value="SI">Siena (Toscana)</SelectItem>
+                  <SelectItem value="SR">Siracusa (Sicilia)</SelectItem>
+                  <SelectItem value="SO">Sondrio (Lombardia)</SelectItem>
+                  <SelectItem value="SU">Sud Sardegna (Sardegna)</SelectItem>
+                  <SelectItem value="TA">Taranto (Puglia)</SelectItem>
+                  <SelectItem value="TE">Teramo (Abruzzo)</SelectItem>
+                  <SelectItem value="TR">Terni (Umbria)</SelectItem>
+                  <SelectItem value="TO">Torino (Piemonte)</SelectItem>
+                  <SelectItem value="TP">Trapani (Sicilia)</SelectItem>
+                  <SelectItem value="TN">Trento (Trentino-Alto Adige)</SelectItem>
+                  <SelectItem value="TV">Treviso (Veneto)</SelectItem>
+                  <SelectItem value="TS">Trieste (Friuli-Venezia Giulia)</SelectItem>
+                  <SelectItem value="UD">Udine (Friuli-Venezia Giulia)</SelectItem>
+                  <SelectItem value="VA">Varese (Lombardia)</SelectItem>
+                  <SelectItem value="VE">Venezia (Veneto)</SelectItem>
+                  <SelectItem value="VB">Verbano-Cusio-Ossola (Piemonte)</SelectItem>
+                  <SelectItem value="VC">Vercelli (Piemonte)</SelectItem>
+                  <SelectItem value="VR">Verona (Veneto)</SelectItem>
+                  <SelectItem value="VI">Vicenza (Veneto)</SelectItem>
+                  <SelectItem value="VT">Viterbo (Lazio)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           ) : null}
 
-          <div className="md:col-span-2">
+          <div>
             <Label htmlFor="assignedTo">Assegnato a</Label>
             <Input
               value={assignedTo}
               onChange={(e) => setAssignedTo(e.target.value)}
               placeholder="Nome destinatario del codice IQ"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="email">Email (opzionale)</Label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Se inserita, il codice verrà inviato via email"
             />
           </div>
         </div>

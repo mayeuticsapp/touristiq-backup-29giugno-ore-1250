@@ -269,7 +269,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     role: z.enum(["admin", "tourist", "structure", "partner"]),
     country: z.string().optional(),
     province: z.string().optional(),
-    assignedTo: z.string().optional()
+    assignedTo: z.string().optional(),
+    email: z.string().email().optional().or(z.literal('')) // Email opzionale
   });
 
   app.post("/api/genera-iqcode", async (req, res) => {
@@ -290,7 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Validate request
-      const { codeType, role, country, province, assignedTo } = generateCodeSchema.parse(req.body);
+      const { codeType, role, country, province, assignedTo, email } = generateCodeSchema.parse(req.body);
       
       // Determine location based on code type (not needed for temporary codes)
       const location = codeType === "emotional" ? country : (codeType === "professional" ? province : null);
@@ -305,8 +306,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // CODICI PROFESSIONALI - SEMPRE DISPONIBILI (NON SCALANO CREDITI)
         const { createIQCode } = await import("./createIQCode");
         const result = await createIQCode(codeType, role, location, assignedTo || `Generato da ${session.iqCode}`);
-        // NON scala crediti per codici professionali
-        res.json(result);
+        
+        // Se email presente, invia codice automaticamente
+        if (email && email.trim()) {
+          const { sendPartnerAcceptedEmail, sendStructurePaymentConfirmationEmail } = await import("./email");
+          if (role === 'partner') {
+            await sendPartnerAcceptedEmail(email, assignedTo || 'Partner', result.code);
+          } else if (role === 'structure') {
+            await sendStructurePaymentConfirmationEmail(email, assignedTo || 'Struttura', result.code, 'Codice Professionale', 0, 'Gratuito');
+          }
+        }
+        
+        res.json({ ...result, emailSent: !!(email && email.trim()) });
         return;
       }
 
