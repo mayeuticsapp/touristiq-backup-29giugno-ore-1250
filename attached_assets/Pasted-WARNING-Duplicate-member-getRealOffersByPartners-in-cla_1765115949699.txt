@@ -1,0 +1,98 @@
+WARNING] Duplicate member "getRealOffersByPartners" in class body [duplicate-class-member]
+    server/storage.ts:920:8:
+      920 │   async getRealOffersByPartners(partnerCodes: string[]): Promise<...
+          ╵         ~~~~~~~~~~~~~~~~~~~~~~~
+  The original member "getRealOffersByPartners" is here:
+    server/storage.ts:800:8:
+      800 │   async getRealOffersByPartners(): Promise<any[]> { return []; }
+          ╵         ~~~~~~~~~~~~~~~~~~~~~~~
+6 of 15 warnings shown (disable the message limit with --log-limit=0)
+  dist/index.js  332.1kb
+⚡ Done in 51ms
+> rest-express@1.0.0 db:push
+> drizzle-kit push
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/opt/render/project/src/drizzle.config.ts'
+Using 'pg' driver for database querying
+[⣷] Pulling schema from database...
+[✓] Pulling schema from database...
+[✓] Changes applied
+==> Uploading build...
+==> Uploaded in 7.8s. Compression took 5.0s
+==> Build successful 🎉
+==> Deploying...
+==> Running 'npm run start'
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+1:54:33 PM [express] serving on port 10000
+Admin user TIQ-IT-ADMIN created in PostgreSQL
+Strutture di esempio create in PostgreSQL
+Pacchetti di esempio assegnati in PostgreSQL
+Partner di esempio creati in PostgreSQL
+✅ DATI DEMO RISPARMIO OSPITI INIZIALIZZATI
+✅ Sistema risparmio ospiti inizializzato con dati demo
+==> Your service is live 🎉
+==> 
+==> ///////////////////////////////////////////////////////////
+==> 
+==> Available at your primary URL https://touristiq-2025-dicembre.onrender.com
+==> 
+==> ///////////////////////////////////////////////////////////
+ValidationError: The 'X-Forwarded-For' header is set but the Express 'trust proxy' setting is false (default). This could indicate a misconfiguration which would prevent express-rate-limit from accurately identifying users. See https://express-rate-limit.github.io/ERR_ERL_UNEXPECTED_X_FORWARDED_FOR/ for more information.
+    at Object.xForwardedForHeader (file:///opt/render/project/src/node_modules/express-rate-limit/dist/index.mjs:157:13)
+    at wrappedValidations.<computed> [as xForwardedForHeader] (file:///opt/render/project/src/node_modules/express-rate-limit/dist/index.mjs:369:22)
+    at Object.keyGenerator (file:///opt/render/project/src/node_modules/express-rate-limit/dist/index.mjs:630:20)
+    at file:///opt/render/project/src/node_modules/express-rate-limit/dist/index.mjs:682:32
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///opt/render/project/src/node_modules/express-rate-limit/dist/index.mjs:663:5 {
+  code: 'ERR_ERL_UNEXPECTED_X_FORWARDED_FOR',
+  help: 'https://express-rate-limit.github.io/ERR_ERL_UNEXPECTED_X_FORWARDED_FOR/'
+}
+🔍 IQ LOGIN ATTEMPT: TIQ-IT-ADMIN
+📋 IQ CODE FOUND: ✅ SI
+1:56:35 PM [express] POST /api/auth/login 200 in 20ms :: {"success":true,"role":"admin","iqCode":"TI…
+1:56:35 PM [express] GET /api/auth/me 200 in 3ms :: {"role":"admin","iqCode":"TIQ-IT-ADMIN"}
+1:56:35 PM [express] GET /api/admin/stats 200 in 5ms :: {"stats":{"totalCodes":7,"activeUsers":7,"st…
+1:56:35 PM [express] GET /api/admin/credits 200 in 5ms :: {"credits":{"creditsRemaining":1000,"credi…
+1:56:36 PM [express] GET /api/admin/stats 304 in 3ms :: {"stats":{"totalCodes":7,"activeUsers":7,"st…
+1:56:36 PM [express] GET /api/admin/stats 304 in 4ms :: {"stats":{"totalCodes":7,"activeUsers":7,"st…
+1:56:36 PM [express] GET /api/admin/stats 304 in 5ms :: {"stats":{"totalCodes":7,"activeUsers":7,"st…
+1:56:36 PM [express] GET /api/admin/stats 304 in 7ms :: {"stats":{"totalCodes":7,"activeUsers":7,"st…
+1:56:36 PM [express] GET /api/admin/stats 304 in 4ms :: {"stats":{"totalCodes":7,"activeUsers":7,"st…
+1:56:36 PM [express] GET /api/admin/stats 304 in 4ms :: {"stats":{"totalCodes":7,"activeUsers":7,"st…
+1:56:36 PM [express] GET /api/admin/stats 304 in 4ms :: {"stats":{"totalCodes":7,"activeUsers":7,"st…
+🔍 IQ LOGIN ATTEMPT: TIQ-IT-2314-PORTOFINO
+📋 IQ CODE FOUND: ❌ NO
+1:57:08 PM [express] POST /api/genera-iqcode 200 in 107ms :: {"id":8,"code":"TIQ-IT-2314-PORTOFINO",…
+1:57:15 PM [express] GET /api/admin/credits 200 in 6ms :: {"credits":{"id":1,"adminCode":"TIQ-IT-ADM…
+🔍 IQ LOGIN ATTEMPT: TIQ-IT-2314-PORTOFINO
+📋 IQ CODE FOUND: ✅ SI
+1:57:23 PM [express] POST /api/auth/login 200 in 6ms :: {"success":true,"role":"tourist","iqCode":"T…
+1:57:23 PM [express] GET /api/auth/me 200 in 3ms :: {"role":"tourist","iqCode":"TIQ-IT-2314-PORTOFIN…
+🔍 DEBUG: Inizio controllo endpoint /api/tourist/one-time-codes
+🔍 DEBUG: Cookie ricevuti: { session_token: 'dJT1cN__aOQs93r4q-EMs' }
+🔍 VERIFY_ROLE_ACCESS: Controllo accesso per endpoint con ruoli tourist
+🔍 COOKIES: {"session_token":"dJT1cN__aOQs93r4q-EMs"}
+🔍 VERIFY_ROLE_ACCESS: Token trovato: dJT1cN__aO...
+🔍 VERIFY_ROLE_ACCESS: Sessione trovata - Utente: TIQ-IT-2314-PORTOFINO, Ruolo: tourist
+✅ VERIFY_ROLE_ACCESS: Accesso autorizzato per TIQ-IT-2314-PORTOFINO (tourist)
+🔍 API: /api/tourist/one-time-codes chiamata per turista: TIQ-IT-2314-PORTOFINO
+🔍 getTouristOneTimeCodes: cercando codici UTILIZZATI per turista TIQ-IT-2314-PORTOFINO
+📊 getTouristOneTimeCodes: trovati 0 codici UTILIZZATI per TIQ-IT-2314-PORTOFINO
+✅ CRONOLOGIA PRIVACY: restituiti 0 codici utilizzati (nascosti 0 non usati)
+🟠 getTouristAvailableUses (iqCode: TIQ-IT-2314-PORTOFINO) → disponibilità: 10 codici, reali: 0
+ℹ️ Sistema TIQ-OTC: 0 codici esistenti, 10 utilizzi disponibili
+🎯 INIZIALIZZAZIONE AUTOMATICA: Creo 10 codici TIQ-OTC per TIQ-IT-2314-PORTOFINO
+ℹ️ Codici creati ma nascosti dalla cronologia fino al primo utilizzo da partner
+🔧 DEBUG: Inserendo 10 codici nel database...
+✅ INIZIALIZZAZIONE AUTOMATICA COMPLETATA: 10 codici TIQ-OTC creati per TIQ-IT-2314-PORTOFINO
+💰 getTouristTotalDiscountUsed: TIQ-IT-2314-PORTOFINO ha utilizzato €0 del plafond €150
+📊 API Response: codes=0, availableUses=10, totalDiscountUsed=€0
+1:57:23 PM [express] GET /api/tourist/one-time-codes 200 in 21ms :: {"codes":[],"availableUses":10,"…
+🔍 IQ LOGIN ATTEMPT: TIQ-IT-2314-PORTOFINO
+📋 IQ CODE FOUND: ✅ SI
+1:57:23 PM [express] GET /api/entity-info 200 in 4ms :: {"code":"TIQ-IT-2314-PORTOFINO","role":"tour…
+Offerte reali dal database: 0
+1:57:23 PM [express] GET /api/tourist/real-offers 200 in 5ms :: {"discounts":[],"totalOffers":0}
+1:57:23 PM [express] GET /api/check-custode-status 200 in 32ms :: {"hasRecoveryData":false}
+Need better ways to work with logs? Try theRender CLI, Render MCP Server, or set up a log stream integration 
