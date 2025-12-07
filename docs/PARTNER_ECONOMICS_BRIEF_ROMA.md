@@ -79,7 +79,8 @@ Il turista cerca attivamente dove usare questi sconti = **cliente motivato**.
 ## Contatti
 
 **TouristIQ Italia**
-Email: noreply@touristiq.it
+Email: info@touristiq.it
+WhatsApp: 379 122 0502
 Web: touristiq.it
 
 ---
