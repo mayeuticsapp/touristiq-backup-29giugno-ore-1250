@@ -1,0 +1,72 @@
+E-mail
+Trasmissioni
+Modelli
+Pubblico
+Metrica
+Domini
+Registri
+Chiavi API
+Webhook
+Impostazioni
+Aiuto
+Documenti
+Dominio
+touristiq.it
+
+Creato
+circa 2 ore fa
+Stato
+Regione
+eu-west-1
+Irlanda ( eu-west-1 )
+Accedi alla pagina delle impostazioni DNS di OVH e aggiungi tutti i record DNS seguenti alla sezione "Record". Una volta aggiunti tutti i record, clicca sul pulsante "Verifica record" in alto.
+
+Record DNS
+
+Verifica del dominio
+DKIM
+Tipo	Nome	Contenuto	Tempo di esecuzione	Priorità	Stato
+TXT	
+resend._domainkey
+p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDujvTVWwSNM6rBvoCrbDeKwwD4/PIWVkqr1uvn4LstjtjvTa+8zXuc1oqb4LhWZxN+f8LUEEwtqcCesM7YR+YE913s8L/lfeJOJRQa9RxGUVJXTT9TS4wM5uOXG2aV4xTV7CcyC4U6F5Ok5xZ0fQNCN1OkEPWPseCfKgTRn/IOQIDAQAB
+Auto		
+
+Abilita invio
+
+fattore di protezione solare
+Tipo	Nome	Contenuto	Tempo di esecuzione	Priorità	Stato
+MX	
+send
+feedback-smtp.eu-west-1.amazonses.com
+Auto	10	
+
+TXT	
+send
+v=spf1 include:amazonses.com ~all
+Auto		
+
+DMARC
+(Opzionale)
+Tipo	Nome	Contenuto	Tempo di esecuzione
+TXT	
+_dmarc
+v=DMARC1; p=none;
+Auto
+Abilita ricezione
+
+MX
+Tipo	Nome	Contenuto	Tempo di esecuzione	Priorità	Stato
+MX	
+@
+inbound-smtp.eu-west-1.amazonaws.com
+Auto	0	
+Configurazione
+Monitoraggio dei clic
+Per tracciare i clic, Resend modifica ogni link nel corpo dell'email HTML. Quando i destinatari aprono un link, vengono indirizzati a un server Resend e immediatamente reindirizzati all'URL di destinazione.
+
+Monitoraggio aperto
+Un'immagine GIF trasparente da 1x1 pixel viene inserita in ogni email e include un riferimento univoco. Il tracciamento aperto può produrre risultati imprecisi e ridurre la recapitabilità. Scopri di più e valuta se il tracciamento aperto è adatto a te .
+
+TLS (sicurezza del livello di trasporto)
+"TLS opportunistico" significa che tenta sempre di stabilire una connessione sicura con il server di posta ricevente. Se non riesce a stabilire una connessione sicura, invia il messaggio in chiaro. "TLS forzato", invece, richiede che la comunicazione e-mail utilizzi TLS in ogni caso. Se il server ricevente non supporta TLS, l'e-mail non verrà inviata.
+Utilizzo · Invia di nuovo5 dicembre
