@@ -292,6 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate request
       const { codeType, role, country, province, assignedTo, email } = generateCodeSchema.parse(req.body);
+      const lang = req.body.lang || 'it';
       
       // Determine location based on code type (not needed for temporary codes)
       const location = codeType === "emotional" ? country : (codeType === "professional" ? province : null);
@@ -323,11 +324,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (email && email.trim()) {
           const { sendPartnerAcceptedEmail, sendStructurePaymentConfirmationEmail } = await import("./email");
           if (role === 'partner') {
-            await sendPartnerAcceptedEmail(email, assignedTo || 'Partner', result.code);
+            await sendPartnerAcceptedEmail(email, assignedTo || 'Partner', result.code, lang);
           } else if (role === 'structure') {
-            await sendStructurePaymentConfirmationEmail(email, assignedTo || 'Struttura', result.code, 'Codice Professionale', 0, 'Gratuito');
+            await sendStructurePaymentConfirmationEmail(email, assignedTo || 'Struttura', result.code, 'Codice Professionale', 0, 'Gratuito', lang);
           }
-          console.log(`✅ EMAIL INVIATA E SALVATA: ${email} -> ${result.code}`);
+          console.log(`✅ EMAIL INVIATA E SALVATA (${lang}): ${email} -> ${result.code}`);
         }
         
         res.json({ ...result, emailSent: !!(email && email.trim()) });

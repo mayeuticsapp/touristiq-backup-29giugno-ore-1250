@@ -1284,10 +1284,11 @@ function DirectGenerationView({ adminCredits, onRefreshCredits }: { adminCredits
   const [country, setCountry] = useState('IT');
   const [province, setProvince] = useState('VV');
   const [assignedTo, setAssignedTo] = useState('');
-  const [email, setEmail] = useState(''); // Email opzionale
+  const [email, setEmail] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [lastEmailSent, setLastEmailSent] = useState<boolean>(false);
+  const { i18n } = useTranslation();
 
   const handleGenerate = async () => {
     if (!assignedTo.trim()) {
@@ -1312,7 +1313,8 @@ function DirectGenerationView({ adminCredits, onRefreshCredits }: { adminCredits
           country: codeType === 'emotional' ? country : undefined,
           province: codeType === 'professional' ? province : undefined,
           assignedTo: assignedTo.trim(),
-          email: email.trim() || undefined
+          email: email.trim() || undefined,
+          lang: i18n.language
         })
       });
 
