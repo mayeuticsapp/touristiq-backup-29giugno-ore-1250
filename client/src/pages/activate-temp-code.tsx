@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Shield, Clock, CheckCircle } from "lucide-react";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 export default function ActivateTempCode() {
   const [tempCode, setTempCode] = useState("");
@@ -197,6 +198,9 @@ export default function ActivateTempCode() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="absolute top-4 right-4">
+        <LanguageSelector />
+      </div>
       <div className="max-w-2xl mx-auto pt-8">
         <Card className="border-2 border-blue-200 shadow-lg">
           <CardHeader className="text-center">

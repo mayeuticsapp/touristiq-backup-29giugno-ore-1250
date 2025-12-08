@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { MapPin, LogOut, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { queryClient } from "@/lib/queryClient";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -73,9 +74,12 @@ export function Layout({ children, title, role, iqCode, navigation, sidebarColor
             <h2 className="text-lg font-semibold text-gray-900">TouristIQ</h2>
           </div>
           
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="p-2">
-            <LogOut size={16} />
-          </Button>
+          <div className="flex items-center gap-2">
+            <LanguageSelector />
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="p-2">
+              <LogOut size={16} />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -139,10 +143,13 @@ export function Layout({ children, title, role, iqCode, navigation, sidebarColor
         <header className="hidden md:block bg-white shadow-sm border-b p-6">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-            <Button variant="ghost" onClick={handleLogout} className="flex items-center text-gray-600 hover:text-gray-900">
-              <LogOut className="mr-2" size={16} />
-              Esci
-            </Button>
+            <div className="flex items-center gap-3">
+              <LanguageSelector />
+              <Button variant="ghost" onClick={handleLogout} className="flex items-center text-gray-600 hover:text-gray-900">
+                <LogOut className="mr-2" size={16} />
+                Esci
+              </Button>
+            </div>
           </div>
         </header>
         
