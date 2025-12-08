@@ -4,18 +4,22 @@ import type { Express } from 'express';
 
 // Rate limiting configurations per endpoint sensitivity
 export const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 login attempts per window
+  windowMs: 5 * 60 * 1000, // 5 minuti
+  max: 20, // 20 tentativi per finestra
   message: {
-    error: "Troppi tentativi di login. Riprova tra 15 minuti.",
-    retryAfter: 900
+    error: "Troppi tentativi di login. Riprova tra 5 minuti.",
+    retryAfter: 300
   },
   standardHeaders: true,
   legacyHeaders: false,
-  trustProxy: false, // Fix per Replit environment
+  trustProxy: false,
   skip: (req) => {
     // Skip rate limiting in development
-    return process.env.NODE_ENV === 'development';
+    if (process.env.NODE_ENV === 'development') return true;
+    // NESSUN LIMITE PER ADMIN
+    const iqCode = req.body?.iqCode?.toUpperCase?.() || '';
+    if (iqCode === 'TIQ-IT-ADMIN') return true;
+    return false;
   }
 });
 
