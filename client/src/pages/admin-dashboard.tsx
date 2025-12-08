@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AdminRechargeManagement } from "@/components/admin-recharge-management";
 import AdminGuestSavingsStats from "@/components/AdminGuestSavingsStats";
 import { AdminPartnerWarnings } from "@/components/AdminPartnerWarnings";
+import { useTranslation } from "react-i18next";
 
 function StatsValue({ endpoint, field }: { endpoint: string; field: string }) {
   const [value, setValue] = useState(0);
@@ -34,8 +35,8 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
   const [isAssigning, setIsAssigning] = useState(false);
   const [adminCredits, setAdminCredits] = useState<any>(null);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
-  // Carico i crediti admin (Pacchetto RobS)
   useEffect(() => {
     fetchAdminCredits();
   }, []);
@@ -46,30 +47,30 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
       const data = await response.json();
       setAdminCredits(data.credits);
     } catch (error) {
-      console.error('Errore caricamento crediti admin:', error);
+      console.error('Error loading admin credits:', error);
     }
   };
 
   const navigation = [
-    { icon: <Users size={20} />, label: "Utenti", href: "/admin/users", onClick: () => setActiveView("users") },
-    { icon: <Settings size={20} />, label: "Gestione Utenti", href: "/admin/user-management", external: true },
-    { icon: <Trash2 size={20} />, label: "Cestino", href: "/admin/trash", onClick: () => setActiveView("trash") },
-    { icon: <QrCode size={20} />, label: "Codici Generati", href: "/admin/iqcodes", onClick: () => setActiveView("iqcodes") },
-    { icon: <Package size={20} />, label: "Genera Codici", href: "/admin/generate-direct", onClick: () => setActiveView("generate-direct") },
-    { icon: <Package size={20} />, label: "Assegna Pacchetti", href: "/admin/assign-iqcodes", onClick: () => setActiveView("assign-iqcodes") },
-    { icon: <CreditCard size={20} />, label: "Gestione Ricariche", href: "/admin/recharges", onClick: () => setActiveView("recharges") },
-    { icon: <TrendingUp size={20} />, label: "Risparmio Ospiti", href: "/admin/guest-savings", onClick: () => setActiveView("guest-savings") },
-    { icon: <AlertTriangle size={20} />, label: "Warning Partner", href: "/admin/partner-warnings", onClick: () => setActiveView("partner-warnings") },
-    { icon: <TrendingUp size={20} />, label: "Report", href: "/admin/reports", onClick: () => setActiveView("reports") },
-    { icon: <BarChart3 size={20} />, label: "Statistiche", href: "/admin/stats", onClick: () => setActiveView("stats") },
-    { icon: <Settings size={20} />, label: "Impostazioni", href: "/admin/settings", onClick: () => setActiveView("settings") }
+    { icon: <Users size={20} />, label: t('admin.users'), href: "/admin/users", onClick: () => setActiveView("users") },
+    { icon: <Settings size={20} />, label: t('admin.userManagement'), href: "/admin/user-management", external: true },
+    { icon: <Trash2 size={20} />, label: t('admin.trash'), href: "/admin/trash", onClick: () => setActiveView("trash") },
+    { icon: <QrCode size={20} />, label: t('admin.generatedCodes'), href: "/admin/iqcodes", onClick: () => setActiveView("iqcodes") },
+    { icon: <Package size={20} />, label: t('admin.generateCodes'), href: "/admin/generate-direct", onClick: () => setActiveView("generate-direct") },
+    { icon: <Package size={20} />, label: t('admin.assignPackages'), href: "/admin/assign-iqcodes", onClick: () => setActiveView("assign-iqcodes") },
+    { icon: <CreditCard size={20} />, label: t('admin.rechargeManagement'), href: "/admin/recharges", onClick: () => setActiveView("recharges") },
+    { icon: <TrendingUp size={20} />, label: t('admin.guestSavings'), href: "/admin/guest-savings", onClick: () => setActiveView("guest-savings") },
+    { icon: <AlertTriangle size={20} />, label: t('admin.partnerWarnings'), href: "/admin/partner-warnings", onClick: () => setActiveView("partner-warnings") },
+    { icon: <TrendingUp size={20} />, label: t('admin.reports'), href: "/admin/reports", onClick: () => setActiveView("reports") },
+    { icon: <BarChart3 size={20} />, label: t('admin.stats'), href: "/admin/stats", onClick: () => setActiveView("stats") },
+    { icon: <Settings size={20} />, label: t('admin.settings'), href: "/admin/settings", onClick: () => setActiveView("settings") }
   ];
 
   const handleAssignPackage = async () => {
     if (!targetId || !packageSize) {
       toast({
-        title: "Errore",
-        description: "Seleziona destinatario e dimensione pacchetto",
+        title: t('admin.error'),
+        description: t('admin.selectRecipientAndPackage'),
         variant: "destructive"
       });
       return;
@@ -90,23 +91,23 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
 
       if (response.ok) {
         toast({
-          title: "Successo",
-          description: `Pacchetto da ${packageSize} crediti assegnato con successo`
+          title: t('admin.success'),
+          description: t('admin.packageAssignedSuccess', { size: packageSize })
         });
         setTargetId('');
         setPackageSize(25);
       } else {
         const error = await response.json();
         toast({
-          title: "Errore",
+          title: t('admin.error'),
           description: error.message,
           variant: "destructive"
         });
       }
     } catch (error) {
       toast({
-        title: "Errore",
-        description: "Errore nell'assegnazione del pacchetto",
+        title: t('admin.error'),
+        description: t('admin.packageAssignError'),
         variant: "destructive"
       });
     } finally {
@@ -116,23 +117,22 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
 
   return (
     <Layout
-      title="Dashboard Admin"
+      title={t('admin.title')}
       role="admin"
       iqCode="TIQ-IT-ADMIN"
       navigation={navigation}
       sidebarColor="bg-red-500"
     >
-      {/* Pacchetto RobS - Crediti Admin */}
       {adminCredits && (
         <Card className="mb-6 border-2 border-blue-500 bg-blue-50">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center justify-between text-blue-800">
               <span className="flex items-center gap-2">
                 <Package className="h-6 w-6" />
-                Pacchetto RobS - Uso Interno Admin
+                {t('admin.packageRobS')}
               </span>
               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                Personale
+                {t('admin.personal')}
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -140,15 +140,15 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-green-600">{adminCredits.creditsRemaining}</p>
-                <p className="text-sm text-gray-600">IQCode Disponibili</p>
+                <p className="text-sm text-gray-600">{t('admin.availableIQCodes')}</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-orange-600">{adminCredits.creditsUsed}</p>
-                <p className="text-sm text-gray-600">Già Utilizzati</p>
+                <p className="text-sm text-gray-600">{t('admin.alreadyUsed')}</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-blue-600">1000</p>
-                <p className="text-sm text-gray-600">Totale Originario</p>
+                <p className="text-sm text-gray-600">{t('admin.originalTotal')}</p>
               </div>
             </div>
             <div className="mt-4">
@@ -159,11 +159,10 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
                 ></div>
               </div>
               <p className="text-xs text-gray-500 mt-2 text-center">
-                Ultima generazione: {adminCredits.lastGeneratedAt ? new Date(adminCredits.lastGeneratedAt).toLocaleString('it-IT') : 'Mai'}
+                {t('admin.lastGeneration')}: {adminCredits.lastGeneratedAt ? new Date(adminCredits.lastGeneratedAt).toLocaleString() : t('admin.never')}
               </p>
             </div>
             
-            {/* Azioni rapide Pacchetto RobS */}
             <div className="mt-4 pt-4 border-t border-blue-200">
               <div className="flex gap-2 justify-center">
                 <Button 
@@ -173,7 +172,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
                   onClick={() => setActiveView("generate-direct")}
                 >
                   <Package size={16} className="mr-1" />
-                  Genera Tutti i Codici
+                  {t('admin.generateAllCodes')}
                 </Button>
                 <Button 
                   size="sm" 
@@ -181,7 +180,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
                   className="text-blue-600 hover:bg-blue-100"
                   onClick={fetchAdminCredits}
                 >
-                  Aggiorna Saldo
+                  {t('admin.refreshBalance')}
                 </Button>
               </div>
             </div>
@@ -196,7 +195,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
             <div className="flex items-center">
               <Users className="h-8 w-8 text-blue-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Utenti Totali</p>
+                <p className="text-sm font-medium text-gray-600">{t('admin.totalUsers')}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   <StatsValue endpoint="/api/admin/stats" field="totalCodes" />
                 </p>
@@ -210,7 +209,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
             <div className="flex items-center">
               <QrCode className="h-8 w-8 text-green-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Codici Attivi</p>
+                <p className="text-sm font-medium text-gray-600">{t('admin.activeCodes')}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   <StatsValue endpoint="/api/admin/stats" field="activeUsers" />
                 </p>
@@ -224,7 +223,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
             <div className="flex items-center">
               <Building2 className="h-8 w-8 text-purple-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Strutture</p>
+                <p className="text-sm font-medium text-gray-600">{t('admin.structures')}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   <StatsValue endpoint="/api/admin/stats" field="structures" />
                 </p>
@@ -238,7 +237,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
             <div className="flex items-center">
               <Package className="h-8 w-8 text-orange-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Partner</p>
+                <p className="text-sm font-medium text-gray-600">{t('admin.partners')}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   <StatsValue endpoint="/api/admin/stats" field="partners" />
                 </p>
@@ -252,7 +251,7 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <Card>
           <CardHeader>
-            <CardTitle>Attività Recente</CardTitle>
+            <CardTitle>{t('admin.recentActivity')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -262,8 +261,8 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
                     <Users className="text-gray-600" size={16} />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Nuovo turista registrato</p>
-                    <p className="text-sm text-gray-500">2 minuti fa</p>
+                    <p className="font-medium text-gray-900">{t('admin.newTouristRegistered')}</p>
+                    <p className="text-sm text-gray-500">{t('admin.minutesAgo', { count: 2 })}</p>
                   </div>
                 </div>
               </div>
@@ -273,8 +272,8 @@ export default function AdminDashboard({ activeSection: propActiveSection }: { a
                     <QrCode className="text-gray-600" size={16} />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Nuovo codice IQ generato</p>
-                    <p className="text-sm text-gray-500">15 minuti fa</p>
+                    <p className="font-medium text-gray-900">{t('admin.newIQCodeGenerated')}</p>
+                    <p className="text-sm text-gray-500">{t('admin.minutesAgo', { count: 15 })}</p>
                   </div>
                 </div>
               </div>
