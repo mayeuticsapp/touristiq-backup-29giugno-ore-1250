@@ -22,7 +22,8 @@ export function LanguageSelector({ variant = "ghost", size = "sm" }: LanguageSel
     { code: 'en', name: 'English', flag: '🇬🇧' },
     { code: 'es', name: 'Español', flag: '🇪🇸' },
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' }
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'pl', name: 'Polski', flag: '🇵🇱' }
   ];
   
   const currentLang = languages.find(lang => lang.code === currentLanguage) || languages[0];

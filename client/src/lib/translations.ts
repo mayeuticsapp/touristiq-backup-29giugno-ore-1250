@@ -186,6 +186,68 @@ export const translations: Record<string, Translation> = {
     loading: "Loading...",
     error: "Error",
     success: "Success"
+  },
+
+  pl: {
+    // Login page
+    loginTitle: "Dostęp do TouristIQ",
+    loginSubtitle: "Wprowadź swój kod IQ, aby uzyskać dostęp",
+    iqCodeLabel: "Kod IQ",
+    iqCodePlaceholder: "Wprowadź swój kod IQ",
+    loginButton: "Zaloguj się",
+    forgotCode: "Zapomniałeś kodu?",
+    recoverWithCustode: "Odzyskaj go za pomocą Strażnika Kodu",
+    
+    // Tourist dashboard
+    welcomeMessage: "Witamy w Twojej przestrzeni turystycznej",
+    magicPassepartout: "Twój Magiczny Paszport",
+    yourCode: "Twój kod",
+    exclusiveDiscoveries: "Twoje Ekskluzywne Odkrycia",
+    myDiscounts: "Moje Zniżki",
+    tiqaiChat: "Czat TIQai",
+    iqcodeValidation: "Walidacja IQCode",
+    custodeCode: "Strażnik Kodu",
+    
+    // Welcome popup
+    welcomePopupTitle: "Witamy w TouristIQ!",
+    welcomePopupBenefit1: "Ekskluzywne zniżki u wybranych partnerów",
+    welcomePopupBenefit2: "TIQai, Twój spersonalizowany przewodnik AI",
+    welcomePopupBenefit3: "Pełna prywatność: Twoje dane są chronione",
+    welcomePopupCTA: "Zacznij odkrywać",
+    dontShowAgain: "Nie pokazuj ponownie",
+    
+    // TIQai chat
+    tiqaiWelcome: "Szepnij mi swoje pragnienia odkryć, poprowadzę Cię do ukrytych skarbów...",
+    tiqaiPlaceholder: "Zapytaj o miejsca, dostępne zniżki...",
+    sendMessage: "Wyślij",
+    
+    // Custode del Codice
+    custodeTitle: "Strażnik Kodu",
+    custodeDescription: "Anonimowy system do odzyskiwania IQCode",
+    activateCustode: "Aktywuj Strażnika Kodu",
+    manageCustode: "Zarządzaj Strażnikiem Kodu",
+    custodeTooltip: "Bezpieczny i anonimowy system odzyskiwania bez emaila lub telefonu",
+    
+    // Validation
+    validation: "Walidacja",
+    validationDescription: "Żądania walidacji IQCode",
+    acceptRequest: "Akceptuj",
+    rejectRequest: "Odrzuć",
+    
+    // Offers
+    validUntil: "Ważne do",
+    discount: "Zniżka",
+    category: "Kategoria",
+    partnerName: "Partner",
+    
+    // General
+    close: "Zamknij",
+    cancel: "Anuluj",
+    confirm: "Potwierdź",
+    save: "Zapisz",
+    loading: "Ładowanie...",
+    error: "Błąd",
+    success: "Sukces"
   }
 };
 

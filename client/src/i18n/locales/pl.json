@@ -1,0 +1,251 @@
+{
+  "auth": {
+    "title": "Dostęp do TouristIQ",
+    "subtitle": "Wprowadź swój kod IQ, aby uzyskać dostęp",
+    "iqCodePlaceholder": "Wprowadź swój kod IQ",
+    "iqCodeLabel": "Kod IQ",
+    "loginButton": "Zaloguj się",
+    "forgotCode": "Zapomniałeś kodu?",
+    "recoverWith": "Odzyskaj go za pomocą Strażnika Kodu",
+    "recoverWithCustode": "Odzyskaj go za pomocą Strażnika Kodu",
+    "custodeTitle": "Strażnik Kodu",
+    "custodeDescription": "Wprowadź tajne słowo i datę urodzenia, które ustawiłeś, aby odzyskać swój IQCode.",
+    "tooltip": {
+      "custodeAria": "Informacje o systemie Strażnika Kodu",
+      "custodeTitle": "Strażnik Kodu",
+      "custodeDescription": "Strażnik Kodu pomaga odzyskać IQCode, jeśli go zapomnisz. Ustaw tajne słowo i datę urodzenia dla bezpiecznego odzyskiwania.",
+      "custodeSecure": "Twoje dane są hashowane i przechowywane anonimowo. Nie możemy odzyskać tych informacji: przechowuj je bezpiecznie!"
+    },
+    "tempCode": {
+      "detected": "Wykryto tymczasowy kod",
+      "redirecting": "Przekierowujemy Cię na stronę aktywacji..."
+    },
+    "recovery": {
+      "success": "IQCode odzyskany!",
+      "yourCode": "Twój IQCode to",
+      "notFound": "Nie znaleziono kodu z tymi danymi",
+      "alreadyActive": "Masz już aktywny kod",
+      "error": "Błąd podczas odzyskiwania kodu",
+      "missingFields": "Wprowadź zarówno tajne słowo, jak i datę urodzenia"
+    },
+    "errors": {
+      "required": "Kod IQ jest wymagany",
+      "invalid": "Nieprawidłowy kod IQ. Spróbuj ponownie.",
+      "notFound": "Nie znaleziono kodu IQ",
+      "serverError": "Błąd serwera. Spróbuj ponownie.",
+      "unknownRole": "Nieznana rola"
+    },
+    "rememberCode": "Zapamiętaj mój kod",
+    "custode": {
+      "title": "Strażnik Kodu"
+    },
+    "support": {
+      "text": "Potrzebujesz pomocy? Skontaktuj się z nami:",
+      "email": "info@touristiq.it"
+    }
+  },
+  "dashboard": {
+    "welcome": "Witamy",
+    "welcomeFallback": "w Twojej przestrzeni turystycznej"
+  },
+  "tourist": {
+    "title": "Panel Turysty",
+    "subtitle": "Każde doświadczenie zaczyna się od IQ",
+    "myDiscounts": "Moje Zniżki",
+    "tiqaiChat": "Czat TIQai",
+    "codeValidation": "Walidacja IQCode",
+    "magicPassepartout": "Magiczny Paszport",
+    "exclusiveDiscoveries": "Twoje Ekskluzywne Odkrycia",
+    "hiddenTreasures": "ukryte skarby",
+    "generateCode": "Generuj Kod",
+    "noOffersAvailable": "Brak dostępnych ofert w tej chwili",
+    "offersCount": "{{count}} oferta",
+    "offersCount_plural": "{{count}} ofert",
+    "security": {
+      "unauthorized": "Nieautoryzowany dostęp",
+      "tempCodeNotAllowed": "Tymczasowe kody muszą być aktywowane przed użyciem"
+    },
+    "welcome": {
+      "message1": "Twoja brama do autentycznych włoskich doświadczeń",
+      "message2": "Gdzie każda chwila staje się niezapomnianym odkryciem",
+      "message3": "Twój paszport do ukrytych skarbów słonecznej ziemi",
+      "message4": "Odkryj Włochy jak nigdy dotąd",
+      "message5": "Witamy w bijącym sercu włoskiej gościnności",
+      "message6": "Każde doświadczenie zaczyna się od IQ, każde wspomnienie rodzi się tutaj",
+      "message7": "Klucz do otwarcia drzwi autentycznych Włoch"
+    },
+    "oneTimeCodes": {
+      "title": "Kody TIQ-OTC",
+      "subtitle": "System anty-podatności dla bezpiecznych walidacji",
+      "generate": "Generuj Kod",
+      "availableUses": "Dostępne użycia: {{count}}",
+      "lastGenerated": "Ostatnio wygenerowany kod:",
+      "copyCode": "Kopiuj Kod",
+      "copied": "Skopiowano!",
+      "history": "Historia Użycia",
+      "noHistory": "Brak zarejestrowanych użyć",
+      "usedAt": "Użyto dnia {{date}}",
+      "usedBy": "przez {{partner}}",
+      "error": "Błąd generowania kodu",
+      "generationDescription": "Generuj tymczasowe jednorazowe kody dla natychmiastowych zniżek",
+      "loadingError": "⚠️ Błąd ładowania danych. Spróbuj odświeżyć stronę.",
+      "retryButton": "Ponów",
+      "generatedSuccess": "✅ Jednorazowy kod wygenerowany!",
+      "generatedDescription": "Kod {{code}} gotowy do użycia",
+      "copySuccess": "Kod skopiowany!",
+      "copyDescription": "Jednorazowy kod został skopiowany do schowka",
+      "copyError": "Nie można skopiować kodu",
+      "generationError": "Błąd generowania kodu",
+      "generationErrorDescription": "Nie można wygenerować jednorazowego kodu. Spróbuj ponownie."
+    },
+    "waitingDiscoveries": "Twoje odkrycia czekają!",
+    "exploreOrAsk": "Odkrywaj okolicę lub zapytaj TIQai o unikalne doświadczenia",
+    "exploreArea": "Odkryj Okolicę",
+    "exploreNearby": "Odkryj W Pobliżu",
+    "discount": "zniżka",
+    "codeActions": {
+      "copyCode": "Kopiuj Swój IQCode",
+      "shareCode": "Udostępnij",
+      "copySuccess": "Kod skopiowany!",
+      "copyDescription": "Twój definitywny IQCode został skopiowany do schowka",
+      "shareMessage": "Mój kod TouristIQ IQ: {{code}} 🎯 Odkryj ekskluzywne zniżki we Włoszech!",
+      "exclusiveDescription": "Twój ekskluzywny kod do unikalnych odkryć we Włoszech!"
+    }
+  },
+  "partner": {
+    "title": "Panel Partnera",
+    "validateCode": "Waliduj IQCode",
+    "codeInput": "Wprowadź kod turysty",
+    "validateButton": "Waliduj",
+    "validation": {
+      "success": "✅ Prawidłowy kod – Turysta uwierzytelniony TouristIQ",
+      "invalid": "❌ Nieprawidłowy kod",
+      "error": "Błąd podczas walidacji"
+    },
+    "offers": {
+      "title": "Moje Oferty",
+      "create": "Utwórz Nową Ofertę",
+      "edit": "Edytuj",
+      "delete": "Usuń",
+      "noOffers": "Brak utworzonych ofert"
+    }
+  },
+  "structure": {
+    "title": "Panel Struktury",
+    "guests": "Zarządzanie Gośćmi",
+    "credits": "Kredyty: {{remaining}}/{{total}}",
+    "miniManagement": "Mini-zarządzanie"
+  },
+  "admin": {
+    "title": "Panel Administracyjny",
+    "users": "Użytkownicy",
+    "userManagement": "Zarządzanie Użytkownikami",
+    "stats": "Statystyki",
+    "iqCodes": "Kody IQ",
+    "settings": "Ustawienia",
+    "assignPackages": "Przypisz Pakiety"
+  },
+  "common": {
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "delete": "Usuń",
+    "edit": "Edytuj",
+    "close": "Zamknij",
+    "back": "Wstecz",
+    "next": "Dalej",
+    "loading": "Ładowanie",
+    "error": "Błąd",
+    "success": "Sukces",
+    "confirm": "Potwierdź",
+    "yes": "Tak",
+    "no": "Nie",
+    "search": "Szukaj",
+    "filter": "Filtruj",
+    "sort": "Sortuj",
+    "actions": "Akcje",
+    "status": "Status",
+    "active": "Aktywny",
+    "inactive": "Nieaktywny",
+    "pending": "Oczekujące",
+    "approved": "Zatwierdzone",
+    "rejected": "Odrzucone",
+    "noData": "Brak dostępnych danych",
+    "tryAgain": "Spróbuj ponownie",
+    "here": "tutaj",
+    "orClick": "lub kliknij"
+  },
+  "errors": {
+    "generic": "Wystąpił błąd. Spróbuj ponownie.",
+    "network": "Błąd połączenia. Sprawdź swoje połączenie internetowe.",
+    "unauthorized": "Nieautoryzowany dostęp",
+    "forbidden": "Operacja niedozwolona",
+    "notFound": "Nie znaleziono zasobu",
+    "validation": "Nieprawidłowe dane",
+    "server": "Błąd serwera"
+  },
+  "validation": {
+    "required": "Pole wymagane",
+    "email": "Nieprawidłowy email",
+    "minLength": "Minimum {{min}} znaków",
+    "maxLength": "Maksimum {{max}} znaków",
+    "numeric": "Tylko cyfry",
+    "alphanumeric": "Tylko litery i cyfry"
+  },
+  "tiqai": {
+    "title": "Czat TIQai",
+    "subtitle": "Twój cyfrowy Genius Loci",
+    "placeholder": "Szepnij mi swoje pragnienia odkryć...",
+    "send": "Wyślij",
+    "welcome": "Cześć! Jestem TIQai, Twoim asystentem AI do odkrywania ukrytych skarbów Włoch. Jak mogę Ci pomóc?",
+    "thinking": "Myślę...",
+    "error": "Błąd komunikacji z TIQai",
+    "initialMessage": "🌅 Cześć, podróżniku! Jestem TIQai, Twój cyfrowy genius loci. Szepnij mi swoje pragnienia odkryć, a poprowadzę Cię do ukrytych skarbów, które zna tylko autentyczne serce Włoch...",
+    "errorMessage": "Przepraszam, wystąpił błąd. Spróbuj ponownie później.",
+    "fullTitle": "TIQai - Genius Loci Włoch",
+    "tagline": "Autentyczna dusza Włoch, która szepcze tajemnice"
+  },
+  "language": {
+    "selector": "Wybierz Język",
+    "it": "Italiano",
+    "en": "English",
+    "es": "Español",
+    "de": "Deutsch",
+    "fr": "Français",
+    "pl": "Polski"
+  },
+  "geolocation": {
+    "unsupported": "Geolokalizacja nieobsługiwana przez przeglądarkę",
+    "permissionDenied": "Nie można uzyskać lokalizacji. Sprawdź uprawnienia przeglądarki.",
+    "error": "Błąd podczas geolokalizacji"
+  },
+  "custode": {
+    "title": "Strażnik Kodu",
+    "securityDescription": "Chroń swój dostęp za pomocą bezpiecznego systemu odzyskiwania",
+    "activateButton": "Aktywuj Strażnika Kodu",
+    "manageButton": "Zarządzaj Strażnikiem Kodu",
+    "alreadyActive": "Strażnik już aktywowany",
+    "modifyTooltip": "Zmień tajne słowo i datę urodzenia powiązane z Twoim IQCode do przyszłego odzyskiwania. Dane pozostają anonimowe i nieodwracalne przez nasz system.",
+    "activateTooltip": "Strażnik Kodu pomaga odzyskać IQCode, jeśli go zapomnisz. Zapisz teraz tajne słowo i specjalną datę: będą używane bezpiecznie tylko przez Ciebie."
+  },
+  "savings": {
+    "title": "Moje Oszczędności",
+    "totalSaved": "Łączne Oszczędności",
+    "savingsCount": "Transakcje",
+    "averageSaving": "Średnie Oszczędności",
+    "thisMonth": "W Tym Miesiącu",
+    "topPartner": "Najlepszy Partner",
+    "yourSavings": "Twoje Oszczędności",
+    "wow": "Fantastycznie!",
+    "keepSaving": "Oszczędzaj dalej!",
+    "noSavingsYet": "Brak oszczędności jeszcze",
+    "startSaving": "Zacznij oszczędzać już dziś!",
+    "recentSavings": "Ostatnie Oszczędności",
+    "at": "w",
+    "on": "dnia",
+    "earned": "Zaoszczędzono",
+    "loading": "Ładowanie...",
+    "error": "Błąd ładowania oszczędności",
+    "noPartner": "Brak partnera jeszcze",
+    "motivationalMessage": "Każda zniżka to krok w stronę nowych odkryć!"
+  }
+}

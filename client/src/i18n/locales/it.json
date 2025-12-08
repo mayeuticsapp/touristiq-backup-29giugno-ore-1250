@@ -209,7 +209,9 @@
     "it": "Italiano",
     "en": "English",
     "es": "Español",
-    "de": "Deutsch"
+    "de": "Deutsch",
+    "fr": "Français",
+    "pl": "Polski"
   },
   "geolocation": {
     "unsupported": "Geolocalizzazione non supportata dal browser",
